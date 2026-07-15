@@ -4,7 +4,10 @@
 % ─── 页面与字体 ───
 \usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
 \usepackage{fontspec}
-\setmonofont{Consolas}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}
+  {\setmonofont{Consolas}}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
 
 % ─── 数学 ───
 \usepackage{amsmath,amssymb}

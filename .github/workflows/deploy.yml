@@ -30,6 +30,7 @@ jobs:
             texlive-latex-extra \
             texlive-fonts-recommended \
             fonts-liberation \
+            fonts-dejavu \
             fonts-noto-cjk
 
       - name: Install PowerShell 7

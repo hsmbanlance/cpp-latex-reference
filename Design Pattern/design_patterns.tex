@@ -11,7 +11,10 @@
 
 % ==================== 字体 ====================
 \usepackage{fontspec}
-\setmonofont{Consolas}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}
+  {\setmonofont{Consolas}}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
 
 % ==================== 颜色 ====================
 \usepackage{xcolor}
