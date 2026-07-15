@@ -1,0 +1,2047 @@
+% !TEX program = xelatex
+% C++线程与协程：从C++11到C++26
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+% ---- listing style ----
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,
+    ifstream,ofstream,fstream,iostream,
+    ostream,istream,stringstream,ostringstream,
+    path,filesystem},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+\lstdefinelanguage{CSharp}{
+  morekeywords={abstract,as,async,await,base,bool,break,byte,case,catch,char,checked,class,
+    const,continue,decimal,default,delegate,do,double,else,enum,event,explicit,extern,
+    false,finally,fixed,float,for,foreach,goto,if,implicit,in,int,interface,internal,is,
+    lock,long,namespace,new,null,object,operator,out,override,params,private,protected,
+    public,readonly,record,ref,return,sbyte,sealed,short,sizeof,stackalloc,static,string,
+    struct,switch,this,throw,true,try,typeof,uint,ulong,unchecked,unsafe,ushort,using,
+    virtual,void,volatile,while,yield,
+    var,dynamic,global,nint,nuint,notnull,unmanaged,with,required,file,init,
+    Task,ValueTask,IAsyncEnumerable,IAsyncDisposable,CancellationToken,
+    CancellationTokenSource,Channel,BlockingCollection,ConcurrentDictionary},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[s]{@"}{"},
+}
+\lstdefinelanguage{Bash}{
+  morekeywords={clang,clang++,cl,cmake,gcc,g++,export,./,cd,mkdir,rm,cp,mv,echo,cat,
+    grep,sed,awk,find,xargs,make,ninja,curl,wget,sudo,apt,yum,brew,choco,winget,
+    powershell,pwsh,dotnet,nuget},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+}
+\lstdefinestyle{csharpstyle}{
+  language=CSharp,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{csharpkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  emph={int,string,bool,double,float,long,byte,char,decimal,object,
+    Task,ValueTask,List,Dictionary,HashSet,Queue,Stack,
+    Action,Func,Predicate,IEnumerable,IEnumerator,
+    IDisposable,IAsyncDisposable,IAsyncEnumerable,
+    CancellationToken,CancellationTokenSource,
+    Channel,BlockingCollection,ConcurrentDictionary,
+    Span,Memory,Nullable,Array,
+    SemaphoreSlim,ManualResetEventSlim,
+    TaskCompletionSource,IProgress},
+  emphstyle=\color{csharptype}\bfseries,
+}
+\lstdefinestyle{bashstyle}{
+  language=Bash,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+}
+\lstset{style=cppstyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,
+  title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,
+  title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,
+  title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,
+  title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,
+  title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={Thread & Coroutine Reference},
+  pdftitle={C++ 线程与协程参考手册},
+}
+
+\usepackage{tikz}
+
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+\newcommand{\guideref}[1]{\textbf{\textcolor{blue!70!black}{[#1]}}}
+\newcommand{\csharp}{C\#}
+\newcommand{\stdexec}{\texttt{std::execution}}
+
+% ====================================================================
+\begin{document}
+
+% ═══════════════════════════════════════════
+% 封面
+% ═══════════════════════════════════════════
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries\color{blue!60!black} \cpp{}线程与协程\par}
+\vspace{1cm}
+{\LARGE\color{blue!40!black} 从\cpp{}11到\cpp{}26的全面指南\par}
+\vspace{2cm}
+{\Large\color{gray} 涵盖\texttt{jthread}、协程、\texttt{std::execution}\par}
+\vspace{0.5cm}
+{\Large\color{gray} 附\csharp{}对比分析\par}
+\vfill
+{\large\color{linenumgray} \today\par}
+\end{titlepage}
+
+\frontmatter
+\tableofcontents
+
+\mainmatter
+
+% ═══════════════════════════════════════════════════════════════
+\part{\cpp{}11/14/17 线程基础}
+% ═══════════════════════════════════════════════════════════════
+
+% ───────────────────────────────────────────
+\chapter{\texttt{std::thread}：原生线程}
+% ───────────────────────────────────────────
+
+\cpp{}11首次在标准库中引入了\texttt{std::thread}，使得跨平台多线程编程不再依赖第三方库或平台特定的API（如POSIX线程或Windows线程）。
+
+\section{基本用法}
+
+\texttt{std::thread}接受一个可调用对象（函数指针、函数对象、lambda表达式）以及该可调用对象所需的参数，启动一个新线程。
+
+\begin{lstlisting}
+#include <iostream>
+#include <thread>
+#include <string>
+
+void greet(const std::string& name) {
+    std::cout << "Hello, " << name << " from thread "
+              << std::this_thread::get_id() << '\n';
+}
+
+int main() {
+    std::thread t1(greet, "Alice");
+    std::thread t2(greet, "Bob");
+
+    t1.join();   // 等待 t1 完成
+    t2.join();   // 等待 t2 完成
+    // 如果不调用 join() 或 detach()，析构函数会调用 std::terminate()
+}
+\end{lstlisting}
+
+\section{线程管理：join与detach}
+
+\texttt{join()}阻塞调用线程，直到目标线程执行完毕。\texttt{detach()}将目标线程与\texttt{std::thread}对象分离，使其成为守护线程（daemon thread），在后台独立运行。
+
+\begin{warning}
+\texttt{detach()}后无法再\texttt{join()}该线程。如果分离的线程引用了栈上的局部变量，当创建线程的函数返回后，这些引用将变成悬空引用，导致未定义行为。\textbf{优先使用\texttt{join()}或\cpp{}20的\texttt{jthread}}。
+\end{warning}
+
+\begin{lstlisting}
+void background_work() {
+    // 长时间运行的后台任务
+    for (int i = 0; i < 1000; ++i) { /* ... */ }
+}
+
+void example() {
+    std::thread t(background_work);
+    t.detach(); // 不等待，让线程在后台运行
+    // 注意：确保 background_work 不会访问已销毁的局部变量
+}
+\end{lstlisting}
+
+\section{线程标识与硬件并发}
+
+\begin{lstlisting}
+#include <thread>
+#include <iostream>
+
+int main() {
+    std::cout << "当前线程ID: " << std::this_thread::get_id() << '\n';
+    std::cout << "硬件并发度: " << std::thread::hardware_concurrency() << '\n';
+
+    // 让出CPU时间片
+    std::this_thread::yield();
+
+    // 休眠
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(100ms);
+}
+\end{lstlisting}
+
+\section{传递参数给线程}
+
+\texttt{std::thread}的参数默认以\textbf{值传递}方式传入。如果需要引用传递，必须使用\texttt{std::ref}或\texttt{std::cref}。
+
+\begin{lstlisting}
+void increment(int& value) {
+    ++value;
+}
+
+int main() {
+    int x = 0;
+    std::thread t(increment, std::ref(x)); // 必须使用 std::ref
+    t.join();
+    std::cout << x << '\n'; // 输出: 1
+}
+\end{lstlisting}
+
+\begin{compare}
+\csharp{}的\texttt{Thread}类接受\texttt{ThreadStart}或\texttt{ParameterizedThreadStart}委托，参数通过闭包或\texttt{Start(arg)}传递。现代\csharp{}更常用\texttt{Task.Run}，它天然支持lambda闭包捕获变量。
+
+\begin{lstlisting}[style=csharpstyle]
+// C# 传统 Thread
+var t = new Thread(() => Console.WriteLine("Hello from thread"));
+t.Start();
+t.Join();
+
+// C# 现代 Task（更推荐）
+await Task.Run(() => Console.WriteLine("Hello from Task"));
+\end{lstlisting}
+\end{compare}
+
+% ───────────────────────────────────────────
+\chapter{同步原语}
+% ───────────────────────────────────────────
+
+多线程编程的核心挑战是保护共享数据。\cpp{}标准库提供了完整的同步原语。
+
+\section{互斥量（Mutex）}
+
+\cpp{}提供四种互斥量类型：
+
+\begin{longtable}{ll}
+\toprule
+\textbf{类型} & \textbf{特性} \\
+\midrule
+\texttt{std::mutex} & 基本互斥量，不可递归锁定 \\
+\texttt{std::recursive\_mutex} & 可递归锁定（同一线程多次锁定） \\
+\texttt{std::timed\_mutex} & 支持超时的互斥量 \\
+\texttt{std::shared\_mutex} & \cpp{}17，支持共享（读）/独占（写）锁 \\
+\bottomrule
+\end{longtable}
+
+\subsection{RAII锁管理}
+
+永远不要手动调用\texttt{lock()}和\texttt{unlock()}——使用RAII包装器确保异常安全。
+
+\begin{lstlisting}
+#include <mutex>
+#include <vector>
+
+std::mutex mtx;
+std::vector<int> shared_data;
+
+void safe_push(int value) {
+    std::lock_guard<std::mutex> lock(mtx); // 离开作用域自动解锁
+    shared_data.push_back(value);
+}
+
+void safe_push_v2(int value) {
+    std::unique_lock<std::mutex> lock(mtx); // 更灵活：可延迟锁定、手动解锁
+    shared_data.push_back(value);
+    lock.unlock(); // 可以在需要时提前解锁
+    // ... 不需要锁的操作 ...
+}
+\end{lstlisting}
+
+\subsection{\cpp{}17 \texttt{std::scoped\_lock}}
+
+\texttt{scoped\_lock}可以同时锁定多个互斥量，使用与\texttt{std::lock()}相同的死锁避免算法。
+
+\begin{lstlisting}
+#include <mutex>
+
+std::mutex m1, m2;
+
+void transfer(int& from, int& to, int amount) {
+    std::scoped_lock lock(m1, m2); // 同时锁定，避免死锁
+    from -= amount;
+    to += amount;
+}
+\end{lstlisting}
+
+\begin{guideline}
+\guideref{CP.21} 使用\texttt{std::scoped\_lock}或\texttt{std::lock\_guard}管理互斥量，不要手动\texttt{lock()}/\texttt{unlock()}。
+\guideref{CP.43} 最小化临界区——只在必须保护共享数据的代码段持有锁。
+\end{guideline}
+
+\section{条件变量}
+
+\texttt{std::condition\_variable}用于线程间的信号通知，典型用法是生产者-消费者模式。
+
+\begin{lstlisting}
+#include <condition_variable>
+#include <mutex>
+#include <queue>
+
+std::mutex mtx;
+std::condition_variable cv;
+std::queue<int> buffer;
+bool done = false;
+
+void producer() {
+    for (int i = 0; i < 100; ++i) {
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            buffer.push(i);
+        }
+        cv.notify_one(); // 通知一个等待的消费者
+    }
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        done = true;
+    }
+    cv.notify_all(); // 通知所有等待的消费者
+}
+
+void consumer() {
+    std::unique_lock<std::mutex> lock(mtx);
+    cv.wait(lock, [] { return !buffer.empty() || done; });
+    // wait 的第二个参数是谓词，防止虚假唤醒（spurious wakeup）
+    while (!buffer.empty()) {
+        int value = buffer.front();
+        buffer.pop();
+        lock.unlock();
+        // 处理 value ...
+        lock.lock();
+        cv.wait(lock, [] { return !buffer.empty() || done; });
+    }
+}
+\end{lstlisting}
+
+\begin{warning}
+条件变量的\texttt{wait()}必须在\texttt{unique\_lock}（而非\texttt{lock\_guard}）保护下调用，因为\texttt{wait()}内部需要解锁和重新锁定互斥量。始终使用带谓词参数的\texttt{wait()}版本来防止虚假唤醒。
+\end{warning}
+
+\section{原子操作}
+
+\texttt{std::atomic<T>}提供无锁的线程安全操作，适用于简单的计数器、标志位等场景。
+
+\begin{lstlisting}
+#include <atomic>
+#include <thread>
+#include <vector>
+#include <iostream>
+
+std::atomic<int> counter{0};
+
+void increment_many(int n) {
+    for (int i = 0; i < n; ++i) {
+        counter.fetch_add(1, std::memory_order_relaxed);
+        // 或使用 counter++（等价的原子自增）
+    }
+}
+
+int main() {
+    std::vector<std::thread> threads;
+    for (int i = 0; i < 4; ++i) {
+        threads.emplace_back(increment_many, 250'000);
+    }
+    for (auto& t : threads) t.join();
+    std::cout << counter.load() << '\n'; // 保证输出 1000000
+}
+\end{lstlisting}
+
+\subsection{内存序（Memory Order）}
+
+\cpp{}的原子操作支持不同的内存序，控制编译器和CPU的指令重排：
+
+\begin{longtable}{lp{8cm}}
+\toprule
+\textbf{内存序} & \textbf{语义} \\
+\midrule
+\texttt{memory\_order\_relaxed} & 仅保证原子性，不限制重排 \\
+\texttt{memory\_order\_consume} & 依赖序（极少使用） \\
+\texttt{memory\_order\_acquire} & 获取操作：后续读写不能重排到此操作之前 \\
+\texttt{memory\_order\_release} & 释放操作：前面的读写不能重排到此操作之后 \\
+\texttt{memory\_order\_acq\_rel} & 获取+释放（用于读写操作） \\
+\texttt{memory\_order\_seq\_cst} & 顺序一致性（默认，最严格，全局序） \\
+\bottomrule
+\end{longtable}
+
+\begin{bestpractice}
+除非你有明确的性能需求并理解内存序的影响，否则始终使用默认的\texttt{memory\_order\_seq\_cst}。过早优化内存序是并发编程中最常见的错误之一。
+\end{bestpractice}
+
+\begin{compare}
+\csharp{}中没有\texttt{std::atomic}的直接等价物。最接近的是\texttt{Interlocked}类（提供\texttt{Increment}、\texttt{CompareExchange}等操作）和\texttt{volatile}关键字（仅提供有限的内存屏障语义）。\csharp{}中更常用的做法是使用\texttt{lock}语句（等价于\texttt{Monitor}）或\texttt{ConcurrentXxx}集合。
+
+\begin{lstlisting}[style=csharpstyle]
+// C# Interlocked
+int counter = 0;
+Interlocked.Increment(ref counter);
+Interlocked.CompareExchange(ref counter, newValue, comparand);
+
+// C# lock (等价于 mutex + lock_guard)
+private readonly object _lock = new();
+lock (_lock) {
+    sharedList.Add(item);
+}
+\end{lstlisting}
+\end{compare}
+
+% ───────────────────────────────────────────
+\chapter{异步操作：future与promise}
+% ───────────────────────────────────────────
+
+\section{\texttt{std::future}与\texttt{std::promise}}
+
+\texttt{promise}是值的\textbf{生产者}端，\texttt{future}是值的\textbf{消费者}端。它们通过一个\emph{共享状态}连接。
+
+\begin{lstlisting}
+#include <future>
+#include <iostream>
+#include <thread>
+
+int compute_heavy_task() {
+    int result = 0;
+    for (int i = 0; i < 1'000'000; ++i) result += i;
+    return result;
+}
+
+int main() {
+    // 方式一：std::async
+    std::future<int> f1 = std::async(std::launch::async, compute_heavy_task);
+
+    // 方式二：std::promise
+    std::promise<int> p;
+    std::future<int> f2 = p.get_future();
+    std::thread t([&p] {
+        try {
+            p.set_value(compute_heavy_task());
+        } catch (...) {
+            p.set_exception(std::current_exception());
+        }
+    });
+
+    std::cout << "async结果: " << f1.get() << '\n';
+    std::cout << "promise结果: " << f2.get() << '\n';
+    t.join();
+}
+\end{lstlisting}
+
+\section{\texttt{std::async}的启动策略}
+
+\texttt{std::async}的第三个参数控制执行策略：
+
+\begin{itemize}[nosep]
+\item \texttt{std::launch::async}——在新线程上执行。
+\item \texttt{std::launch::deferred}——延迟到调用\texttt{get()}或\texttt{wait()}时在调用线程上执行（惰性求值）。
+\item 默认（不指定）——由实现决定，可能导致意外的同步执行。
+\end{itemize}
+
+\begin{warning}
+不带启动策略的\texttt{std::async(func)}调用可能在新线程上运行，也可能延迟到\texttt{get()}时才在当前线程同步执行。始终显式指定\texttt{std::launch::async}以确保并发执行。
+\end{warning}
+
+\section{\texttt{std::packaged\_task}}
+
+\texttt{packaged\_task}将可调用对象包装为异步任务，自动将其返回值或异常存入共享状态。
+
+\begin{lstlisting}
+#include <future>
+#include <thread>
+#include <iostream>
+
+int main() {
+    std::packaged_task<int(int, int)> task([](int a, int b) {
+        return a + b;
+    });
+
+    std::future<int> result = task.get_future();
+    std::thread t(std::move(task), 3, 4);
+    t.join();
+
+    std::cout << result.get() << '\n'; // 输出: 7
+}
+\end{lstlisting}
+
+\begin{compare}
+\csharp{}的\texttt{Task<T>}是\cpp{}中\texttt{future}+\texttt{promise}+\texttt{packaged\_task}的统一体。\texttt{TaskCompletionSource<T>}等价于\texttt{promise}。\csharp{}的\texttt{async/await}使得异步代码看起来像同步代码，而\cpp{}20之前的\texttt{future::get()}只能阻塞等待。
+
+\begin{lstlisting}[style=csharpstyle]
+// C# Task 等价于 C++ future + promise
+var tcs = new TaskCompletionSource<int>();
+Task.Run(() => tcs.SetResult(42));
+int result = await tcs.Task;
+
+// C# async/await（C++ 在 C++20 之前没有等价物）
+async Task<int> ComputeAsync() {
+    await Task.Delay(1000);
+    return 42;
+}
+int value = await ComputeAsync();
+\end{lstlisting}
+\end{compare}
+
+% ═══════════════════════════════════════════════════════════════
+\part{\cpp{}20 \texttt{jthread}与协作式取消}
+% ═══════════════════════════════════════════════════════════════
+
+\chapter{\texttt{jthread}：自动join的线程}
+% ───────────────────────────────────────────
+
+\cpp{}20引入的\texttt{std::jthread}（joining thread）是对\texttt{std::thread}的改进替代。它有两个核心改进：
+\begin{enumerate}[nosep]
+\item \textbf{析构时自动join}——如果线程可join，析构函数会自动调用\texttt{join()}，不会意外调用\texttt{std::terminate()}。
+\item \textbf{内置协作式取消}——通过\texttt{stop\_token}机制，线程可以被优雅地请求停止。
+\end{enumerate}
+
+\begin{lstlisting}
+#include <thread>
+#include <iostream>
+
+void worker(int id) {
+    std::cout << "Worker " << id << " running\n";
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::cout << "Worker " << id << " done\n";
+}
+
+int main() {
+    {
+        std::jthread t1(worker, 1);
+        std::jthread t2(worker, 2);
+        // 离开作用域时，t1和t2自动join——不需要手动调用
+    }
+    std::cout << "All threads finished\n";
+}
+\end{lstlisting}
+
+\section{为什么\texttt{std::thread}的析构行为是危险的}
+
+\texttt{std::thread}的析构函数在可join状态下会调用\texttt{std::terminate()}，这被认为是一个设计缺陷。P0206（\texttt{jthread}提案）的作者Herb Sutter称之为"可能是\cpp{}标准库中最令人惊讶的行为"。
+
+\begin{lstlisting}
+void dangerous() {
+    std::thread t([] {
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+    });
+    throw std::runtime_error("oops");
+    // t的析构函数被调用，线程仍然可join
+    // => std::terminate() 被调用，程序崩溃！
+}
+
+void safe() {
+    std::jthread t([] {
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+    });
+    throw std::runtime_error("oops");
+    // t的析构函数被调用，自动join——安全退出
+}
+\end{lstlisting}
+
+\begin{guideline}
+\guideref{CP.25} 优先使用\texttt{jthread}而非\texttt{thread}。\texttt{jthread}的析构语义更安全，且支持协作式取消。
+\end{guideline}
+
+\begin{compare}
+\csharp{}的\texttt{Thread}类在析构时不会导致崩溃（GC会清理），但也不会自动等待完成。\texttt{Thread}对象被GC回收后，如果线程仍在运行，.NET运行时会等待它结束（对于前台线程）或直接终止（对于后台线程，即\texttt{IsBackground = true}）。现代\csharp{}开发几乎只用\texttt{Task}，由\texttt{ThreadPool}管理线程生命周期。
+\end{compare}
+
+% ───────────────────────────────────────────
+\chapter{协作式取消：\texttt{stop\_token}机制}
+% ───────────────────────────────────────────
+
+\cpp{}20引入的stop token机制是一套完整的协作式取消框架，包含三个核心组件：
+
+\begin{longtable}{lp{8cm}}
+\toprule
+\textbf{组件} & \textbf{角色} \\
+\midrule
+\texttt{std::stop\_source} & \textbf{请求端}：发出停止请求 \\
+\texttt{std::stop\_token} & \textbf{查询端}：检查是否收到停止请求 \\
+\texttt{std::stop\_callback} & \textbf{回调端}：注册在停止请求时执行的回调 \\
+\bottomrule
+\end{longtable}
+
+\section{基本用法}
+
+\texttt{jthread}的线程函数可以接受一个\texttt{stop\_token}作为第一个参数：
+
+\begin{lstlisting}
+#include <thread>
+#include <iostream>
+
+void cancellable_worker(std::stop_token st) {
+    int count = 0;
+    while (!st.stop_requested()) {
+        ++count;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    std::cout << "Worker stopped after " << count << " iterations\n";
+}
+
+int main() {
+    std::jthread t(cancellable_worker);
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    t.request_stop(); // 请求线程停止
+    // t 析构时自动 join，此时线程已响应停止请求
+}
+\end{lstlisting}
+
+\section{\texttt{stop\_callback}：注册取消回调}
+
+当需要在停止请求时立即执行某些操作（如唤醒阻塞在条件变量上的线程），可以使用\texttt{stop\_callback}。
+
+\begin{lstlisting}
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+
+template<typename T>
+class ThreadSafeQueue {
+    std::queue<T> queue_;
+    std::mutex mtx_;
+    std::condition_variable cv_;
+
+public:
+    void push(T value) {
+        {
+            std::lock_guard lock(mtx_);
+            queue_.push(std::move(value));
+        }
+        cv_.notify_one();
+    }
+
+    // 可取消的等待弹出
+    bool try_pop(T& value, std::stop_token st) {
+        std::unique_lock lock(mtx_);
+
+        // 注册回调：收到停止请求时唤醒等待
+        std::stop_callback cb(st, [&] { cv_.notify_all(); });
+
+        cv_.wait(lock, [&] {
+            return !queue_.empty() || st.stop_requested();
+        });
+
+        if (st.stop_requested()) return false;
+        value = std::move(queue_.front());
+        queue_.pop();
+        return true;
+    }
+};
+\end{lstlisting}
+
+\section{独立的\texttt{stop\_source}}
+
+\texttt{stop\_source}也可以独立于\texttt{jthread}使用，用于任何需要协作式取消的场景：
+
+\begin{lstlisting}
+#include <stop_token>
+#include <thread>
+#include <iostream>
+
+void monitor(std::stop_token st, const std::string& name) {
+    while (!st.stop_requested()) {
+        std::cout << name << " is running...\n";
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+    std::cout << name << " stopped.\n";
+}
+
+int main() {
+    std::stop_source source;
+    std::stop_token token = source.get_token();
+
+    std::jthread t1(monitor, token, "Monitor-A");
+    std::jthread t2(monitor, token, "Monitor-B");
+
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    source.request_stop(); // 同时停止所有使用此 token 的线程
+}
+\end{lstlisting}
+
+\begin{compare}
+\csharp{}的\texttt{CancellationToken}体系与\cpp{}20的\texttt{stop\_token}非常相似：
+
+\begin{longtable}{ll}
+\toprule
+\textbf{\cpp{}20} & \textbf{\csharp{}} \\
+\midrule
+\texttt{stop\_source} & \texttt{CancellationTokenSource} \\
+\texttt{stop\_token} & \texttt{CancellationToken} \\
+\texttt{stop\_callback} & \texttt{CancellationToken.Register()} \\
+\texttt{stop\_requested()} & \texttt{IsCancellationRequested} \\
+\texttt{request\_stop()} & \texttt{Cancel()} \\
+\texttt{stop\_possible()} & 无直接等价（检查\texttt{!= default}） \\
+\bottomrule
+\end{longtable}
+
+\begin{lstlisting}[style=csharpstyle]
+// C# 等价代码
+var cts = new CancellationTokenSource();
+var token = cts.Token;
+
+var task = Task.Run(async () => {
+    while (!token.IsCancellationRequested) {
+        Console.WriteLine("Working...");
+        await Task.Delay(1000, token); // 自动响应取消
+    }
+}, token);
+
+cts.CancelAfter(TimeSpan.FromSeconds(3));
+// 或 cts.Cancel();
+\end{lstlisting}
+
+关键差异：\csharp{}的\texttt{CancellationToken}在\texttt{Task.Delay}、\texttt{Stream.Read}等BCL方法中被原生支持，取消后直接抛出\texttt{OperationCanceledException}。\cpp{}的\texttt{stop\_token}需要手动检查或配合条件变量。
+\end{compare}
+
+\begin{warning}
+\texttt{stop\_token}是\textbf{协作式}的——它只是发出请求，不会强制终止线程。如果线程函数从不检查\texttt{stop\_requested()}且不注册\texttt{stop\_callback}，取消请求将被忽略。这与\csharp{}的\texttt{Thread.Abort()}（已在.NET 5+中移除）或Windows的\texttt{TerminateThread()}不同——那些是强制终止，极其危险。
+\end{warning}
+
+% ═══════════════════════════════════════════════════════════════
+\part{\cpp{}20 协程}
+% ═══════════════════════════════════════════════════════════════
+
+\chapter{协程概述与核心概念}
+% ───────────────────────────────────────────
+
+\cpp{}20引入了语言级别的协程（coroutine）支持。协程是一种可以被暂停和恢复的函数——它可以在执行到某个点时\emph{让出}控制权（挂起），之后从暂停的位置\emph{恢复}继续执行。
+
+\section{协程与传统函数的区别}
+
+\begin{longtable}{lp{6cm}p{5cm}}
+\toprule
+\textbf{特性} & \textbf{传统函数} & \textbf{协程} \\
+\midrule
+执行模型 & 调用$\to$执行$\to$返回（一次性） & 可多次挂起和恢复 \\
+状态管理 & 栈帧（调用结束即销毁） & 堆上的协程帧（跨挂起点保留） \\
+控制权转移 & 调用者完全让出 & 协程与调用者协作 \\
+典型用途 & 计算、转换 & 生成器、异步I/O、状态机 \\
+\bottomrule
+\end{longtable}
+
+\section{三个关键字}
+
+\cpp{}20协程通过三个关键字标识：
+
+\begin{itemize}[nosep]
+\item \texttt{co\_await}——挂起协程，等待一个异步操作完成。
+\item \texttt{co\_yield}——产出一个值并挂起协程（常用于生成器）。
+\item \texttt{co\_return}——结束协程并返回最终值。
+\end{itemize}
+
+只要函数体中出现任何一个关键字，该函数就自动成为协程。
+
+\begin{lstlisting}
+// 生成器：产出序列中的每个值
+Generator<int> fibonacci() {
+    int a = 0, b = 1;
+    while (true) {
+        co_yield a;          // 产出 a 并挂起
+        auto temp = a + b;
+        a = b;
+        b = temp;
+    }
+}
+
+// 异步任务：等待操作完成后返回值
+Task<int> fetch_data_async() {
+    auto data = co_await http_get("https://api.example.com");
+    co_return parse(data);   // 返回最终结果
+}
+\end{lstlisting}
+
+\begin{note}
+\cpp{}20协程是\textbf{无栈协程}（stackless coroutine）——每次挂起只保存当前挂起点的状态（类似状态机），而非整个调用栈。这与Go的goroutine（有栈协程）不同，意味着你不能在深层嵌套的调用中直接\texttt{co\_await}——整条调用链都必须是协程。
+\end{note}
+
+\begin{compare}
+\csharp{}的\texttt{async/await}也是无栈协程的实现，设计哲学高度一致。但\csharp{}的实现更"开箱即用"——编译器自动生成状态机，\texttt{Task}和\texttt{ValueTask}作为标准返回类型。\cpp{}则需要开发者自己实现\texttt{promise\_type}。
+
+\begin{lstlisting}[style=csharpstyle]
+// C# async/await - 开箱即用
+async Task<string> FetchDataAsync() {
+    using var client = new HttpClient();
+    var data = await client.GetStringAsync("https://api.example.com");
+    return ProcessData(data);
+}
+
+// C# 迭代器（类似 C++ co_yield 生成器）
+IEnumerable<int> Fibonacci() {
+    int a = 0, b = 1;
+    while (true) {
+        yield return a;
+        (a, b) = (b, a + b);
+    }
+}
+
+// C# 异步迭代器（结合 async 和 yield）
+async IAsyncEnumerable<int> AsyncFibonacci() {
+    int a = 0, b = 1;
+    while (true) {
+        await Task.Delay(100);
+        yield return a;
+        (a, b) = (b, a + b);
+    }
+}
+\end{lstlisting}
+\end{compare}
+
+% ───────────────────────────────────────────
+\chapter{协程机制深入：\texttt{promise\_type}与\texttt{coroutine\_handle}}
+% ───────────────────────────────────────────
+
+\section{协程的编译原理}
+
+当编译器遇到一个协程函数时，会将其转换为等价的状态机。大致等价于：
+
+\begin{lstlisting}
+// 编译器对协程的"去糖化"（伪代码）
+ReturnType coroutine_name(params...) {
+    // 1. 分配协程帧（coroutine frame）——通常在堆上
+    auto* frame = operator new(sizeof(CoroutineFrame));
+
+    // 2. 创建 promise 对象
+    frame->promise = PromiseType{};
+
+    // 3. 获取返回对象（通过 promise.get_return_object()）
+    auto return_obj = frame->promise.get_return_object();
+
+    // 4. 创建 coroutine_handle
+    auto handle = coroutine_handle<PromiseType>::from_promise(frame->promise);
+
+    // 5. 处理 initial_suspend
+    auto initial = frame->promise.initial_suspend();
+    if (initial.await_ready() == false) {
+        // 挂起，保存状态到帧
+        // 将恢复逻辑设置为"从第一个挂起点开始"
+    }
+
+    // 6. 执行协程体（在每个 co_await/co_yield 处有恢复点）
+    // ...
+
+    return return_obj; // NRVO
+}
+\end{lstlisting}
+
+\section{\texttt{promise\_type}：协程的定制点}
+
+每个协程都有一个关联的\texttt{promise\_type}，它控制协程的行为。开发者通过实现\texttt{promise\_type}来定制协程的语义。
+
+\begin{lstlisting}
+struct Generator {
+    struct promise_type {
+        int current_value_;
+
+        Generator get_return_object() {
+            return Generator{
+                std::coroutine_handle<promise_type>::from_promise(*this)
+            };
+        }
+
+        std::suspend_always initial_suspend() noexcept { return {}; }
+        std::suspend_always final_suspend() noexcept { return {}; }
+
+        std::suspend_always yield_value(int value) noexcept {
+            current_value_ = value;
+            return {};
+        }
+
+        void return_void() noexcept {}
+        void unhandled_exception() { std::terminate(); }
+    };
+
+    std::coroutine_handle<promise_type> handle_;
+
+    ~Generator() { if (handle_) handle_.destroy(); }
+    Generator(Generator&& other) noexcept
+        : handle_(std::exchange(other.handle_, {})) {}
+
+    // 迭代器接口
+    bool next() {
+        handle_.resume();
+        return !handle_.done();
+    }
+    int value() const { return handle_.promise().current_value_; }
+};
+\end{lstlisting}
+
+\subsection{\texttt{promise\_type}必须提供的接口}
+
+\begin{longtable}{lp{7cm}}
+\toprule
+\textbf{方法} & \textbf{作用} \\
+\midrule
+\texttt{get\_return\_object()} & 返回协程的返回对象（外部持有者） \\
+\texttt{initial\_suspend()} & 协程创建后是否立即挂起 \\
+\texttt{final\_suspend()} & 协程结束时是否挂起（而非销毁） \\
+\texttt{yield\_value(T)} & 处理\texttt{co\_yield}表达式 \\
+\texttt{return\_void()}或\texttt{return\_value(T)} & 处理\texttt{co\_return}表达式 \\
+\texttt{unhandled\_exception()} & 协程中抛出异常时的处理 \\
+\bottomrule
+\end{longtable}
+
+\section{\texttt{coroutine\_handle}：协程的控制句柄}
+
+\texttt{std::coroutine\_handle<PromiseType>}是操作协程实例的句柄，提供以下操作：
+
+\begin{lstlisting}
+#include <coroutine>
+
+void control_coroutine(std::coroutine_handle<MyPromise> h) {
+    if (!h.done()) {
+        h.resume();        // 恢复协程执行
+        // 等价于 h();
+    }
+
+    auto& promise = h.promise(); // 获取 promise 引用
+    // ...
+
+    h.destroy();           // 销毁协程帧（释放内存）
+}
+\end{lstlisting}
+
+\begin{warning}
+\texttt{coroutine\_handle}类似于裸指针——不调用\texttt{destroy()}就会内存泄漏。在\texttt{final\_suspend()}返回\texttt{suspend\_always}时，协程结束后必须显式销毁。忘记销毁是最常见的协程内存泄漏原因。
+\end{warning}
+
+\section{对称转移（Symmetric Transfer）}
+
+\cpp{}20协程支持\textbf{对称转移}——一个协程可以在挂起时直接恢复另一个协程，而不会增加调用栈深度。这是通过让\texttt{await\_suspend}返回\texttt{coroutine\_handle}实现的。
+
+\begin{lstlisting}
+struct SymmetricTransferAwaiter {
+    std::coroutine_handle<> target_;
+
+    bool await_ready() const noexcept { return false; }
+
+    // 返回 coroutine_handle 实现对称转移
+    std::coroutine_handle<> await_suspend(
+        std::coroutine_handle<> current) noexcept {
+        return target_; // 挂起当前协程，恢复 target 协程
+    }
+
+    void await_resume() noexcept {}
+};
+\end{lstlisting}
+
+\begin{note}
+对称转移避免了协程恢复时的栈增长问题。如果\texttt{await\_suspend}返回\texttt{void}，恢复的协程会在当前调用栈上执行，可能导致深层嵌套协程的栈溢出。返回\texttt{coroutine\_handle}则通过"尾调用"式的转移避免了这个问题。
+\end{note}
+
+% ───────────────────────────────────────────
+\chapter{Awaitable与Awaiter}
+% ───────────────────────────────────────────
+
+\section{三函数协议}
+
+\texttt{co\_await expr}的行为由\textbf{awaitable}对象上的三个函数决定：
+
+\begin{enumerate}[nosep]
+\item \texttt{await\_ready()}——如果返回\texttt{true}，跳过挂起，直接获取结果。
+\item \texttt{await\_suspend(handle)}——在挂起时调用，可以注册回调或安排异步操作。
+\item \texttt{await\_resume()}——恢复后调用，返回\texttt{co\_await}表达式的值。
+\end{enumerate}
+
+\begin{lstlisting}
+// 自定义 Awaiter 示例：异步计时器
+struct AsyncSleep {
+    std::chrono::milliseconds duration_;
+
+    bool await_ready() const noexcept { return duration_.count() == 0; }
+
+    void await_suspend(std::coroutine_handle<> h) const {
+        // 在后台线程中等待，然后恢复协程
+        std::jthread([h, d = duration_](std::stop_token) {
+            std::this_thread::sleep_for(d);
+            h.resume();
+        }).detach();
+    }
+
+    void await_resume() const noexcept {}
+};
+
+// 使用
+Task<void> delayed_greeting() {
+    std::cout << "Before sleep\n";
+    co_await AsyncSleep{std::chrono::seconds(2)};
+    std::cout << "After sleep\n";
+}
+\end{lstlisting}
+
+\section{可等待对象的查找规则}
+
+\texttt{co\_await expr}的解析顺序：
+
+\begin{enumerate}[nosep]
+\item 如果\texttt{promise\_type}有\texttt{await\_transform(expr)}，使用其返回值作为可等待对象。
+\item 如果可等待对象有\texttt{operator co\_await()}，使用返回的awaiter。
+\item 否则，可等待对象本身就是awaiter（必须提供三函数）。
+\end{enumerate}
+
+% ───────────────────────────────────────────
+\chapter{实用协程模式}
+% ───────────────────────────────────────────
+
+\section{Generator模式}
+
+生成器是最常见的协程应用之一——惰性产出序列中的值。
+
+\begin{lstlisting}
+template<typename T>
+class Generator {
+public:
+    struct promise_type {
+        T current_value_;
+        std::exception_ptr exception_;
+
+        Generator get_return_object() {
+            return Generator{Handle::from_promise(*this)};
+        }
+        std::suspend_always initial_suspend() noexcept { return {}; }
+        std::suspend_always final_suspend() noexcept { return {}; }
+        std::suspend_always yield_value(T value) {
+            current_value_ = std::move(value);
+            return {};
+        }
+        void return_void() noexcept {}
+        void unhandled_exception() {
+            exception_ = std::current_exception();
+        }
+    };
+
+    using Handle = std::coroutine_handle<promise_type>;
+
+    // 移动语义
+    Generator(Handle h) : handle_(h) {}
+    ~Generator() { if (handle_) handle_.destroy(); }
+    Generator(Generator&& o) noexcept
+        : handle_(std::exchange(o.handle_, {})) {}
+    Generator& operator=(Generator&& o) noexcept {
+        if (this != &o) {
+            if (handle_) handle_.destroy();
+            handle_ = std::exchange(o.handle_, {});
+        }
+        return *this;
+    }
+
+    // 范围 for 支持
+    struct Iterator {
+        Handle handle_;
+        bool operator!=(std::default_sentinel_t) const {
+            return handle_ && !handle_.done();
+        }
+        Iterator& operator++() {
+            handle_.resume();
+            if (handle_.promise().exception_)
+                std::rethrow_exception(handle_.promise().exception_);
+            return *this;
+        }
+        T operator*() const { return handle_.promise().current_value_; }
+    };
+
+    Iterator begin() {
+        handle_.resume();
+        if (handle_.promise().exception_)
+            std::rethrow_exception(handle_.promise().exception_);
+        return {handle_};
+    }
+    std::default_sentinel_t end() { return {}; }
+
+private:
+    Handle handle_;
+};
+\end{lstlisting}
+
+使用生成器：
+
+\begin{lstlisting}
+Generator<int> range(int start, int end) {
+    for (int i = start; i < end; ++i) {
+        co_yield i;
+    }
+}
+
+Generator<int> primes() {
+    co_yield 2;
+    for (int n = 3; ; n += 2) {
+        bool is_prime = true;
+        for (int d = 2; d * d <= n; ++d) {
+            if (n % d == 0) { is_prime = false; break; }
+        }
+        if (is_prime) co_yield n;
+    }
+}
+
+int main() {
+    for (int x : range(1, 10)) {
+        std::cout << x << ' ';
+    }
+    // 输出: 1 2 3 4 5 6 7 8 9
+
+    // 取前 5 个素数
+    int count = 0;
+    for (int p : primes()) {
+        std::cout << p << ' ';
+        if (++count >= 5) break;
+    }
+    // 输出: 2 3 5 7 11
+}
+\end{lstlisting}
+
+\section{Task模式：异步任务}
+
+Task协程封装异步操作，类似于\csharp{}的\texttt{Task<T>}。
+
+\begin{lstlisting}
+template<typename T = void>
+class Task {
+public:
+    struct promise_type {
+        std::optional<T> value_;
+        std::exception_ptr exception_;
+        std::coroutine_handle<> continuation_;
+
+        Task get_return_object() {
+            return Task{Handle::from_promise(*this)};
+        }
+        std::suspend_always initial_suspend() noexcept { return {}; }
+
+        // final_suspend 使用对称转移恢复等待者
+        auto final_suspend() noexcept {
+            struct FinalAwaiter {
+                bool await_ready() noexcept { return false; }
+                std::coroutine_handle<>
+                await_suspend(Handle h) noexcept {
+                    auto& p = h.promise();
+                    if (p.continuation_)
+                        return p.continuation_;
+                    return std::noop_coroutine();
+                }
+                void await_resume() noexcept {}
+            };
+            return FinalAwaiter{};
+        }
+
+        void return_value(T value) { value_ = std::move(value); }
+        void unhandled_exception() {
+            exception_ = std::current_exception();
+        }
+    };
+
+    using Handle = std::coroutine_handle<promise_type>;
+
+    // co_await 支持
+    bool await_ready() const { return handle_.done(); }
+    std::coroutine_handle<>
+    await_suspend(std::coroutine_handle<> caller) {
+        handle_.promise().continuation_ = caller;
+        return handle_; // 对称转移：恢复此 Task 协程
+    }
+    T await_resume() {
+        if (handle_.promise().exception_)
+            std::rethrow_exception(handle_.promise().exception_);
+        return std::move(*handle_.promise().value_);
+    }
+
+    // 同步阻塞获取结果
+    T get() {
+        handle_.resume();
+        if (handle_.promise().exception_)
+            std::rethrow_exception(handle_.promise().exception_);
+        return std::move(*handle_.promise().value_);
+    }
+
+    ~Task() { if (handle_) handle_.destroy(); }
+    Task(Task&& o) noexcept
+        : handle_(std::exchange(o.handle_, {})) {}
+
+private:
+    Handle handle_;
+};
+\end{lstlisting}
+
+使用Task：
+
+\begin{lstlisting}
+Task<int> compute_async(int x) {
+    co_await AsyncSleep{std::chrono::milliseconds(100)};
+    co_return x * x;
+}
+
+Task<int> chained_computation() {
+    int a = co_await compute_async(3);  // 9
+    int b = co_await compute_async(a);  // 81
+    co_return b + 1;                    // 82
+}
+
+int main() {
+    auto task = chained_computation();
+    std::cout << task.get() << '\n'; // 输出: 82
+}
+\end{lstlisting}
+
+\begin{compare}
+\csharp{}的\texttt{async Task<T>}无需手动实现状态机——编译器自动生成\texttt{IAsyncStateMachine}，运行时由\texttt{SynchronizationContext}和\texttt{TaskScheduler}管理调度。\cpp{}的\texttt{Task}模式需要完全手动实现\texttt{promise\_type}和调度逻辑，灵活但复杂得多。
+
+\begin{lstlisting}[style=csharpstyle]
+// C# Task - 编译器自动处理一切
+async Task<int> ComputeAsync(int x) {
+    await Task.Delay(100);
+    return x * x;
+}
+
+async Task<int> ChainedAsync() {
+    int a = await ComputeAsync(3);
+    int b = await ComputeAsync(a);
+    return b + 1;
+}
+
+int result = await ChainedAsync(); // 82
+\end{lstlisting}
+\end{compare}
+
+\section{\cpp{}23 \texttt{std::generator}}
+
+\cpp{}23标准库终于引入了\texttt{std::generator<T>}，无需手动实现\texttt{promise\_type}：
+
+\begin{lstlisting}
+#include <generator> // C++23
+
+std::generator<int> fibonacci() {
+    int a = 0, b = 1;
+    while (true) {
+        co_yield a;
+        auto temp = a + b;
+        a = b;
+        b = temp;
+    }
+}
+
+int main() {
+    for (int x : fibonacci() | std::views::take(10)) {
+        std::cout << x << ' ';
+    }
+}
+\end{lstlisting}
+
+\begin{note}
+\texttt{std::generator}支持递归\texttt{co\_yield}（通过\texttt{yield\_value}接受另一个\texttt{generator}），这在自定义实现中需要额外的工作。\cpp{}26的\texttt{std::execution}库进一步提供了\texttt{as\_awaitable}和\texttt{with\_awaitable\_senders}，使sender可以直接在协程中被\texttt{co\_await}。
+\end{note}
+
+% ═══════════════════════════════════════════════════════════════
+\part{\cpp{}26 \texttt{std::execution}（stdexec）}
+% ═══════════════════════════════════════════════════════════════
+
+\chapter{为什么需要\texttt{std::execution}}
+% ───────────────────────────────────────────
+
+\cpp{}26引入的\texttt{std::execution}库（源自P2300提案，原名为stdexec）是\cpp{}异步编程的一次范式革命。它解决了长期存在的几个核心问题：
+
+\section{\texttt{std::future}的局限}
+
+\cpp{}11的\texttt{future/promise/async}存在严重的性能问题：
+\begin{itemize}[nosep]
+\item 每次\texttt{std::async}调用都会分配堆内存（共享状态）。
+\item \texttt{future::get()}只能阻塞，无法组合。
+\item 没有取消机制（\cpp{}20之前）。
+\item 无法指定在哪个线程池/执行器上运行。
+\end{itemize}
+
+\section{协程的局限}
+
+\cpp{}20协程虽然强大，但：
+\begin{itemize}[nosep]
+\item 标准库没有提供标准\texttt{Task}类型——每个库各自实现，互不兼容。
+\item 协程需要运行时支持（堆分配协程帧），在某些嵌入式场景不可用。
+\item 协程无法描述\textbf{计算图}——多个异步操作的依赖和组合关系。
+\end{itemize}
+
+\section{Sender/Receiver模型}
+
+\texttt{std::execution}采用\textbf{Sender/Receiver}模型，核心思想是将异步计算描述为一棵\textbf{值传递的有向无环图}（DAG）：
+
+\begin{itemize}[nosep]
+\item \textbf{Sender}——描述"什么工作要做"，但不立即执行。
+\item \textbf{Receiver}——接收工作结果的回调（三个通道：value、error、stopped）。
+\item \textbf{Operation State}——\texttt{connect(sender, receiver)}的结果，持有执行所需的所有状态。
+\item \texttt{start(op\_state)}——真正开始执行。
+\end{itemize}
+
+这种设计使得编译器可以在编译时优化整个计算图，消除中间分配，实现零成本抽象。
+
+\begin{compare}
+\csharp{}的\texttt{Task}是\emph{hot}（创建即执行），而\cpp{}的sender是\emph{cold}（创建不执行，connect+start才执行）。这更接近\csharp{}中的\texttt{IObservable<T>}（Reactive Extensions）或\texttt{IAsyncEnumerable<T>}的延迟求值语义。
+
+\csharp{}生态中最接近sender/receiver的是TPL Dataflow的\texttt{ISourceBlock}/\texttt{ITargetBlock}，以及.NET 6+的\texttt{System.Threading.Channels}，但它们的粒度和编译时优化能力远不及\texttt{std::execution}。
+\end{compare}
+
+% ───────────────────────────────────────────
+\chapter{核心概念与API}
+% ───────────────────────────────────────────
+
+\section{Sender：异步工作描述}
+
+\texttt{sender}是异步工作的\emph{惰性描述}——它本身不执行任何操作，只描述"要做什么以及结果如何传递"。
+
+\begin{lstlisting}
+#include <execution>
+
+// just：创建一个立即完成的 sender
+auto s1 = std::execution::just(42);
+// s1 描述：立即向 receiver 的 value 通道发送 42
+
+auto s2 = std::execution::just("hello"s, 3.14);
+// s2 描述：立即发送两个值
+
+// just_error：创建一个立即失败的 sender
+auto s3 = std::execution::just_error(std::make_exception_ptr(
+    std::runtime_error("oops")));
+
+// just_stopped：创建一个立即取消的 sender
+auto s4 = std::execution::just_stopped();
+\end{lstlisting}
+
+\section{Receiver：三通道回调}
+
+Receiver是异步操作的\emph{消费者}，通过三个通道接收结果：
+
+\begin{lstlisting}
+struct MyReceiver {
+    // 成功：接收一个或多个值
+    void set_value(int result) && noexcept {
+        std::cout << "Got value: " << result << '\n';
+    }
+
+    // 失败：接收异常或错误
+    void set_error(std::exception_ptr e) && noexcept {
+        try { std::rethrow_exception(e); }
+        catch (const std::exception& ex) {
+            std::cout << "Error: " << ex.what() << '\n';
+        }
+    }
+
+    // 取消：操作被取消
+    void set_stopped() && noexcept {
+        std::cout << "Operation was stopped\n";
+    }
+};
+\end{lstlisting}
+
+\section{Connect与Start}
+
+\texttt{connect}将sender和receiver组合为\texttt{operation\_state}，\texttt{start}开始执行：
+
+\begin{lstlisting}
+#include <execution>
+
+auto sender = std::execution::just(42);
+MyReceiver receiver;
+
+// connect 创建 operation state（惰性，不执行）
+auto op = std::execution::connect(std::move(sender),
+                                  std::move(receiver));
+
+// start 真正开始执行
+std::execution::start(op);
+// 输出: Got value: 42
+\end{lstlisting}
+
+\section{\texttt{sync\_wait}：阻塞等待结果}
+
+\texttt{this\_thread::sync\_wait}是最常用的sender消费者——阻塞当前线程直到sender完成：
+
+\begin{lstlisting}
+#include <execution>
+#include <iostream>
+
+int main() {
+    auto sender = std::execution::just(1)
+        | std::execution::then([](int x) { return x + 1; })
+        | std::execution::then([](int x) { return x * 3; });
+
+    // sync_wait 返回 std::optional<std::tuple<T...>>
+    auto [result] = std::this_thread::sync_wait(std::move(sender)).value();
+    std::cout << result << '\n'; // 输出: 6
+}
+\end{lstlisting}
+
+\begin{note}
+\texttt{sync\_wait}返回\texttt{optional}——如果sender通过stopped通道完成（被取消），则返回\texttt{nullopt}。
+\end{note}
+
+% ───────────────────────────────────────────
+\chapter{Sender适配器：组合异步工作}
+% ───────────────────────────────────────────
+
+\texttt{std::execution}的强大之处在于通过适配器（adaptor）组合sender，构建复杂的异步计算图。所有适配器都支持管道（\texttt{|}）语法。
+
+\section{\texttt{then}：值转换}
+
+\texttt{then}在上一个sender的值上应用一个函数，产生新的值：
+
+\begin{lstlisting}
+auto pipeline = std::execution::just(5)
+    | std::execution::then([](int x) {
+          return x * x;      // 25
+      })
+    | std::execution::then([](int x) {
+          return std::to_string(x); // "25"
+      })
+    | std::execution::then([](std::string s) {
+          return "Result: " + s;    // "Result: 25"
+      });
+
+auto [result] = std::this_thread::sync_wait(std::move(pipeline)).value();
+// result == "Result: 25"
+\end{lstlisting}
+
+\section{\texttt{let\_value}：链接异步操作}
+
+\texttt{then}只能做同步转换。如果转换函数本身返回一个sender（即需要链接另一个异步操作），就要使用\texttt{let\_value}：
+
+\begin{lstlisting}
+// 模拟异步文件读取
+auto read_file_async(std::string path);  // 返回 sender<std::string>
+auto process_async(std::string data);    // 返回 sender<int>
+
+auto pipeline = std::execution::just("data.txt"s)
+    | std::execution::let_value([](std::string& path) {
+          return read_file_async(path);   // 返回新的 sender
+      })
+    | std::execution::let_value([](std::string& content) {
+          return process_async(content);  // 再链接一个 sender
+      });
+\end{lstlisting}
+
+\begin{note}
+\texttt{let\_value}与\texttt{then}的关系类似于Haskell中\texttt{>>=}（bind）与\texttt{fmap}的关系。\texttt{then}是\texttt{fmap}——在值上应用函数；\texttt{let\_value}是\texttt{>>=}——在值上应用返回sender的函数（flat map）。
+\end{note}
+
+\section{\texttt{upon\_error}与\texttt{let\_error}：错误处理}
+
+\begin{lstlisting}
+auto pipeline = std::execution::just(10)
+    | std::execution::then([](int x) -> int {
+          if (x == 0) throw std::runtime_error("division by zero");
+          return 100 / x;
+      })
+    | std::execution::upon_error([](std::exception_ptr e) {
+          // 错误恢复：返回默认值
+          try { std::rethrow_exception(e); }
+          catch (const std::exception& ex) {
+              std::cerr << "Recovered: " << ex.what() << '\n';
+          }
+          return -1; // 恢复后的值
+      });
+\end{lstlisting}
+
+\section{\texttt{when\_all}：并行组合}
+
+\texttt{when\_all}同时启动多个sender，等所有完成后合并结果：
+
+\begin{lstlisting}
+auto s1 = std::execution::just(1)
+    | std::execution::then([](int x) {
+          std::this_thread::sleep_for(std::chrono::seconds(1));
+          return x + 10;
+      });
+
+auto s2 = std::execution::just(2)
+    | std::execution::then([](int x) {
+          std::this_thread::sleep_for(std::chrono::seconds(1));
+          return x + 20;
+      });
+
+auto s3 = std::execution::just(3)
+    | std::execution::then([](int x) {
+          std::this_thread::sleep_for(std::chrono::seconds(1));
+          return x + 30;
+      });
+
+// 三个操作并行执行，总耗时约 1 秒（而非 3 秒）
+auto [r1, r2, r3] = std::this_thread::sync_wait(
+    std::execution::when_all(std::move(s1), std::move(s2), std::move(s3))
+).value();
+
+// r1 == 11, r2 == 22, r3 == 33
+\end{lstlisting}
+
+\section{\texttt{stopped\_as\_optional}与\texttt{stopped\_as\_error}}
+
+将stopped（取消）通道映射为其他通道：
+
+\begin{lstlisting}
+// 将 stopped 映射为 std::nullopt
+auto s1 = some_sender | std::execution::stopped_as_optional();
+// 值通道变为 std::optional<T>，取消时返回 nullopt
+
+// 将 stopped 映射为 error
+auto s2 = some_sender | std::execution::stopped_as_error(
+    std::make_exception_ptr(std::runtime_error("cancelled")));
+\end{lstlisting}
+
+\begin{compare}
+\csharp{}的\texttt{Task}组合方式对比：
+
+\begin{longtable}{ll}
+\toprule
+\textbf{\texttt{std::execution}} & \textbf{\csharp{} Task} \\
+\midrule
+\texttt{just(v)} & \texttt{Task.FromResult(v)} \\
+\texttt{then(f)} & \texttt{await task; f(result)} 或 \texttt{task.ContinueWith(f)} \\
+\texttt{let\_value(f)} & \texttt{await f(await task)} \\
+\texttt{upon\_error(f)} & \texttt{try/catch} 块 \\
+\texttt{when\_all(...)} & \texttt{Task.WhenAll(...)} \\
+\texttt{bulk(shape, f)} & \texttt{Parallel.For / Partitioner} \\
+\texttt{sync\_wait(s)} & \texttt{task.GetAwaiter().GetResult()} \\
+\bottomrule
+\end{longtable}
+
+关键区别：\cpp{}的sender管道在编译时完全展开和内联（零成本抽象），\csharp{}的\texttt{Task}链在运行时通过\texttt{async}状态机执行。
+\end{compare}
+
+% ───────────────────────────────────────────
+\chapter{调度器与执行上下文}
+% ───────────────────────────────────────────
+
+\section{调度器（Scheduler）}
+
+\texttt{scheduler}是执行资源的轻量级句柄——它不拥有线程，只代表"在哪里执行"的概念。
+
+\begin{lstlisting}
+#include <execution>
+
+std::execution::run_loop loop;
+
+// 获取调度器
+std::execution::scheduler auto sched = loop.get_scheduler();
+
+// 在调度器上创建 sender
+auto s = std::execution::schedule(sched);
+// s 描述："在 sched 代表的执行资源上开始执行"
+\end{lstlisting}
+
+\section{\texttt{run\_loop}：手动事件循环}
+
+\texttt{run\_loop}是一个简单的MPSC（多生产者单消费者）任务队列，提供手动驱动的事件循环：
+
+\begin{lstlisting}
+#include <execution>
+#include <thread>
+#include <iostream>
+
+int main() {
+    std::execution::run_loop loop;
+
+    // 在工作线程上运行事件循环
+    std::jthread worker([&](std::stop_token st) {
+        std::stop_callback cb(st, [&] { loop.finish(); });
+        loop.run(); // 阻塞直到 finish() 被调用
+    });
+
+    auto io_sched = loop.get_scheduler();
+
+    // 在 io 线程上执行工作
+    auto work = std::execution::schedule(io_sched)
+        | std::execution::then([] {
+              std::cout << "Running on IO thread, id: "
+                        << std::this_thread::get_id() << '\n';
+              return 42;
+          });
+
+    auto [result] = std::this_thread::sync_wait(std::move(work)).value();
+    std::cout << "Result: " << result << '\n';
+    // worker 析构时触发 stop_callback，loop.finish()，线程退出
+}
+\end{lstlisting}
+
+\section{执行转移：\texttt{starts\_on}、\texttt{continues\_on}、\texttt{on}}
+
+\begin{lstlisting}
+auto main_sched = /* 主线程调度器 */;
+auto io_sched = /* IO 线程池调度器 */;
+auto compute_sched = /* 计算线程池调度器 */;
+
+auto pipeline = std::execution::schedule(io_sched)
+    | std::execution::then([] {
+          // 在 IO 线程上执行：读取文件
+          return read_file("config.json");
+      })
+    | std::execution::continues_on(compute_sched) // 切换到计算线程
+    | std::execution::then([](std::string content) {
+          // 在计算线程上执行：解析 JSON
+          return parse_json(content);
+      })
+    | std::execution::continues_on(main_sched) // 切换回主线程
+    | std::execution::then([](Config config) {
+          // 在主线程上执行：更新 UI
+          update_ui(config);
+      });
+\end{lstlisting}
+
+\begin{itemize}[nosep]
+\item \texttt{starts\_on(sched, sender)}——让sender在指定调度器上开始执行。
+\item \texttt{continues\_on(sched)}——将后续操作转移到指定调度器上完成。
+\item \texttt{on(sched, sender)}——在指定调度器上执行sender，完成后回到原始调度器。
+\end{itemize}
+
+\begin{compare}
+\csharp{}中通过\texttt{TaskScheduler}和\texttt{SynchronizationContext}控制执行位置：
+
+\begin{lstlisting}[style=csharpstyle]
+// 在 ThreadPool 上执行
+var data = await Task.Run(() => File.ReadAllText("config.json"));
+
+// 回到 UI 线程（WPF/WinForms 自动通过 SynchronizationContext 处理）
+var config = ParseJson(data);
+UpdateUI(config);
+
+// 显式指定调度器
+await Task.Factory.StartNew(
+    () => HeavyComputation(),
+    CancellationToken.None,
+    TaskCreationOptions.LongRunning,
+    customScheduler);
+\end{lstlisting}
+
+\csharp{}的\texttt{ConfigureAwait(false)}用于避免回到原始\texttt{SynchronizationContext}（库代码中使用），类似于\cpp{}中不指定\texttt{continues\_on}的行为。
+\end{compare}
+
+% ───────────────────────────────────────────
+\chapter{批量执行与并行算法}
+% ───────────────────────────────────────────
+
+\section{\texttt{bulk}：并行批处理}
+
+\texttt{bulk}将一个操作在多个索引上并行执行，类似于并行for循环：
+
+\begin{lstlisting}
+#include <execution>
+#include <vector>
+
+int main() {
+    std::vector<double> data(10000);
+
+    auto pipeline = std::execution::just()
+        | std::execution::bulk(10000,
+              [&data](int i) {
+                  data[i] = std::sin(i * 0.001);
+              });
+
+    std::this_thread::sync_wait(std::move(pipeline));
+    // data 现在包含 10000 个 sin 值
+}
+\end{lstlisting}
+
+\section{实际场景：并行HTTP请求}
+
+\begin{lstlisting}
+#include <execution>
+#include <vector>
+#include <string>
+
+// 假设已有异步 HTTP 客户端
+auto http_get_async(std::string url); // -> sender<std::string>
+
+int main() {
+    std::vector<std::string> urls = {
+        "https://api.example.com/users",
+        "https://api.example.com/posts",
+        "https://api.example.com/comments",
+    };
+
+    // 并行发起所有请求
+    auto requests = urls | std::views::transform([](const auto& url) {
+        return http_get_async(url);
+    });
+
+    // when_all 并行等待所有请求
+    auto all_responses = std::execution::when_all(
+        std::move(requests[0]),
+        std::move(requests[1]),
+        std::move(requests[2])
+    );
+
+    auto results = std::this_thread::sync_wait(std::move(all_responses));
+}
+\end{lstlisting}
+
+% ───────────────────────────────────────────
+\chapter{与协程的互操作}
+% ───────────────────────────────────────────
+
+\texttt{std::execution}与\cpp{}20协程可以无缝互操作——sender可以在协程中被\texttt{co\_await}，协程也可以产生sender。
+
+\section{\texttt{as\_awaitable}：在协程中等待Sender}
+
+\begin{lstlisting}
+#include <execution>
+
+// 在协程中直接 co_await sender
+Task<int> compute_with_execution() {
+    auto s = std::execution::just(10)
+        | std::execution::then([](int x) { return x * 2; });
+
+    // as_awaitable 将 sender 转换为可等待对象
+    int result = co_await std::execution::as_awaitable(
+        std::move(s), co_await std::execution::get_stop_token{});
+    co_return result; // 20
+}
+\end{lstlisting}
+
+\section{\texttt{with\_awaitable\_senders}：简化协程集成}
+
+通过让\texttt{promise\_type}继承\texttt{with\_awaitable\_senders}，协程可以直接\texttt{co\_await}任何sender，无需显式调用\texttt{as\_awaitable}：
+
+\begin{lstlisting}
+template<typename T = void>
+class Task {
+public:
+    struct promise_type : std::execution::with_awaitable_senders<promise_type> {
+        // ... 其余 promise_type 接口 ...
+        // 继承 with_awaitable_senders 后，
+        // co_await sender 自动工作
+    };
+};
+
+// 现在可以直接 co_await sender
+Task<std::string> fetch_and_process() {
+    auto data = co_await (
+        std::execution::just("input"s)
+        | std::execution::then([](std::string s) {
+              return s + " processed";
+          })
+    );
+    co_return data;
+}
+\end{lstlisting}
+
+\begin{bestpractice}
+在\cpp{}26及以后的项目中，推荐的异步编程模式是：
+\begin{enumerate}[nosep]
+\item 使用\texttt{std::execution}的sender描述异步计算图（库层面、可组合）。
+\item 在需要顺序逻辑的顶层使用协程+\texttt{co\_await}（应用层面、可读性）。
+\item 使用\texttt{with\_awaitable\_senders}桥接两者。
+\end{enumerate}
+\end{bestpractice}
+
+\begin{compare}
+在\csharp{}中，\texttt{async/await}和\texttt{Task}是统一的——不需要在"描述式异步"和"协程式异步"之间选择。\csharp{}的\texttt{Task}既是执行单元又是\texttt{await}的目标。
+
+\cpp{}26的sender/receiver更接近函数式编程的\emph{描述-执行分离}：先构建计算图，再选择执行策略。这赋予了更高的灵活性（可替换调度器、取消传播、编译时优化），但增加了概念复杂度。
+
+\begin{lstlisting}[style=csharpstyle]
+// C# 统一模型：Task 既是描述也是执行
+async Task ProcessAllAsync() {
+    var users = await FetchUsersAsync();
+    var posts = await FetchPostsAsync();
+    // Task.WhenAll 并行执行
+    var (comments, likes) = await (
+        FetchCommentsAsync(),
+        FetchLikesAsync()
+    ); // C# 元组解构 + 并行 await
+}
+\end{lstlisting}
+\end{compare}
+
+% ───────────────────────────────────────────
+\chapter{取消与错误传播}
+% ───────────────────────────────────────────
+
+\section{与\texttt{stop\_token}的集成}
+
+\texttt{std::execution}原生支持\cpp{}20的\texttt{stop\_token}。停止请求通过receiver的\textbf{environment}向下传播：
+
+\begin{lstlisting}
+#include <execution>
+#include <stop_token>
+
+int main() {
+    std::stop_source source;
+
+    // 创建带 stop_token 的环境
+    auto env = std::execution::env(
+        std::execution::prop{
+            std::execution::get_stop_token,
+            source.get_token()
+        }
+    );
+
+    auto long_work = std::execution::just()
+        | std::execution::then([] {
+              // 长时间运行的工作
+              std::this_thread::sleep_for(std::chrono::seconds(10));
+              return 42;
+          });
+
+    // 在另一个线程上请求取消
+    std::jthread canceller([&source] {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        source.request_stop(); // 取消请求自动传播到 sender 管道
+    });
+
+    // sync_wait 会响应取消
+    auto result = std::this_thread::sync_wait(std::move(long_work));
+    if (!result) {
+        std::cout << "Operation was cancelled\n";
+    }
+}
+\end{lstlisting}
+
+\section{错误在管道中的传播}
+
+错误通过\textbf{error通道}自动在sender管道中传播，直到被\texttt{upon\_error}或\texttt{let\_error}处理：
+
+\begin{lstlisting}
+auto pipeline = std::execution::just(0)
+    | std::execution::then([](int x) {
+          return 100 / x; // 除以零 => 异常
+      })
+    | std::execution::then([](int x) {
+          // 永远不会执行——错误已传播
+          return x + 1;
+      })
+    | std::execution::let_error([](std::exception_ptr e) {
+          // 错误恢复
+          try { std::rethrow_exception(e); }
+          catch (const std::exception& ex) {
+              std::cerr << "Caught: " << ex.what() << '\n';
+          }
+          return std::execution::just(-1); // 恢复为正常值
+      });
+
+auto [result] = std::this_thread::sync_wait(std::move(pipeline)).value();
+// result == -1
+\end{lstlisting}
+
+\begin{compare}
+\csharp{}的异常传播在\texttt{async/await}中自然工作（\texttt{try/catch}包裹\texttt{await}即可）。\texttt{Task}的异常通过\texttt{AggregateException}聚合。\cpp{}的sender模型显式区分value/error/stopped三个通道，错误处理更加结构化，但需要显式使用适配器。
+\end{compare}
+
+% ═══════════════════════════════════════════════════════════════
+\part{总结与对比}
+% ═══════════════════════════════════════════════════════════════
+
+\chapter{\cpp{}线程与协程演进总览}
+
+\section{特性演进时间线}
+
+\begin{longtable}{llp{6cm}}
+\toprule
+\textbf{标准} & \textbf{特性} & \textbf{核心能力} \\
+\midrule
+\cpp{}11 & \texttt{std::thread}, mutex, atomic, future & 基本多线程与同步 \\
+\cpp{}14 & \texttt{shared\_mutex} (shared lock) & 读写锁 \\
+\cpp{}17 & \texttt{scoped\_lock}, \texttt{shared\_mutex}正式化 & 更安全的多锁管理 \\
+\cpp{}20 & \texttt{jthread}, stop\_token & 自动join + 协作式取消 \\
+\cpp{}20 & 协程 (co\_await/yield/return) & 语言级无栈协程 \\
+\cpp{}23 & \texttt{std::generator} & 标准生成器类型 \\
+\cpp{}26 & \texttt{std::execution} (sender/receiver) & 可组合异步计算图 \\
+\bottomrule
+\end{longtable}
+
+\section{\cpp{}与\csharp{}异步编程全面对比}
+
+\begin{longtable}{p{3.5cm}p{4.5cm}p{4.5cm}}
+\toprule
+\textbf{维度} & \textbf{\cpp{}} & \textbf{\csharp{}} \\
+\midrule
+线程创建 & \texttt{std::thread/jthread} & \texttt{Thread}, \texttt{Task.Run} \\
+协作式取消 & \texttt{stop\_token/source} & \texttt{CancellationToken} \\
+互斥同步 & \texttt{mutex + lock\_guard} & \texttt{lock + Monitor} \\
+原子操作 & \texttt{atomic<T>} & \texttt{Interlocked} \\
+条件等待 & \texttt{condition\_variable} & \texttt{Monitor.Wait/Pulse} \\
+异步返回值 & \texttt{future<T>} / sender & \texttt{Task<T>} \\
+异步组合 & sender管道 (\texttt{| then}) & \texttt{async/await} \\
+并行等待 & \texttt{when\_all} & \texttt{Task.WhenAll} \\
+异步迭代 & 协程 + \texttt{generator} & \texttt{IAsyncEnumerable} \\
+取消传播 & environment + stop\_token & CancellationToken自动传递 \\
+执行调度 & scheduler + \texttt{continues\_on} & \texttt{TaskScheduler} \\
+错误处理 & error通道 + \texttt{upon\_error} & \texttt{try/catch + AggregateException} \\
+\bottomrule
+\end{longtable}
+
+\section{选型建议}
+
+\begin{bestpractice}
+\textbf{简单并发}（几个独立任务）：使用\texttt{jthread} + \texttt{stop\_token}。
+
+\textbf{异步I/O与事件驱动}：使用\cpp{}20协程或\cpp{}26 \texttt{std::execution}。
+
+\textbf{可组合异步管道}：使用\texttt{std::execution}的sender管道。
+
+\textbf{数据并行/批处理}：使用\texttt{bulk}或传统\texttt{std::for\_each} + 执行策略。
+
+\textbf{实时系统/嵌入式}：使用\texttt{jthread} + \texttt{atomic}，避免堆分配。
+\end{bestpractice}
+
+\backmatter
+
+\printindex
+
+\end{document}

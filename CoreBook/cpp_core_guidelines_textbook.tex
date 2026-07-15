@@ -1,0 +1,739 @@
+% ============================================================
+% C++ 核心指南详解 — 主文档
+% 基于 ISO C++ Core Guidelines
+% ============================================================
+
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+% ---- listing style ----
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,
+    ifstream,ofstream,fstream,iostream,
+    ostream,istream,stringstream,ostringstream,
+    path,filesystem},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+\lstset{style=cppstyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,
+  title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,
+  title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,
+  title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,
+  title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,
+  title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={C++ Core Guidelines Reference},
+  pdftitle={C++ 核心指南详解},
+}
+
+\usepackage{makeidx}
+\makeindex
+
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+\newcommand{\guideline}[1]{\textbf{\textcolor{blue!70!black}{#1}}}
+
+% CoreBook 特有关键要点框
+\newtcolorbox{keypoint}{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  boxed title style={colback=blue!75!black},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ====================================================================
+\begin{document}
+
+% ------------------------------------------------------------
+% 封面
+% ------------------------------------------------------------
+\begin{titlepage}
+\centering
+
+\vspace*{3cm}
+
+{\Huge\bfseries\color{blue!60!black} C\texttt{++} 核心指南详解\par}
+
+\vspace{1.2cm}
+
+{\LARGE\color{blue!40!black} 基于 ISO C\texttt{++} Core Guidelines\par}
+
+\vspace{2cm}
+
+\tikzset{
+  guidelineline/.style={
+    draw=blue!60!black,
+    line width=1.2pt
+  }
+}
+\noindent\makebox[\textwidth]{\color{blue!60!black}\rule{0.6\textwidth}{1.2pt}}
+
+\vspace{2cm}
+
+{\large 面向现代 C\texttt{++} 开发者的权威参考\par}
+
+\vspace{0.6cm}
+
+{\large 涵盖类型安全、所有权、并发、错误处理等核心主题\par}
+
+\vspace{3cm}
+
+{\large\itshape \today\par}
+
+\vfill
+
+{\small\color{gray} 本书基于 Bjarne Stroustrup 与 Herb Sutter 维护的\\
+C\texttt{++} Core Guidelines 社区项目编写\par}
+
+\end{titlepage}
+
+% ------------------------------------------------------------
+% 前言
+% ------------------------------------------------------------
+\frontmatter
+
+\chapter{前言}
+
+C\texttt{++} 是一门历史悠久且持续演进的编程语言。自 2011 年 C\texttt{++}11 标准发布以来，语言本身经历了深刻的变革——移动语义、智能指针、Lambda 表达式、概念（Concepts）、协程（Coroutines）等现代特性的引入，使得 C\texttt{++} 的编程范式与最佳实践发生了根本性的变化。
+
+然而，语言的演进并不意味着旧有的编程习惯会自动消失。大量项目仍然使用着过时的模式，许多开发者对新特性的理解也参差不齐。正是在这一背景下，Bjarne Stroustrup 与 Herb Sutter 于 2015 年发起了 C\texttt{++} Core Guidelines 项目，旨在为社区提供一套经过实践检验的、可被工具自动检查的编程规范。
+
+本书是对 C\texttt{++} Core Guidelines 的系统性解读。我们不仅逐条阐释指南中的核心规则，还结合大量实际代码示例，展示如何在真实项目中应用这些规则。本书的目标是：
+
+\begin{itemize}
+  \item 帮助读者理解每条规则背后的设计哲学与技术原因；
+  \item 通过正反两方面的代码示例，让读者直观感受规则的价值；
+  \item 提供从旧式 C\texttt{++} 向现代 C\texttt{++} 渐进迁移的实用建议；
+  \item 为团队制定编码规范提供参考框架。
+\end{itemize}
+
+\section*{如何使用本书}
+
+本书按照主题分为多个部分，每部分包含若干章节。各部分之间相对独立，读者可以根据自己的需要选择阅读顺序。建议初学者从第一部分开始按序阅读；有经验的开发者可以直接跳到感兴趣的主题。
+
+每条规则的讲解遵循统一的格式：首先给出规则的核心思想，然后通过代码示例展示正确与错误的做法，最后讨论规则的适用场景与例外情况。
+
+\section*{约定}
+
+\begin{itemize}
+  \item \textbf{推荐做法}：用绿色边框的代码块表示。
+  \item \textbf{错误做法}：用红色边框的代码块表示。
+  \item 规则编号采用原指南的编号体系，如 \texttt{R.1}、\texttt{ES.5} 等。
+  \item 书中代码默认使用 C\texttt{++}17 标准，除非另有说明。
+\end{itemize}
+
+% ------------------------------------------------------------
+% 目录
+% ------------------------------------------------------------
+\tableofcontents
+
+% ------------------------------------------------------------
+% 正文
+% ------------------------------------------------------------
+\mainmatter
+
+\input{latex_part1.tex}
+
+\input{latex_part2.tex}
+
+% ============================================================
+% 附录
+% ============================================================
+\appendix
+
+% ------------------------------------------------------------
+% 附录 A: 术语表
+% ------------------------------------------------------------
+\chapter{核心术语表}
+
+本附录收录了本书及 C\texttt{++} Core Guidelines 中的关键术语，供读者查阅。
+
+\begin{longtable}{>{\bfseries}p{4cm} p{10cm}}
+\toprule
+\textbf{术语} & \textbf{释义} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{术语} & \textbf{释义} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+RAII & Resource Acquisition Is Initialization（资源获取即初始化）。将资源的生命周期绑定到局部对象的生命周期，利用构造/析构机制自动管理资源。\\[6pt]
+类型安全 (Type Safety) & 保证每个对象仅按照其类型所允许的方式被访问和操作，避免类型混淆导致的未定义行为。\\[6pt]
+边界安全 (Bounds Safety) & 保证对数组、容器等序列的访问不超出其有效范围，防止缓冲区溢出。\\[6pt]
+生命周期安全 (Lifetime Safety) & 保证对对象的引用或指针不会在对象被销毁后继续使用，避免悬空引用。\\[6pt]
+所有权 (Ownership) & 明确谁负责在何时释放资源。现代 C\texttt{++} 通过智能指针（\texttt{unique\_ptr}、\texttt{shared\_ptr}）在类型系统中表达所有权语义。\\[6pt]
+移动语义 (Move Semantics) & 通过右值引用（\texttt{\&\&}）和移动构造/赋值，将资源从即将销毁的对象高效地转移到新对象，避免不必要的深拷贝。\\[6pt]
+零规则 (Rule of Zero) & 如果一个类不需要自定义析构函数，则通常也不需要自定义拷贝/移动构造和赋值运算符。优先使用 RAII 成员让编译器自动生成的特殊成员函数完成工作。\\[6pt]
+五规则 (Rule of Five) & 如果自定义了析构函数、拷贝构造、拷贝赋值、移动构造、移动赋值中的任何一个，通常需要定义全部五个。\\[6pt]
+SFINAE & Substitution Failure Is Not An Error（替换失败不是错误）。模板元编程中的核心机制，允许在模板参数替换失败时优雅地回退而非报错。\\[6pt]
+概念 (Concepts) & C\texttt{++}20 引入的语言特性，用于对模板参数施加约束，使模板接口更加清晰、错误信息更加友好。\\[6pt]
+不变式 (Invariant) & 在对象的生命周期中始终为真的条件。良好的类设计应确保构造后建立不变式，并在所有公开操作中维护不变式。\\[6pt]
+前置条件 (Precondition) & 调用函数之前必须满足的条件。由调用者负责保证。\\[6pt]
+后置条件 (Postcondition) & 函数执行完毕后保证成立的条件。由被调用函数负责保证。\\[6pt]
+未定义行为 (UB) & Undefined Behavior。C\texttt{++} 标准未规定其行为的操作。一旦发生 UB，程序的任何结果都是不可预测的。\\[6pt]
+SL 系列规则 & Standard-library 系列规则，涉及标准库的使用建议。\\[6pt]
+ES 系列规则 & Expressions and Statements 系列规则，涉及表达式和语句的编写建议。\\[6pt]
+F 系列规则 & Functions 系列规则，涉及函数设计的建议。\\[6pt]
+C 系列规则 & Classes and Class Hierarchies 系列规则，涉及类与类层次设计的建议。\\[6pt]
+Con 系列规则 & Concurrency 系列规则，涉及并发编程的建议。\\[6pt]
+R 系列规则 & Resource Management 系列规则，涉及资源管理的建议。\\[6pt]
+E 系列规则 & Error Handling 系列规则，涉及错误处理的建议。\\[6pt]
+P 系列规则 & Philosophical rules，涉及编程哲学的高层原则。\\[6pt]
+\end{longtable}
+
+% ------------------------------------------------------------
+% 附录 B: 推荐阅读
+% ------------------------------------------------------------
+\chapter{推荐阅读}
+
+以下书籍与资源是深入理解 C\texttt{++} Core Guidelines 及其背后设计理念的重要参考资料。
+
+\section*{核心参考}
+
+\begin{enumerate}[label=\textbf{[\arabic*]}]
+  \item Bjarne Stroustrup. \textit{The C\texttt{++} Programming Language, 4th Edition}. Addison-Wesley, 2013.\\
+  C\texttt{++} 之父撰写的权威参考，全面覆盖 C\texttt{++}11 标准。
+
+  \item Bjarne Stroustrup. \textit{A Tour of C\texttt{++}, 3rd Edition}. Addison-Wesley, 2022.\\
+  简明扼要的现代 C\texttt{++} 导览，适合快速了解 C\texttt{++}17/20 的核心特性。
+
+  \item Scott Meyers. \textit{Effective Modern C\texttt{++}}. O'Reilly Media, 2014.\\
+  针对 C\texttt{++}11/14 的 42 条具体建议，与核心指南高度互补。
+
+  \item Herb Sutter, Andrei Alexandrescu. \textit{C\texttt{++} Coding Standards}. Addison-Wesley, 2004.\\
+  核心指南的前身之一，101 条编码规范。
+\end{enumerate}
+
+\section*{进阶阅读}
+
+\begin{enumerate}[label=\textbf{[\arabic*]}, start=5]
+  \item Scott Meyers. \textit{Effective C\texttt{++}, 3rd Edition}. Addison-Wesley, 2005.\\
+  经典 C\texttt{++} 最佳实践，虽然基于 C\texttt{++}03，但核心理念仍然适用。
+
+  \item Nicolai M. Josuttis. \textit{The C\texttt{++} Standard Library, 2nd Edition}. Addison-Wesley, 2012.\\
+  标准库的百科全书式参考，涵盖 C\texttt{++}11 标准库。
+
+  \item Anthony Williams. \textit{C\texttt{++} Concurrency in Action, 2nd Edition}. Manning, 2019.\\
+  并发编程的权威指南，覆盖 C\texttt{++}17 内存模型与线程库。
+
+  \item Marc Gregoire. \textit{Professional C\texttt{++}, 5th Edition}. Wrox, 2021.\\
+  全面覆盖 C\texttt{++}20 特性的专业参考书。
+\end{enumerate}
+
+\section*{在线资源}
+
+\begin{itemize}
+  \item \href{https://isocpp.github.io/CppCoreGuidelines/}{C\texttt{++} Core Guidelines 官方文档}
+  \item \href{https://en.cppreference.com/}{cppreference.com --- C\texttt{++} 标准参考}
+  \item \href{https://godbolt.org/}{Compiler Explorer (Godbolt) --- 在线编译器}
+  \item \href{https://clang.llvm.org/extra/clang-tidy/}{clang-tidy --- 静态分析工具（支持部分核心指南检查）}
+\end{itemize}
+
+% ------------------------------------------------------------
+% 附录 C: 规则索引
+% ------------------------------------------------------------
+\chapter{规则索引}
+
+本附录按照规则编号列出所有在本书中讲解的核心指南规则，并标注其所在章节，方便读者快速查找。
+
+\section*{P 系列：哲学规则}
+
+\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+P.1 & 直接表达意图 & 第 2 章 \\
+P.2 & 尽量用 ISO C\texttt{++} 编写 & 第 2 章 \\
+P.3 & 表达意图 & 第 2 章 \\
+P.4 & 理想情况下，程序应该是静态类型安全的 & 第 2 章 \\
+P.5 & 编译时能检查的东西不要留到运行时 & 第 2 章 \\
+P.6 & 无法在编译时检查的内容应在运行时检查 & 第 2 章 \\
+P.7 & 尽早捕获运行时错误 & 第 2 章 \\
+P.8 & 不泄漏任何资源 & 第 2 章 \\
+P.9 & 不要浪费资源 & 第 2 章 \\
+P.10 & 优先使用默认值而非引用传递 & 第 2 章 \\
+P.11 & 不在程序中隐藏指针 & 第 2 章 \\
+\end{longtable}
+
+\section*{ES 系列：表达式与语句}
+
+\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+ES.1 & 适当时使用抽象，避免使用原始语言特性 & 第 3 章 \\
+ES.2 & 适当时使用抽象，避免使用原始语言特性 & 第 3 章 \\
+ES.3 & 不要重复自己，避免冗余 & 第 3 章 \\
+ES.5 & 避免使用宏 & 第 3 章 \\
+ES.10 & 不要在同一表达式中初始化多个变量 & 第 3 章 \\
+ES.11 & 用 \texttt{auto} 避免冗余的类型重复 & 第 3 章 \\
+ES.20 & 始终初始化对象 & 第 3 章 \\
+ES.21 & 不要在声明或初始化之前使用变量 & 第 3 章 \\
+ES.22 & 不要在拥有未初始化的变量时声明函数 & 第 3 章 \\
+ES.23 & 保留 \texttt{\{\}} 初始化列表语法 & 第 3 章 \\
+ES.24 & 使用 \texttt{unique\_ptr} 或 \texttt{shared\_ptr} 管理堆上对象 & 第 3 章 \\
+ES.25 & 不要在函数中声明同名变量来隐藏外层变量 & 第 3 章 \\
+ES.26 & 不要用一个变量做两件不相关的事 & 第 3 章 \\
+ES.27 & 使用 \texttt{std::array} 或 \texttt{stack\_string} 代替 C 风格数组 & 第 3 章 \\
+ES.28 & 使用 \texttt{std::array} 或 \texttt{stack\_string} 代替 C 风格数组 & 第 3 章 \\
+ES.30 & 不要用宏做程序文本处理 & 第 3 章 \\
+ES.31 & 不要用宏做常量或"函数" & 第 3 章 \\
+\end{longtable}
+
+\section*{F 系列：函数}
+
+\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+F.1 & 将"打包"操作封装为函数 & 第 4 章 \\
+F.2 & 函数应做且仅做一件事 & 第 4 章 \\
+F.3 & 保持函数短小精悍 & 第 4 章 \\
+F.4 & 如果函数可能需要在编译时求值，则声明为 \texttt{constexpr} & 第 4 章 \\
+F.5 & 函数参数少 & 第 4 章 \\
+F.6 & 使用 \texttt{noexcept} 标记不抛异常的函数 & 第 4 章 \\
+F.7 & 对于通用引用，使用 \texttt{auto\&\&} 参数 & 第 4 章 \\
+F.10 & 如果一个操作可以重用，应将其命名为函数 & 第 4 章 \\
+F.15 & 遵循简单而惯用的参数传递方式 & 第 4 章 \\
+F.16 & 对于"输入"参数，按值传递或按 \texttt{const} 引用传递 & 第 4 章 \\
+F.17 & 对于"输入-输出"参数，按非 \texttt{const} 引用传递 & 第 4 章 \\
+F.18 & 对于"将被移动"的参数，按值传递 & 第 4 章 \\
+F.19 & 对于"转发"参数，使用 \texttt{auto\&\&} 并 \texttt{std::forward} & 第 4 章 \\
+F.20 & 对于"输出"输出值，优先使用返回值 & 第 4 章 \\
+F.21 & 需要返回多个值时，返回结构体 & 第 4 章 \\
+F.36 & 使用 \texttt{[[nodiscard]]} 标记不应忽略返回值的函数 & 第 4 章 \\
+F.38 & 使用返回值参数代替函数返回 void & 第 4 章 \\
+F.40 & 使用 \texttt{final} 阻止覆写 & 第 4 章 \\
+F.41 & 返回元组以返回多个不相关的值 & 第 4 章 \\
+\end{longtable}
+
+\section*{C 系列：类与类层次}
+
+\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+C.1 & 将相关的变量组织为结构体 & 第 5 章 \\
+C.2 & 如果类有不变式，则使用构造函数建立不变式 & 第 5 章 \\
+C.3 & 表示默认操作 & 第 5 章 \\
+C.4 & 使默认操作在语义上正确 & 第 5 章 \\
+C.5 & 将辅助函数放在与其辅助的类相同的命名空间中 & 第 5 章 \\
+C.7 & 不要定义类或函数；声明它们 & 第 5 章 \\
+C.8 & 用 \texttt{class} 而非 \texttt{struct} 表示有私有成员的类型 & 第 5 章 \\
+C.9 & 最小化暴露的成员 & 第 5 章 \\
+C.10 & 优先使用具体类型而非类层次 & 第 5 章 \\
+C.11 & 使具体类型 \texttt{constexpr} 可初始化 & 第 5 章 \\
+C.12 & 不要在拷贝赋值运算符中使用 \texttt{const} 参数 & 第 5 章 \\
+C.20 & 如果能避免定义默认操作，就避免 & 第 5 章 \\
+C.21 & 如果定义或禁用默认操作，对所有都这样做 & 第 5 章 \\
+C.22 & 使默认操作一致 & 第 5 章 \\
+C.30 & 如果析构函数需要执行显式操作，定义析构函数 & 第 5 章 \\
+C.31 & 类分配的所有资源必须由析构函数释放 & 第 5 章 \\
+C.32 & 如果类拥有原始指针或指针，考虑是否应该拥有 & 第 5 章 \\
+C.33 & 如果类拥有带所有权的指针，定义拷贝操作 & 第 5 章 \\
+C.35 & 基类需要有虚析构函数 & 第 5 章 \\
+C.36 & 基类不应有数据成员 & 第 5 章 \\
+C.37 & 使基类具有 \texttt{noexcept} 的析构函数 & 第 5 章 \\
+C.40 & 如果类有虚函数，定义析构函数 & 第 5 章 \\
+C.41 & 构造函数应创建完全初始化的对象 & 第 5 章 \\
+C.42 & 构造函数不应抛出异常 & 第 5 章 \\
+C.43 & 确保可复制的类有默认构造函数 & 第 5 章 \\
+C.44 & 使默认构造函数简单且非抛出 & 第 5 章 \\
+C.45 & 不要定义仅初始化数据成员的构造函数 & 第 5 章 \\
+C.46 & 默认构造函数至少初始化所有成员 & 第 5 章 \\
+C.47 & 按照成员声明的顺序定义和初始化成员变量 & 第 5 章 \\
+C.48 & 对常量默认值使用就地初始化 & 第 5 章 \\
+C.49 & 优先用初始化而非赋值来初始化成员 & 第 5 章 \\
+C.50 & 使用"工厂函数"处理需要多态或复杂初始化的情形 & 第 5 章 \\
+C.65 & 使移动操作 \texttt{noexcept} & 第 5 章 \\
+C.67 & 多态基类应删除或保护拷贝操作 & 第 5 章 \\
+C.80 & 用 \texttt{delete} 禁止默认行为 & 第 5 章 \\
+C.81 & 用 \texttt{=default} 使用编译器生成的默认行为 & 第 5 章 \\
+C.90 & 使拷贝赋值和拷贝构造 \texttt{noexcept} & 第 5 章 \\
+C.120 & 使用类层次结构表示抽象概念（运行时多态） & 第 6 章 \\
+C.122 & 用抽象类做接口 & 第 6 章 \\
+C.126 & 用虚函数调用分派 & 第 6 章 \\
+C.127 & 有虚函数的类应有虚析构函数 & 第 6 章 \\
+C.128 & 虚函数应指定 \texttt{default}、\texttt{delete}、\texttt{override} 或 \texttt{final} & 第 6 章 \\
+C.129 & 设计类层次时考虑抽象与实现 & 第 6 章 \\
+C.130 & 对大型多态类使用虚函数 & 第 6 章 \\
+C.131 & 避免琐碎的 getter 和 setter & 第 6 章 \\
+C.133 & 避免 \texttt{protected} 数据 & 第 6 章 \\
+C.134 & 用 \texttt{public} 成员保护非虚基类数据 & 第 6 章 \\
+C.135 & 用多重继承表示独立的方面 & 第 6 章 \\
+C.136 & 用 \texttt{dynamic\_cast} 安全地导航类层次 & 第 6 章 \\
+C.137 & 用 \texttt{dynamic\_cast} 安全地导航类层次 & 第 6 章 \\
+C.138 & 用 \texttt{dynamic\_cast} 代替类型转换 & 第 6 章 \\
+C.139 & 使用 \texttt{final} 于虚函数 & 第 6 章 \\
+C.140 & 不要为类层次使用不相关的转换运算符 & 第 6 章 \\
+C.145 & 多态地访问对象 & 第 6 章 \\
+C.146 & 使用 \texttt{dynamic\_cast} 访问类层次中的派生类对象 & 第 6 章 \\
+C.147 & 对已初始化的引用使用 \texttt{dynamic\_cast} & 第 6 章 \\
+C.149 & 用 \texttt{unique\_ptr} 或 \texttt{shared\_ptr} 避免忘记 \texttt{delete} & 第 6 章 \\
+C.150 & 用 \texttt{unique\_ptr} 或 \texttt{shared\_ptr} 避免忘记 \texttt{delete} & 第 6 章 \\
+C.151 & 用 \texttt{unique\_ptr} 或 \texttt{shared\_ptr} 避免忘记 \texttt{delete} & 第 6 章 \\
+C.152 & 禁止赋值给基类子对象 & 第 6 章 \\
+\end{longtable}
+
+\section*{Con 系列：并发}
+
+\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+Con.1 & 默认使用线程而非进程 & 第 7 章 \\
+Con.2 & 默认使用标准库的并发工具 & 第 7 章 \\
+Con.3 & 不要对共享数据加锁，除非必须 & 第 7 章 \\
+Con.4 & 用 \texttt{mutex} 或 \texttt{atomic} 保护共享数据 & 第 7 章 \\
+Con.5 & 形成层次结构来避免死锁 & 第 7 章 \\
+Con.6 & 用 \texttt{lock\_guard} 或 \texttt{scoped\_lock} 管理互斥量 & 第 7 章 \\
+Con.7 & 避免使用裸 \texttt{atomic} 变量 & 第 7 章 \\
+Con.8 & 不要用锁来保护个别变量 & 第 7 章 \\
+Con.9 & 限制使用 \texttt{yield} & 第 7 章 \\
+Con.10 & 优先使用标准库的并发设施 & 第 7 章 \\
+Con.11 & 不要使用无界队列 & 第 7 章 \\
+Con.12 & 使用原子操作时确保内存顺序正确 & 第 7 章 \\
+Con.32 & 让共享的可访问对象用 \texttt{shared\_ptr} 引用 & 第 7 章 \\
+Con.34 & 等待线程完成 & 第 7 章 \\
+Con.35 & 使用 \texttt{jthread} 代替 \texttt{thread} & 第 7 章 \\
+Con.36 & 绑定不可分离的线程 & 第 7 章 \\
+Con.40 & 确保锁的作用域尽可能小 & 第 7 章 \\
+Con.41 & 不要用 \texttt{volatile} 做线程间通信 & 第 7 章 \\
+Con.42 & 不要 \texttt{sleep} 等待条件变化 & 第 7 章 \\
+Con.43 & 不要对共享状态使用无锁编程 & 第 7 章 \\
+Con.44 & 使用 \texttt{std::async} 而非裸线程 & 第 7 章 \\
+Con.45 & 不要生成和吞噬异常 & 第 7 章 \\
+Con.46 & 不要使用信号量做线程间通信 & 第 7 章 \\
+\end{longtable}
+
+\section*{R 系列：资源管理}
+
+\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+R.1 & 资源获取即初始化 (RAII) & 第 9 章 \\
+R.2 & 在非全局函数中尽量少用裸 \texttt{new} & 第 9 章 \\
+R.3 & 裸 \texttt{new} 表达式是代码异味 & 第 9 章 \\
+R.4 & 裸 \texttt{delete} 表达式是代码异味 & 第 9 章 \\
+R.5 & 优先使用作用域对象 & 第 9 章 \\
+R.6 & 避免全局变量 & 第 9 章 \\
+R.7 & 避免非 const 全局引用 & 第 9 章 \\
+R.8 & 避免全局指针 & 第 9 章 \\
+R.10 & 避免 \texttt{malloc()} 和 \texttt{free()} & 第 9 章 \\
+R.11 & 避免显式调用 \texttt{new} 和 \texttt{delete} & 第 9 章 \\
+R.12 & 避免多个裸的拥有指针 & 第 9 章 \\
+R.13 & 立即执行至少一个拥有操作 & 第 9 章 \\
+R.14 & 避免 \texttt{new[]} 和 \texttt{delete[]} 参数 & 第 9 章 \\
+R.15 & 始终重载 \texttt{new} 和 \texttt{delete} & 第 9 章 \\
+R.20 & 使用 \texttt{unique\_ptr} 或 \texttt{shared\_ptr} 避免忘记 \texttt{delete} & 第 9 章 \\
+R.21 & 优先使用 \texttt{unique\_ptr} 而非 \texttt{shared\_ptr} & 第 9 章 \\
+R.22 & 用 \texttt{make\_unique} 创建 \texttt{unique\_ptr} & 第 9 章 \\
+R.23 & 用 \texttt{make\_shared} 创建 \texttt{shared\_ptr} & 第 9 章 \\
+R.24 & 用 \texttt{std::atomic\_shared\_ptr<T>} 共享 \texttt{shared\_ptr} & 第 9 章 \\
+R.30 & 用 \texttt{unique\_ptr} 或 \texttt{shared\_ptr} 传递所有权 & 第 9 章 \\
+R.31 & 如果 \texttt{unique\_ptr} 模式不够，使用 \texttt{shared\_ptr} & 第 9 章 \\
+R.32 & 取 \texttt{unique\_ptr} 参数表示获取所有权 & 第 9 章 \\
+R.33 & 取 \texttt{const unique\_ptr\&} 参数表示保留所有权 & 第 9 章 \\
+R.34 & 取 \texttt{const shared\_ptr\&} 参数表示不改变所有权 & 第 9 章 \\
+R.35 & 取 \texttt{shared\_ptr\&} 参数表示重新绑定 & 第 9 章 \\
+R.36 & 取 \texttt{shared\_ptr\&\&} 参数表示获取所有权 & 第 9 章 \\
+R.37 & 不要将 \texttt{shared\_ptr} 传递给非拥有者 & 第 9 章 \\
+\end{longtable}
+
+\section*{E 系列：错误处理}
+
+\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+E.1 & 在开发阶段尽早系统地找出错误 & 第 10 章 \\
+E.2 & 用异常表示无法完成的任务 & 第 10 章 \\
+E.3 & 仅用异常来报告无法在当前作用域处理的错误 & 第 10 章 \\
+E.4 & 围绕每个可能失败的操作设计错误处理策略 & 第 10 章 \\
+E.5 & 让构造函数建立类不变式；若无法建立则抛出异常 & 第 10 章 \\
+E.6 & 使用 RAII 防止资源泄漏 & 第 10 章 \\
+E.7 & 注意前置条件 & 第 10 章 \\
+E.12 & 不要在 \texttt{noexcept} 函数中抛出异常 & 第 10 章 \\
+E.13 & 不要在直接拥有对象的函数中抛出异常 & 第 10 章 \\
+E.14 & 使用自定义异常类型而非 \texttt{int} 或 \texttt{string} & 第 10 章 \\
+E.15 & 通过合适的异常类型抛出异常 & 第 10 章 \\
+E.16 & 用 \texttt{catch} 处理异常 & 第 10 章 \\
+E.17 & 不要在每个函数中捕获所有异常 & 第 10 章 \\
+E.18 & 最小化显式 \texttt{catch} 的使用 & 第 10 章 \\
+E.19 & 用 \texttt{final\_action} 在函数退出时清理 & 第 10 章 \\
+E.25 & 如果不能抛出异常，模拟 RAII 进行清理 & 第 10 章 \\
+E.26 & 不要在无法 \texttt{abort} 的情况下 \texttt{throw} & 第 10 章 \\
+E.27 & 使用 \texttt{std::terminate} 处理不可恢复的错误 & 第 10 章 \\
+E.28 & 避免基于错误码的错误处理 & 第 10 章 \\
+E.30 & 不要用异常传播做控制流 & 第 10 章 \\
+E.31 & 正确区分异常和错误码 & 第 10 章 \\
+\end{longtable}
+
+\section*{SL 系列：标准库}
+
+\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{规则} & \textbf{概要} & \textbf{章节} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+SL.1 & 使用标准库 & 第 8 章 \\
+SL.2 & 优先使用标准库而非其他库 & 第 8 章 \\
+SL.3 & 不要给标准库添加实体 & 第 8 章 \\
+SL.4 & 安全地使用标准库 & 第 8 章 \\
+SL.5 & 避免类型不安全 & 第 8 章 \\
+SL.6 & 使用 ISO C\texttt{++} 标准库特性 & 第 8 章 \\
+SL.7 & 不要将 \texttt{std::string} 与 \texttt{nullptr} 混用 & 第 8 章 \\
+SL.8 & 避免 \texttt{std::string} 的 \texttt{c\_str()} & 第 8 章 \\
+SL.9 & 避免使用窄化转换 & 第 8 章 \\
+SL.10 & 使用 \texttt{std::string} 或 \texttt{string\_view} 代替 C 风格字符串 & 第 8 章 \\
+SL.11 & 使用 \texttt{gsl::span} 代替指针加长度 & 第 8 章 \\
+SL.12 & 使用 \texttt{gsl::narrow\_cast} 或 \texttt{narrow} 做窄化转换 & 第 8 章 \\
+SL.13 & 使用 \texttt{string\_view} 或 \texttt{span} 避免越界访问 & 第 8 章 \\
+SL.14 & 使用 \texttt{vector} 代替 C 风格数组 & 第 8 章 \\
+SL.15 & 避免使用裸指针 & 第 8 章 \\
+SL.20 & 使用 \texttt{string\_view} 或 \texttt{span} 代替指针加长度 & 第 8 章 \\
+SL.21 & 不要用裸指针做参数 & 第 8 章 \\
+SL.22 & 不要用裸指针做变量 & 第 8 章 \\
+SL.23 & 避免抛出异常的临时变量 & 第 8 章 \\
+SL.24 & 用 \texttt{unique\_ptr} 代替裸 \texttt{new} & 第 8 章 \\
+SL.25 & 用 \texttt{make\_unique} 或 \texttt{make\_shared} & 第 8 章 \\
+SL.26 & 用 \texttt{unique\_ptr} 或 \texttt{shared\_ptr} 代替裸 \texttt{new} & 第 8 章 \\
+SL.27 & 用 \texttt{vector} 或 \texttt{string\_view} 代替 C 风格数组 & 第 8 章 \\
+\end{longtable}
+
+% ------------------------------------------------------------
+% 后记
+% ------------------------------------------------------------
+\backmatter
+
+\chapter{后记}
+
+C\texttt{++} Core Guidelines 是一项持续演进的社区工程。本书所解读的规则和建议，也会随着语言标准的更新和社区的实践而不断修订。我们鼓励读者定期访问指南的官方仓库，关注最新的规则变更和新增内容。
+
+编程规范的价值不在于被记住多少条，而在于能否在日常开发中自觉地运用。希望本书能帮助读者建立起对现代 C\texttt{++} 编程范式的深刻理解，在实践中写出更安全、更高效、更优雅的代码。
+
+\printindex
+
+\end{document}

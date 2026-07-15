@@ -1,0 +1,70 @@
+name: Build & Deploy PDFs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install TeX Live
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            texlive-xetex \
+            texlive-lang-chinese \
+            texlive-latex-extra \
+            texlive-fonts-recommended \
+            fonts-liberation \
+            fonts-noto-cjk
+
+      - name: Install PowerShell 7
+        run: |
+          sudo apt-get install -y --no-install-recommends \
+            apt-transport-https software-properties-common wget
+          source /etc/os-release
+          wget -q "https://packages.microsoft.com/config/ubuntu/${VERSION_ID}/packages-microsoft-prod.deb"
+          sudo dpkg -i packages-microsoft-prod.deb
+          rm packages-microsoft-prod.deb
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends powershell
+          pwsh --version
+
+      - name: Build all projects (PowerShell)
+        run: pwsh -NoProfile -File workflow.ps1 -Action build-all
+
+      - name: Copy PDFs to _site
+        run: pwsh -NoProfile -File .github/copy_pdfs.ps1
+
+      - name: Generate index.html
+        run: python3 .github/gen_index.py
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

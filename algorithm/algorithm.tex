@@ -1,0 +1,3185 @@
+% !TEX program = xelatex
+% 常用算法：C / C++ / C# 实现与对比
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ── Page ──
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ── Colors ──
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+\definecolor{clangkw}{HTML}{0050A0}
+\definecolor{cheadbg}{HTML}{34495E}
+\definecolor{cppheadbg}{HTML}{2E4057}
+\definecolor{csharpheadbg}{HTML}{68217A}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ── Font ──
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ── Listings ──
+\usepackage{listings}
+
+\lstdefinelanguage{CSharp}{
+  morekeywords={abstract,as,async,await,base,bool,break,byte,case,catch,char,checked,class,
+    const,continue,decimal,default,delegate,do,double,else,enum,event,explicit,extern,
+    false,finally,fixed,float,for,foreach,goto,if,implicit,in,int,interface,internal,is,
+    lock,long,namespace,new,null,object,operator,out,override,params,private,protected,
+    public,readonly,record,ref,return,sbyte,sealed,short,sizeof,stackalloc,static,string,
+    struct,switch,this,throw,true,try,typeof,uint,ulong,unchecked,unsafe,ushort,using,
+    virtual,void,volatile,while,yield,
+    var,dynamic,global,nint,nuint,notnull,unmanaged,with,required,file,init},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[s]{@"}{"},
+}
+
+\lstdefinelanguage{Bash}{
+  morekeywords={clang,clang++,cl,cmake,gcc,g++,export,./,cd,mkdir,rm,cp,mv,echo,cat,
+    grep,sed,awk,find,xargs,make,ninja,curl,wget,sudo,apt,yum,brew,choco,winget,
+    powershell,pwsh,dotnet,nuget},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+}
+
+\lstdefinestyle{cstyle}{
+  language=C,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{clangkw}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  emphstyle=\color{teal!80!black},
+  emph={size_t,NULL,printf,scanf,malloc,free,memcpy,memset,sizeof},
+}
+
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  escapeinside={(*@}{@*)},
+  showstringspaces=false,
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  morekeywords={constexpr,decltype,auto,override,final,noexcept,consteval,concept,requires,
+    co_await,co_yield,co_return,mutable,explicit,nullptr,
+    vector,deque,list,map,set,unordered_map,unordered_set,
+    array,span,pair,tuple,string,string_view,optional,variant,any,
+    unique_ptr,shared_ptr,weak_ptr,
+    swap,sort,stable_sort,partial_sort,reverse,rotate,
+    find,find_if,count,count_if,for_each,transform,
+    copy,fill,remove,remove_if,unique,replace,
+    accumulate,inner_product,partial_sum,
+    lower_bound,upper_bound,equal_range,binary_search,
+    push_back,pop_back,emplace_back,emplace,insert,erase,
+    begin,end,cbegin,cend,rbegin,rend,front,back,size,empty,
+    make_heap,push_heap,pop_heap,sort_heap,
+    next_permutation,prev_permutation,iota},
+  emph={size_t,int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t,
+    ptrdiff_t,int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,
+    vector,map,set,unordered_map,deque,list,array,string,pair,tuple,
+    iterator,const_iterator,reverse_iterator},
+  emphstyle=\color{teal!80!black},
+}
+
+\lstdefinestyle{csharpstyle}{
+  language=CSharp,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{csharpkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  emphstyle=\color{csharptype}\bfseries,
+  emph={List,Dictionary,SortedDictionary,HashSet,Stack,Queue,PriorityQueue,
+    Array,Span,Memory,ReadOnlySpan,
+    Task,ValueTask,IEnumerable,IEnumerator,
+    IEnumerable<T>,List<T>,Dictionary<K,V>,
+    Action,Func,Predicate,Comparison,IComparer,
+    Console,Math,StringBuilder,
+    Enumerable,IGrouping,ILookup},
+}
+
+\lstdefinestyle{bashstyle}{
+  language=Bash,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+}
+
+\lstset{style=cppstyle}
+
+% ── TColorBox ──
+\usepackage[most]{tcolorbox}
+\usepackage{tabularx}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{seqsplit}
+\usepackage{makeidx}
+\makeindex
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,
+  title=C / C++ / C\#~对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,
+  title=算法要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,
+  title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,
+  title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,
+  title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+\newtcolorbox{complexitybox}[1][]{
+  enhanced,breakable,
+  colback=yellow!3!white,colframe=yellow!60!black,
+  fonttitle=\bfseries,
+  title=复杂度分析,#1,
+  boxed title style={colback=yellow!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+\newtcolorbox{stdspec}[1][]{
+  enhanced,breakable,
+  colback=cyan!4!white,colframe=cyan!70!black,
+  fonttitle=\bfseries,
+  title=标准库规定与常用实现,#1,
+  boxed title style={colback=cyan!70!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ── Language label ──
+\newcommand{\clabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=cheadbg,colframe=cheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily C}\end{tcolorbox}%
+}
+
+\newcommand{\cpplabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=cppheadbg,colframe=cppheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily C++}\end{tcolorbox}%
+}
+
+\newcommand{\csharplabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=csharpheadbg,colframe=csharpheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily C\#}\end{tcolorbox}%
+}
+
+% ── Custom commands ──
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\cstd}[1]{C\#~#1}
+\newcommand{\bigO}[1]{\mathcal{O}(#1)}
+\newcommand{\header}[1]{\texttt{<#1>}}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+% ── Hyperref ──
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={Algorithm Reference},
+  pdftitle={Common Algorithms: C / C++ / C\#},
+}
+
+\title{\Huge\textbf{常用算法}\\[0.5em]
+  \Large C / C++ / C\#~实现与对比}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\frontmatter
+\chapter*{前\quad 言}
+\addcontentsline{toc}{chapter}{前言}
+
+本文档系统整理了计算机科学中常用算法的~C、C++~和~C\#~实现，
+旨在帮助读者理解算法本身的同时，对比三种语言在数据结构操作、泛型编程、
+标准库支持等方面的差异。
+
+\section*{文档约定}
+
+\begin{itemize}
+  \item \textbf{C}~版本使用裸指针与手动内存管理，体现底层控制能力。
+  \item \textbf{C++}~版本优先使用 STL 容器、迭代器与泛型算法，体现现代~C++~风格。
+  \item \textbf{C\#}~版本使用 .NET 集合库、泛型与 LINQ，体现托管语言便利性。
+  \item 复杂度标注采用~$\bigO{\cdot}$~记法。
+  \item \textcolor{green!50!black}{\textbf{对比框}}~总结三种语言的关键差异。
+  \item \textcolor{yellow!60!black}{\textbf{复杂度框}}~分析时间与空间复杂度。
+  \item \textcolor{red!75!black}{\textbf{陷阱框}}~提示常见实现错误。
+\end{itemize}
+
+% --- TOC：从 build.ps1 生成的 manual.toc 读取目录 ---
+\makeatletter
+\newif\ifhavemanualtoc
+\IfFileExists{\jobname-manual.toc}{\havemanualtoctrue}{}
+\ifhavemanualtoc
+  \clearpage
+  \chapter*{\contentsname}%
+  \@mkboth{\contentsname}{\contentsname}%
+  \@input{\jobname-manual.toc}%
+  \clearpage
+\else
+  \tableofcontents
+\fi
+\makeatother
+
+\mainmatter
+
+% ============================================================
+\part{排序算法}
+% ============================================================
+
+% ── 1. 冒泡排序 ──
+\chapter{冒泡排序}
+
+冒泡排序（Bubble Sort）是最简单的排序算法之一。
+它重复遍历数组，比较相邻元素并交换顺序错误的元素，
+直到没有需要交换的元素为止。每轮遍历会将当前未排序部分的最大值"冒泡"到末尾。
+
+\begin{complexitybox}
+  时间：最优~$\bigO{n}$（已排序+提前终止）、平均/最差~$\bigO{n^2}$。
+  空间：$\bigO{1}$（原地排序）。稳定排序。
+\end{complexitybox}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+void bubble_sort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        int swapped = 0;
+        for (int j = 0; j < n - 1 - i; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int tmp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = tmp;
+                swapped = 1;
+            }
+        }
+        if (!swapped) break;  /* early exit */
+    }
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <algorithm>
+#include <vector>
+
+template <typename T>
+void bubble_sort(std::vector<T>& v) {
+    for (size_t i = 0; i + 1 < v.size(); ++i) {
+        bool swapped = false;
+        for (size_t j = 0; j + 1 < v.size() - i; ++j) {
+            if (v[j] > v[j + 1]) {
+                std::swap(v[j], v[j + 1]);
+                swapped = true;
+            }
+        }
+        if (!swapped) break;
+    }
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static void BubbleSort<T>(T[] arr) where T : IComparable<T>
+{
+    for (int i = 0; i < arr.Length - 1; i++)
+    {
+        bool swapped = false;
+        for (int j = 0; j < arr.Length - 1 - i; j++)
+        {
+            if (arr[j].CompareTo(arr[j + 1]) > 0)
+            {
+                (arr[j], arr[j + 1]) = (arr[j + 1], arr[j]);
+                swapped = true;
+            }
+        }
+        if (!swapped) break;
+    }
+}
+\end{lstlisting}
+
+\begin{compare}
+\begin{tabularx}{\textwidth}{lX}
+  \textbf{元素交换} & C~使用临时变量；C++~使用~\Fn{std::swap}；C\#~使用元组解构~\texttt{(a, b) = (b, a)}。\\
+  \textbf{泛型方式} & C~只能处理~\texttt{int[]}；C++~使用~\texttt{template <typename T>}；C\#~使用泛型约束~\texttt{where T : IComparable<T>}。\\
+  \textbf{数组传参} & C~传指针+长度；C++~传~\texttt{vector<T>\&}~引用；C\#~传数组（自带~\texttt{.Length}）。\\
+\end{tabularx}
+\end{compare}
+
+% ── 2. 选择排序 ──
+\chapter{选择排序}
+
+选择排序（Selection Sort）每轮从未排序部分选出最小元素，
+放到已排序部分的末尾。比较次数固定为~$\bigO{n^2}$，交换次数为~$\bigO{n}$。
+
+\begin{complexitybox}
+  时间：$\bigO{n^2}$（所有情况）。空间：$\bigO{1}$。不稳定排序（交换可能破坏相等元素的相对顺序）。
+\end{complexitybox}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+void selection_sort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        int min_idx = i;
+        for (int j = i + 1; j < n; j++) {
+            if (arr[j] < arr[min_idx])
+                min_idx = j;
+        }
+        if (min_idx != i) {
+            int tmp = arr[i];
+            arr[i] = arr[min_idx];
+            arr[min_idx] = tmp;
+        }
+    }
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+template <typename Iter>
+void selection_sort(Iter first, Iter last) {
+    for (auto it = first; it != last; ++it) {
+        auto min_it = std::min_element(it, last);
+        if (min_it != it)
+            std::iter_swap(it, min_it);
+    }
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static void SelectionSort<T>(T[] arr) where T : IComparable<T>
+{
+    for (int i = 0; i < arr.Length - 1; i++)
+    {
+        int minIdx = i;
+        for (int j = i + 1; j < arr.Length; j++)
+            if (arr[j].CompareTo(arr[minIdx]) < 0)
+                minIdx = j;
+        if (minIdx != i)
+            (arr[i], arr[minIdx]) = (arr[minIdx], arr[i]);
+    }
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~版本使用迭代器接口~\Fn{std::min\_element}，兼容任意容器；
+C~和~C\#~均使用下标遍历。C\#~的元组交换语法最简洁。
+\end{compare}
+
+% ── 3. 插入排序 ──
+\chapter{插入排序}
+
+插入排序（Insertion Sort）将数组分为已排序和未排序两部分，
+每次从未排序部分取出一个元素，插入到已排序部分的正确位置。
+对于几乎已排序的数组，性能接近~$\bigO{n}$。
+
+\begin{complexitybox}
+  时间：最优~$\bigO{n}$、平均/最差~$\bigO{n^2}$。空间：$\bigO{1}$。稳定排序。
+  在~$\bigO{n}$~规模或接近有序的数据上表现优异，常作为高级排序算法的递归基。
+\end{complexitybox}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+void insertion_sort(int arr[], int n) {
+    for (int i = 1; i < n; i++) {
+        int key = arr[i];
+        int j = i - 1;
+        while (j >= 0 && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+        arr[j + 1] = key;
+    }
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+template <typename Iter>
+void insertion_sort(Iter first, Iter last) {
+    if (first == last) return;
+    for (auto it = std::next(first); it != last; ++it) {
+        auto key = std::move(*it);
+        auto hole = it;
+        while (hole != first && *std::prev(hole) > key) {
+            *hole = std::move(*std::prev(hole));
+            --hole;
+        }
+        *hole = std::move(key);
+    }
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static void InsertionSort<T>(T[] arr) where T : IComparable<T>
+{
+    for (int i = 1; i < arr.Length; i++)
+    {
+        T key = arr[i];
+        int j = i - 1;
+        while (j >= 0 && arr[j].CompareTo(key) > 0)
+        {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+        arr[j + 1] = key;
+    }
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~版本使用~\Fn{std::move}~避免不必要的拷贝，对非 trivially-copyable 类型性能更好。
+C~和~C\#~中值语义由编译器直接处理。
+\end{compare}
+
+% ── 4. 快速排序 ──
+\chapter{快速排序}
+
+快速排序（Quicksort）采用分治策略：选择一个基准元素（pivot），
+将数组分为小于和大于基准的两部分，递归排序。
+平均时间复杂度~$\bigO{n \log n}$，是实际应用中最常用的排序算法之一。
+
+\begin{complexitybox}
+  时间：平均~$\bigO{n \log n}$、最差~$\bigO{n^2}$（pivot 选取不当）。
+  空间：$\bigO{\log n}$（递归栈）。不稳定排序。
+\end{complexitybox}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+void swap(int* a, int* b) {
+    int t = *a; *a = *b; *b = t;
+}
+
+int partition(int arr[], int lo, int hi) {
+    int pivot = arr[hi];
+    int i = lo - 1;
+    for (int j = lo; j < hi; j++) {
+        if (arr[j] <= pivot) {
+            i++;
+            swap(&arr[i], &arr[j]);
+        }
+    }
+    swap(&arr[i + 1], &arr[hi]);
+    return i + 1;
+}
+
+void quicksort(int arr[], int lo, int hi) {
+    if (lo < hi) {
+        int p = partition(arr, lo, hi);
+        quicksort(arr, lo, p - 1);
+        quicksort(arr, p + 1, hi);
+    }
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <algorithm>
+#include <iterator>
+
+template <typename Iter>
+void quicksort(Iter first, Iter last) {
+    if (std::distance(first, last) <= 1) return;
+    auto pivot = *std::prev(last);
+    auto mid = std::partition(first, std::prev(last),
+        [&](const auto& x) { return x < pivot; });
+    std::swap(*mid, *std::prev(last));
+    quicksort(first, mid);
+    quicksort(std::next(mid), last);
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static void QuickSort<T>(T[] arr, int lo, int hi)
+    where T : IComparable<T>
+{
+    if (lo >= hi) return;
+    T pivot = arr[hi];
+    int i = lo - 1;
+    for (int j = lo; j < hi; j++)
+    {
+        if (arr[j].CompareTo(pivot) <= 0)
+        {
+            i++;
+            (arr[i], arr[j]) = (arr[j], arr[i]);
+        }
+    }
+    (arr[i + 1], arr[hi]) = (arr[hi], arr[i + 1]);
+    QuickSort(arr, lo, i);
+    QuickSort(arr, i + 2, hi);
+}
+\end{lstlisting}
+
+\begin{compare}
+\begin{tabularx}{\textwidth}{lX}
+  \textbf{分区策略} & C~和~C\#~使用 Lomuto 分区；C++~版本借助~\Fn{std::partition}~（Hoare 变体），通常更高效。\\
+  \textbf{泛型} & C++~迭代器模板可排序~\Tp{vector}、\Tp{deque}、原生数组等；C\#~泛型约束~\Tp{IComparable<T>}~提供类型安全比较。\\
+  \textbf{实践} & 生产环境应使用~\Fn{std::sort}~(C++) / \Fn{Array.Sort}~(C\#)，它们使用 Introsort（快排+堆排+插排混合）。\\
+\end{tabularx}
+\end{compare}
+
+\begin{warning}
+快速排序最差情况~$\bigO{n^2}$~可通过三数取中法（median-of-three）或随机化 pivot 避免。
+实际库实现（如~\Fn{std::sort}）使用 Introsort，在递归深度超过~$2\log n$~时切换到堆排序。
+\end{warning}
+
+\begin{stdspec}[title=标准库排序算法]
+\textbf{C++}~（\header{algorithm}）：
+
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+  \Fn{std::sort} & $\bigO{n\log n}$ & \textbf{Introsort}：快排递归，深度超过~$2\log n$~时切换为堆排序，小规模（$\leq 16$）切换为插入排序。C++11 起标准\textbf{要求}最坏~$\bigO{n\log n}$（C++03 仅要求平均~$\bigO{n\log n}$）。不稳定。 \\
+  \Fn{std::stable\_sort} & $\bigO{n\log n}$ & \textbf{TimSort}（libc++/libstdc++ 现代实现）或归并排序变体。有额外内存时~$\bigO{n\log n}$，内存不足时退化为~$\bigO{n\log^2 n}$。\textbf{稳定排序}。 \\
+  \Fn{std::partial\_sort} & $\bigO{n\log k}$ & 基于堆选择：构建大小为~$k$~的最大堆，遍历剩余元素替换堆顶，最终堆排序。前~$k$~个元素有序。 \\
+  \Fn{std::nth\_element} & $\bigO{n}$ 平均 & \textbf{Introselect}：quickselect + median-of-medians 回退。将第~$n$~小元素放到位置~$n$，左侧均$\leq$、右侧均$\geq$，但不保证两侧有序。 \\
+  \Fn{std::is\_sorted} & $\bigO{n}$ & 线性扫描检测是否有序，C++11 起可用自定义比较器。 \\
+\end{tabularx}
+
+\medskip\noindent\textbf{C\#}（\texttt{System}~命名空间）：
+
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+  \Fn{Array.Sort} & $\bigO{n\log n}$ & .NET 使用 \textbf{Introsort}（快排+堆排+插排混合），与 C++ \Fn{std::sort}~策略相同。\textbf{不稳定}。对~$\leq 16$~元素用插入排序，递归深度超~$2\log n$~用堆排序。 \\
+  \Fn{List<T>.Sort} & $\bigO{n\log n}$ & 内部委托给~\Fn{Array.Sort}，行为一致。 \\
+  \Fn{OrderBy} & $\bigO{n\log n}$ & LINQ 扩展方法，\textbf{稳定排序}（保持相等元素的原始顺序）。延迟执行，调用~\Fn{ToList()}/\Fn{ToArray()}~时触发。 \\
+  \Fn{Array.BinarySearch} & $\bigO{\log n}$ & 内置二分搜索，返回非负下标表示找到；返回负数~$\sim i$~表示未找到，$i$~为插入位置。 \\
+\end{tabularx}
+
+\medskip
+\textbf{稳定性对比}：C++ \Fn{std::sort}~和 C\# \Fn{Array.Sort}~均不稳定；需要稳定排序时使用
+C++~\Fn{std::stable\_sort}~或 C\#~\Fn{OrderBy}。
+\end{stdspec}
+
+% ── 5. 归并排序 ──
+\chapter{归并排序}
+
+归并排序（Merge Sort）采用分治策略：将数组递归拆分为两半，
+分别排序后合并。是稳定排序且时间复杂度保证~$\bigO{n \log n}$。
+
+\begin{complexitybox}
+  时间：$\bigO{n \log n}$（所有情况）。空间：$\bigO{n}$（需辅助数组）。稳定排序。
+\end{complexitybox}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+void merge(int arr[], int lo, int mid, int hi) {
+    int n1 = mid - lo + 1, n2 = hi - mid;
+    int* L = (int*)malloc(n1 * sizeof(int));
+    int* R = (int*)malloc(n2 * sizeof(int));
+    memcpy(L, arr + lo, n1 * sizeof(int));
+    memcpy(R, arr + mid + 1, n2 * sizeof(int));
+    int i = 0, j = 0, k = lo;
+    while (i < n1 && j < n2)
+        arr[k++] = (L[i] <= R[j]) ? L[i++] : R[j++];
+    while (i < n1) arr[k++] = L[i++];
+    while (j < n2) arr[k++] = R[j++];
+    free(L); free(R);
+}
+
+void merge_sort(int arr[], int lo, int hi) {
+    if (lo >= hi) return;
+    int mid = lo + (hi - lo) / 2;
+    merge_sort(arr, lo, mid);
+    merge_sort(arr, mid + 1, hi);
+    merge(arr, lo, mid, hi);
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <algorithm>
+#include <vector>
+
+template <typename T>
+void merge_sort(std::vector<T>& v) {
+    if (v.size() <= 1) return;
+    auto mid = v.begin() + v.size() / 2;
+    std::vector<T> left(v.begin(), mid);
+    std::vector<T> right(mid, v.end());
+    merge_sort(left);
+    merge_sort(right);
+    std::merge(left.begin(), left.end(),
+               right.begin(), right.end(), v.begin());
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static T[] MergeSort<T>(T[] arr) where T : IComparable<T>
+{
+    if (arr.Length <= 1) return arr;
+    int mid = arr.Length / 2;
+    var left  = MergeSort(arr[..mid]);
+    var right = MergeSort(arr[mid..]);
+    var result = new T[arr.Length];
+    int i = 0, j = 0, k = 0;
+    while (i < left.Length && j < right.Length)
+        result[k++] = left[i].CompareTo(right[j]) <= 0
+                      ? left[i++] : right[j++];
+    while (i < left.Length)  result[k++] = left[i++];
+    while (j < right.Length) result[k++] = right[j++];
+    return result;
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~的~\Fn{std::merge}~使合并步骤一行完成；C\#~使用 range 表达式~\texttt{arr[..mid]}~简化拆分。
+C~版本需手动~\texttt{malloc}/\texttt{free}~管理临时数组，容易遗漏释放导致内存泄漏。
+\end{compare}
+
+\begin{stdspec}[title=归并排序相关标准库]
+\textbf{C++}~\Fn{std::stable\_sort}（\header{algorithm}）内部通常采用归并排序或其变体 TimSort：
+标准\textbf{要求}~$\bigO{n\log n}$~比较次数（有足够额外内存时），
+内存不足时允许~$\bigO{n\log^2 n}$。
+\Fn{std::inplace\_merge}~提供~$\bigO{n}$~（有额外内存）或~$\bigO{n\log n}$~（无额外内存）的原地合并。
+
+\textbf{C\#}~\Fn{Enumerable.OrderBy}~（LINQ）是\textbf{稳定排序}，底层实现通常为归并排序或 TimSort，
+保证~$\bigO{n\log n}$。与~\Fn{Array.Sort}~（不稳定 Introsort）形成互补。
+\end{stdspec}
+
+% ── 6. 堆排序 ──
+\chapter{堆排序}
+
+堆排序（Heapsort）利用最大堆性质：先建堆，然后反复取出堆顶（最大值）放到数组末尾。
+原地排序且保证~$\bigO{n \log n}$~时间复杂度。
+
+\begin{complexitybox}
+  时间：$\bigO{n \log n}$（所有情况）。空间：$\bigO{1}$（原地）。不稳定排序。
+\end{complexitybox}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+void sift_down(int arr[], int n, int i) {
+    int largest = i;
+    int l = 2 * i + 1, r = 2 * i + 2;
+    if (l < n && arr[l] > arr[largest]) largest = l;
+    if (r < n && arr[r] > arr[largest]) largest = r;
+    if (largest != i) {
+        int tmp = arr[i]; arr[i] = arr[largest]; arr[largest] = tmp;
+        sift_down(arr, n, largest);
+    }
+}
+
+void heap_sort(int arr[], int n) {
+    for (int i = n / 2 - 1; i >= 0; i--)
+        sift_down(arr, n, i);
+    for (int i = n - 1; i > 0; i--) {
+        int tmp = arr[0]; arr[0] = arr[i]; arr[i] = tmp;
+        sift_down(arr, i, 0);
+    }
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <algorithm>
+#include <vector>
+
+template <typename T>
+void heap_sort(std::vector<T>& v) {
+    std::make_heap(v.begin(), v.end());
+    std::sort_heap(v.begin(), v.end());
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static void HeapSort<T>(T[] arr) where T : IComparable<T>
+{
+    int n = arr.Length;
+    for (int i = n / 2 - 1; i >= 0; i--)
+        SiftDown(arr, n, i);
+    for (int i = n - 1; i > 0; i--)
+    {
+        (arr[0], arr[i]) = (arr[i], arr[0]);
+        SiftDown(arr, i, 0);
+    }
+}
+
+static void SiftDown<T>(T[] arr, int n, int i)
+    where T : IComparable<T>
+{
+    int largest = i, l = 2 * i + 1, r = 2 * i + 2;
+    if (l < n && arr[l].CompareTo(arr[largest]) > 0) largest = l;
+    if (r < n && arr[r].CompareTo(arr[largest]) > 0) largest = r;
+    if (largest != i)
+    {
+        (arr[i], arr[largest]) = (arr[largest], arr[i]);
+        SiftDown(arr, n, largest);
+    }
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~的~\Fn{std::make\_heap}~+~\Fn{std::sort\_heap}~将堆排序简化为两行调用；
+C~和~C\#~需要手动实现 sift-down 逻辑。C\#~没有内置的堆排序函数，
+但~\Tp{PriorityQueue<TElement, TPriority>}~（.NET 6+）提供最小堆支持。
+\end{compare}
+
+\begin{stdspec}[title=堆操作算法族]
+\textbf{C++}~（\header{algorithm}）提供完整的堆操作原语，均作用于普通容器（\Tp{vector}~等）：
+
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+  \Fn{std::make\_heap} & $\bigO{n}$ & 将范围~$[first, last)$~重排为最大堆。Floyd 建堆法（自底向上 sift-down）。 \\
+  \Fn{std::push\_heap} & $\bigO{\log n}$ & 假设~$[first, last-1)$~已是堆，将~$last-1$~处新元素上浮到正确位置。 \\
+  \Fn{std::pop\_heap} & $\bigO{\log n}$ & 将堆顶与~$last-1$~交换，然后对~$[first, last-1)$~执行 sift-down。堆顶移至末尾。 \\
+  \Fn{std::sort\_heap} & $\bigO{n\log n}$ & 反复调用 pop\_heap 将堆转为升序排列。调用后原范围不再是堆。 \\
+  \Fn{std::is\_heap} & $\bigO{n}$ & 线性检测范围是否满足堆性质。 \\
+\end{tabularx}
+
+\medskip
+\Tp{std::priority\_queue}~（\header{queue}）是容器适配器，默认使用~\Tp{vector}~+~\Fn{std::less}
+（\textbf{最大堆}）。入队~$\bigO{\log n}$、出队~$\bigO{\log n}$、查看堆顶~$\bigO{1}$。
+使用~\Tp{std::greater<T>}~可改为最小堆。不提供 decrease-key 操作。
+
+\medskip\noindent\textbf{C\#}~\Tp{PriorityQueue<TElement, TPriority>}（.NET 6+，\texttt{System.Collections.Generic}）：
+入队/出队~$\bigO{\log n}$，查看最小优先级~$\bigO{1}$。\textbf{最小堆}（与 C++ 默认相反）。
+同样不支持 decrease-key，需通过惰性删除（enqueue 重复元素 + 跳过过时条目）处理。
+\end{stdspec}
+
+% ── 7. 计数排序 ──
+\chapter{计数排序}
+
+计数排序（Counting Sort）是非比较排序，适用于值域有限的整数排序。
+通过统计每个值出现的次数来实现排序，时间复杂度~$\bigO{n + k}$，
+其中~$k$~为值域大小。
+
+\begin{complexitybox}
+  时间：$\bigO{n + k}$。空间：$\bigO{k}$。稳定排序。
+  当~$k = \bigO{n}$~时，达到线性时间。
+\end{complexitybox}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+void counting_sort(int arr[], int n, int max_val) {
+    int* count = (int*)calloc(max_val + 1, sizeof(int));
+    int* output = (int*)malloc(n * sizeof(int));
+    for (int i = 0; i < n; i++) count[arr[i]]++;
+    for (int i = 1; i <= max_val; i++) count[i] += count[i - 1];
+    for (int i = n - 1; i >= 0; i--) {
+        output[count[arr[i]] - 1] = arr[i];
+        count[arr[i]]--;
+    }
+    memcpy(arr, output, n * sizeof(int));
+    free(count); free(output);
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <algorithm>
+#include <vector>
+#include <numeric>
+
+void counting_sort(std::vector<int>& v) {
+    if (v.empty()) return;
+    auto [lo, hi] = std::minmax_element(v.begin(), v.end());
+    int offset = -*lo;
+    std::vector<int> count(*hi - *lo + 1, 0);
+    for (int x : v) count[x + offset]++;
+    std::partial_sum(count.begin(), count.end(), count.begin());
+    std::vector<int> out(v.size());
+    for (auto it = v.rbegin(); it != v.rend(); ++it)
+        out[count[*it + offset]-- - 1] = *it;
+    v = std::move(out);
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static void CountingSort(int[] arr)
+{
+    if (arr.Length == 0) return;
+    int min = arr.Min(), max = arr.Max();
+    int[] count = new int[max - min + 1];
+    foreach (int x in arr) count[x - min]++;
+    int[] output = new int[arr.Length];
+    int idx = arr.Length - 1;
+    for (int i = count.Length - 1; i >= 0; i--)
+        while (count[i]-- > 0)
+            output[idx--] = i + min;
+    Array.Copy(output, arr, arr.Length);
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~使用结构化绑定~\texttt{auto [lo, hi]}~和~\Fn{std::partial\_sum}~简化前缀和计算。
+C\#~使用 LINQ 的~\Fn{Min()}/\Fn{Max()}~获取范围。C~需手动管理两个动态数组。
+\end{compare}
+
+% ============================================================
+\part{搜索算法}
+% ============================================================
+
+% ── 8. 二分搜索 ──
+\chapter{二分搜索}
+
+二分搜索（Binary Search）在有序数组中通过反复将搜索区间减半来查找目标元素。
+每次比较中间元素，若目标更小则在左半部分继续，否则在右半部分继续。
+
+\begin{complexitybox}
+  时间：$\bigO{\log n}$。空间：$\bigO{1}$（迭代）或~$\bigO{\log n}$（递归）。
+  前提：数组必须有序。
+\end{complexitybox}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+/* 返回下标，未找到返回 -1 */
+int binary_search(const int arr[], int n, int target) {
+    int lo = 0, hi = n - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;  /* avoid overflow */
+        if (arr[mid] == target) return mid;
+        else if (arr[mid] < target) lo = mid + 1;
+        else hi = mid - 1;
+    }
+    return -1;
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <algorithm>
+#include <vector>
+
+/* 精确查找 */
+template <typename T>
+int binary_search(const std::vector<T>& v, const T& target) {
+    auto it = std::lower_bound(v.begin(), v.end(), target);
+    if (it != v.end() && *it == target)
+        return static_cast<int>(std::distance(v.begin(), it));
+    return -1;
+}
+
+/* 查找插入位置（第一个 >= target 的位置）*/
+template <typename T>
+auto lower_bound_pos(const std::vector<T>& v, const T& target) {
+    return std::lower_bound(v.begin(), v.end(), target);
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static int BinarySearch<T>(T[] arr, T target)
+    where T : IComparable<T>
+{
+    int lo = 0, hi = arr.Length - 1;
+    while (lo <= hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+        int cmp = arr[mid].CompareTo(target);
+        if (cmp == 0) return mid;
+        if (cmp < 0) lo = mid + 1;
+        else hi = mid - 1;
+    }
+    return -1;
+}
+
+// .NET built-in: Array.BinarySearch(arr, target)
+\end{lstlisting}
+
+\begin{compare}
+\begin{tabularx}{\textwidth}{lX}
+  \textbf{标准库} & C++~提供~\Fn{std::lower\_bound}、\Fn{std::upper\_bound}、\Fn{std::equal\_range}~三种变体；C\#~提供~\Fn{Array.BinarySearch}（返回负数表示未找到，取反得插入位置）。\\
+  \textbf{溢出防护} & C~和~C\#~使用~\texttt{lo + (hi - lo) / 2}~避免整数溢出；C++~的~\Fn{std::lower\_bound}~内部已处理。\\
+  \textbf{泛型} & C++~的迭代器接口可用于任意有序容器；C\#~的~\Tp{IComparable<T>}~约束保证比较安全。\\
+\end{tabularx}
+\end{compare}
+
+\begin{stdspec}[title=二分搜索族]
+\textbf{C++}~（\header{algorithm}）定义四个二分搜索函数，均要求输入范围已排序，
+接受~\Tp{ForwardIterator}（$\bigO{\log n}$~比较，但前进操作可能~$\bigO{n}$~对于非随机访问迭代器）：
+
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+  \Fn{std::lower\_bound} & 返回指向\textbf{第一个~$\geq$~value}~的元素的迭代器。不存在时返回~\texttt{last}。等价于 Python \texttt{bisect\_left}。 \\
+  \Fn{std::upper\_bound} & 返回指向\textbf{第一个~$>$~value}~的元素的迭代器。等价于 Python \texttt{bisect\_right}。 \\
+  \Fn{std::equal\_range} & 返回~\texttt{pair(lower\_bound, upper\_bound)}，一次调用获取所有等于 value 的元素范围。 \\
+  \Fn{std::binary\_search} & 返回~\texttt{bool}，仅判断元素是否存在。 \\
+\end{tabularx}
+
+\medskip
+标准\textbf{要求}比较次数为~$\bigO{\log n}$（精确为~$\lfloor\log_2 n\rfloor + \bigO{1}$），
+但对于~\Tp{ForwardIterator}（如~\Tp{std::list::iterator}），\texttt{advance}~操作使总复杂度为~$\bigO{n}$。
+只有~\Tp{RandomAccessIterator}（如~\Tp{vector::iterator}）才能达到真正的~$\bigO{\log n}$~总时间。
+
+\medskip\noindent\textbf{C\#}~\Fn{Array.BinarySearch<T>}~和~\Fn{List<T>.BinarySearch}：
+返回非负整数表示找到元素的下标；返回负数~$r$~时，$\sim r$~（按位取反）为应插入位置。
+要求数组已排序且元素实现~\Tp{IComparable<T>}。
+
+\medskip
+\textbf{C++ 有序容器}：\Tp{std::set}/\Tp{std::map}~标准仅要求~$\bigO{\log n}$~的插入/查找/删除，未指定具体实现（主流库多用平衡 BST）。提供~\Fn{find}/\Fn{lower\_bound}/\Fn{upper\_bound}~成员函数。
+\Tp{std::unordered\_set}/\Tp{std::unordered\_map}（哈希表）提供~$\bigO{1}$~平均的~\Fn{find}，但不支持有序查询。
+\end{stdspec}
+
+% ============================================================
+\part{数据结构操作}
+% ============================================================
+
+% ── 9. 链表反转 ──
+\chapter{链表反转}
+
+反转单链表是基础数据结构操作。
+通过维护三个指针（前驱、当前、后继），遍历链表时逐个反转节点的~\texttt{next}~指针。
+
+\begin{complexitybox}
+  时间：$\bigO{n}$。空间：$\bigO{1}$（迭代）或~$\bigO{n}$（递归）。
+\end{complexitybox}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
+
+Node* reverse_list(Node* head) {
+    Node *prev = NULL, *curr = head;
+    while (curr) {
+        Node* next = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = next;
+    }
+    return prev;
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <memory>
+
+struct Node {
+    int data;
+    std::unique_ptr<Node> next;
+    Node(int d) : data(d) {}
+};
+
+std::unique_ptr<Node> reverse_list(std::unique_ptr<Node> head) {
+    std::unique_ptr<Node> prev;
+    auto curr = std::move(head);
+    while (curr) {
+        auto next = std::move(curr->next);
+        curr->next = std::move(prev);
+        prev = std::move(curr);
+        curr = std::move(next);
+    }
+    return prev;
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+public class ListNode<T>
+{
+    public T Val;
+    public ListNode<T>? Next;
+    public ListNode(T val, ListNode<T>? next = null)
+        { Val = val; Next = next; }
+}
+
+static ListNode<T>? ReverseList<T>(ListNode<T>? head)
+{
+    ListNode<T>? prev = null, curr = head;
+    while (curr is not null)
+    {
+        var next = curr.Next;
+        curr.Next = prev;
+        prev = curr;
+        curr = next;
+    }
+    return prev;
+}
+\end{lstlisting}
+
+\begin{compare}
+C~使用裸指针，调用者需管理链表内存。
+C++~使用~\Tp{unique\_ptr}~实现自动内存管理，\Fn{std::move}~转移所有权，
+但增加了实现复杂度。C\#~依赖 GC，无需手动管理但可能引入 GC 暂停。
+\end{compare}
+
+% ── 10. 链表环检测 ──
+\chapter{链表环检测（Floyd 算法）}
+
+Floyd 龟兔赛跑算法使用快慢指针检测链表是否有环。
+慢指针每次走一步，快指针每次走两步，若存在环则二者必然相遇。
+
+\begin{complexitybox}
+  时间：$\bigO{n}$。空间：$\bigO{1}$。
+\end{complexitybox}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+int has_cycle(const Node* head) {
+    const Node *slow = head, *fast = head;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow == fast) return 1;
+    }
+    return 0;
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+bool has_cycle(const Node* head) {
+    const Node *slow = head, *fast = head;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+        if (slow == fast) return true;
+    }
+    return false;
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static bool HasCycle<T>(ListNode<T>? head)
+{
+    var slow = head;
+    var fast = head;
+    while (fast is not null && fast.Next is not null)
+    {
+        slow = slow!.Next;
+        fast = fast.Next.Next;
+        if (ReferenceEquals(slow, fast))
+            return true;
+    }
+    return false;
+}
+\end{lstlisting}
+
+\begin{compare}
+三种语言实现几乎相同，区别在于空指针检查语法（C~\texttt{NULL}~vs C++~\texttt{nullptr}~vs C\#~\texttt{null}）
+和 C\#~的~\Fn{ReferenceEquals}~确保引用比较而非重载的~\texttt{==}~运算符。
+\end{compare}
+
+% ── 11. LRU 缓存 ──
+\chapter{LRU 缓存}
+
+LRU（Least Recently Used）缓存淘汰策略：容量满时淘汰最久未使用的元素。
+标准实现使用哈希表 + 双向链表，实现~$\bigO{1}$~的读写和淘汰。
+
+\begin{complexitybox}
+  时间：get / put 均~$\bigO{1}$。空间：$\bigO{C}$（$C$~为容量）。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <list>
+#include <unordered_map>
+#include <optional>
+
+class LRUCache {
+    int capacity_;
+    using KV = std::pair<int, int>;
+    std::list<KV> list_;
+    std::unordered_map<int, std::list<KV>::iterator> map_;
+public:
+    explicit LRUCache(int cap) : capacity_(cap) {}
+
+    std::optional<int> get(int key) {
+        auto it = map_.find(key);
+        if (it == map_.end()) return std::nullopt;
+        list_.splice(list_.begin(), list_, it->second);
+        return it->second->second;
+    }
+
+    void put(int key, int value) {
+        auto it = map_.find(key);
+        if (it != map_.end()) {
+            it->second->second = value;
+            list_.splice(list_.begin(), list_, it->second);
+            return;
+        }
+        if ((int)map_.size() >= capacity_) {
+            map_.erase(list_.back().first);
+            list_.pop_back();
+        }
+        list_.emplace_front(key, value);
+        map_[key] = list_.begin();
+    }
+};
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+public class LRUCache
+{
+    private readonly int _capacity;
+    private readonly Dictionary<int, LinkedListNode<(int Key, int Val)>> _map;
+    private readonly LinkedList<(int Key, int Val)> _list = new();
+
+    public LRUCache(int capacity)
+    {
+        _capacity = capacity;
+        _map = new(capacity);
+    }
+
+    public int? Get(int key)
+    {
+        if (!_map.TryGetValue(key, out var node)) return null;
+        _list.Remove(node);
+        _list.AddFirst(node);
+        return node.Value.Val;
+    }
+
+    public void Put(int key, int value)
+    {
+        if (_map.TryGetValue(key, out var node))
+        {
+            node.Value = (key, value);
+            _list.Remove(node);
+            _list.AddFirst(node);
+            return;
+        }
+        if (_map.Count >= _capacity)
+        {
+            _map.Remove(_list.Last!.Value.Key);
+            _list.RemoveLast();
+        }
+        var newNode = _list.AddFirst((key, value));
+        _map[key] = newNode;
+    }
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~使用~\Fn{std::list::splice}~实现~$\bigO{1}$~节点移动（无拷贝）；
+C\#~使用~\Tp{LinkedList<T>}~+~\Tp{Dictionary}~实现等价逻辑。
+C~缺少标准双向链表和哈希表，实现较繁琐（需手写双向链表+开放寻址哈希表）。
+\end{compare}
+
+% ============================================================
+\part{树算法}
+% ============================================================
+
+% ── 12. 二叉树遍历 ──
+\chapter{二叉树遍历}
+
+二叉树的四种经典遍历方式：前序（根-左-右）、中序（左-根-右）、
+后序（左-右-根）和层序（BFS）。中序遍历二叉搜索树可得到有序序列。
+
+\begin{complexitybox}
+  时间：$\bigO{n}$（每个节点访问一次）。
+  空间：$\bigO{h}$（递归栈/栈，$h$~为树高）或~$\bigO{n}$（层序队列）。
+\end{complexitybox}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+typedef struct TreeNode {
+    int val;
+    struct TreeNode *left, *right;
+} TreeNode;
+
+/* 中序遍历（递归）*/
+void inorder(const TreeNode* root, void (*visit)(int)) {
+    if (!root) return;
+    inorder(root->left, visit);
+    visit(root->val);
+    inorder(root->right, visit);
+}
+
+/* 层序遍历（BFS）*/
+void level_order(TreeNode* root, void (*visit)(int)) {
+    if (!root) return;
+    TreeNode* queue[1024];
+    int front = 0, rear = 0;
+    queue[rear++] = root;
+    while (front < rear) {
+        TreeNode* node = queue[front++];
+        visit(node->val);
+        if (node->left)  queue[rear++] = node->left;
+        if (node->right) queue[rear++] = node->right;
+    }
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <queue>
+#include <functional>
+
+struct TreeNode {
+    int val;
+    TreeNode *left = nullptr, *right = nullptr;
+    TreeNode(int v) : val(v) {}
+};
+
+/* 中序遍历（递归 + lambda）*/
+void inorder(TreeNode* root, const std::function<void(int)>& visit) {
+    if (!root) return;
+    inorder(root->left, visit);
+    visit(root->val);
+    inorder(root->right, visit);
+}
+
+/* 层序遍历 */
+void level_order(TreeNode* root, const std::function<void(int)>& visit) {
+    if (!root) return;
+    std::queue<TreeNode*> q;
+    q.push(root);
+    while (!q.empty()) {
+        auto node = q.front(); q.pop();
+        visit(node->val);
+        if (node->left)  q.push(node->left);
+        if (node->right) q.push(node->right);
+    }
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+public class TreeNode
+{
+    public int Val;
+    public TreeNode? Left, Right;
+    public TreeNode(int val) => Val = val;
+}
+
+// 中序遍历
+static void InOrder(TreeNode? root, Action<int> visit)
+{
+    if (root is null) return;
+    InOrder(root.Left, visit);
+    visit(root.Val);
+    InOrder(root.Right, visit);
+}
+
+// 层序遍历
+static void LevelOrder(TreeNode? root, Action<int> visit)
+{
+    if (root is null) return;
+    var queue = new Queue<TreeNode>();
+    queue.Enqueue(root);
+    while (queue.Count > 0)
+    {
+        var node = queue.Dequeue();
+        visit(node.Val);
+        if (node.Left is not null)  queue.Enqueue(node.Left);
+        if (node.Right is not null) queue.Enqueue(node.Right);
+    }
+}
+\end{lstlisting}
+
+\begin{compare}
+C~的~BFS~使用固定大小数组模拟队列（需预估容量）；
+C++~使用~\Tp{std::queue}；C\#~使用~\Tp{Queue<T>}。
+回调方式：C~用函数指针，C++~用~\Tp{std::function}，C\#~用~\Tp{Action<T>}~委托。
+\end{compare}
+
+% ── 13. 二叉搜索树 ──
+\chapter{二叉搜索树（BST）}
+
+二叉搜索树的性质：左子树所有节点值 $<$ 根 $<$ 右子树所有节点值。
+支持~$\bigO{h}$~的查找、插入和删除操作。
+
+\begin{complexitybox}
+  时间：平均~$\bigO{\log n}$、最差~$\bigO{n}$（退化为链表）。
+  平衡 BST（AVL/红黑树）保证~$\bigO{\log n}$。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <memory>
+#include <optional>
+
+struct BSTNode {
+    int key;
+    std::unique_ptr<BSTNode> left, right;
+    BSTNode(int k) : key(k) {}
+};
+
+class BST {
+    std::unique_ptr<BSTNode> root_;
+
+    std::unique_ptr<BSTNode>& find_min(std::unique_ptr<BSTNode>& n) {
+        return n->left ? find_min(n->left) : n;
+    }
+    bool insert(std::unique_ptr<BSTNode>& node, int key) {
+        if (!node) { node = std::make_unique<BSTNode>(key); return true; }
+        if (key < node->key)      return insert(node->left, key);
+        else if (key > node->key) return insert(node->right, key);
+        return false;  /* duplicate */
+    }
+    bool remove(std::unique_ptr<BSTNode>& node, int key) {
+        if (!node) return false;
+        if (key < node->key)      return remove(node->left, key);
+        if (key > node->key)      return remove(node->right, key);
+        if (!node->left) { node = std::move(node->right); return true; }
+        if (!node->right){ node = std::move(node->left);  return true; }
+        auto& succ = find_min(node->right);
+        node->key = succ->key;
+        return remove(node->right, succ->key);
+    }
+public:
+    void insert(int key)            { insert(root_, key); }
+    void remove(int key)            { remove(root_, key); }
+};
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+public class BSTNode
+{
+    public int Key;
+    public BSTNode? Left, Right;
+    public BSTNode(int key) => Key = key;
+}
+
+public class BST
+{
+    private BSTNode? _root;
+
+    public void Insert(int key) => _root = Insert(_root, key);
+
+    private BSTNode Insert(BSTNode? node, int key)
+    {
+        if (node is null) return new BSTNode(key);
+        if (key < node.Key)      node.Left  = Insert(node.Left, key);
+        else if (key > node.Key) node.Right = Insert(node.Right, key);
+        return node;
+    }
+
+    public bool Contains(int key)
+    {
+        var cur = _root;
+        while (cur is not null)
+        {
+            if (key == cur.Key) return true;
+            cur = key < cur.Key ? cur.Left : cur.Right;
+        }
+        return false;
+    }
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~使用~\Tp{unique\_ptr}~实现自动内存管理，删除节点时通过所有权转移避免泄漏。
+C\#~依赖 GC，实现更简洁但有 GC 暂停风险。
+生产环境中 C++~通常直接使用~\Tp{std::map}（标准保证~$\bigO{\log n}$），C\#~使用~\Tp{SortedDictionary<K,V>}。
+\end{compare}
+
+% ============================================================
+\part{图算法}
+% ============================================================
+
+% ── 14. BFS ──
+\chapter{广度优先搜索（BFS）}
+
+BFS 从起始节点开始，逐层访问邻居节点。使用队列实现，
+常用于无权图最短路径和层序遍历。
+
+\begin{complexitybox}
+  时间：$\bigO{V + E}$。空间：$\bigO{V}$。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <queue>
+#include <vector>
+
+/* adj[u] = list of neighbors of u */
+std::vector<int> bfs(const std::vector<std::vector<int>>& adj, int start) {
+    std::vector<int> dist(adj.size(), -1);
+    std::queue<int> q;
+    dist[start] = 0;
+    q.push(start);
+    while (!q.empty()) {
+        int u = q.front(); q.pop();
+        for (int v : adj[u]) {
+            if (dist[v] == -1) {
+                dist[v] = dist[u] + 1;
+                q.push(v);
+            }
+        }
+    }
+    return dist;
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static int[] Bfs(List<int>[] adj, int start)
+{
+    var dist = Enumerable.Repeat(-1, adj.Length).ToArray();
+    var queue = new Queue<int>();
+    dist[start] = 0;
+    queue.Enqueue(start);
+    while (queue.Count > 0)
+    {
+        int u = queue.Dequeue();
+        foreach (int v in adj[u])
+        {
+            if (dist[v] == -1)
+            {
+                dist[v] = dist[u] + 1;
+                queue.Enqueue(v);
+            }
+        }
+    }
+    return dist;
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~的~\Tp{vector<vector<int>>}~邻接表与 C\#~的~\Tp{List<int>[]}~等价。
+C\#~使用~\Fn{Enumerable.Repeat}~初始化距离数组，C++~使用构造函数默认值。
+\end{compare}
+
+% ── 15. DFS ──
+\chapter{深度优先搜索（DFS）}
+
+DFS 沿一条路径尽可能深入，再回溯探索其他分支。
+可用递归或显式栈实现，用于连通性检测、拓扑排序、环检测等。
+
+\begin{complexitybox}
+  时间：$\bigO{V + E}$。空间：$\bigO{V}$（递归栈/显式栈）。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <vector>
+
+void dfs(const std::vector<std::vector<int>>& adj, int u,
+         std::vector<bool>& visited) {
+    visited[u] = true;
+    for (int v : adj[u]) {
+        if (!visited[v])
+            dfs(adj, v, visited);
+    }
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static void Dfs(List<int>[] adj, int u, bool[] visited)
+{
+    visited[u] = true;
+    foreach (int v in adj[u])
+        if (!visited[v])
+            Dfs(adj, v, visited);
+}
+\end{lstlisting}
+
+\begin{warning}
+递归 DFS 在大规模图上可能导致栈溢出。
+可改用显式栈（C++~\Tp{std::stack}~或 C\#~\Tp{Stack<T>}）实现迭代版本。
+\end{warning}
+
+% ── 16. Dijkstra ──
+\chapter{Dijkstra 最短路径}
+
+Dijkstra 算法求解单源最短路径（非负权图）。
+使用优先队列（最小堆）贪心地选择当前距离最小的节点扩展。
+
+\begin{complexitybox}
+  时间：$\bigO{(V + E) \log V}$（使用优先队列）。空间：$\bigO{V}$。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <queue>
+#include <vector>
+#include <limits>
+
+using pii = std::pair<int, int>;  /* (distance, vertex) */
+
+std::vector<int> dijkstra(
+    const std::vector<std::vector<pii>>& adj, int src)
+{
+    constexpr int INF = std::numeric_limits<int>::max();
+    std::vector<int> dist(adj.size(), INF);
+    std::priority_queue<pii, std::vector<pii>, std::greater<>> pq;
+    dist[src] = 0;
+    pq.emplace(0, src);
+    while (!pq.empty()) {
+        auto [d, u] = pq.top(); pq.pop();
+        if (d > dist[u]) continue;  /* stale entry */
+        for (auto [w, v] : adj[u]) {
+            if (dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+                pq.emplace(dist[v], v);
+            }
+        }
+    }
+    return dist;
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static int[] Dijkstra(List<(int W, int V)>[] adj, int src)
+{
+    const int INF = int.MaxValue;
+    var dist = Enumerable.Repeat(INF, adj.Length).ToArray();
+    var pq = new PriorityQueue<int, int>();
+    dist[src] = 0;
+    pq.Enqueue(src, 0);
+    while (pq.Count > 0)
+    {
+        int u = pq.Dequeue();
+        // Note: PriorityQueue doesn't have decrease-key,
+        // so we skip stale entries by checking distance.
+        foreach (var (w, v) in adj[u])
+        {
+            int newDist = dist[u] + w;
+            if (newDist < dist[v])
+            {
+                dist[v] = newDist;
+                pq.Enqueue(v, newDist);
+            }
+        }
+    }
+    return dist;
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~使用~\Tp{priority\_queue}~配合~\Tp{std::greater}~实现最小堆，结构化绑定解构节点。
+C\#~使用 .NET 6+ 的~\Tp{PriorityQueue<TElement, TPriority>}，
+API 更简洁但不支持 decrease-key 操作（通过惰性删除处理）。
+C~缺少标准优先队列，需手动实现二叉堆。
+\end{compare}
+
+% ── 17. 最小生成树（Kruskal）──
+\chapter{最小生成树（Kruskal）}
+
+Kruskal 算法贪心地按边权升序选择不构成环的边，构建最小生成树。
+使用并查集（Disjoint Set Union）高效检测环。
+
+\begin{complexitybox}
+  时间：$\bigO{E \log E}$（排序边）。空间：$\bigO{V}$（并查集）。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <algorithm>
+#include <numeric>
+#include <tuple>
+#include <vector>
+
+struct DSU {
+    std::vector<int> parent, rank_;
+    DSU(int n) : parent(n), rank_(n, 0) { std::iota(parent.begin(), parent.end(), 0); }
+    int find(int x) { return parent[x] == x ? x : parent[x] = find(parent[x]); }
+    bool unite(int a, int b) {
+        a = find(a); b = find(b);
+        if (a == b) return false;
+        if (rank_[a] < rank_[b]) std::swap(a, b);
+        parent[b] = a;
+        if (rank_[a] == rank_[b]) rank_[a]++;
+        return true;
+    }
+};
+
+/* edges: (weight, u, v) */
+int kruskal(int n, std::vector<std::tuple<int,int,int>>& edges) {
+    std::sort(edges.begin(), edges.end());
+    DSU dsu(n);
+    int total = 0;
+    for (auto& [w, u, v] : edges)
+        if (dsu.unite(u, v)) total += w;
+    return total;
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+class DSU
+{
+    int[] parent, rank;
+    public DSU(int n)
+    {
+        parent = Enumerable.Range(0, n).ToArray();
+        rank = new int[n];
+    }
+    public int Find(int x) =>
+        parent[x] == x ? x : (parent[x] = Find(parent[x]));
+    public bool Unite(int a, int b)
+    {
+        a = Find(a); b = Find(b);
+        if (a == b) return false;
+        if (rank[a] < rank[b]) (a, b) = (b, a);
+        parent[b] = a;
+        if (rank[a] == rank[b]) rank[a]++;
+        return true;
+    }
+}
+
+// edges: (Weight, U, V)
+static int Kruskal(int n, (int W, int U, int V)[] edges)
+{
+    Array.Sort(edges, (a, b) => a.W.CompareTo(b.W));
+    var dsu = new DSU(n);
+    int total = 0;
+    foreach (var (w, u, v) in edges)
+        if (dsu.Unite(u, v)) total += w;
+    return total;
+}
+\end{lstlisting}
+
+\begin{compare}
+并查集的路径压缩（\Fn{find}~中赋值）和按秩合并（\texttt{rank}）在两种语言中实现相同。
+C++~使用~\Fn{std::iota}~初始化 parent 数组；C\#~使用~\Fn{Enumerable.Range}。
+\end{compare}
+
+% ── 18. 拓扑排序 ──
+\chapter{拓扑排序}
+
+拓扑排序对有向无环图（DAG）的节点排序，使得每条边~$(u,v)$~满足~$u$~在~$v$~之前。
+使用 Kahn 算法（BFS + 入度计数）实现。
+
+\begin{complexitybox}
+  时间：$\bigO{V + E}$。空间：$\bigO{V}$。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <queue>
+#include <vector>
+
+/* returns empty vector if graph has a cycle */
+std::vector<int> topo_sort(const std::vector<std::vector<int>>& adj) {
+    int n = adj.size();
+    std::vector<int> indeg(n, 0);
+    for (auto& neighbors : adj)
+        for (int v : neighbors) indeg[v]++;
+    std::queue<int> q;
+    for (int i = 0; i < n; i++)
+        if (indeg[i] == 0) q.push(i);
+    std::vector<int> order;
+    while (!q.empty()) {
+        int u = q.front(); q.pop();
+        order.push_back(u);
+        for (int v : adj[u])
+            if (--indeg[v] == 0) q.push(v);
+    }
+    return order.size() == (size_t)n ? order : std::vector<int>{};
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static int[]? TopoSort(List<int>[] adj)
+{
+    int n = adj.Length;
+    var indeg = new int[n];
+    foreach (var neighbors in adj)
+        foreach (int v in neighbors) indeg[v]++;
+    var queue = new Queue<int>();
+    for (int i = 0; i < n; i++)
+        if (indeg[i] == 0) queue.Enqueue(i);
+    var order = new List<int>();
+    while (queue.Count > 0)
+    {
+        int u = queue.Dequeue();
+        order.Add(u);
+        foreach (int v in adj[u])
+            if (--indeg[v] == 0) queue.Enqueue(v);
+    }
+    return order.Count == n ? order.ToArray() : null;
+}
+\end{lstlisting}
+
+\begin{compare}
+两种实现逻辑完全一致。C++~返回空~\Tp{vector}~表示有环；
+C\#~返回~\texttt{null}（\Tp{int[]?}~可空类型）。
+C\#~使用~\Fn{List<int>.ToArray()}~转换结果。
+\end{compare}
+
+% ============================================================
+\part{动态规划}
+% ============================================================
+
+% ── 19. 0-1 背包 ──
+\chapter{0-1 背包问题}
+
+给定~$n$~个物品（各有重量和价值）和容量为~$W$~的背包，
+每个物品最多选一次，求最大总价值。经典 DP 问题。
+
+\begin{complexitybox}
+  时间：$\bigO{nW}$。空间：$\bigO{W}$（滚动数组优化）。
+\end{complexitybox}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+int knapsack_01(int W, const int wt[], const int val[], int n) {
+    int* dp = (int*)calloc(W + 1, sizeof(int));
+    for (int i = 0; i < n; i++)
+        for (int w = W; w >= wt[i]; w--)
+            if (dp[w - wt[i]] + val[i] > dp[w])
+                dp[w] = dp[w - wt[i]] + val[i];
+    int ans = dp[W];
+    free(dp);
+    return ans;
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <vector>
+#include <algorithm>
+
+int knapsack_01(int W, const std::vector<int>& wt,
+                const std::vector<int>& val) {
+    int n = wt.size();
+    std::vector<int> dp(W + 1, 0);
+    for (int i = 0; i < n; i++)
+        for (int w = W; w >= wt[i]; w--)
+            dp[w] = std::max(dp[w], dp[w - wt[i]] + val[i]);
+    return dp[W];
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static int Knapsack01(int W, int[] wt, int[] val)
+{
+    int n = wt.Length;
+    var dp = new int[W + 1];
+    for (int i = 0; i < n; i++)
+        for (int w = W; w >= wt[i]; w--)
+            dp[w] = Math.Max(dp[w], dp[w - wt[i]] + val[i]);
+    return dp[W];
+}
+\end{lstlisting}
+
+\begin{compare}
+三种语言实现几乎相同，关键区别在于内存管理：
+C~需手动~\texttt{calloc}/\texttt{free}，C++~用~\Tp{vector}~自动释放，C\#~用 GC 管理的数组。
+逆序遍历~\texttt{w}~保证每个物品只使用一次（0-1 约束）。
+\end{compare}
+
+% ── 20. 最长公共子序列（LCS）──
+\chapter{最长公共子序列（LCS）}
+
+求两个序列的最长公共子序列长度。
+子序列不要求连续但要求保持相对顺序。
+
+\begin{complexitybox}
+  时间：$\bigO{mn}$。空间：$\bigO{mn}$（可优化为~$\bigO{\min(m,n)}$）。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <string>
+#include <vector>
+#include <algorithm>
+
+int lcs_length(const std::string& a, const std::string& b) {
+    int m = a.size(), n = b.size();
+    std::vector<std::vector<int>> dp(m + 1, std::vector<int>(n + 1, 0));
+    for (int i = 1; i <= m; i++)
+        for (int j = 1; j <= n; j++)
+            dp[i][j] = (a[i-1] == b[j-1])
+                        ? dp[i-1][j-1] + 1
+                        : std::max(dp[i-1][j], dp[i][j-1]);
+    return dp[m][n];
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static int LcsLength(string a, string b)
+{
+    int m = a.Length, n = b.Length;
+    var dp = new int[m + 1, n + 1];  // 2D array
+    for (int i = 1; i <= m; i++)
+        for (int j = 1; j <= n; j++)
+            dp[i, j] = a[i - 1] == b[j - 1]
+                        ? dp[i - 1, j - 1] + 1
+                        : Math.Max(dp[i - 1, j], dp[i, j - 1]);
+    return dp[m, n];
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~使用~\Tp{vector<vector<int>>}~（锯齿数组）；C\#~使用~\texttt{int[,]}~（多维数组），
+后者内存布局更紧凑（连续分配）。C~通常使用~\texttt{int**}~或一维数组模拟二维。
+\end{compare}
+
+% ── 21. 最长递增子序列（LIS）──
+\chapter{最长递增子序列（LIS）}
+
+求数组中最长严格递增子序列的长度。
+DP 解法~$\bigO{n^2}$，二分搜索优化解法~$\bigO{n \log n}$。
+
+\begin{complexitybox}
+  时间：$\bigO{n \log n}$（耐心排序 + 二分）。空间：$\bigO{n}$。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <vector>
+#include <algorithm>
+
+int lis_length(const std::vector<int>& a) {
+    std::vector<int> tails;  /* tails[i] = smallest tail of IS of len i+1 */
+    for (int x : a) {
+        auto it = std::lower_bound(tails.begin(), tails.end(), x);
+        if (it == tails.end()) tails.push_back(x);
+        else *it = x;
+    }
+    return (int)tails.size();
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static int LisLength(int[] a)
+{
+    var tails = new List<int>();
+    foreach (int x in a)
+    {
+        int idx = tails.BinarySearch(x);
+        if (idx < 0) idx = ~idx;  // bitwise complement = insert pos
+        if (idx == tails.Count) tails.Add(x);
+        else tails[idx] = x;
+    }
+    return tails.Count;
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~的~\Fn{std::lower\_bound}~返回迭代器；C\#~的~\Fn{List<T>.BinarySearch}~返回负数表示插入位置（需~\texttt{\~idx}~取反）。
+核心算法逻辑相同：维护递增的~\texttt{tails}~数组，用二分查找更新。
+\end{compare}
+
+% ── 22. 编辑距离 ──
+\chapter{编辑距离（Levenshtein）}
+
+将字符串~$a$~转换为字符串~$b$~所需的最少操作数（插入、删除、替换各计 1）。
+广泛用于拼写检查、DNA 序列比对、模糊搜索。
+
+\begin{complexitybox}
+  时间：$\bigO{mn}$。空间：$\bigO{mn}$（可优化为~$\bigO{\min(m,n)}$）。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <string>
+#include <vector>
+#include <algorithm>
+
+int edit_distance(const std::string& a, const std::string& b) {
+    int m = a.size(), n = b.size();
+    std::vector<std::vector<int>> dp(m + 1, std::vector<int>(n + 1));
+    for (int i = 0; i <= m; i++) dp[i][0] = i;
+    for (int j = 0; j <= n; j++) dp[0][j] = j;
+    for (int i = 1; i <= m; i++)
+        for (int j = 1; j <= n; j++) {
+            int cost = (a[i-1] == b[j-1]) ? 0 : 1;
+            dp[i][j] = std::min({dp[i-1][j] + 1,     /* delete */
+                                 dp[i][j-1] + 1,     /* insert */
+                                 dp[i-1][j-1] + cost}); /* replace */
+        }
+    return dp[m][n];
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static int EditDistance(string a, string b)
+{
+    int m = a.Length, n = b.Length;
+    var dp = new int[m + 1, n + 1];
+    for (int i = 0; i <= m; i++) dp[i, 0] = i;
+    for (int j = 0; j <= n; j++) dp[0, j] = j;
+    for (int i = 1; i <= m; i++)
+        for (int j = 1; j <= n; j++)
+        {
+            int cost = a[i - 1] == b[j - 1] ? 0 : 1;
+            dp[i, j] = Math.Min(dp[i - 1, j] + 1,
+                       Math.Min(dp[i, j - 1] + 1,
+                                dp[i - 1, j - 1] + cost));
+        }
+    return dp[m, n];
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~的~\Fn{std::min}~支持初始化列表（三参数取最小）；
+C\#~的~\Fn{Math.Min}~只接受两个参数，需嵌套调用。
+\end{compare}
+
+% ============================================================
+\part{贪心算法}
+% ============================================================
+
+% ── 23. 活动选择 ──
+\chapter{活动选择问题}
+
+给定一组活动（各有开始和结束时间），选择最大数量的互不重叠活动。
+贪心策略：按结束时间升序，每次选择结束最早且不与已选活动冲突的活动。
+
+\begin{complexitybox}
+  时间：$\bigO{n \log n}$（排序）+ $\bigO{n}$（选择）。空间：$\bigO{n}$。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <algorithm>
+#include <vector>
+
+struct Activity { int start, end; };
+
+std::vector<Activity> activity_selection(std::vector<Activity> acts) {
+    std::sort(acts.begin(), acts.end(),
+              [](const Activity& a, const Activity& b) {
+                  return a.end < b.end;
+              });
+    std::vector<Activity> result;
+    int last_end = -1;
+    for (auto& act : acts) {
+        if (act.start >= last_end) {
+            result.push_back(act);
+            last_end = act.end;
+        }
+    }
+    return result;
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+record Activity(int Start, int End);
+
+static List<Activity> ActivitySelection(Activity[] acts)
+{
+    var sorted = acts.OrderBy(a => a.End).ToList();
+    var result = new List<Activity>();
+    int lastEnd = -1;
+    foreach (var act in sorted)
+    {
+        if (act.Start >= lastEnd)
+        {
+            result.Add(act);
+            lastEnd = act.End;
+        }
+    }
+    return result;
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~使用~\Fn{std::sort}~配合 lambda 自定义比较；
+C\#~使用 LINQ 的~\Fn{OrderBy}~链式调用，声明式风格更简洁。
+C\#~的~\texttt{record}~自动提供值相等比较和~\Fn{ToString}。
+\end{compare}
+
+% ── 24. 哈夫曼编码 ──
+\chapter{哈夫曼编码}
+
+根据字符出现频率构建最优前缀码二叉树。
+使用最小堆贪心地反复合并频率最低的两个节点。
+
+\begin{complexitybox}
+  时间：$\bigO{n \log n}$。空间：$\bigO{n}$。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <memory>
+#include <queue>
+#include <string>
+#include <unordered_map>
+
+struct HuffNode {
+    char ch; int freq;
+    std::shared_ptr<HuffNode> left, right;
+    HuffNode(char c, int f) : ch(c), freq(f) {}
+};
+
+std::shared_ptr<HuffNode> build_huffman(
+    const std::unordered_map<char, int>& freq)
+{
+    auto cmp = [](const auto& a, const auto& b) {
+        return a->freq > b->freq;
+    };
+    std::priority_queue<std::shared_ptr<HuffNode>,
+        std::vector<std::shared_ptr<HuffNode>>, decltype(cmp)> pq(cmp);
+    for (auto& [c, f] : freq)
+        pq.push(std::make_shared<HuffNode>(c, f));
+    while (pq.size() > 1) {
+        auto l = pq.top(); pq.pop();
+        auto r = pq.top(); pq.pop();
+        auto parent = std::make_shared<HuffNode>('\0', l->freq + r->freq);
+        parent->left = l; parent->right = r;
+        pq.push(parent);
+    }
+    return pq.top();
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+class HuffNode
+{
+    public char Ch; public int Freq;
+    public HuffNode? Left, Right;
+    public HuffNode(char ch, int freq) { Ch = ch; Freq = freq; }
+}
+
+static HuffNode? BuildHuffman(Dictionary<char, int> freq)
+{
+    var pq = new PriorityQueue<HuffNode, int>();
+    foreach (var (ch, f) in freq)
+        pq.Enqueue(new HuffNode(ch, f), f);
+    while (pq.Count > 1)
+    {
+        var l = pq.Dequeue();
+        var r = pq.Dequeue();
+        var parent = new HuffNode('\0', l.Freq + r.Freq)
+            { Left = l, Right = r };
+        pq.Enqueue(parent, parent.Freq);
+    }
+    return pq.Count > 0 ? pq.Dequeue() : null;
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~使用~\Tp{shared\_ptr}~因为树节点被多个指针引用（父节点的 left/right）；
+C\#~的 GC 自动处理共享引用。
+C++~的~\Tp{priority\_queue}~需要自定义比较器（lambda + decltype）；
+C\#~的~\Tp{PriorityQueue}~通过独立优先级参数更简洁。
+\end{compare}
+
+% ============================================================
+\part{回溯算法}
+% ============================================================
+
+% ── 25. N 皇后 ──
+\chapter{N 皇后问题}
+
+在~$n \times n$~棋盘上放置~$n$~个皇后，使得任意两个皇后不在同一行、列和对角线上。
+回溯法逐行尝试放置，冲突时回溯。
+
+\begin{complexitybox}
+  时间：$\bigO{n!}$（上界）。空间：$\bigO{n}$。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <vector>
+#include <string>
+#include <cmath>
+
+class NQueens {
+    int n_;
+    std::vector<std::vector<std::string>> solutions_;
+    std::vector<int> cols_, diag1_, diag2_;
+
+    void solve(int row, std::vector<int>& queens) {
+        if (row == n_) {
+            std::vector<std::string> board;
+            for (int c : queens) {
+                std::string line(n_, '.');
+                line[c] = 'Q';
+                board.push_back(line);
+            }
+            solutions_.push_back(board);
+            return;
+        }
+        for (int col = 0; col < n_; col++) {
+            int d1 = row - col + n_, d2 = row + col;
+            if (cols_[col] || diag1_[d1] || diag2_[d2]) continue;
+            cols_[col] = diag1_[d1] = diag2_[d2] = 1;
+            queens.push_back(col);
+            solve(row + 1, queens);
+            queens.pop_back();
+            cols_[col] = diag1_[d1] = diag2_[d2] = 0;
+        }
+    }
+public:
+    std::vector<std::vector<std::string>> solve_nqueens(int n) {
+        n_ = n;
+        cols_.assign(n, 0);
+        diag1_.assign(2 * n, 0);
+        diag2_.assign(2 * n, 0);
+        std::vector<int> queens;
+        solve(0, queens);
+        return solutions_;
+    }
+};
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static List<string[]> SolveNQueens(int n)
+{
+    var solutions = new List<string[]>();
+    var cols  = new bool[n];
+    var diag1 = new bool[2 * n];
+    var diag2 = new bool[2 * n];
+
+    void Solve(int row, int[] queens)
+    {
+        if (row == n)
+        {
+            var board = new string[n];
+            for (int i = 0; i < n; i++)
+            {
+                var line = new char[n];
+                Array.Fill(line, '.');
+                line[queens[i]] = 'Q';
+                board[i] = new string(line);
+            }
+            solutions.Add(board);
+            return;
+        }
+        for (int col = 0; col < n; col++)
+        {
+            int d1 = row - col + n, d2 = row + col;
+            if (cols[col] || diag1[d1] || diag2[d2]) continue;
+            cols[col] = diag1[d1] = diag2[d2] = true;
+            queens[row] = col;
+            Solve(row + 1, queens);
+            cols[col] = diag1[d1] = diag2[d2] = false;
+        }
+    }
+
+    Solve(0, new int[n]);
+    return solutions;
+}
+\end{lstlisting}
+
+\begin{compare}
+C\#~使用局部函数（local function）\Fn{Solve}~直接捕获外部变量~\texttt{cols/diag1/diag2}，
+无需将它们作为参数传递或封装为类成员。
+C++~需要类封装或~\texttt{std::function}~配合引用捕获。
+\end{compare}
+
+% ── 26. 全排列 ──
+\chapter{全排列}
+
+生成数组的所有排列。回溯法通过交换元素递归生成；
+C++ 还可使用标准库函数~\texttt{\seqsplit{next\_permutation}}~按字典序逐个枚举。
+
+\begin{complexitybox}
+  时间：$\bigO{n \cdot n!}$。空间：$\bigO{n}$（递归栈）。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <algorithm>
+#include <vector>
+
+/* 方法 1：回溯 */
+void permute(std::vector<int>& nums, int start,
+             std::vector<std::vector<int>>& result) {
+    if (start == (int)nums.size()) {
+        result.push_back(nums);
+        return;
+    }
+    for (int i = start; i < (int)nums.size(); i++) {
+        std::swap(nums[start], nums[i]);
+        permute(nums, start + 1, result);
+        std::swap(nums[start], nums[i]);
+    }
+}
+
+/* 方法 2：使用标准库 */
+std::vector<std::vector<int>> all_permutations(std::vector<int> nums) {
+    std::sort(nums.begin(), nums.end());
+    std::vector<std::vector<int>> result;
+    do {
+        result.push_back(nums);
+    } while (std::next_permutation(nums.begin(), nums.end()));
+    return result;
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static List<int[]> Permute(int[] nums)
+{
+    var result = new List<int[]>();
+    void Backtrack(int start)
+    {
+        if (start == nums.Length)
+        {
+            result.Add((int[])nums.Clone());
+            return;
+        }
+        for (int i = start; i < nums.Length; i++)
+        {
+            (nums[start], nums[i]) = (nums[i], nums[start]);
+            Backtrack(start + 1);
+            (nums[start], nums[i]) = (nums[i], nums[start]);
+        }
+    }
+    Backtrack(0);
+    return result;
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~提供~\Fn{std::next\_permutation}~直接生成下一个排列（字典序），
+无需手写回溯逻辑。C\#~和~C~无此内置功能，需手动实现回溯。
+C\#~使用~\Fn{Array.Clone()}~保存排列快照。
+\end{compare}
+
+\begin{stdspec}[title=排列操作]
+\textbf{C++}~（\header{algorithm}）：
+
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+  \Fn{std::next\_permutation} & 将范围重排为字典序的\textbf{下一个}排列。若已是最大排列（降序），则重排为最小排列（升序）并返回~\texttt{false}。\textbf{摊还~$\bigO{1}$}~（每~$n!$~次调用总交换次数为~$\bigO{n!}$）。要求~\Tp{BidirectionalIterator}。\\
+  \Fn{std::prev\_permutation} & 对称操作：生成字典序的\textbf{上一个}排列。\\
+  \Fn{std::is\_permutation} & 判断两个范围是否为同一集合的排列，$\bigO{n}$~（使用哈希计数）或~$\bigO{n^2}$~（纯比较）。\\
+\end{tabularx}
+
+\medskip
+\textbf{典型用法}：先~\Fn{std::sort}~升序，然后循环调用~\Fn{next\_permutation}~枚举所有排列：
+\begin{lstlisting}[style=cppstyle,numbers=none]
+std::sort(v.begin(), v.end());
+do { process(v); } while (std::next_permutation(v.begin(), v.end()));
+\end{lstlisting}
+
+\noindent\textbf{C\#}：标准库无排列生成函数，需手动实现回溯或使用第三方库
+（如 MoreLINQ 的~\Fn{Permutations}~扩展方法）。
+\end{stdspec}
+
+% ============================================================
+\part{字符串匹配}
+% ============================================================
+
+% ── 27. KMP ──
+\chapter{KMP 字符串匹配}
+
+KMP 算法通过预处理模式串构建部分匹配表（failure function），
+在主串匹配失败时跳过已知不可能匹配的位置，避免回溯。
+
+\begin{complexitybox}
+  时间：预处理~$\bigO{m}$~+ 匹配~$\bigO{n}$~= $\bigO{n+m}$。空间：$\bigO{m}$。
+\end{complexitybox}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+void build_lps(const char* pat, int m, int* lps) {
+    lps[0] = 0;
+    int len = 0, i = 1;
+    while (i < m) {
+        if (pat[i] == pat[len]) { lps[i++] = ++len; }
+        else if (len) { len = lps[len - 1]; }
+        else { lps[i++] = 0; }
+    }
+}
+
+/* returns first match position, or -1 */
+int kmp_search(const char* text, const char* pat) {
+    int n = strlen(text), m = strlen(pat);
+    int* lps = (int*)malloc(m * sizeof(int));
+    build_lps(pat, m, lps);
+    int i = 0, j = 0;
+    while (i < n) {
+        if (text[i] == pat[j]) { i++; j++; }
+        if (j == m) { free(lps); return i - j; }
+        if (i < n && text[i] != pat[j]) {
+            if (j) j = lps[j - 1];
+            else i++;
+        }
+    }
+    free(lps);
+    return -1;
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <string>
+#include <vector>
+
+std::vector<int> build_lps(const std::string& pat) {
+    int m = pat.size();
+    std::vector<int> lps(m, 0);
+    for (int len = 0, i = 1; i < m; ) {
+        if (pat[i] == pat[len]) lps[i++] = ++len;
+        else if (len) len = lps[len - 1];
+        else lps[i++] = 0;
+    }
+    return lps;
+}
+
+int kmp_search(const std::string& text, const std::string& pat) {
+    int n = text.size(), m = pat.size();
+    auto lps = build_lps(pat);
+    for (int i = 0, j = 0; i < n; ) {
+        if (text[i] == pat[j]) { i++; j++; }
+        if (j == m) return i - j;
+        if (i < n && text[i] != pat[j]) {
+            if (j) j = lps[j - 1];
+            else i++;
+        }
+    }
+    return -1;
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static int[] BuildLps(string pat)
+{
+    int m = pat.Length;
+    var lps = new int[m];
+    for (int len = 0, i = 1; i < m;)
+    {
+        if (pat[i] == pat[len]) lps[i++] = ++len;
+        else if (len > 0) len = lps[len - 1];
+        else lps[i++] = 0;
+    }
+    return lps;
+}
+
+static int KmpSearch(string text, string pat)
+{
+    int n = text.Length, m = pat.Length;
+    var lps = BuildLps(pat);
+    for (int i = 0, j = 0; i < n;)
+    {
+        if (text[i] == pat[j]) { i++; j++; }
+        if (j == m) return i - j;
+        if (i < n && text[i] != pat[j])
+        {
+            if (j > 0) j = lps[j - 1];
+            else i++;
+        }
+    }
+    return -1;
+}
+\end{lstlisting}
+
+\begin{compare}
+三种语言实现逻辑相同。C~版本需手动~\texttt{malloc}/\texttt{free}~LPS 数组。
+C++~返回~\Tp{vector<int>}~自动管理内存。C\#~使用~\texttt{string}~索引器（\texttt{pat[i]}）
+与 C++ 的~\texttt{string::operator[]}~等价。
+\end{compare}
+
+\begin{stdspec}[title=标准库字符串搜索]
+标准库均提供内置字符串搜索，实现策略因平台而异：
+
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+  C++ \Fn{std::string::find} & 标准仅要求~$\bigO{nm}$~最差复杂度。libstdc++/libc++ 均使用优化朴素算法，短模式时性能接近 KMP。C++17 提供~\texttt{\seqsplit{boyer\_moore\_searcher}}~和~\texttt{\seqsplit{boyer\_moore\_horspool\_searcher}}~用于长文本搜索。 \\
+  C\# \Fn{String.IndexOf} & .NET 6+ 在 x86/x64/ARM64 平台上使用 \textbf{SIMD 向量化}搜索（\texttt{Vector128/256}），对 ASCII 模式可达数 GB/s 吞吐。.NET 8 起对 UTF-16 模式也进行了优化。无 SIMD 平台回退到优化的朴素算法。 \\
+  C \Fn{strstr} & C 标准库函数，实现未规定算法。glibc 使用 Two-Way String Matching（$\bigO{n}$~最差），musl 使用优化的朴素算法。 \\
+\end{tabularx}
+
+\medskip
+\textbf{实践建议}：单次搜索优先使用标准库（C\#~的 SIMD 实现通常快于手写 KMP）。
+需要\textbf{多次搜索同一模式}时，KMP 的预处理优势才体现。
+长文本中搜索长模式时，考虑 Boyer-Moore（C++）或 Rabin-Karp（多模式匹配）。
+\end{stdspec}
+
+% ── 28. Rabin-Karp ──
+\chapter{Rabin-Karp 字符串匹配}
+
+Rabin-Karp 使用滚动哈希在~$\bigO{n+m}$~期望时间内匹配字符串。
+通过比较哈希值快速排除不匹配位置，仅在哈希匹配时逐字符验证。
+
+\begin{complexitybox}
+  时间：期望~$\bigO{n+m}$、最差~$\bigO{nm}$（哈希冲突）。空间：$\bigO{1}$。
+\end{complexitybox}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <string>
+#include <vector>
+
+constexpr long long BASE = 31, MOD = 1e9 + 9;
+
+std::vector<int> rabin_karp(const std::string& text, const std::string& pat) {
+    int n = text.size(), m = pat.size();
+    if (m > n) return {};
+    long long pat_hash = 0, win_hash = 0, power = 1;
+    for (int i = 0; i < m; i++) {
+        pat_hash = (pat_hash + pat[i] * power) % MOD;
+        win_hash = (win_hash + text[i] * power) % MOD;
+        if (i < m - 1) power = (power * BASE) % MOD;
+    }
+    std::vector<int> result;
+    for (int i = 0; i <= n - m; i++) {
+        if (pat_hash == win_hash &&
+            text.substr(i, m) == pat) {
+            result.push_back(i);
+        }
+        if (i + m < n) {
+            win_hash = (win_hash - text[i] + MOD) % MOD;
+            win_hash = (win_hash * modInverse(BASE, MOD)) % MOD;
+            win_hash = (win_hash + text[i + m] * power) % MOD;
+        }
+    }
+    return result;
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+static List<int> RabinKarp(string text, string pat)
+{
+    const long BASE = 31, MOD = 1_000_000_009;
+    int n = text.Length, m = pat.Length;
+    var result = new List<int>();
+    if (m > n) return result;
+    long patHash = 0, winHash = 0, power = 1;
+    for (int i = 0; i < m; i++)
+    {
+        patHash = (patHash + pat[i] * power) % MOD;
+        winHash = (winHash + text[i] * power) % MOD;
+        if (i < m - 1) power = power * BASE % MOD;
+    }
+    for (int i = 0; i <= n - m; i++)
+    {
+        if (patHash == winHash &&
+            string.CompareOrdinal(text, i, pat, 0, m) == 0)
+            result.Add(i);
+        if (i + m < n)
+        {
+            winHash = (winHash - text[i] + MOD) % MOD;
+            winHash = winHash * ModInverse(BASE, MOD) % MOD;
+            winHash = (winHash + text[i + m] * power) % MOD;
+        }
+    }
+    return result;
+}
+\end{lstlisting}
+
+\begin{compare}
+C++~使用~\Fn{std::string::substr}~验证匹配；C\#~使用~\Fn{string.CompareOrdinal}~避免分配子串。
+哈希冲突时两者都需逐字符验证。
+C~实现类似但需手动管理结果数组的动态扩容。
+\end{compare}
+
+% ============================================================
+\part*{算法总览}
+\addcontentsline{toc}{part}{算法总览}
+% ============================================================
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{l l c c X}
+  \hline
+  \textbf{类别} & \textbf{算法} & \textbf{时间} & \textbf{空间} & \textbf{C\# 标准库等价物} \\
+  \hline
+  \multirow{3}{*}{排序}
+    & 快速排序 & $\bigO{n\log n}$ & $\bigO{\log n}$ & \Fn{Array.Sort} / \Fn{List.Sort} \\
+    & 归并排序 & $\bigO{n\log n}$ & $\bigO{n}$ & \Fn{Enumerable.OrderBy}（稳定） \\
+    & 堆排序   & $\bigO{n\log n}$ & $\bigO{1}$ & \Fn{Array.Sort}（Introsort 含堆排） \\
+  \hline
+  \multirow{2}{*}{搜索}
+    & 二分搜索 & $\bigO{\log n}$ & $\bigO{1}$ & \Fn{Array.BinarySearch} \\
+    & BFS/DFS  & $\bigO{V+E}$ & $\bigO{V}$ & 无内置，需手写 \\
+  \hline
+  \multirow{2}{*}{数据结构}
+    & 链表反转 & $\bigO{n}$ & $\bigO{1}$ & \Fn{LinkedList<T>}（无内置反转） \\
+    & LRU 缓存 & $\bigO{1}$ & $\bigO{C}$ & 无内置，手写 Map + DLL \\
+  \hline
+  \multirow{3}{*}{图}
+    & Dijkstra & $\bigO{(V+E)\log V}$ & $\bigO{V}$ & \Tp{PriorityQueue}（.NET 6+） \\
+    & Kruskal  & $\bigO{E\log E}$ & $\bigO{V}$ & 无内置，手写 DSU \\
+    & 拓扑排序 & $\bigO{V+E}$ & $\bigO{V}$ & 无内置，需手写 \\
+  \hline
+  \multirow{3}{*}{DP}
+    & 背包 & $\bigO{nW}$ & $\bigO{W}$ & 无内置 \\
+    & LCS & $\bigO{mn}$ & $\bigO{mn}$ & 无内置 \\
+    & 编辑距离 & $\bigO{mn}$ & $\bigO{mn}$ & 无内置 \\
+  \hline
+  \multirow{2}{*}{字符串}
+    & KMP & $\bigO{n+m}$ & $\bigO{m}$ & \Fn{String.IndexOf}（.NET 使用 SIMD 优化） \\
+    & Rabin-Karp & $\bigO{n+m}$ & $\bigO{1}$ & 无内置 \\
+  \hline
+\end{tabularx}
+\end{center}
+
+\begin{bestpractice}
+\textbf{排序：}生产代码优先使用标准库排序（\Fn{std::sort}~C++ / \Fn{Array.Sort}~C\#），
+它们使用 Introsort 混合策略，兼顾最坏情况和平均性能。
+
+\textbf{搜索：}有序数据使用二分搜索；无序数据考虑哈希表（C++~\Tp{unordered\_map}~
+/ C\#~\Tp{Dictionary}）。
+
+\textbf{图算法：}C\#~的~\Tp{PriorityQueue}（.NET 6+）大幅简化了 Dijkstra 等需要优先队列的算法；
+C++~的~\Tp{std::priority\_queue}~同样高效但默认是最大堆，需~\Tp{std::greater}~改为最小堆。
+
+\textbf{动态规划：}注意空间优化（滚动数组/一维 DP），C++~的~\Tp{vector}~和 C\#~的~\texttt{Span<T>}
+都可以高效实现。
+
+\textbf{字符串匹配：}对于单次匹配，标准库~\Fn{string::find}~(C++) / \Fn{String.IndexOf}~(C\#)~
+通常足够（.NET 使用 SIMD 优化）。KMP/Rabin-Karp 适用于多次匹配或流式匹配场景。
+\end{bestpractice}
+
+% ============================================================
+\chapter*{附录：LeetCode 典型题解}
+\addcontentsline{toc}{chapter}{附录：LeetCode 典型题解}
+\markboth{附录：LeetCode 典型题解}{附录：LeetCode 典型题解}
+% ============================================================
+
+本章精选 20 道 LeetCode 高频题目，按算法类别组织，提供 C++~解法。
+对于 C++20/23 ranges、views、结构化绑定等特性可显著简化实现的题目，
+同时给出传统（C++11）和现代（C++20/23）两种写法。
+
+% ────────────────────────────────────────
+\section*{A.1\quad 哈希与双指针}
+\addcontentsline{toc}{section}{A.1\quad 哈希与双指针}
+% ────────────────────────────────────────
+
+\subsection*{LC 1 — 两数之和 (Two Sum)}
+
+给定数组~\texttt{nums}~和目标值~\texttt{target}，找出和为~\texttt{target}~的两个元素下标。
+
+\begin{lstlisting}[style=cppstyle]
+vector<int> twoSum(vector<int>& nums, int target) {
+    unordered_map<int, int> seen;  // val -> index
+    for (int i = 0; i < (int)nums.size(); i++) {
+        if (auto it = seen.find(target - nums[i]); it != seen.end())
+            return {it->second, i};
+        seen[nums[i]] = i;
+    }
+    return {};
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n}$~时间，$\bigO{n}$~空间。
+
+\begin{compare}
+\textbf{C++20}~写法相同，但可改用~\texttt{ranges::find\_if}：
+\begin{lstlisting}[style=cppstyle,numbers=none]
+// C++20: 用 ranges 替代手写循环
+auto it = ranges::find_if(seen, [rem = target - nums[i]](auto& p) {
+    return p.first == rem;
+});
+\end{lstlisting}
+不过对于~\Tp{unordered\_map}~的~\Fn{find}，直接成员调用更高效。
+\end{compare}
+
+\subsection*{LC 11 — 盛最多水的容器 (Container With Most Water)}
+
+给定高度数组，找两条线使容器盛水最多。双指针从两端向中间收缩。
+
+\begin{lstlisting}[style=cppstyle]
+int maxArea(vector<int>& h) {
+    int ans = 0, l = 0, r = (int)h.size() - 1;
+    while (l < r) {
+        ans = max(ans, (r - l) * min(h[l], h[r]));
+        h[l] < h[r] ? l++ : r++;
+    }
+    return ans;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n}$~时间，$\bigO{1}$~空间。贪心策略：矮的一侧内移不可能更优。
+
+\subsection*{LC 15 — 三数之和 (3Sum)}
+
+找出数组中所有和为 0 的三元组，不重复。排序 + 双指针。
+
+\begin{lstlisting}[style=cppstyle]
+vector<vector<int>> threeSum(vector<int>& nums) {
+    vector<vector<int>> res;
+    ranges::sort(nums);  // C++20 ranges::sort
+    for (int i = 0; i + 2 < (int)nums.size(); i++) {
+        if (i > 0 && nums[i] == nums[i-1]) continue;
+        int lo = i + 1, hi = (int)nums.size() - 1;
+        while (lo < hi) {
+            int s = nums[i] + nums[lo] + nums[hi];
+            if (s < 0) lo++;
+            else if (s > 0) hi--;
+            else {
+                res.push_back({nums[i], nums[lo++], nums[hi--]});
+                while (lo < hi && nums[lo] == nums[lo-1]) lo++;
+            }
+        }
+    }
+    return res;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n^2}$~时间，$\bigO{1}$~额外空间（排序原地）。
+
+% ────────────────────────────────────────
+\section*{A.2\quad 滑动窗口}
+\addcontentsline{toc}{section}{A.2\quad 滑动窗口}
+% ────────────────────────────────────────
+
+\subsection*{LC 3 — 最长无重复子串 (Longest Substring Without Repeating)}
+
+给定字符串，找最长不含重复字符的子串长度。
+
+\cpplabel\noindent\textit{C++11 版本：}
+\begin{lstlisting}[style=cppstyle]
+int lengthOfLongestSubstring(string s) {
+    unordered_map<char, int> pos;
+    int ans = 0, start = 0;
+    for (int i = 0; i < (int)s.size(); i++) {
+        if (auto it = pos.find(s[i]); it != pos.end() && it->second >= start)
+            start = it->second + 1;
+        pos[s[i]] = i;
+        ans = max(ans, i - start + 1);
+    }
+    return ans;
+}
+\end{lstlisting}
+
+\cpplabel\noindent\textit{C++23 版本（views::enumerate）：}
+\begin{lstlisting}[style=cppstyle]
+int lengthOfLongestSubstring(string_view s) {
+    unordered_map<char, int> pos;
+    int ans = 0, start = 0;
+    for (auto [i, c] : s | views::enumerate) {
+        if (auto it = pos.find(c); it != pos.end() && it->second >= start)
+            start = it->second + 1;
+        pos[c] = i;
+        ans = max(ans, (int)i - start + 1);
+    }
+    return ans;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n}$~时间，$\bigO{|\Sigma|}$~空间。C++23 用~\texttt{string\_view}~避免拷贝，
+\texttt{\seqsplit{views::enumerate}}~提供下标+值的结构化绑定。
+
+% ────────────────────────────────────────
+\section*{A.3\quad 链表}
+\addcontentsline{toc}{section}{A.3\quad 链表}
+% ────────────────────────────────────────
+
+\subsection*{LC 21 — 合并两个有序链表 (Merge Two Sorted Lists)}
+
+\begin{lstlisting}[style=cppstyle]
+ListNode* mergeTwoLists(ListNode* a, ListNode* b) {
+    ListNode dummy(0), *tail = &dummy;
+    while (a && b) {
+        if (a->val <= b->val) { tail->next = a; a = a->next; }
+        else                  { tail->next = b; b = b->next; }
+        tail = tail->next;
+    }
+    tail->next = a ? a : b;
+    return dummy.next;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n+m}$~时间，$\bigO{1}$~空间。哨兵节点简化边界处理。
+
+\subsection*{LC 146 — LRU 缓存 (LRU Cache)}
+
+设计一个容量为~$k$~的缓存，支持~$\bigO{1}$~的~\texttt{get}~和~\texttt{put}，淘汰最久未使用的键。
+（完整实现见第 11 章。）
+
+% ────────────────────────────────────────
+\section*{A.4\quad 二叉树}
+\addcontentsline{toc}{section}{A.4\quad 二叉树}
+% ────────────────────────────────────────
+
+\subsection*{LC 102 — 二叉树的层序遍历 (Level Order Traversal)}
+
+按层返回二叉树节点值（每层一个~\Tp{vector}）。
+
+\begin{lstlisting}[style=cppstyle]
+vector<vector<int>> levelOrder(TreeNode* root) {
+    if (!root) return {};
+    vector<vector<int>> res;
+    queue<TreeNode*> q;
+    q.push(root);
+    while (!q.empty()) {
+        int sz = q.size();
+        vector<int> level;
+        while (sz--) {
+            auto node = q.front(); q.pop();
+            level.push_back(node->val);
+            if (node->left)  q.push(node->left);
+            if (node->right) q.push(node->right);
+        }
+        res.push_back(move(level));
+    }
+    return res;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n}$~时间，$\bigO{n}$~空间（队列最大宽度）。
+
+\subsection*{LC 236 — 二叉树的最近公共祖先 (LCA)}
+
+\begin{lstlisting}[style=cppstyle]
+TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+    if (!root || root == p || root == q) return root;
+    auto left  = lowestCommonAncestor(root->left, p, q);
+    auto right = lowestCommonAncestor(root->right, p, q);
+    if (left && right) return root;
+    return left ? left : right;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n}$~时间，$\bigO{h}$~空间（递归栈）。
+后序遍历：左右子树各找到一个目标时，当前节点即为 LCA。
+
+\subsection*{LC 98 — 验证二叉搜索树 (Validate BST)}
+
+\begin{lstlisting}[style=cppstyle]
+bool isValidBST(TreeNode* root,
+                TreeNode* lo = nullptr, TreeNode* hi = nullptr) {
+    if (!root) return true;
+    if (lo && root->val <= lo->val) return false;
+    if (hi && root->val >= hi->val) return false;
+    return isValidBST(root->left, lo, root)
+        && isValidBST(root->right, root, hi);
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n}$~时间，$\bigO{h}$~空间。递归传递上下界约束。
+
+% ────────────────────────────────────────
+\section*{A.5\quad 图}
+\addcontentsline{toc}{section}{A.5\quad 图}
+% ────────────────────────────────────────
+
+\subsection*{LC 200 — 岛屿数量 (Number of Islands)}
+
+\texttt{'1'}~表示陆地，\texttt{'0'}~表示水域，求连通区域数。
+
+\cpplabel\noindent\textit{C++11 版本：}
+\begin{lstlisting}[style=cppstyle]
+int numIslands(vector<vector<char>>& grid) {
+    int m = grid.size(), n = grid[0].size(), ans = 0;
+    function<void(int,int)> dfs = [&](int r, int c) {
+        if (r < 0 || r >= m || c < 0 || c >= n || grid[r][c] != '1') return;
+        grid[r][c] = '0';
+        dfs(r+1,c); dfs(r-1,c); dfs(r,c+1); dfs(r,c-1);
+    };
+    for (int i = 0; i < m; i++)
+        for (int j = 0; j < n; j++)
+            if (grid[i][j] == '1') { dfs(i, j); ans++; }
+    return ans;
+}
+\end{lstlisting}
+
+\cpplabel\noindent\textit{C++23 版本（views + ranges::count）：}
+\begin{lstlisting}[style=cppstyle]
+int numIslands(vector<vector<char>>& grid) {
+    int m = grid.size(), n = grid[0].size(), ans = 0;
+    auto dfs = [&](this auto& self, int r, int c) -> void {
+        if (r < 0 || r >= m || c < 0 || c >= n || grid[r][c] != '1') return;
+        grid[r][c] = '0';
+        for (auto [dr, dc] : {pair{1,0}, pair{-1,0}, pair{0,1}, pair{0,-1}})
+            self(r + dr, c + dc);
+    };
+    for (int i : views::iota(0, m))
+        for (int j : views::iota(0, n))
+            if (grid[i][j] == '1') { dfs(i, j); ans++; }
+    return ans;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{mn}$~时间，$\bigO{mn}$~最差空间（递归栈）。
+C++23 使用\textbf{显式对象参数}（deducing this）替代~\Tp{std::function}，零开销递归。
+
+\subsection*{LC 207 — 课程表 (Course Schedule)}
+
+判断课程依赖图是否有环（拓扑排序）。
+
+\begin{lstlisting}[style=cppstyle]
+bool canFinish(int n, vector<vector<int>>& prereq) {
+    vector<vector<int>> adj(n);
+    vector<int> indeg(n);
+    for (auto& e : prereq) { adj[e[1]].push_back(e[0]); indeg[e[0]]++; }
+    queue<int> q;
+    for (int i = 0; i < n; i++) if (indeg[i] == 0) q.push(i);
+    int cnt = 0;
+    while (!q.empty()) {
+        int u = q.front(); q.pop(); cnt++;
+        for (int v : adj[u]) if (--indeg[v] == 0) q.push(v);
+    }
+    return cnt == n;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{V+E}$~时间。Kahn 算法（见第 18 章），能拓扑排序完即无环。
+
+% ────────────────────────────────────────
+\section*{A.6\quad 二分搜索}
+\addcontentsline{toc}{section}{A.6\quad 二分搜索}
+% ────────────────────────────────────────
+
+\subsection*{LC 33 — 搜索旋转排序数组 (Search in Rotated Sorted Array)}
+
+在旋转有序数组中~$\bigO{\log n}$~查找目标值。
+
+\begin{lstlisting}[style=cppstyle]
+int search(vector<int>& nums, int target) {
+    int lo = 0, hi = (int)nums.size() - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (nums[mid] == target) return mid;
+        if (nums[lo] <= nums[mid]) {  // left half sorted
+            if (nums[lo] <= target && target < nums[mid]) hi = mid - 1;
+            else lo = mid + 1;
+        } else {                       // right half sorted
+            if (nums[mid] < target && target <= nums[hi]) lo = mid + 1;
+            else hi = mid - 1;
+        }
+    }
+    return -1;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{\log n}$~时间，$\bigO{1}$~空间。关键：至少一半有序，判断目标在哪半。
+
+% ────────────────────────────────────────
+\section*{A.7\quad 动态规划}
+\addcontentsline{toc}{section}{A.7\quad 动态规划}
+% ────────────────────────────────────────
+
+\subsection*{LC 70 — 爬楼梯 (Climbing Stairs)}
+
+每次爬 1 或 2 阶，到第~$n$~阶有多少种方法。
+
+\cpplabel\noindent\textit{C++11 版本：}
+\begin{lstlisting}[style=cppstyle]
+int climbStairs(int n) {
+    int a = 1, b = 1;
+    for (int i = 2; i <= n; i++) { int c = a + b; a = b; b = c; }
+    return b;
+}
+\end{lstlisting}
+
+\cpplabel\noindent\textit{C++23 版本（views::iota + ranges::fold\_left）：}
+\begin{lstlisting}[style=cppstyle]
+int climbStairs(int n) {
+    return ranges::fold_left(views::iota(2, n + 1), pair{1, 1},
+        [](pair<int,int> p, int) { return pair{p.second, p.first + p.second}; }
+    ).second;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n}$~时间，$\bigO{1}$~空间。本质是斐波那契数列。
+
+\subsection*{LC 322 — 零钱兑换 (Coin Change)}
+
+最少硬币数凑成金额~\texttt{amount}，凑不出返回~$-1$。
+
+\cpplabel\noindent\textit{C++11 版本：}
+\begin{lstlisting}[style=cppstyle]
+int coinChange(vector<int>& coins, int amount) {
+    vector<int> dp(amount + 1, amount + 1);
+    dp[0] = 0;
+    for (int i = 1; i <= amount; i++)
+        for (int c : coins)
+            if (c <= i) dp[i] = min(dp[i], dp[i - c] + 1);
+    return dp[amount] > amount ? -1 : dp[amount];
+}
+\end{lstlisting}
+
+\cpplabel\noindent\textit{C++20 版本（ranges::min）：}
+\begin{lstlisting}[style=cppstyle]
+int coinChange(vector<int>& coins, int amount) {
+    vector<int> dp(amount + 1, amount + 1);
+    dp[0] = 0;
+    for (int i = 1; i <= amount; i++) {
+        auto candidates = coins | views::filter([i](int c) { return c <= i; })
+                                | views::transform([&](int c) { return dp[i - c] + 1; });
+        if (!ranges::empty(candidates))
+            dp[i] = ranges::min(candidates);
+    }
+    return dp[amount] > amount ? -1 : dp[amount];
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n \cdot |coins|}$~时间，$\bigO{n}$~空间。完全背包变体（见第 19 章）。
+
+\subsection*{LC 5 — 最长回文子串 (Longest Palindromic Substring)}
+
+中心扩展法，以每个字符（或字符间隙）为中心向两侧扩展。
+
+\begin{lstlisting}[style=cppstyle]
+string longestPalindrome(string s) {
+    int best_lo = 0, best_len = 0;
+    auto expand = [&](int l, int r) {
+        while (l >= 0 && r < (int)s.size() && s[l] == s[r]) { l--; r++; }
+        int len = r - l - 1;
+        if (len > best_len) { best_len = len; best_lo = l + 1; }
+    };
+    for (int i = 0; i < (int)s.size(); i++) {
+        expand(i, i);      // odd length
+        expand(i, i + 1);  // even length
+    }
+    return s.substr(best_lo, best_len);
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n^2}$~时间，$\bigO{1}$~空间。
+Manacher 算法可优化至~$\bigO{n}$，但面试中中心扩展更常用。
+
+% ────────────────────────────────────────
+\section*{A.8\quad 贪心与排序}
+\addcontentsline{toc}{section}{A.8\quad 贪心与排序}
+% ────────────────────────────────────────
+
+\subsection*{LC 121 — 买卖股票的最佳时机 (Best Time to Buy and Sell Stock)}
+
+一次买入、一次卖出，求最大利润。
+
+\cpplabel\noindent\textit{C++11 版本：}
+\begin{lstlisting}[style=cppstyle]
+int maxProfit(vector<int>& prices) {
+    int min_price = INT_MAX, ans = 0;
+    for (int p : prices) {
+        min_price = min(min_price, p);
+        ans = max(ans, p - min_price);
+    }
+    return ans;
+}
+\end{lstlisting}
+
+\cpplabel\noindent\textit{C++23 版本（ranges::fold\_left）：}
+\begin{lstlisting}[style=cppstyle]
+int maxProfit(vector<int>& prices) {
+    auto [min_p, ans] = ranges::fold_left(prices, pair{INT_MAX, 0},
+        [](pair<int,int> acc, int p) {
+            return pair{min(acc.first, p), max(acc.second, p - acc.first)};
+        });
+    return ans;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n}$~时间，$\bigO{1}$~空间。贪心：维护前缀最小价。
+
+\subsection*{LC 56 — 合并区间 (Merge Intervals)}
+
+将有重叠的区间合并。
+
+\begin{lstlisting}[style=cppstyle]
+vector<vector<int>> merge(vector<vector<int>>& intervals) {
+    ranges::sort(intervals, [](auto& a, auto& b) { return a[0] < b[0]; });
+    vector<vector<int>> res;
+    for (auto& iv : intervals) {
+        if (res.empty() || res.back()[1] < iv[0])
+            res.push_back(iv);
+        else
+            res.back()[1] = max(res.back()[1], iv[1]);
+    }
+    return res;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n\log n}$~时间（排序），$\bigO{n}$~空间。贪心：按起点排序后逐个合并。
+
+% ────────────────────────────────────────
+\section*{A.9\quad 回溯}
+\addcontentsline{toc}{section}{A.9\quad 回溯}
+% ────────────────────────────────────────
+
+\subsection*{LC 78 — 子集 (Subsets)}
+
+返回数组的所有子集。
+
+\begin{lstlisting}[style=cppstyle]
+vector<vector<int>> subsets(vector<int>& nums) {
+    vector<vector<int>> res;
+    vector<int> cur;
+    auto dfs = [&](this auto& self, int i) -> void {
+        if (i == (int)nums.size()) { res.push_back(cur); return; }
+        cur.push_back(nums[i]); self(i + 1);  // include
+        cur.pop_back();         self(i + 1);  // exclude
+    };
+    dfs(0);
+    return res;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{2^n \cdot n}$~时间，$\bigO{n}$~空间。
+C++23 用~\texttt{\seqsplit{deducing this}}~避免~\Tp{std::function}~开销。
+
+\subsection*{LC 79 — 单词搜索 (Word Search)}
+
+在二维字符网格中搜索单词，每个格子只能用一次。
+
+\begin{lstlisting}[style=cppstyle]
+bool exist(vector<vector<char>>& board, string word) {
+    int m = board.size(), n = board[0].size();
+    auto dfs = [&](this auto& self, int r, int c, int k) -> bool {
+        if (k == (int)word.size()) return true;
+        if (r < 0 || r >= m || c < 0 || c >= n || board[r][c] != word[k])
+            return false;
+        board[r][c] = '#';  // mark visited
+        bool found = self(r+1,c,k+1) || self(r-1,c,k+1)
+                  || self(r,c+1,k+1) || self(r,c-1,k+1);
+        board[r][c] = word[k];  // restore
+        return found;
+    };
+    for (int i = 0; i < m; i++)
+        for (int j = 0; j < n; j++)
+            if (dfs(i, j, 0)) return true;
+    return false;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{m \cdot n \cdot 3^{|w|})}$~时间，$\bigO{|w|}$~空间（递归栈）。
+
+% ────────────────────────────────────────
+\section*{A.10\quad 单调队列与单调栈}
+\addcontentsline{toc}{section}{A.10\quad 单调队列与单调栈}
+% ────────────────────────────────────────
+
+\subsection*{LC 239 — 滑动窗口最大值 (Sliding Window Maximum)}
+
+大小为~$k$~的滑动窗口中的最大值。
+
+\begin{lstlisting}[style=cppstyle]
+vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+    deque<int> dq;  // stores indices, front = max
+    vector<int> res;
+    for (int i = 0; i < (int)nums.size(); i++) {
+        while (!dq.empty() && dq.front() <= i - k) dq.pop_front();
+        while (!dq.empty() && nums[dq.back()] <= nums[i]) dq.pop_back();
+        dq.push_back(i);
+        if (i >= k - 1) res.push_back(nums[dq.front()]);
+    }
+    return res;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n}$~时间（每个元素最多入队出队各一次），$\bigO{k}$~空间。
+单调递减队列：队头始终是当前窗口最大值。
+
+\subsection*{LC 84 — 柱状图中最大矩形 (Largest Rectangle in Histogram)}
+
+单调栈经典题：求柱状图中最大矩形面积。
+
+\begin{lstlisting}[style=cppstyle]
+int largestRectangleArea(vector<int>& heights) {
+    stack<int> st;
+    int ans = 0;
+    heights.push_back(0);  // sentinel
+    for (int i = 0; i < (int)heights.size(); i++) {
+        while (!st.empty() && heights[st.top()] > heights[i]) {
+            int h = heights[st.top()]; st.pop();
+            int w = st.empty() ? i : i - st.top() - 1;
+            ans = max(ans, h * w);
+        }
+        st.push(i);
+    }
+    heights.pop_back();
+    return ans;
+}
+\end{lstlisting}
+\textbf{复杂度}：$\bigO{n}$~时间（每个柱体最多入栈出栈各一次），$\bigO{n}$~空间。
+
+\begin{note}[title=C++20/23 现代特性速查]
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+  \textbf{ranges::sort} & 直接接受容器，无需~\texttt{begin()/end()}。\\
+  \textbf{views::filter/transform} & 惰性管道，零拷贝链式操作。\\
+  \textbf{views::enumerate} & C++23，提供~\texttt{(index, value)}~结构化绑定。\\
+  \textbf{views::iota} & 整数范围生成器，替代传统~\texttt{for (int i = 0; ...)}。\\
+  \textbf{ranges::fold\_left} & C++23 广义折叠，可替代手写累加循环。\\
+  \textbf{Deducing this} & C++23，lambda 递归调用自身时零开销（替代~\Tp{std::function}）。\\
+  \textbf{string\_view} & C++17，避免字符串拷贝，适合只读场景。\\
+  \textbf{Structured bindings} & C++17，\texttt{auto [a, b] = pair}~解构。\\
+\end{tabularx}
+\end{note}
+
+\clearpage
+\backmatter
+\printindex
+
+\end{document}

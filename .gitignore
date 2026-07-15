@@ -1,0 +1,45 @@
+# ── LaTeX 编译中间文件 ──
+*.aux
+*.toc
+*.out
+*.log
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.idx
+*.ilg
+*.ind
+*.xdv
+*.bcf
+*.run.xml
+*.lof
+*.lot
+*-manual.toc
+
+# ── 编译输出 ──
+*.pdf
+
+# ── 备份文件 ──
+*.bak
+
+# ── 非 LaTeX 源文件的附件 ──
+*.mp4
+*.pptx
+*.png
+*.json
+
+# ── 操作系统 ──
+.DS_Store
+Thumbs.db
+Desktop.ini
+._*
+
+# ── 编辑器 ──
+*.swp
+*.swo
+*~
+*.sublime-workspace
+*.sublime-project
+.vscode/
+.idea/
+*.code-workspace

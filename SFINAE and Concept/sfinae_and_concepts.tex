@@ -1,0 +1,1245 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+% ---- listing style ----
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,
+    ifstream,ofstream,fstream,iostream,
+    ostream,istream,stringstream,ostringstream,
+    path,filesystem},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+
+% ---- 文档特定语言定义 ----
+\lstdefinelanguage{Cpp20}{%
+  language=[GNU]C++,
+  morekeywords={concept,requires,co_await,co_yield,co_return,consteval,constinit},
+  morekeywords=[2]{std},
+}
+\lstset{style=cppstyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,
+  title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,
+  title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,
+  title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,
+  title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,
+  title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={SFINAE & Concepts Reference},
+  pdftitle={C++ SFINAE 与 C++20 约束和概念},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+% ====================================================================
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\tableofcontents
+\newpage
+
+% ═══════════════════════════════════════════════════════════
+\section{引言}
+% ═══════════════════════════════════════════════════════════
+
+模板元编程的核心问题之一是\textbf{如何在编译期选择正确的函数重载}。
+C++ 提供了两条技术路线来解决这个问题：
+
+\begin{itemize}[nosep]
+  \item \textbf{SFINAE}（Substitution Failure Is Not An Error）——C++11 起可用，通过让模板实例化失败来静默地排除某些重载。
+  \item \textbf{Concepts \& Constraints}（概念与约束）——C++20 引入，提供显式的语法来约束模板参数。
+\end{itemize}
+
+两者在表达能力上大体等价，但 Concepts 的可读性和错误信息质量远优于 SFINAE。
+本文先分别介绍两者的基本用法，再给出系统性的对照和转换方法，帮助读者在 C++20 之前的项目中用 SFINAE 模拟 Concepts 的能力。
+
+% ═══════════════════════════════════════════════════════════
+\section{SFINAE 基础}
+% ═══════════════════════════════════════════════════════════
+
+\subsection{核心原理}
+
+SFINAE 的全称是 \emph{Substitution Failure Is Not An Error}。
+当编译器在模板实参替换（substitution）过程中遇到错误时，该重载会\textbf{被静默移除}而非产生编译错误。
+这使得我们可以编写多个模板重载，让编译器根据类型特征自动选择最匹配的版本。
+
+\begin{lstlisting}
+#include <iostream>
+#include <type_traits>
+
+// 仅对整数类型启用
+template<typename T>
+typename std::enable_if<std::is_integral<T>::value, T>::type
+process(T val) {
+    std::cout << "integral: " << val << '\n';
+    return val;
+}
+
+// 仅对浮点类型启用
+template<typename T>
+typename std::enable_if<std::is_floating_point<T>::value, T>::type
+process(T val) {
+    std::cout << "floating: " << val << '\n';
+    return val;
+}
+
+int main() {
+    process(42);      // -> integral: 42
+    process(3.14);    // -> floating: 3.14
+    // process("hi"); // 编译错误：没有匹配的重载
+}
+\end{lstlisting}
+
+\subsection{\texttt{std::enable\_if} 的三种位置}
+
+\texttt{enable\_if} 可以放在模板参数、返回类型或函数参数中，效果相同但语法略有差异：
+
+\begin{lstlisting}
+// (1) 作为返回类型（C++11 最常见）
+template<typename T>
+typename std::enable_if<std::is_integral<T>::value, T>::type
+foo(T val);
+
+// (2) 作为默认模板参数（C++11，更清晰）
+template<typename T,
+         typename = typename std::enable_if<
+             std::is_integral<T>::value>::type>
+void foo(T val);
+
+// (3) 作为默认函数参数（C++11）
+template<typename T>
+void foo(T val,
+         typename std::enable_if<
+             std::is_integral<T>::value, int>::type = 0);
+\end{lstlisting}
+
+\textbf{注意}：方式 (2) 有一个陷阱——当两个重载都使用默认模板参数形式的 \texttt{enable\_if} 时，
+编译器会认为它们具有相同的模板签名，导致重定义错误。此时应改用方式 (1) 或 (3)。
+
+\subsection{\texttt{void\_t} 技巧（C++17）}
+
+\texttt{std::void\_t} 是一个极其有用的 SFINAE 工具，用于检测类型是否具有某种成员或操作：
+
+\begin{lstlisting}
+// C++17 标准库已提供 std::void_t
+// C++11/14 可自行定义：
+// template<typename...> using void_t = void;
+
+// 检测类型是否有 .size() 成员函数
+template<typename T, typename = void>
+struct has_size : std::false_type {};
+
+template<typename T>
+struct has_size<T, std::void_t<decltype(std::declval<T>().size())>>
+    : std::true_type {};
+
+// 使用
+static_assert(has_size<std::vector<int>>::value, "");
+static_assert(!has_size<int>::value, "");
+\end{lstlisting}
+
+\texttt{void\_t} 的工作原理：当 \texttt{decltype(...)} 中的表达式不合法时，
+整个特化被 SFINAE 移除，回退到主模板（\texttt{false\_type}）。
+
+\subsection{\texttt{decltype} 与尾置返回类型}
+
+结合 \texttt{decltype} 和尾置返回类型，可以在返回值层面实现 SFINAE：
+
+\begin{lstlisting}
+// 仅当 T 支持 operator+ 时此函数才参与重载
+template<typename T>
+auto add(T a, T b) -> decltype(a + b) {
+    return a + b;
+}
+\end{lstlisting}
+
+如果 \texttt{T} 不支持 \texttt{operator+}，\texttt{decltype(a + b)} 不合法，
+该重载在 substitution 阶段被移除。
+
+\subsection{类型特征组合}
+
+实际项目中经常需要组合多个条件：
+
+\begin{lstlisting}
+// T 必须是可默认构造且可析构的
+template<typename T>
+typename std::enable_if<
+    std::is_default_constructible<T>::value &&
+    std::is_destructible<T>::value,
+    void
+>::type
+create_and_destroy() {
+    T obj{};
+}
+
+// 辅助别名模板，简化书写（C++14）
+template<typename T>
+using EnableIfArithmetic = typename std::enable_if<
+    std::is_arithmetic<T>::value, T>::type;
+
+template<typename T>
+EnableIfArithmetic<T> safe_divide(T a, T b) {
+    return a / b;
+}
+\end{lstlisting}
+
+% ═══════════════════════════════════════════════════════════
+\section{C++20 约束与概念}
+% ═══════════════════════════════════════════════════════════
+
+\subsection{概念（Concept）的定义}
+
+概念是一组编译期谓词的命名封装，用于约束模板参数：
+
+\begin{lstlisting}
+#include <concepts>
+
+// 基本语法：concept 名字 = 约束表达式;
+template<typename T>
+concept Numeric = std::integral<T> || std::floating_point<T>;
+
+// 使用标准库已有的概念
+template<std::integral T>
+T gcd(T a, T b) {
+    while (b != 0) {
+        T t = b;
+        b = a % b;
+        a = t;
+    }
+    return a;
+}
+\end{lstlisting}
+
+\subsection{\texttt{requires} 表达式}
+
+\texttt{requires} 表达式是 C++20 最强大的新特性之一，可以直接描述对类型的操作要求：
+
+\begin{lstlisting}
+// 简单 requires 表达式
+template<typename T>
+concept Addable = requires(T a, T b) {
+    a + b;                    // 简单要求：表达式必须合法
+};
+
+// 带返回类型约束的复合要求
+template<typename T>
+concept Container = requires(T c) {
+    { c.size() } -> std::convertible_to<std::size_t>;
+    { c.begin() } -> std::input_iterator;
+    { c.end()   } -> std::input_iterator;
+    c.clear();                // 必须支持 clear()
+    { c.empty() } -> std::same_as<bool>;
+};
+
+// 嵌套要求（约束必须为 true）
+template<typename T>
+concept SmallType = requires {
+    requires sizeof(T) <= 8;
+};
+\end{lstlisting}
+
+\texttt{requires} 表达式有四种子句：
+
+\begin{enumerate}[nosep]
+  \item \textbf{简单要求}：\texttt{expression;} —— 表达式必须合法。
+  \item \textbf{类型要求}：\texttt{typename T::value\_type;} —— 嵌套类型必须存在。
+  \item \textbf{复合要求}：\texttt{\{ expression \} -> constraint;} —— 表达式合法且返回值满足约束。
+  \item \textbf{嵌套要求}：\texttt{requires bool-expr;} —— 布尔表达式必须为 \texttt{true}。
+\end{enumerate}
+
+\subsection{约束的四种使用位置}
+
+\begin{lstlisting}
+// (1) 约束模板参数（最常见）
+template<std::integral T>
+T square(T x) { return x * x; }
+
+// (2) requires 子句（trailing constraint）
+template<typename T>
+    requires std::integral<T>
+T cube(T x) { return x * x * x; }
+
+// (3) 约束 auto（缩写函数模板）
+auto negate(std::integral auto x) { return -x; }
+
+// (4) 约束变量模板 / 概念本身
+template<typename T>
+    requires Addable<T>
+T sum(T a, T b) { return a + b; }
+\end{lstlisting}
+
+\subsection{常用标准库概念}
+
+C++20 在 \texttt{<concepts>} 头文件中提供了大量预定义概念：
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{概念} & \textbf{含义} \\
+\midrule
+\texttt{std::integral<T>} & 整数类型 \\
+\texttt{std::floating\_point<T>} & 浮点类型 \\
+\texttt{std::same\_as<T, U>} & 同一类型 \\
+\texttt{std::convertible\_to<From, To>} & 可隐式转换 \\
+\texttt{std::derived\_from<D, B>} & 派生关系 \\
+\texttt{std::assignable\_from<T, U>} & 可赋值 \\
+\texttt{std::copyable<T>} & 可拷贝 \\
+\texttt{std::movable<T>} & 可移动 \\
+\texttt{std::invocable<F, Args...>} & 可调用 \\
+\texttt{std::default\_initializable<T>} & 可默认构造 \\
+\texttt{std::destructible<T>} & 可析构 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{概念的组合}
+
+概念支持逻辑运算符组合：
+
+\begin{lstlisting}
+template<typename T>
+    requires (std::integral<T> || std::floating_point<T>)
+           && std::totally_ordered<T>
+           && std::copyable<T>
+T clamp(T val, T lo, T hi) {
+    if (val < lo) return lo;
+    if (val > hi) return hi;
+    return val;
+}
+\end{lstlisting}
+
+% ═══════════════════════════════════════════════════════════
+\section{SFINAE 与 Concepts 对照表}
+% ═══════════════════════════════════════════════════════════
+
+下表列出常见的约束场景，以及它们在 SFINAE 和 Concepts 两种写法下的对照：
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{5.5cm}p{5.5cm}@{}}
+\toprule
+\textbf{SFINAE (C++11/14/17)} & \textbf{Concepts (C++20)} \\
+\midrule
+\begin{lstlisting}[numbers=none,frame=none,backgroundcolor=\color{white}]
+template<typename T>
+enable_if_t<is_integral_v<T>>
+foo(T x);
+\end{lstlisting}
+&
+\begin{lstlisting}[numbers=none,frame=none,backgroundcolor=\color{white}]
+template<std::integral T>
+void foo(T x);
+\end{lstlisting}
+\\
+\midrule
+\begin{lstlisting}[numbers=none,frame=none,backgroundcolor=\color{white}]
+template<typename T>
+enable_if_t<is_same_v<T, U>>
+foo(T x);
+\end{lstlisting}
+&
+\begin{lstlisting}[numbers=none,frame=none,backgroundcolor=\color{white}]
+template<std::same_as<U> T>
+void foo(T x);
+\end{lstlisting}
+\\
+\midrule
+\begin{lstlisting}[numbers=none,frame=none,backgroundcolor=\color{white}]
+template<typename T,
+  void_t<decltype(declval<T>()
+    .size())>* = nullptr>
+void foo(T& c);
+\end{lstlisting}
+&
+\begin{lstlisting}[numbers=none,frame=none,backgroundcolor=\color{white}]
+template<typename T>
+  requires requires(T c) {
+    c.size();
+  }
+void foo(T& c);
+\end{lstlisting}
+\\
+\midrule
+\begin{lstlisting}[numbers=none,frame=none,backgroundcolor=\color{white}]
+template<typename T>
+enable_if_t<
+  is_default_constructible_v<T>
+  && is_destructible_v<T>>
+foo();
+\end{lstlisting}
+&
+\begin{lstlisting}[numbers=none,frame=none,backgroundcolor=\color{white}]
+template<typename T>
+  requires std::default_
+    initializable<T>
+        && std::destructible<T>
+void foo();
+\end{lstlisting}
+\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ═══════════════════════════════════════════════════════════
+\section{将 Concepts 转换为 SFINAE}
+% ═══════════════════════════════════════════════════════════
+
+本节是全文的核心：给出系统性的方法，将 C++20 的 Concepts 改写为 C++11/14/17 可用的 SFINAE 代码。
+
+\subsection{简单类型约束 $\to$ \texttt{enable\_if}}
+
+最简单的情况：概念只检查一个类型特征。
+
+\begin{lstlisting}
+// ── C++20 ──
+template<std::integral T>
+T abs_val(T x) { return x < 0 ? -x : x; }
+
+// ── C++11 SFINAE ──
+template<typename T>
+typename std::enable_if<std::is_integral<T>::value, T>::type
+abs_val(T x) { return x < 0 ? -x : x; }
+
+// ── C++14 SFINAE（使用辅助别名）──
+template<typename T>
+std::enable_if_t<std::is_integral_v<T>, T>
+abs_val(T x) { return x < 0 ? -x : x; }
+\end{lstlisting}
+
+\textbf{规则}：\texttt{std::concept\_name<T>} $\to$ \texttt{enable\_if\_t<对应的 type\_trait<T>>}。
+大部分标准库概念都有直接对应的类型特征（见下表）。
+
+\begin{center}
+\small
+\begin{tabular}{ll}
+\toprule
+\textbf{C++20 Concept} & \textbf{C++11/14 Type Trait} \\
+\midrule
+\texttt{std::integral<T>} & \texttt{std::is\_integral<T>} \\
+\texttt{std::floating\_point<T>} & \texttt{std::is\_floating\_point<T>} \\
+\texttt{std::same\_as<T, U>} & \texttt{std::is\_same<T, U>} \\
+\texttt{std::derived\_from<D, B>} & \texttt{std::is\_base\_of<B, D>} \\
+\texttt{std::default\_initializable<T>} & \texttt{std::is\_default\_constructible<T>} \\
+\texttt{std::copy\_constructible<T>} & \texttt{std::is\_copy\_constructible<T>} \\
+\texttt{std::move\_constructible<T>} & \texttt{std::is\_move\_constructible<T>} \\
+\texttt{std::assignable\_from<T, U>} & \texttt{std::is\_assignable<T\&, U>} \\
+\texttt{std::destructible<T>} & \texttt{std::is\_destructible<T>} \\
+\texttt{std::swappable<T>} & \texttt{std::is\_swappable<T>} (C++17) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{复合要求 $\to$ \texttt{void\_t} + \texttt{decltype}}
+
+当概念要求类型具有特定成员函数或操作时，用 \texttt{void\_t} 技巧模拟：
+
+\begin{lstlisting}
+// ── C++20 ──
+template<typename T>
+concept HasSize = requires(T c) {
+    { c.size() } -> std::convertible_to<std::size_t>;
+};
+
+template<HasSize C>
+void print_size(const C& c) {
+    std::cout << c.size() << '\n';
+}
+
+// ── C++11/14 SFINAE ──
+// 第一步：定义检测 trait
+template<typename T, typename = void>
+struct has_size : std::false_type {};
+
+template<typename T>
+struct has_size<T,
+    std::void_t<decltype(std::declval<const T&>().size())>
+> : std::true_type {};
+
+// 第二步：用 enable_if 约束
+template<typename C>
+std::enable_if_t<has_size<C>::value>
+print_size(const C& c) {
+    std::cout << c.size() << '\n';
+}
+\end{lstlisting}
+
+\textbf{转换步骤}：
+\begin{enumerate}[nosep]
+  \item 将 \texttt{requires} 表达式中的每个操作提取为 \texttt{decltype} 检测。
+  \item 用 \texttt{void\_t} 包裹所有检测，定义一个 \texttt{has\_xxx} trait。
+  \item 用 \texttt{enable\_if\_t<has\_xxx<T>::value>} 约束函数模板。
+\end{enumerate}
+
+\subsection{返回值类型约束 $\to$ \texttt{decltype} 尾置返回}
+
+当 \texttt{requires} 表达式包含复合要求 \texttt{\{ expr \} -> concept} 时：
+
+\begin{lstlisting}
+// ── C++20 ──
+template<typename T>
+concept Incrementable = requires(T x) {
+    { ++x } -> std::same_as<T&>;
+    { x++ } -> std::same_as<T>;
+};
+
+// ── C++14 SFINAE ──
+template<typename T, typename = void>
+struct is_incrementable : std::false_type {};
+
+template<typename T>
+struct is_incrementable<T, std::void_t<
+    decltype(static_cast<T&>(++std::declval<T&>())),
+    decltype(static_cast<T>(std::declval<T&>()++))
+>> : std::true_type {};
+
+template<typename T>
+std::enable_if_t<is_incrementable<T>::value>
+increment(T& x) { ++x; }
+\end{lstlisting}
+
+这里 \texttt{static\_cast} 用来验证返回类型是否匹配期望。
+
+\subsection{嵌套要求 $\to$ 普通布尔表达式}
+
+\texttt{requires} 中的嵌套要求（\texttt{requires bool-expr;}）直接变成 \texttt{enable\_if} 的布尔条件：
+
+\begin{lstlisting}
+// ── C++20 ──
+template<typename T>
+concept SmallIntegral = std::integral<T> && requires {
+    requires sizeof(T) <= 4;
+};
+
+// ── C++14 SFINAE ──
+template<typename T>
+std::enable_if_t<
+    std::is_integral<T>::value && (sizeof(T) <= 4)
+>
+process_small(T x) { /* ... */ }
+\end{lstlisting}
+
+\subsection{多约束组合 $\to$ 多条件 \texttt{enable\_if}}
+
+\begin{lstlisting}
+// ── C++20 ──
+template<typename T>
+    requires std::copyable<T>
+          && std::default_initializable<T>
+          && std::totally_ordered<T>
+void sort_and_copy(T& dst, const T& src) { /* ... */ }
+
+// ── C++14 SFINAE ──
+template<typename T>
+std::enable_if_t<
+    std::is_copy_constructible<T>::value &&
+    std::is_copy_assignable<T>::value &&
+    std::is_default_constructible<T>::value &&
+    // totally_ordered 需要检测全部6个比较运算符
+    // 此处简化为只检测 < 和 ==
+    std::is_same<
+        decltype(std::declval<const T&>() < std::declval<const T&>()),
+        bool
+    >::value &&
+    std::is_same<
+        decltype(std::declval<const T&>() == std::declval<const T&>()),
+        bool
+    >::value
+>
+void sort_and_copy(T& dst, const T& src) { /* ... */ }
+\end{lstlisting}
+
+\subsection{概念组合（\texttt{\&\&}, \texttt{||}）$\to$ 布尔逻辑}
+
+C++20 概念支持 \texttt{\&\&} 和 \texttt{||}，这在 SFINAE 中就是普通的 \texttt{\&\&} 和 \texttt{||}：
+
+\begin{lstlisting}
+// ── C++20 ──
+template<typename T>
+concept Number = std::integral<T> || std::floating_point<T>;
+
+template<Number T>
+T multiply(T a, T b) { return a * b; }
+
+// ── C++14 SFINAE ──
+template<typename T>
+std::enable_if_t<
+    std::is_integral<T>::value ||
+    std::is_floating_point<T>::value,
+    T
+>
+multiply(T a, T b) { return a * b; }
+\end{lstlisting}
+
+% ═══════════════════════════════════════════════════════════
+\section{完整实战案例}
+% ═══════════════════════════════════════════════════════════
+
+\subsection{案例：通用序列化框架}
+
+下面用一个完整的例子演示两种写法实现相同的约束体系。
+
+\textbf{需求}：编写一个 \texttt{serialize} 函数，要求传入的类型支持 \texttt{.to\_string()} 成员函数。
+
+\begin{lstlisting}
+// ══════════ C++20 版本 ══════════
+#include <concepts>
+#include <string>
+#include <iostream>
+
+template<typename T>
+concept Stringable = requires(const T& obj) {
+    { obj.to_string() } -> std::convertible_to<std::string>;
+};
+
+template<Stringable T>
+std::string serialize(const T& obj) {
+    return "[serialized] " + obj.to_string();
+}
+
+struct Point {
+    int x, y;
+    std::string to_string() const {
+        return "(" + std::to_string(x) + ", "
+                   + std::to_string(y) + ")";
+    }
+};
+
+int main() {
+    Point p{3, 4};
+    std::cout << serialize(p) << '\n';
+    // serialize(42); // 编译错误：int 不满足 Stringable
+}
+\end{lstlisting}
+
+\begin{lstlisting}
+// ══════════ C++11/14 SFINAE 版本 ══════════
+#include <type_traits>
+#include <string>
+#include <iostream>
+
+// 检测 to_string() 成员
+template<typename T, typename = void>
+struct has_to_string : std::false_type {};
+
+template<typename T>
+struct has_to_string<T, std::void_t<
+    decltype(std::declval<const T&>().to_string())
+>> : std::is_convertible<
+    decltype(std::declval<const T&>().to_string()),
+    std::string
+> {};
+
+// 约束函数
+template<typename T>
+typename std::enable_if<has_to_string<T>::value,
+                        std::string>::type
+serialize(const T& obj) {
+    return "[serialized] " + obj.to_string();
+}
+
+struct Point {
+    int x, y;
+    std::string to_string() const {
+        return "(" + std::to_string(x) + ", "
+                   + std::to_string(y) + ")";
+    }
+};
+
+int main() {
+    Point p{3, 4};
+    std::cout << serialize(p) << '\n';
+    // serialize(42); // 编译错误：int 不满足 has_to_string
+}
+\end{lstlisting}
+
+\subsection{案例：迭代器概念降级}
+
+C++20 标准库定义了精细的迭代器概念体系。
+以下演示如何将 \texttt{std::random\_access\_iterator} 降级到 C++17 SFINAE：
+
+\begin{lstlisting}
+// ══════════ C++20 ══════════
+#include <iterator>
+
+template<std::random_access_iterator It>
+void random_shuffle_custom(It first, It last) {
+    auto n = last - first;
+    // ... 随机打乱逻辑
+}
+
+// ══════════ C++17 SFINAE ══════════
+#include <type_traits>
+#include <iterator>
+
+// 利用 iterator_traits 检测迭代器类别
+template<typename It, typename = void>
+struct is_random_access_iterator : std::false_type {};
+
+template<typename It>
+struct is_random_access_iterator<It, std::void_t<
+    typename std::iterator_traits<It>::iterator_category
+>> : std::is_base_of<
+    std::random_access_iterator_tag,
+    typename std::iterator_traits<It>::iterator_category
+> {};
+
+template<typename It>
+std::enable_if_t<is_random_access_iterator<It>::value>
+random_shuffle_custom(It first, It last) {
+    auto n = last - first;
+    // ... 随机打乱逻辑
+}
+\end{lstlisting}
+
+\subsection{案例：CRTP 约束}
+
+\begin{lstlisting}
+// ══════════ C++20 ══════════
+template<typename Derived>
+concept Printable = requires(const Derived& d) {
+    { d.print(std::declval<std::ostream&>()) }
+        -> std::same_as<void>;
+};
+
+template<Printable T>
+std::ostream& operator<<(std::ostream& os, const T& obj) {
+    obj.print(os);
+    return os;
+}
+
+// ══════════ C++14 SFINAE ══════════
+template<typename T, typename = void>
+struct is_printable : std::false_type {};
+
+template<typename T>
+struct is_printable<T, std::void_t<
+    decltype(std::declval<const T&>().print(
+        std::declval<std::ostream&>()))
+>> : std::is_same<
+    decltype(std::declval<const T&>().print(
+        std::declval<std::ostream&>())),
+    void
+> {};
+
+template<typename T>
+std::enable_if_t<is_printable<T>::value, std::ostream&>
+operator<<(std::ostream& os, const T& obj) {
+    obj.print(os);
+    return os;
+}
+\end{lstlisting}
+
+\subsection{案例：同时支持 cereal 和 Boost.Serialization}
+
+在实际项目中，可能需要让同一个类同时兼容 \textbf{cereal}（轻量级、header-only、模板化归档）
+和 \textbf{Boost.Serialization}（功能丰富、支持版本化、多态归档）两套序列化框架。
+两者的核心区别在于序列化函数的签名约定不同：
+
+\begin{center}
+\small
+\begin{tabular}{lll}
+\toprule
+\textbf{} & \textbf{cereal} & \textbf{Boost.Serialization} \\
+\midrule
+成员函数方式 & \texttt{template<class Ar> serialize(Ar\&)} & \texttt{serialize(Ar\&, unsigned int)} \\
+自由函数方式 & \texttt{template<class Ar> serialize(Ar\&, T\&)} & \texttt{serialize(Ar\&, T\&, unsigned int)} \\
+归档类型 & 模板参数（泛型） & 具体归档类型 \\
+版本参数 & 无 & 有（\texttt{unsigned int version}） \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection*{步骤一：定义支持双框架的类}
+
+\begin{lstlisting}
+#include <string>
+#include <vector>
+#include <cstdint>
+
+struct Employee {
+    std::string name;
+    uint32_t    id;
+    std::vector<std::string> skills;
+
+    // ── cereal：模板化 serialize，无版本号 ──
+    // cereal 的归档（JSONOutputArchive、BinaryOutputArchive 等）
+    // 都通过此模板函数实例化
+    template<class Archive>
+    void serialize(Archive& ar) {
+        ar(name, id, skills);          // cereal 风格：operator()
+    }
+
+    // ── Boost.Serialization：非模板 serialize，带版本号 ──
+    // Boost 的归档（text_oarchive、binary_oarchive 等）
+    // 通过此非模板函数调用
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar & name & id & skills;       // Boost 风格：operator&
+    }
+};
+\end{lstlisting}
+
+两个 \texttt{serialize} 重载共存于同一个类中，编译器会根据调用时的参数个数
+自动选择正确的版本：cereal 归档调用 1 参数版本，Boost 归档调用 2 参数版本。
+
+\subsubsection*{步骤二：用 Concepts / SFINAE 检测类型支持哪个框架}
+
+\textbf{C++20 版本}——用 \texttt{requires} 表达式检测：
+
+\begin{lstlisting}
+#include <concepts>
+
+// 概念：T 是否支持 cereal 风格的序列化（1 参数 serialize）
+// 使用一个模拟归档类型来测试
+namespace detail {
+    struct cereal_probe {
+        template<typename... Args>
+        void operator()(Args&&...);
+    };
+}
+
+template<typename T>
+concept CerealSerializable = requires(T& obj, detail::cereal_probe& ar) {
+    obj.serialize(ar);   // cereal: serialize(Archive&)
+};
+
+// 概念：T 是否支持 Boost 风格的序列化（2 参数 serialize）
+template<typename T>
+concept BoostSerializable = requires(T& obj, detail::cereal_probe& ar) {
+    obj.serialize(ar, 0u);   // Boost: serialize(Archive&, unsigned)
+};
+
+// 组合概念：同时支持两者
+template<typename T>
+concept DualSerializable =
+    CerealSerializable<T> && BoostSerializable<T>;
+\end{lstlisting}
+
+\textbf{C++14 SFINAE 版本}——用 \texttt{void\_t} 检测：
+
+\begin{lstlisting}
+#include <type_traits>
+
+namespace detail {
+    struct cereal_probe {
+        template<typename... Args>
+        void operator()(Args&&...);
+    };
+}
+
+// 检测 cereal 风格 serialize(Archive&)
+template<typename T, typename = void>
+struct is_cereal_serializable : std::false_type {};
+
+template<typename T>
+struct is_cereal_serializable<T, std::void_t<
+    decltype(std::declval<T&>().serialize(
+        std::declval<detail::cereal_probe&>()))
+>> : std::true_type {};
+
+// 检测 Boost 风格 serialize(Archive&, unsigned int)
+template<typename T, typename = void>
+struct is_boost_serializable : std::false_type {};
+
+template<typename T>
+struct is_boost_serializable<T, std::void_t<
+    decltype(std::declval<T&>().serialize(
+        std::declval<detail::cereal_probe&>(), 0u))
+>> : std::true_type {};
+
+// 组合 trait
+template<typename T>
+struct is_dual_serializable : std::integral_constant<bool,
+    is_cereal_serializable<T>::value &&
+    is_boost_serializable<T>::value
+> {};
+
+// 辅助变量模板（C++14）
+template<typename T>
+constexpr bool is_cereal_serializable_v =
+    is_cereal_serializable<T>::value;
+template<typename T>
+constexpr bool is_boost_serializable_v =
+    is_boost_serializable<T>::value;
+template<typename T>
+constexpr bool is_dual_serializable_v =
+    is_dual_serializable<T>::value;
+\end{lstlisting}
+
+\subsubsection*{步骤三：统一分发接口}
+
+有了检测能力，就可以编写一个统一接口，根据归档类型自动选择正确的序列化路径：
+
+\begin{lstlisting}
+// ══════════ C++20 版本 ══════════
+
+// 归档分类概念
+template<typename Ar>
+concept CerealArchive = requires(Ar& ar) {
+    // cereal 归档的核心操作是 operator()
+    ar(std::declval<int&>());
+};
+
+template<typename Ar>
+concept BoostArchive = requires(Ar& ar) {
+    // Boost 归档的核心操作是 operator&
+    ar & std::declval<int&>();
+};
+
+// 统一分发：自动识别归档类型，调用正确的 serialize 重载
+template<typename Ar, DualSerializable T>
+void unified_save(Ar& ar, T& obj) {
+    if constexpr (CerealArchive<Ar>) {
+        obj.serialize(ar);           // 1 参数：cereal 路径
+    } else if constexpr (BoostArchive<Ar>) {
+        obj.serialize(ar, 0u);       // 2 参数：Boost 路径
+    } else {
+        static_assert(!sizeof(Ar*),
+            "Unknown archive type");
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}
+// ══════════ C++14 SFINAE 版本 ══════════
+
+// 归档分类 trait
+template<typename Ar, typename = void>
+struct is_cereal_archive : std::false_type {};
+
+template<typename Ar>
+struct is_cereal_archive<Ar, std::void_t<
+    decltype(std::declval<Ar&>()(std::declval<int&>()))
+>> : std::true_type {};
+
+template<typename Ar, typename = void>
+struct is_boost_archive : std::false_type {};
+
+template<typename Ar>
+struct is_boost_archive<Ar, std::void_t<
+    decltype(std::declval<Ar&>() & std::declval<int&>())
+>> : std::true_type {};
+
+// C++17 可用 constexpr if；C++14 需要 tag dispatch
+// 这里给出 C++17 版本：
+template<typename Ar, typename T,
+    std::enable_if_t<
+        is_cereal_archive<Ar>::value &&
+        is_dual_serializable_v<T>, int> = 0>
+void unified_save(Ar& ar, T& obj) {
+    obj.serialize(ar);               // cereal 路径
+}
+
+template<typename Ar, typename T,
+    std::enable_if_t<
+        is_boost_archive<Ar>::value &&
+        !is_cereal_archive<Ar>::value &&
+        is_dual_serializable_v<T>, int> = 0>
+void unified_save(Ar& ar, T& obj) {
+    obj.serialize(ar, 0u);           // Boost 路径
+}
+\end{lstlisting}
+
+\subsubsection*{步骤四：使用示例}
+
+\begin{lstlisting}
+// ── 使用 cereal ──
+#include <cereal/archives/json.hpp>
+#include <fstream>
+
+void save_as_json(const Employee& emp, const std::string& path) {
+    std::ofstream os(path);
+    cereal::JSONOutputArchive ar(os);
+    ar(emp);                         // 自动调用 serialize(Ar&)
+}
+
+// ── 使用 Boost.Serialization ──
+#include <boost/archive/text_oarchive.hpp>
+#include <fstream>
+
+void save_as_boost(const Employee& emp, const std::string& path) {
+    std::ofstream os(path);
+    boost::archive::text_oarchive ar(os);
+    ar << emp;                       // 自动调用 serialize(Ar&, uint)
+}
+
+// ── 使用统一接口 ──
+void save_employee(const Employee& emp, const std::string& path,
+                   bool use_cereal) {
+    if (use_cereal) {
+        std::ofstream os(path);
+        cereal::JSONOutputArchive ar(os);
+        unified_save(ar, const_cast<Employee&>(emp));
+    } else {
+        std::ofstream os(path);
+        boost::archive::text_oarchive ar(os);
+        unified_save(ar, const_cast<Employee&>(emp));
+    }
+}
+
+int main() {
+    Employee emp{"Alice", 1001, {"C++", "Rust", "Python"}};
+    save_as_json(emp,  "employee.json");
+    save_as_boost(emp, "employee.txt");
+}
+\end{lstlisting}
+
+\textbf{关键要点}：
+\begin{itemize}[nosep]
+  \item 两个 \texttt{serialize} 重载的参数数量不同（1 vs 2），编译器通过重载解析自动选择，不会冲突。
+  \item \texttt{probe} 类型模拟归档的核心操作，用于在编译期检测类型的序列化能力。
+  \item C++20 的 \texttt{if constexpr} 让分发逻辑简洁直观；C++14 需要用 SFINAE 重载或 tag dispatch。
+  \item 这种「检测 + 分发」的模式可以推广到任何需要兼容多个序列化框架的场景
+        （如 FlatBuffers vs Protobuf、nlohmann::json vs RapidJSON 等）。
+\end{itemize}
+
+% ═══════════════════════════════════════════════════════════
+\section{转换速查清单}
+% ═══════════════════════════════════════════════════════════
+
+将 C++20 概念改写为 SFINAE 时，按以下步骤操作：
+
+\begin{enumerate}
+  \item \textbf{识别概念类型}
+  \begin{itemize}[nosep]
+    \item 纯类型特征（\texttt{std::integral}, \texttt{std::copyable}）$\to$ 直接用对应的 \texttt{type\_trait} + \texttt{enable\_if}。
+    \item 操作要求（\texttt{requires \{ expr; \}}）$\to$ 定义 \texttt{has\_xxx} trait，用 \texttt{void\_t} + \texttt{decltype}。
+    \item 嵌套要求（\texttt{requires bool-expr;}）$\to$ 直接写成布尔条件。
+  \end{itemize}
+  \item \textbf{处理返回值约束}
+  \begin{itemize}[nosep]
+    \item \texttt{\{ expr \} -> std::same\_as<U>} $\to$ \texttt{std::is\_same<decltype(expr), U>}。
+    \item \texttt{\{ expr \} -> std::convertible\_to<U>} $\to$ \texttt{std::is\_convertible<decltype(expr), U>}。
+  \end{itemize}
+  \item \textbf{组合多个约束}
+  \begin{itemize}[nosep]
+    \item \texttt{concept\_a<T> \&\& concept\_b<T>} $\to$ \texttt{enable\_if\_t<trait\_a<T>::value \&\& trait\_b<T>::value>}。
+    \item \texttt{concept\_a<T> || concept\_b<T>} $\to$ 同理用 \texttt{||}。
+  \end{itemize}
+  \item \textbf{选择合适的 \texttt{enable\_if} 位置}
+  \begin{itemize}[nosep]
+    \item 单一约束 $\to$ 返回类型位置。
+    \item 多个重载冲突 $\to$ 函数参数位置（带默认值）。
+  \end{itemize}
+\end{enumerate}
+
+% ═══════════════════════════════════════════════════════════
+\section{注意事项与最佳实践}
+% ═══════════════════════════════════════════════════════════
+
+\subsection{C++11 兼容性的额外考虑}
+
+如果目标标准是 C++11（而非 C++14/17），需要注意以下差异：
+
+\begin{itemize}[nosep]
+  \item 没有 \texttt{\_t} 和 \texttt{\_v} 辅助模板，必须写完整的 \texttt{::type} 和 \texttt{::value}。
+  \item 没有 \texttt{std::void\_t}，需要自行定义：
+\begin{lstlisting}[numbers=none]
+template<typename...> using void_t = void;
+\end{lstlisting}
+  \item 没有 \texttt{std::conjunction} / \texttt{std::disjunction}（C++17），
+        多条件用 \texttt{\&\&} / \texttt{||} 组合。
+  \item \texttt{constexpr if}（C++17）不可用，分支选择须依赖 SFINAE 重载。
+\end{itemize}
+
+\subsection{何时优先使用 SFINAE}
+
+即使在 C++20 环境下，SFINAE 仍有其用途：
+
+\begin{itemize}[nosep]
+  \item 需要支持旧编译器（如 MSVC 2017、GCC 8 等不支持 Concepts 的版本）。
+  \item 库代码需要向后兼容 C++11/14 用户。
+  \item 与大量使用 \texttt{enable\_if} 的旧代码库保持一致。
+\end{itemize}
+
+\subsection{何时优先使用 Concepts}
+
+在 C++20 及以上：
+
+\begin{itemize}[nosep]
+  \item 新代码应始终优先使用 Concepts，可读性和错误信息显著改善。
+  \item 复杂约束（多个 \texttt{requires} 子句）用 Concepts 表达更自然。
+  \item \texttt{requires} 表达式可以检测语义约束（不仅是语法合法性），比 \texttt{void\_t} 更精确。
+\end{itemize}
+
+\subsection{混合使用的建议}
+
+在同时支持 C++17 和 C++20 的项目中，可以用宏做条件编译：
+
+\begin{lstlisting}
+#if __cplusplus >= 202002L
+    #define REQUIRES(...) requires __VA_ARGS__
+    #define TEMPLATE_CONSTRAINT(C, T) C<T> T
+#else
+    #define REQUIRES(...)
+    #define TEMPLATE_CONSTRAINT(C, T) \
+        typename T, \
+        typename = std::enable_if_t<C<T>::value>
+#endif
+\end{lstlisting}
+
+不过这种方式可读性较差，更推荐的做法是为 C++17 提供一套完整的 SFINAE trait，
+在 C++20 中用概念封装它们，并在 \texttt{\#if} 中选择暴露哪套接口。
+
+% ═══════════════════════════════════════════════════════════
+\section{总结}
+% ═══════════════════════════════════════════════════════════
+
+SFINAE 和 Concepts 解决的是同一个问题——约束模板参数以控制重载选择。
+Concepts 是 SFINAE 的现代化替代，语法更清晰、错误信息更友好、组合更灵活。
+在需要兼容 C++20 之前标准的场景下，掌握从 Concepts 到 SFINAE 的系统性转换方法，
+可以让你先在 C++20 下设计和验证约束逻辑，再降级到旧标准部署。
+
+两者的核心对应关系可以概括为：
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{C++20 Concepts} & \textbf{SFINAE 等价物} \\
+\midrule
+\texttt{concept Name = expr;} & \texttt{template<...> struct Name : ... \{\};} \\
+\texttt{template<C T>} & \texttt{enable\_if\_t<C\_trait<T>::value>} \\
+\texttt{requires \{ e; \}} & \texttt{void\_t<decltype(e)>} \\
+\texttt{\{ e \} -> same\_as<U>} & \texttt{is\_same<decltype(e), U>} \\
+\texttt{\{ e \} -> convertible\_to<U>} & \texttt{is\_convertible<decltype(e), U>} \\
+\texttt{requires bool-expr;} & 直接写在 \texttt{enable\_if} 条件中 \\
+\texttt{C1 \&\& C2} & \texttt{trait1::value \&\& trait2::value} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}

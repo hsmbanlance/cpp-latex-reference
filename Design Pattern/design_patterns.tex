@@ -1,0 +1,2715 @@
+% ============================================================
+% C++ 常用设计模式与 C# 对比
+% 结合 C++ Core Guidelines 的使用建议
+% ============================================================
+
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+% ---- listing style ----
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,
+    ifstream,ofstream,fstream,iostream,
+    ostream,istream,stringstream,ostringstream,
+    path,filesystem},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+\lstdefinelanguage{CSharp}{
+  morekeywords={
+    abstract,as,base,bool,break,byte,case,catch,char,checked,class,
+    const,continue,decimal,default,delegate,do,double,else,enum,
+    event,explicit,extern,false,finally,fixed,float,for,foreach,
+    goto,if,implicit,in,int,interface,internal,is,lock,long,
+    namespace,new,null,object,operator,out,override,params,
+    partial,private,protected,public,readonly,ref,return,sbyte,
+    sealed,short,sizeof,stackalloc,static,string,struct,switch,
+    this,throw,true,try,typeof,uint,ulong,unchecked,unsafe,
+    ushort,using,virtual,void,volatile,while,
+    var,async,await,yield,dynamic,where,select,from,
+    get,set,init,value,record,with,required,file,global,
+    nint,nuint,notnull,unmanaged
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]@",
+}
+\lstdefinestyle{csharpstyle}{
+  language=CSharp,
+  backgroundcolor=\color{codebg},
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{csharpkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numbers=left,
+  numberstyle=\tiny\color{linenumgray},
+  numbersep=8pt,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  breakatwhitespace=false,
+  tabsize=4,
+  showstringspaces=false,
+  columns=flexible,
+  keepspaces=true,
+  escapeinside={(*@}{@*)},
+  emph={int,string,bool,double,float,void,long,byte,char,object,
+    decimal,var,Task,List,Dictionary,Action,Func,IEnumerable,
+    IDisposable,IComparable,EventArgs,EventArgsT,IObserver,
+    IObservable,Span,Memory,Nullable},
+  emphstyle=\color{csharptype}\bfseries,
+}
+\lstset{style=cppstyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,
+  title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,
+  title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,
+  title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,
+  title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,
+  title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={Design Patterns Reference},
+  pdftitle={C++ 设计模式与 C\# 对比},
+}
+
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+\newcommand{\guideref}[1]{\textbf{\textcolor{blue!70!black}{[#1]}}}
+
+\usepackage{makeidx}
+\makeindex
+
+% ====================================================================
+\begin{document}
+
+% ------------------------------------------------------------
+% 封面
+% ------------------------------------------------------------
+\begin{titlepage}
+\centering
+
+\vspace*{3cm}
+
+{\Huge\bfseries\color{blue!60!black} C\texttt{++} 常用设计模式\par}
+
+\vspace{0.8cm}
+
+{\LARGE\color{blue!40!black} 与 C\# 对比 \& Core Guidelines 实践指南\par}
+
+\vspace{2cm}
+
+\noindent\makebox[\textwidth]{\color{blue!60!black}\rule{0.6\textwidth}{1.2pt}}
+
+\vspace{2cm}
+
+{\large 涵盖创建型、结构型、行为型三大类设计模式\par}
+
+\vspace{0.6cm}
+
+{\large 结合 C\texttt{++} Core Guidelines 的现代实现建议\par}
+
+\vspace{3cm}
+
+{\large\itshape \today\par}
+
+\vfill
+
+{\small\color{gray} 设计模式经典理论源自 Erich Gamma 等人所著\\
+\textit{Design Patterns: Elements of Reusable Object-Oriented Software}\\
+本书在此基础上结合现代 C\texttt{++} 与 C\# 进行重新诠释\par}
+
+\end{titlepage}
+
+% ------------------------------------------------------------
+% 前言
+% ------------------------------------------------------------
+\frontmatter
+
+\chapter{前言}
+
+设计模式（Design Patterns）是面向对象软件工程中经过反复验证的通用解决方案。1994 年，Erich Gamma、Richard Helm、Ralph Johnson 和 John Vlissides（合称"四人帮"，Gang of Four，GoF）在其经典著作中系统性地总结了 23 种设计模式，分为创建型（Creational）、结构型（Structural）和行为型（Behavioral）三大类。这些模式虽然源自 C++ 代码，但其思想跨越语言边界，在 Java、C\#、Python 等现代语言中都有广泛应用。
+
+然而，自 1994 年以来，C\texttt{++} 本身经历了巨大的演进。C++11/14/17/20 引入了移动语义、智能指针、Lambda 表达式、概念（Concepts）、\texttt{std::variant}、\texttt{std::function} 等特性，使得许多经典模式的实现方式发生了根本性的变化。与此同时，C\# 语言也在不断演进，其内置特性（如接口、委托、事件、泛型、\texttt{async/await}、模式匹配等）为设计模式提供了更加优雅的表达方式。
+
+本书的目标是：
+
+\begin{itemize}
+  \item 系统讲解最常用的设计模式，保留经典理论的核心思想；
+  \item 为每种模式提供现代 C\texttt{++} 实现，充分利用 C++17/20 特性；
+  \item 对适合编译时多态的模式，额外提供 CRTP / C++20 Concepts 的泛型版本；
+  \item 与 C\# 实现进行对比，帮助双栈开发者快速切换思维；
+  \item 结合 C++ Core Guidelines 的规则，给出模式使用的最佳实践——包括对单例模式的审慎警告。
+\end{itemize}
+
+\section*{如何使用本书}
+
+本书按创建型、结构型、行为型三部分组织。每种模式的讲解包含：意图说明、C++ 实现、C\# 对比、Core Guidelines 建议四个环节。读者可以按需跳读，无需严格按顺序阅读。
+
+\section*{约定}
+
+\begin{itemize}
+  \item C\texttt{++} 代码默认使用 C++17 标准，部分示例涉及 C++20 特性时会特别注明。
+  \item C\# 代码默认使用 C\# 10 / .NET 6 及以上版本。
+  \item Core Guidelines 引用采用规则编号，如 \guideref{C.120} 表示类层次设计的第 120 条规则。
+  \item \textbf{推荐做法}使用蓝色边框提示，\textbf{常见陷阱}使用红色边框警告。
+\end{itemize}
+
+\tableofcontents
+
+% ============================================================
+% 正文
+% ============================================================
+\mainmatter
+
+% ============================================================
+% Part I: 创建型模式
+% ============================================================
+\part{创建型模式}
+
+创建型模式关注对象的创建方式，将对象的创建与使用解耦，使系统不依赖于具体类的实例化方式。
+
+% ------------------------------------------------------------
+% Chapter 1: 单例模式
+% ------------------------------------------------------------
+\chapter{单例模式 (Singleton)}
+
+\section{意图}
+
+确保一个类只有一个实例，并提供一个全局访问点。经典教科书将单例列为创建型模式之一，但在现代 C++ 工程实践中，\textbf{单例本质上是一种全局变量}，应极其谨慎地使用。
+
+\begin{warning}[title={Core Guidelines 立场：慎用单例}]
+\guideref{I.3}（Avoid singletons）明确指出：\textbf{单例本质上是经过包装的全局变量}，它隐藏了全局状态、破坏了可测试性、引入隐式依赖，并且使代码的并发安全性难以推理。
+
+\guideref{R.6}（Avoid non-\texttt{const} global variables）进一步强调：全局可变状态是 bug 的主要来源，单例并未从根本上解决这一问题——它只是用函数调用语法伪装了全局访问。
+
+\textbf{在 C++ 中应优先考虑替代方案：}
+\begin{itemize}
+  \item \textbf{依赖注入}：将依赖通过构造函数或参数传入，而非隐式访问全局实例。
+  \item \textbf{RAII 作用域对象}：在 \texttt{main()} 中创建资源对象，通过引用传递到需要的地方。
+  \item \textbf{静态函数/自由函数}：如果只需要全局行为（如日志），无需维护状态，直接提供无状态的函数接口。
+\end{itemize}
+\end{warning}
+
+\section{C++ 实现}
+
+如果确实需要单例（例如硬件资源句柄、全局配置等\textbf{确实全局唯一}的场景），现代 C++ 推荐使用 Meyer's Singleton：
+
+\begin{lstlisting}[style=cppstyle, caption={Meyer's Singleton --- 最小化单例危害}]
+class HardwareConfig {
+public:
+    static HardwareConfig& instance() {
+        static HardwareConfig inst;   // C++11 起线程安全
+        return inst;
+    }
+
+    int cpuCores() const { return cores_; }
+
+    // 禁止拷贝和移动
+    HardwareConfig(const HardwareConfig&) = delete;
+    HardwareConfig& operator=(const HardwareConfig&) = delete;
+    HardwareConfig(HardwareConfig&&) = delete;
+    HardwareConfig& operator=(HardwareConfig&&) = delete;
+
+private:
+    HardwareConfig() { /* 读取硬件信息 */ cores_ = 8; }
+    int cores_;
+};
+\end{lstlisting}
+
+Meyer's Singleton 至少保证了：局部静态变量的构造在 C++11 起是线程安全的，避免了经典 Singleton 中的竞态条件；同时避免了静态初始化顺序问题（Static Initialization Order Fiasco）。
+
+\begin{guideline}
+\guideref{C.80}：用 \texttt{= delete} 显式禁止拷贝和赋值操作。
+
+\guideref{R.6}：虽然 Meyer's Singleton 避免了 SIOF，但它\textbf{仍然是全局可变状态}。每引入一个单例，系统的可测试性就降低一分。
+
+\guideref{C.41}：构造函数应创建完全初始化的对象。单例构造函数中的任何失败都难以优雅处理。
+\end{guideline}
+
+\section{模板版本：CRTP 泛型 Singleton 基类}
+
+如果项目中确实存在多个必须使用单例的场景，可以用 CRTP 提取公共样板（\texttt{instance()}、删除拷贝/移动），避免每个单例类重复编写：
+
+\begin{lstlisting}[style=cppstyle, caption={CRTP Singleton 基类 --- 可复用的单例骨架}]
+template<typename Derived>
+class Singleton {
+public:
+    static Derived& instance() {
+        static Derived inst;   // 每个 Derived 类型独立一份
+        return inst;
+    }
+
+    Singleton(const Singleton&) = delete;
+    Singleton& operator=(const Singleton&) = delete;
+    Singleton(Singleton&&) = delete;
+    Singleton& operator=(Singleton&&) = delete;
+
+protected:
+    Singleton() = default;
+    ~Singleton() = default;
+};
+
+// 使用：继承即可获得单例能力
+class Logger : public Singleton<Logger> {
+    friend class Singleton<Logger>;  // 允许基类构造
+    Logger() { /* 初始化日志系统 */ }
+public:
+    void log(std::string_view msg) {
+        std::lock_guard lock(mtx_);
+        std::println("{}", msg);
+    }
+private:
+    std::mutex mtx_;
+};
+
+class AppConfig : public Singleton<AppConfig> {
+    friend class Singleton<AppConfig>;
+    AppConfig() { /* 读取配置文件 */ maxRetries_ = 3; }
+public:
+    int maxRetries() const { return maxRetries_; }
+private:
+    int maxRetries_;
+};
+
+// 各类型拥有独立的单例实例
+Logger::instance().log("App started");
+auto retries = AppConfig::instance().maxRetries();
+\end{lstlisting}
+
+\begin{warning}
+CRTP Singleton 基类仅减少代码重复，\textbf{并未改变单例作为全局变量的本质}。每个 \texttt{Singleton<Derived>} 仍然产生一个全局静态对象，仍然面临析构顺序问题、可测试性问题和隐式依赖问题。使用此基类前请确认依赖注入确实不可行。
+\end{warning}
+
+\section*{C\# 对比：自引用泛型 Singleton 基类}
+
+C\# 可以用自引用泛型（Self-referencing Generics）实现类似的泛型 Singleton 基类，避免每个单例重复 \texttt{Lazy<T>} 样板：
+
+\begin{lstlisting}[style=csharpstyle, caption={C\# 泛型 Singleton 基类}]
+public abstract class Singleton<T> where T : Singleton<T>
+{
+    private static readonly Lazy<T> _instance = new(
+        () => (T)Activator.CreateInstance(
+            typeof(T), nonPublic: true)!);
+
+    public static T Instance => _instance.Value;
+
+    protected Singleton() { }
+}
+
+// 使用：继承 + sealed
+public sealed class Logger : Singleton<Logger>
+{
+    private Logger() { }
+
+    private readonly object _lock = new();
+
+    public void Log(string message)
+    {
+        lock (_lock)
+        {
+            Console.WriteLine(message);
+        }
+    }
+}
+
+// 使用
+Logger.Instance.Log("App started");
+\end{lstlisting}
+
+\begin{compare}[title={CRTP vs 自引用泛型 Singleton}]
+\textbf{构造机制}：C++ CRTP 利用局部静态变量（语言保证线程安全）；C\# 利用 \texttt{Lazy<T>} + \texttt{Activator.CreateInstance}（反射调用私有构造函数）。
+
+\textbf{类型安全}：C++ CRTP 的 \texttt{static\_cast} 在编译时完成，零开销；C\# 的 \texttt{Activator.CreateInstance} 涉及反射，有少量运行时开销。
+
+\textbf{安全约束}：C++ 用 \texttt{friend} 限制基类构造；C\# 用 \texttt{protected} 构造函数 + \texttt{sealed} 防止外部实例化。
+
+\textbf{共同缺点}：两者仍然产生全局状态，仍然不利于单元测试。优先考虑依赖注入。
+\end{compare}
+
+\section{推荐替代：依赖注入}
+
+以下展示如何用依赖注入替代单例，这是 Core Guidelines 推荐的方式：
+
+\begin{lstlisting}[style=cppstyle, caption={用依赖注入替代单例}]
+// 不好：隐式依赖全局单例
+void processOrder() {
+    Logger::instance().log("Processing order");   // 隐式全局依赖
+    auto cfg = Config::instance().getMaxRetries(); // 又一个全局依赖
+}
+
+// 好：显式依赖注入
+void processOrder(Logger& logger, const Config& cfg) {
+    logger.log("Processing order");
+    auto retries = cfg.getMaxRetries();
+}
+
+// 在 main 中组装依赖
+int main() {
+    Logger logger;
+    Config config("config.yaml");
+    processOrder(logger, config);  // 依赖关系清晰可见
+}
+\end{lstlisting}
+
+\section{C\# 对比}
+
+C\# 生态中同样不鼓励单例。ASP.NET Core 的依赖注入容器提供了 \texttt{AddSingleton} 生命周期，可以在不编写单例类的情况下获得单例语义：
+
+\begin{lstlisting}[style=csharpstyle, caption={C\# 依赖注入替代单例}]
+// 不需要编写 Singleton 类，由 DI 容器管理生命周期
+public class ConfigService
+{
+    public int MaxRetries { get; } = 3;
+    public ConfigService(IConfiguration config)
+    { /* 从配置源读取 */ }
+}
+
+// 注册为单例生命周期
+services.AddSingleton<ConfigService>();
+
+// 通过构造函数注入，无需全局访问
+public class OrderProcessor
+{
+    private readonly ConfigService _config;
+    public OrderProcessor(ConfigService config) => _config = config;
+    public void Process() { /* 使用 _config */ }
+}
+\end{lstlisting}
+
+\begin{compare}
+\textbf{共识}：两种语言的现代工程实践都趋向于\textbf{避免手动编写单例}，转而使用依赖注入容器管理对象生命周期。
+
+\textbf{C++ 特殊问题}：析构顺序（静态局部变量析构顺序与构造相反）、多线程初始化竞态（C++11 已解决）、全局状态导致的测试困难。
+
+\textbf{C\# 优势}：DI 容器是一等公民，\texttt{AddSingleton}/\texttt{AddScoped}/\texttt{AddTransient} 提供了更灵活的生命周期管理。
+\end{compare}
+
+\section{常用使用场景}
+
+以下列出单例模式的典型应用场景，并标注推荐程度：
+
+\begin{longtable}{p{4cm} p{6cm} p{3cm}}
+\toprule
+\textbf{场景} & \textbf{说明} & \textbf{推荐度} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{场景} & \textbf{说明} & \textbf{推荐度} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+硬件配置读取 & CPU 核心数、GPU 能力等\textbf{真正全局唯一}的只读信息 & 可接受 \\
+日志/审计系统 & 全局统一的日志输出点（但 DI 注入更好） & 谨慎使用 \\
+线程池/连接池 & 全局资源池，控制并发数量 & 谨慎使用 \\
+全局缓存 & 进程级缓存，避免重复计算 & 谨慎使用 \\
+应用配置 & 读取配置文件/环境变量 & 推荐用 DI \\
+UI 主题管理器 & 全局一致的主题/样式 & 推荐用 DI \\
+\end{longtable}
+
+% ------------------------------------------------------------
+% Chapter 2: 工厂方法模式
+% ------------------------------------------------------------
+\chapter{工厂方法模式 (Factory Method)}
+
+\section{意图}
+
+定义创建对象的接口，但让子类决定实例化哪个类。工厂方法将类的实例化延迟到子类。
+
+\section{C++ 实现}
+
+在 C\texttt{++} 中，工厂方法通常结合多态和智能指针使用：
+
+\begin{lstlisting}[style=cppstyle, caption={工厂方法模式 --- C++ 实现}]
+// 产品接口
+class Document {
+public:
+    virtual ~Document() = default;
+    virtual void open() = 0;
+    virtual void save() = 0;
+};
+
+class PdfDocument : public Document {
+public:
+    void open() override { /* PDF 打开逻辑 */ }
+    void save() override { /* PDF 保存逻辑 */ }
+};
+
+class WordDocument : public Document {
+public:
+    void open() override { /* Word 打开逻辑 */ }
+    void save() override { /* Word 保存逻辑 */ }
+};
+
+// 工厂
+class Application {
+public:
+    virtual ~Application() = default;
+
+    // 工厂方法
+    virtual std::unique_ptr<Document> createDocument() = 0;
+
+    void newDocument() {
+        auto doc = createDocument();
+        doc->open();
+    }
+};
+
+class PdfApp : public Application {
+public:
+    std::unique_ptr<Document> createDocument() override {
+        return std::make_unique<PdfDocument>();
+    }
+};
+
+class WordApp : public Application {
+public:
+    std::unique_ptr<Document> createDocument() override {
+        return std::make_unique<WordDocument>();
+    }
+};
+\end{lstlisting}
+
+\section{模板版本：类型注册工厂}
+
+当需要按名称（如文件扩展名、配置键）动态创建对象时，可以使用模板实现类型注册工厂，避免手动编写大量 \texttt{if-else} 分支：
+
+\begin{lstlisting}[style=cppstyle, caption={模板类型注册工厂 --- C++20}]
+template<typename Base>
+class TypeRegistry {
+public:
+    using Creator = std::function<std::unique_ptr<Base>()>;
+
+    // 模板注册：编译时确定具体类型
+    template<typename Derived>
+    void registerType(std::string key) {
+        static_assert(std::is_base_of_v<Base, Derived>,
+            "Derived must inherit from Base");
+        creators_[std::move(key)] = []() -> std::unique_ptr<Base> {
+            return std::make_unique<Derived>();
+        };
+    }
+
+    std::unique_ptr<Base> create(std::string_view key) const {
+        auto it = creators_.find(std::string(key));
+        if (it == creators_.end()) return nullptr;
+        return it->second();
+    }
+
+private:
+    std::map<std::string, Creator, std::less<>> creators_;
+};
+
+// 使用：注册一次，动态创建
+TypeRegistry<Document> registry;
+registry.registerType<PdfDocument>(".pdf");
+registry.registerType<WordDocument>(".docx");
+
+auto doc = registry.create(".pdf");  // 创建 PdfDocument
+if (doc) doc->open();
+\end{lstlisting}
+
+\begin{guideline}
+\guideref{R.20}：使用 \texttt{unique\_ptr} 表示所有权转移。工厂方法创建并返回对象，调用者获得所有权——这正是 \texttt{unique\_ptr} 的语义。
+
+\guideref{R.22}：用 \texttt{make\_unique} 创建 \texttt{unique\_ptr}，确保异常安全。
+
+\guideref{C.35}：基类必须有虚析构函数。多态基类 \texttt{Document} 和 \texttt{Application} 都声明了虚析构函数。
+
+\guideref{C.120}：使用类层次结构表示需要运行时多态的抽象概念。\texttt{Document} 是一个抽象概念，不同格式的实现各有不同。
+\end{guideline}
+
+\section{C\# 对比}
+
+\begin{lstlisting}[style=csharpstyle, caption={工厂方法模式 --- C\# 实现}]
+// 产品接口
+public interface IDocument
+{
+    void Open();
+    void Save();
+}
+
+public class PdfDocument : IDocument
+{
+    public void Open() { /* PDF 打开逻辑 */ }
+    public void Save() { /* PDF 保存逻辑 */ }
+}
+
+public class WordDocument : IDocument
+{
+    public void Open() { /* Word 打开逻辑 */ }
+    public void Save() { /* Word 保存逻辑 */ }
+}
+
+// 工厂
+public abstract class Application
+{
+    // 工厂方法
+    public abstract IDocument CreateDocument();
+
+    public void NewDocument()
+    {
+        var doc = CreateDocument();
+        doc.Open();
+    }
+}
+
+public class PdfApp : Application
+{
+    public override IDocument CreateDocument() => new PdfDocument();
+}
+
+public class WordApp : Application
+{
+    public override IDocument CreateDocument() => new WordDocument();
+}
+\end{lstlisting}
+
+\begin{compare}
+\textbf{接口表达}：C++ 用抽象类（纯虚函数）表示接口；C\# 有原生的 \texttt{interface} 关键字，语义更清晰。
+
+\textbf{所有权}：C++ 用 \texttt{unique\_ptr} 显式表达所有权转移；C\# 由 GC 管理，无需关心所有权。
+
+\textbf{类型注册工厂}：C++ 可用模板 + \texttt{static\_assert} 构建泛型注册表，编译时检查继承关系；C\# 可用 \texttt{Activator.CreateInstance<T>()} 或 DI 容器实现类似功能，但类型检查在运行时。
+
+\textbf{析构函数}：C++ 多态基类必须声明虚析构函数；C\# 无此需求。
+\end{compare}
+
+\section{常用使用场景}
+
+\begin{longtable}{p{4.5cm} p{8.5cm}}
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+文档/文件解析器 & 根据文件扩展名创建对应的解析器（PDF、Word、Excel 等） \\
+数据库连接工厂 & 根据配置字符串创建 MySQL/PostgreSQL/SQLite 连接对象 \\
+插件系统 & 通过工厂方法延迟具体插件类型的实例化，核心框架不依赖具体插件 \\
+UI 控件创建 & 根据操作系统创建原生控件（Win32/Cocoa/GTK 按钮等） \\
+序列化器 & 根据数据格式（JSON/XML/Protobuf）创建对应的序列化器实例 \\
+测试替身 & 在测试中用 Mock 工厂创建桩对象，替换真实依赖 \\
+\end{longtable}
+
+% ------------------------------------------------------------
+% Chapter 3: 抽象工厂模式
+% ------------------------------------------------------------
+\chapter{抽象工厂模式 (Abstract Factory)}
+
+\section{意图}
+
+提供一个接口，用于创建一系列相关或相互依赖的对象，而无需指定它们的具体类。
+
+\section{C++ 实现}
+
+\begin{lstlisting}[style=cppstyle, caption={抽象工厂模式 --- C++ 实现}]
+// 抽象产品族
+class Button {
+public:
+    virtual ~Button() = default;
+    virtual void paint() = 0;
+};
+
+class Checkbox {
+public:
+    virtual ~Checkbox() = default;
+    virtual void paint() = 0;
+};
+
+// 具体产品 --- Windows 风格
+class WinButton : public Button {
+public:
+    void paint() override { /* Windows 按钮绘制 */ }
+};
+
+class WinCheckbox : public Checkbox {
+public:
+    void paint() override { /* Windows 复选框绘制 */ }
+};
+
+// 具体产品 --- macOS 风格
+class MacButton : public Button {
+public:
+    void paint() override { /* macOS 按钮绘制 */ }
+};
+
+class MacCheckbox : public Checkbox {
+public:
+    void paint() override { /* macOS 复选框绘制 */ }
+};
+
+// 抽象工厂
+class GUIFactory {
+public:
+    virtual ~GUIFactory() = default;
+    virtual std::unique_ptr<Button> createButton() = 0;
+    virtual std::unique_ptr<Checkbox> createCheckbox() = 0;
+};
+
+class WinFactory : public GUIFactory {
+public:
+    std::unique_ptr<Button> createButton() override {
+        return std::make_unique<WinButton>();
+    }
+    std::unique_ptr<Checkbox> createCheckbox() override {
+        return std::make_unique<WinCheckbox>();
+    }
+};
+
+class MacFactory : public GUIFactory {
+public:
+    std::unique_ptr<Button> createButton() override {
+        return std::make_unique<MacButton>();
+    }
+    std::unique_ptr<Checkbox> createCheckbox() override {
+        return std::make_unique<MacCheckbox>();
+    }
+};
+\end{lstlisting}
+
+\begin{guideline}
+\guideref{C.122}：用抽象类做接口。\texttt{GUIFactory} 是一个纯抽象类，定义了创建产品族的契约。
+
+\guideref{C.128}：虚函数覆写应标记 \texttt{override}，所有派生类的工厂方法都使用了 \texttt{override}。
+\end{guideline}
+
+\section{C\# 对比}
+
+\begin{lstlisting}[style=csharpstyle, caption={抽象工厂模式 --- C\# 实现}]
+// 抽象工厂
+public interface IGUIFactory
+{
+    IButton CreateButton();
+    ICheckbox CreateCheckbox();
+}
+
+public class WinFactory : IGUIFactory
+{
+    public IButton CreateButton() => new WinButton();
+    public ICheckbox CreateCheckbox() => new WinCheckbox();
+}
+
+public class MacFactory : IGUIFactory
+{
+    public IButton CreateButton() => new MacButton();
+    public ICheckbox CreateCheckbox() => new MacCheckbox();
+}
+\end{lstlisting}
+
+\begin{compare}
+\textbf{接口定义}：C++ 用纯虚函数模拟接口；C\# 直接用 \texttt{interface}。
+
+\textbf{产品族扩展}：两种语言中，新增产品族（如 Linux 风格）只需添加新的工厂类和产品类；但新增产品类型（如 Slider）需要修改所有工厂，这是抽象工厂的固有限制。
+
+\textbf{现代替代方案}：在 C\# 中，依赖注入容器（如 Microsoft.Extensions.DependencyInjection）已经接管了大部分抽象工厂的职责。C++ 也有类似的 DI 库（如 Boost.DI），但不如 C\# 生态普及。
+\end{compare}
+
+\section{常用使用场景}
+
+\begin{longtable}{p{4.5cm} p{8.5cm}}
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+跨平台 UI 工具包 & 创建同一风格族的控件（Windows/macOS/Linux 按钮、文本框、菜单） \\
+数据库驱动切换 & 根据环境创建整套驱动（Connection + Command + DataReader） \\
+主题/皮肤系统 & 一次切换整套视觉主题（浅色/暗色主题的按钮、背景、字体） \\
+多供应商集成 & 不同支付网关的完整客户端套件（支付宝/微信/PayPal 的认证+支付+退款） \\
+嵌入式平台适配 & 为不同硬件平台创建整套外设驱动（GPIO、UART、SPI 实现） \\
+\end{longtable}
+
+% ------------------------------------------------------------
+% Chapter 4: 建造者模式
+% ------------------------------------------------------------
+\chapter{建造者模式 (Builder)}
+
+\section{意图}
+
+将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。适用于构造参数多、配置选项复杂的对象。
+
+\section{C++ 实现}
+
+\begin{lstlisting}[style=cppstyle, caption={建造者模式 --- C++ 实现}]
+class HttpRequest {
+public:
+    class Builder {
+    public:
+        Builder& setMethod(std::string m) {
+            method_ = std::move(m);
+            return *this;
+        }
+        Builder& setUrl(std::string u) {
+            url_ = std::move(u);
+            return *this;
+        }
+        Builder& addHeader(std::string key, std::string val) {
+            headers_.emplace_back(std::move(key), std::move(val));
+            return *this;
+        }
+        Builder& setBody(std::string b) {
+            body_ = std::move(b);
+            return *this;
+        }
+        Builder& setTimeout(std::chrono::milliseconds t) {
+            timeout_ = t;
+            return *this;
+        }
+
+        HttpRequest build() && {
+            return HttpRequest(std::move(*this));
+        }
+
+    private:
+        friend class HttpRequest;
+        std::string method_ = "GET";
+        std::string url_;
+        std::vector<std::pair<std::string, std::string>> headers_;
+        std::string body_;
+        std::chrono::milliseconds timeout_{30000};
+    };
+
+    // 只读访问
+    const std::string& method() const { return method_; }
+    const std::string& url() const { return url_; }
+    auto timeout() const { return timeout_; }
+
+private:
+    explicit HttpRequest(Builder b)
+        : method_(std::move(b.method_))
+        , url_(std::move(b.url_))
+        , headers_(std::move(b.headers_))
+        , body_(std::move(b.body_))
+        , timeout_(b.timeout_)
+    {}
+
+    std::string method_;
+    std::string url_;
+    std::vector<std::pair<std::string, std::string>> headers_;
+    std::string body_;
+    std::chrono::milliseconds timeout_;
+};
+
+// 使用：流畅接口
+auto request = HttpRequest::Builder{}
+    .setMethod("POST")
+    .setUrl("https://api.example.com/data")
+    .addHeader("Content-Type", "application/json")
+    .setBody(R"({"key": "value"})")
+    .setTimeout(std::chrono::milliseconds{5000})
+    .build();
+\end{lstlisting}
+
+\section{模板版本：CRTP 泛型 Builder}
+
+当多个类都需要 Builder 时，每次都手写 Builder 样板代码是冗余的。使用 CRTP（Curiously Recurring Template Pattern）可以提取通用的流畅构建基类：
+
+\begin{lstlisting}[style=cppstyle, caption={CRTP 泛型 Builder 基类 --- C++20}]
+// CRTP 基类：提供通用的 build() 入口
+template<typename Builder, typename Product>
+class BuilderBase {
+public:
+    Product build() && {
+        return static_cast<Builder*>(this)->buildImpl();
+    }
+
+protected:
+    Builder& self() { return static_cast<Builder&>(*this); }
+};
+
+// 具体 Builder 只需定义字段和 buildImpl
+class QueryBuilder
+    : public BuilderBase<QueryBuilder, std::string> {
+public:
+    QueryBuilder& select(std::string cols) {
+        cols_ = std::move(cols); return *this;
+    }
+    QueryBuilder& from(std::string table) {
+        table_ = std::move(table); return *this;
+    }
+    QueryBuilder& where(std::string cond) {
+        where_ = std::move(cond); return *this;
+    }
+
+    std::string buildImpl() {
+        return "SELECT " + cols_ + " FROM " + table_
+             + (where_.empty() ? "" : " WHERE " + where_);
+    }
+
+private:
+    friend class BuilderBase<QueryBuilder, std::string>;
+    std::string cols_, table_, where_;
+};
+
+// 使用
+auto sql = QueryBuilder{}
+    .select("id, name")
+    .from("users")
+    .where("age > 18")
+    .build();
+// sql == "SELECT id, name FROM users WHERE age > 18"
+\end{lstlisting}
+
+更进一步，可以使用 C++20 Concepts 约束 Builder 契约，让编译器在违反契约时给出友好错误信息：
+
+\begin{lstlisting}[style=cppstyle, caption={C++20 Concept 约束 Builder}]
+template<typename B, typename P>
+concept Buildable = requires(B b) {
+    { std::move(b).buildImpl() } -> std::convertible_to<P>;
+};
+
+template<Buildable<std::string> B>
+std::string buildQuery(B builder) {
+    return std::move(builder).buildImpl();
+}
+
+// 编译期检查：如果 builder 缺少 buildImpl()，
+// 错误信息会明确指出违反了 Buildable concept
+auto result = buildQuery(QueryBuilder{}
+    .select("*").from("orders"));
+\end{lstlisting}
+
+\begin{guideline}
+\guideref{C.41}：构造函数应创建完全初始化的对象。\texttt{HttpRequest} 的构造函数接收 Builder，确保对象一旦创建即处于有效状态。
+
+\guideref{C.45}：不要定义仅初始化数据成员的构造函数。当参数过多时，使用 Builder 比定义一个接受 10 个参数的构造函数更加清晰。
+
+\guideref{F.5}：函数参数少。Builder 模式正是解决参数过多问题的经典方案。
+\end{guideline}
+
+\section{C\# 对比}
+
+\begin{lstlisting}[style=csharpstyle, caption={建造者模式 --- C\# 实现}]
+public class HttpRequest
+{
+    public string Method { get; init; } = "GET";
+    public string Url { get; init; } = "";
+    public Dictionary<string, string> Headers { get; init; } = new();
+    public string Body { get; init; } = "";
+    public TimeSpan Timeout { get; init; } = TimeSpan.FromSeconds(30);
+
+    public class Builder
+    {
+        private readonly HttpRequest _request = new();
+
+        public Builder SetMethod(string method)
+        { _request.Method = method; return this; }
+
+        public Builder SetUrl(string url)
+        { _request.Url = url; return this; }
+
+        public Builder AddHeader(string key, string value)
+        { _request.Headers[key] = value; return this; }
+
+        public Builder SetBody(string body)
+        { _request.Body = body; return this; }
+
+        public Builder SetTimeout(TimeSpan timeout)
+        { _request.Timeout = timeout; return this; }
+
+        public HttpRequest Build() => _request;
+    }
+}
+
+// 使用
+var request = new HttpRequest.Builder()
+    .SetMethod("POST")
+    .SetUrl("https://api.example.com/data")
+    .AddHeader("Content-Type", "application/json")
+    .SetBody("""{"key": "value"}""")
+    .SetTimeout(TimeSpan.FromSeconds(5))
+    .Build();
+\end{lstlisting}
+
+\section*{C\# 泛型版本：自引用泛型 Builder}
+
+C\# 虽然没有 CRTP，但可以通过自引用泛型（Self-referencing Generics）实现类似效果：
+
+\begin{lstlisting}[style=csharpstyle, caption={C\# 泛型 Builder 基类}]
+public abstract class BuilderBase<TBuilder, TProduct>
+    where TBuilder : BuilderBase<TBuilder, TProduct>
+{
+    public abstract TProduct Build();
+    protected TBuilder Self => (TBuilder)this;
+}
+
+public class QueryBuilder
+    : BuilderBase<QueryBuilder, string>
+{
+    private string _cols = "*", _table = "", _where = "";
+
+    public QueryBuilder Select(string cols)
+    { _cols = cols; return this; }
+    public QueryBuilder From(string table)
+    { _table = table; return this; }
+    public QueryBuilder Where(string cond)
+    { _where = cond; return this; }
+
+    public override string Build() =>
+        $"SELECT {_cols} FROM {_table}" +
+        (_where.Length > 0 ? $" WHERE {_where}" : "");
+}
+\end{lstlisting}
+
+\begin{compare}
+\textbf{初始化语法}：C\# 的 \texttt{init} 属性使简单的 Builder 场景可以用对象初始化器替代；C++ 则需要显式的 Builder 类。
+
+\textbf{所有权转移}：C++ 的 \texttt{build() \&\&} 限定为右值调用，确保 Builder 被消费后不再使用；C\# 无需此机制。
+
+\textbf{泛型复用}：C++ 用 CRTP 模板提取 Builder 基类，配合 C++20 Concepts 约束契约；C\# 用自引用泛型（\texttt{where TBuilder : BuilderBase<TBuilder, TProduct>}）达到类似效果。
+
+\textbf{现代替代}：C\# 9+ 的 \texttt{record} 类型配合 \texttt{with} 表达式在很多场景下可以替代 Builder；C++ 没有等价特性。
+\end{compare}
+
+\section{常用使用场景}
+
+\begin{longtable}{p{4.5cm} p{8.5cm}}
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+HTTP 请求构建 & 组装 URL、Headers、Body、Timeout、认证信息等可选参数 \\
+SQL 查询构建 & 动态组合 SELECT/FROM/JOIN/WHERE/ORDER BY 等子句 \\
+Protobuf/消息构建 & Google Protobuf 的 Message.Builder 是经典应用 \\
+复杂配置对象 & 多字段配置（数据库连接串、线程池参数、日志级别等） \\
+测试数据工厂 & 在单元测试中快速构建具有不同属性组合的测试对象 \\
+文档生成器 & 构建结构化文档（HTML 页面、PDF 布局、邮件模板） \\
+编译器 AST 节点 & 构建语法树节点，部分属性可选（如注解、类型参数） \\
+\end{longtable}
+
+% ============================================================
+% Part II: 结构型模式
+% ============================================================
+\part{结构型模式}
+
+结构型模式关注类和对象的组合，通过识别类与类之间的关系来简化系统设计。
+
+% ------------------------------------------------------------
+% Chapter 5: 适配器模式
+% ------------------------------------------------------------
+\chapter{适配器模式 (Adapter)}
+
+\section{意图}
+
+将一个类的接口转换成客户希望的另一个接口，使原本由于接口不兼容而不能一起工作的类可以协同工作。
+
+\section{C++ 实现}
+
+\begin{lstlisting}[style=cppstyle, caption={适配器模式 --- C++ 实现}]
+// 目标接口
+class ModernLogger {
+public:
+    virtual ~ModernLogger() = default;
+    virtual void log(int level, std::string_view msg) = 0;
+};
+
+// 遗留系统接口
+class LegacyLogSystem {
+public:
+    virtual ~LegacyLogSystem() = default;
+    virtual void writeInfo(const char* msg) = 0;
+    virtual void writeError(const char* msg) = 0;
+};
+
+// 适配器
+class LogAdapter : public ModernLogger {
+public:
+    explicit LogAdapter(std::shared_ptr<LegacyLogSystem> legacy)
+        : legacy_(std::move(legacy)) {}
+
+    void log(int level, std::string_view msg) override {
+        std::string s(msg);
+        if (level >= 3)
+            legacy_->writeError(s.c_str());
+        else
+            legacy_->writeInfo(s.c_str());
+    }
+
+private:
+    std::shared_ptr<LegacyLogSystem> legacy_;
+};
+\end{lstlisting}
+
+\begin{guideline}
+\guideref{C.120}：使用类层次结构表示需要运行时多态的场景。适配器继承 \texttt{ModernLogger} 接口，是典型的多态应用。
+
+\guideref{R.34}：取 \texttt{const shared\_ptr\&} 或 \texttt{shared\_ptr} 值参数表示共享所有权。此处适配器持有遗留系统的共享引用。
+\end{guideline}
+
+\section{C\# 对比}
+
+\begin{lstlisting}[style=csharpstyle, caption={适配器模式 --- C\# 实现}]
+public interface IModernLogger
+{
+    void Log(int level, string message);
+}
+
+public interface ILegacyLogSystem
+{
+    void WriteInfo(string message);
+    void WriteError(string message);
+}
+
+public class LogAdapter : IModernLogger
+{
+    private readonly ILegacyLogSystem _legacy;
+
+    public LogAdapter(ILegacyLogSystem legacy) => _legacy = legacy;
+
+    public void Log(int level, string message)
+    {
+        if (level >= 3)
+            _legacy.WriteError(message);
+        else
+            _legacy.WriteInfo(message);
+    }
+}
+\end{lstlisting}
+
+\begin{compare}
+\textbf{接口继承}：C++ 用抽象类；C\# 用 \texttt{interface}，语义更精确，且避免了虚析构函数的问题。
+
+\textbf{构造函数注入}：两者都使用构造函数注入依赖，C\# 的 \texttt{readonly} 字段等价于 C++ 中不可重新绑定的智能指针。
+\end{compare}
+
+\section{常用使用场景}
+
+\begin{longtable}{p{4.5cm} p{8.5cm}}
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+遗留系统集成 & 将老式 API（C 风格回调、XML 接口）适配为现代接口 \\
+第三方库包装 & 将 Boost.Asio、libcurl 等库适配为统一的内部抽象层 \\
+数据库驱动统一 & 将 MySQL/PostgreSQL/SQLite 各自的 C API 适配为统一接口 \\
+日志框架桥接 & 将 spdlog、glog、log4cxx 等不同日志库适配为统一日志接口 \\
+硬件抽象层 & 将不同厂商的硬件驱动适配为统一的 HAL 接口 \\
+支付网关集成 & 将支付宝/微信/PayPal 各自的 SDK 适配为统一的支付接口 \\
+\end{longtable}
+
+% ------------------------------------------------------------
+% Chapter 6: 装饰器模式
+% ------------------------------------------------------------
+\chapter{装饰器模式 (Decorator)}
+
+\section{意图}
+
+动态地给对象添加额外职责。与子类继承相比，装饰器提供了更加灵活的扩展方式，遵循"组合优于继承"的原则。
+
+\section{C++ 实现}
+
+\begin{lstlisting}[style=cppstyle, caption={装饰器模式 --- C++ 实现}]
+class DataSource {
+public:
+    virtual ~DataSource() = default;
+    virtual void writeData(std::string_view data) = 0;
+    virtual std::string readData() = 0;
+};
+
+class FileDataSource : public DataSource {
+public:
+    explicit FileDataSource(std::string filename)
+        : filename_(std::move(filename)) {}
+
+    void writeData(std::string_view data) override {
+        // 写入文件
+    }
+    std::string readData() override {
+        return "file content";
+    }
+
+private:
+    std::string filename_;
+};
+
+// 装饰器基类
+class DataSourceDecorator : public DataSource {
+public:
+    explicit DataSourceDecorator(std::unique_ptr<DataSource> wrappee)
+        : wrappee_(std::move(wrappee)) {}
+
+    void writeData(std::string_view data) override {
+        wrappee_->writeData(data);
+    }
+    std::string readData() override {
+        return wrappee_->readData();
+    }
+
+protected:
+    std::unique_ptr<DataSource> wrappee_;
+};
+
+// 具体装饰器：加密
+class EncryptionDecorator : public DataSourceDecorator {
+public:
+    using DataSourceDecorator::DataSourceDecorator;  // 继承构造函数
+
+    void writeData(std::string_view data) override {
+        DataSourceDecorator::writeData(encrypt(data));
+    }
+    std::string readData() override {
+        return decrypt(DataSourceDecorator::readData());
+    }
+
+private:
+    std::string encrypt(std::string_view s) {
+        return std::string("ENC(") + std::string(s) + ")";
+    }
+    std::string decrypt(std::string_view s) {
+        // 解密逻辑
+        return std::string(s);
+    }
+};
+
+// 具体装饰器：压缩
+class CompressionDecorator : public DataSourceDecorator {
+public:
+    using DataSourceDecorator::DataSourceDecorator;
+
+    void writeData(std::string_view data) override {
+        DataSourceDecorator::writeData(compress(data));
+    }
+    std::string readData() override {
+        return decompress(DataSourceDecorator::readData());
+    }
+
+private:
+    std::string compress(std::string_view s) {
+        return std::string("ZIP(") + std::string(s) + ")";
+    }
+    std::string decompress(std::string_view s) {
+        return std::string(s);
+    }
+};
+
+// 使用：可组合的装饰器链
+auto source = std::make_unique<FileDataSource>("data.txt");
+auto encrypted = std::make_unique<EncryptionDecorator>(
+    std::move(source));
+auto compressed = std::make_unique<CompressionDecorator>(
+    std::move(encrypted));
+compressed->writeData("Hello World");
+\end{lstlisting}
+
+\begin{guideline}
+\guideref{R.20}：使用 \texttt{unique\_ptr} 表达所有权。装饰器拥有被装饰对象的所有权，通过构造函数获取 \texttt{unique\_ptr}。
+
+\guideref{C.120}：使用类层次结构表示运行时多态。装饰器与被装饰对象共享同一接口，通过虚函数实现透明包装。
+\end{guideline}
+
+\section{C\# 对比}
+
+\begin{lstlisting}[style=csharpstyle, caption={装饰器模式 --- C\# 实现}]
+public interface IDataSource
+{
+    void WriteData(string data);
+    string ReadData();
+}
+
+public class EncryptionDecorator : IDataSource
+{
+    private readonly IDataSource _inner;
+
+    public EncryptionDecorator(IDataSource inner) => _inner = inner;
+
+    public void WriteData(string data) =>
+        _inner.WriteData($"ENC({data})");
+
+    public string ReadData() =>
+        _inner.ReadData(); // + 解密逻辑
+}
+
+// 使用
+IDataSource source = new CompressionDecorator(
+    new EncryptionDecorator(
+        new FileDataSource("data.txt")));
+source.WriteData("Hello World");
+\end{lstlisting}
+
+\begin{compare}
+\textbf{所有权管理}：C++ 通过 \texttt{unique\_ptr} 链式转移所有权；C\# 由 GC 管理，代码更简洁。
+
+\textbf{构造函数继承}：C++ 用 \texttt{using Base::Base} 继承构造函数；C\# 无此语法糖，需显式编写。
+
+\textbf{组合链构建}：C\# 可以直接在构造参数中嵌套，语法更紧凑；C++ 需要分步构造。
+\end{compare}
+
+\section{常用使用场景}
+
+\begin{longtable}{p{4.5cm} p{8.5cm}}
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+I/O 流处理 & Java 的 \texttt{BufferedInputStream(new GZIPInputStream(new FileInputStream(...)))} 是经典案例 \\
+HTTP 中间件 & ASP.NET Core 的中间件管道（认证 → 日志 → 压缩 → 路由）本质是装饰器链 \\
+网络协议栈 & TCP → TLS → HTTP → WebSocket 的逐层封装 \\
+日志增强 & 在已有服务上叠加时间戳、关联 ID、脱敏等日志装饰器 \\
+权限控制 & 在不修改业务逻辑的前提下，为服务方法添加权限检查装饰 \\
+序列化增强 & 为数据传输叠加压缩、加密、校验（CRC）等装饰层 \\
+\end{longtable}
+
+% ------------------------------------------------------------
+% Chapter 7: 代理模式
+% ------------------------------------------------------------
+\chapter{代理模式 (Proxy)}
+
+\section{意图}
+
+为其他对象提供一种代理以控制对这个对象的访问。常见变体包括：远程代理、虚拟代理（延迟初始化）、保护代理（权限控制）。
+
+\section{C++ 实现}
+
+\begin{lstlisting}[style=cppstyle, caption={代理模式 --- 虚拟代理}]
+class Image {
+public:
+    virtual ~Image() = default;
+    virtual void display() = 0;
+};
+
+class RealImage : public Image {
+public:
+    explicit RealImage(std::string filename)
+        : filename_(std::move(filename))
+    {
+        loadFromDisk();  // 昂贵的加载操作
+    }
+
+    void display() override {
+        std::println("Displaying {}", filename_);
+    }
+
+private:
+    void loadFromDisk() {
+        std::println("Loading {} from disk...", filename_);
+    }
+    std::string filename_;
+};
+
+// 虚拟代理：延迟加载
+class LazyImageProxy : public Image {
+public:
+    explicit LazyImageProxy(std::string filename)
+        : filename_(std::move(filename)) {}
+
+    void display() override {
+        if (!real_) {
+            real_ = std::make_unique<RealImage>(filename_);
+        }
+        real_->display();
+    }
+
+private:
+    std::string filename_;
+    std::unique_ptr<RealImage> real_;
+};
+
+// 使用：图片只在首次显示时才加载
+std::vector<std::unique_ptr<Image>> gallery;
+gallery.push_back(std::make_unique<LazyImageProxy>("photo1.jpg"));
+gallery.push_back(std::make_unique<LazyImageProxy>("photo2.jpg"));
+gallery.push_back(std::make_unique<LazyImageProxy>("photo3.jpg"));
+// 此时没有任何图片被加载
+gallery[0]->display();  // 只有 photo1 被加载
+\end{lstlisting}
+
+\begin{guideline}
+\guideref{R.20}：\texttt{unique\_ptr} 用于延迟初始化场景非常合适——代理拥有真实对象，且在需要时才创建。
+
+\guideref{P.9}：不要浪费资源。虚拟代理体现了"按需加载"的资源节约理念。
+\end{guideline}
+
+\section{C\# 对比}
+
+C\# 中可以使用 \texttt{Lazy<T>} 实现延迟加载代理，无需手动编写代理类：
+
+\begin{lstlisting}[style=csharpstyle, caption={C\# 延迟加载}]
+var lazyImage = new Lazy<RealImage>(() => new RealImage("photo.jpg"));
+// 图片尚未加载
+lazyImage.Value.Display();  // 此时才加载
+\end{lstlisting}
+
+\begin{compare}
+\textbf{延迟加载}：C++ 需要手动编写代理类或使用 \texttt{unique\_ptr}；C\# 内置 \texttt{Lazy<T>}，还支持线程安全选项。
+
+\textbf{保护代理}：在 C\# 中常用特性（Attribute）和 AOP 框架实现权限检查代理；C++ 则通常使用模板或手动实现。
+
+\textbf{远程代理}：C\# 的 WCF/gRPC 客户端代理是典型的远程代理模式；C++ 中 gRPC 的 Stub 类扮演同样的角色。
+\end{compare}
+
+\section{常用使用场景}
+
+\begin{longtable}{p{4.5cm} p{8.5cm}}
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+延迟加载（虚拟代理） & ORM 中的关联对象延迟加载（如 Hibernate/NHibernate 的 Lazy 加载） \\
+RPC 客户端（远程代理） & gRPC Stub、WCF ClientProxy 将远程调用封装为本地方法调用 \\
+访问控制（保护代理） & 为敏感操作添加权限检查，不修改原始类代码 \\
+缓存代理 & 为昂贵的计算/网络请求添加透明缓存层 \\
+智能引用 & C++ 的 \texttt{shared\_ptr} 本身就是引用计数代理；ORM 的延迟加载属性 \\
+AOP 代理 & C\# 的 Castle DynamicProxy 实现横切关注点（日志、事务、缓存） \\
+\end{longtable}
+
+% ------------------------------------------------------------
+% Chapter 8: 组合模式
+% ------------------------------------------------------------
+\chapter{组合模式 (Composite)}
+
+\section{意图}
+
+将对象组合成树形结构以表示"部分--整体"的层次结构，使客户端对单个对象和组合对象的使用具有一致性。
+
+\section{C++ 实现}
+
+\begin{lstlisting}[style=cppstyle, caption={组合模式 --- 文件系统示例}]
+class FileSystemNode {
+public:
+    explicit FileSystemNode(std::string name)
+        : name_(std::move(name)) {}
+    virtual ~FileSystemNode() = default;
+
+    virtual void print(int indent = 0) const = 0;
+    virtual size_t size() const = 0;
+
+    const std::string& name() const { return name_; }
+
+private:
+    std::string name_;
+};
+
+class File : public FileSystemNode {
+public:
+    File(std::string name, size_t bytes)
+        : FileSystemNode(std::move(name)), size_(bytes) {}
+
+    void print(int indent = 0) const override {
+        std::println("{:>{}}- {} ({} bytes)", "", indent, name(), size_);
+    }
+    size_t size() const override { return size_; }
+
+private:
+    size_t size_;
+};
+
+class Directory : public FileSystemNode {
+public:
+    using FileSystemNode::FileSystemNode;
+
+    void add(std::unique_ptr<FileSystemNode> node) {
+        children_.push_back(std::move(node));
+    }
+
+    void print(int indent = 0) const override {
+        std::println("{:>{}}[{}]", "", indent, name());
+        for (const auto& child : children_)
+            child->print(indent + 2);
+    }
+
+    size_t size() const override {
+        size_t total = 0;
+        for (const auto& child : children_)
+            total += child->size();
+        return total;
+    }
+
+private:
+    std::vector<std::unique_ptr<FileSystemNode>> children_;
+};
+\end{lstlisting}
+
+\begin{guideline}
+\guideref{C.120}：组合模式是类层次的经典应用。\texttt{FileSystemNode} 统一了文件和目录的接口。
+
+\guideref{R.20}：使用 \texttt{unique\_ptr} 管理子节点，目录拥有其子节点的所有权。
+
+\guideref{C.35}：\texttt{FileSystemNode} 声明了虚析构函数，确保通过基类指针删除派生类对象时行为正确。
+\end{guideline}
+
+\section{C\# 对比}
+
+\begin{lstlisting}[style=csharpstyle, caption={组合模式 --- C\# 实现}]
+public abstract class FileSystemNode(string name)
+{
+    public string Name { get; } = name;
+    public abstract void Print(int indent = 0);
+    public abstract long Size { get; }
+}
+
+public class File(string name, long size) : FileSystemNode(name)
+{
+    public override void Print(int indent = 0) =>
+        Console.WriteLine($"{new string(' ', indent)}- {Name} ({size} bytes)");
+    public override long Size => size;
+}
+
+public class Directory(string name) : FileSystemNode(name)
+{
+    private readonly List<FileSystemNode> _children = new();
+
+    public void Add(FileSystemNode node) => _children.Add(node);
+
+    public override void Print(int indent = 0)
+    {
+        Console.WriteLine($"{new string(' ', indent)}[{Name}]");
+        foreach (var child in _children) child.Print(indent + 2);
+    }
+
+    public override long Size => _children.Sum(c => c.Size);
+}
+\end{lstlisting}
+
+\begin{compare}
+\textbf{主构造函数}：C\# 12 的主构造函数使基类构造更加简洁；C++ 仍需传统的成员初始化列表。
+
+\textbf{属性 vs 方法}：C\# 用 \texttt{Size} 属性表达"计算大小"；C++ 用 \texttt{size()} 成员函数。
+
+\textbf{GC vs 所有权}：C\# 的 \texttt{List<FileSystemNode>} 存储引用即可；C++ 的 \texttt{vector<unique\_ptr>} 需要显式管理所有权。
+\end{compare}
+
+\section{常用使用场景}
+
+\begin{longtable}{p{4.5cm} p{8.5cm}}
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+文件系统 & 文件与目录的树形结构，统一 \texttt{size()}/\texttt{list()} 操作 \\
+UI 控件树 & GUI 框架中的窗口 → 面板 → 按钮/文本框的嵌套层次 \\
+组织架构 & 公司 → 部门 → 团队 → 员工，统一的汇报/统计接口 \\
+编译器 AST & 表达式树（二元运算、函数调用、字面量）的统一遍历和求值 \\
+XML/HTML DOM & 元素节点和文本节点的统一树形操作 \\
+菜单/路由系统 & 菜单项和子菜单、路由分组和子路由的递归结构 \\
+游戏场景图 & 场景 → 实体 → 子实体/组件的层次管理（如 Unity Transform 层级） \\
+\end{longtable}
+
+% ============================================================
+% Part III: 行为型模式
+% ============================================================
+\part{行为型模式}
+
+行为型模式关注对象之间的通信和职责分配，描述对象之间如何协作完成任务。
+
+% ------------------------------------------------------------
+% Chapter 9: 观察者模式
+% ------------------------------------------------------------
+\chapter{观察者模式 (Observer)}
+
+\section{意图}
+
+定义对象间的一对多依赖关系，当一个对象的状态发生变化时，所有依赖于它的对象都得到通知并自动更新。
+
+\section{C++ 实现}
+
+现代 C++ 推荐使用 \texttt{std::function} 和模板实现类型安全的观察者：
+
+\begin{lstlisting}[style=cppstyle, caption={观察者模式 --- C++ 实现}]
+template<typename... Args>
+class Event {
+public:
+    using Handler = std::function<void(Args...)>;
+    using Token = size_t;
+
+    Token subscribe(Handler handler) {
+        Token token = nextToken_++;
+        handlers_[token] = std::move(handler);
+        return token;
+    }
+
+    void unsubscribe(Token token) {
+        handlers_.erase(token);
+    }
+
+    void notify(Args... args) {
+        for (auto& [_, handler] : handlers_) {
+            handler(args...);
+        }
+    }
+
+private:
+    std::map<Token, Handler> handlers_;
+    Token nextToken_ = 0;
+};
+
+// 使用
+class StockMarket {
+public:
+    void setPrice(std::string_view symbol, double price) {
+        prices_[std::string(symbol)] = price;
+        priceChanged_.notify(symbol, price);
+    }
+
+    auto& onPriceChanged() { return priceChanged_; }
+
+private:
+    std::map<std::string, double> prices_;
+    Event<std::string_view, double> priceChanged_;
+};
+
+StockMarket market;
+auto token = market.onPriceChanged().subscribe(
+    [](std::string_view sym, double price) {
+        std::println("{}: {}", sym, price);
+    });
+market.setPrice("AAPL", 150.0);  // 触发通知
+market.onPriceChanged().unsubscribe(token);
+\end{lstlisting}
+
+\section{模板增强：C++20 Concept 约束的 Observer}
+
+使用 C++20 Concepts 可以为 Observer 的回调类型提供更友好的编译错误信息，同时支持编译时检查回调是否满足要求：
+
+\begin{lstlisting}[style=cppstyle, caption={Concept 约束的 Observer --- C++20}]
+// 约束回调必须可用指定参数调用
+template<typename Handler, typename... Args>
+concept Callable = std::invocable<Handler, Args...>;
+
+// Concept 约束的泛型 Observable
+template<typename... Args>
+class Observable {
+public:
+    using Token = size_t;
+
+    // subscribe 接受任何可调用对象，编译时检查
+    Token subscribe(Callable<Args...> auto handler) {
+        Token token = next_++;
+        handlers_[token] = std::move(handler);
+        return token;
+    }
+
+    void unsubscribe(Token t) { handlers_.erase(t); }
+
+    void notify(Args... args) {
+        for (auto& [_, h] : handlers_) h(args...);
+    }
+
+private:
+    std::map<Token, std::function<void(Args...)>> handlers_;
+    Token next_ = 0;
+};
+
+// 使用：如果传入不可调用的对象，编译器直接报错
+Observable<std::string_view, double> priceChanged;
+
+// OK: lambda 满足 Callable concept
+priceChanged.subscribe([](std::string_view s, double p) {
+    std::println("{}: {}", s, p);
+});
+
+// 编译错误：int 不可调用，错误信息明确指出
+// 违反了 Callable<Args...> concept
+// priceChanged.subscribe(42);  // 清晰的编译错误
+\end{lstlisting}
+
+\begin{guideline}
+\guideref{F.16}：对于"输入"参数，按值传递或按 \texttt{const} 引用传递。\texttt{std::function} 的回调参数遵循此规则。
+
+\guideref{C.126}：用虚函数调用分派。虽然这里使用模板和 \texttt{std::function} 替代了传统的虚函数观察者模式，但本质仍是多态分派。
+\end{guideline}
+
+\begin{note}
+使用 \texttt{std::function} 的观察者模式需要注意生命周期问题：如果观察者（回调中捕获的对象）先于被观察者被销毁，回调将产生悬空引用。解决方案包括使用 \texttt{weak\_ptr} 检查或使用令牌显式取消订阅。
+\end{note}
+
+\section{C\# 对比}
+
+C\# 的委托和事件机制天然支持观察者模式：
+
+\begin{lstlisting}[style=csharpstyle, caption={观察者模式 --- C\# 事件}]
+public class PriceChangedEventArgs : EventArgs
+{
+    public string Symbol { get; }
+    public double Price { get; }
+    public PriceChangedEventArgs(string sym, double p)
+    { Symbol = sym; Price = p; }
+}
+
+public class StockMarket
+{
+    public event EventHandler<PriceChangedEventArgs>? PriceChanged;
+
+    public void SetPrice(string symbol, double price)
+    {
+        _prices[symbol] = price;
+        PriceChanged?.Invoke(this,
+            new PriceChangedEventArgs(symbol, price));
+    }
+
+    private readonly Dictionary<string, double> _prices = new();
+}
+
+// 使用
+var market = new StockMarket();
+market.PriceChanged += (sender, e) =>
+    Console.WriteLine($"{e.Symbol}: {e.Price}");
+market.SetPrice("AAPL", 150.0);
+\end{lstlisting}
+
+\begin{compare}
+\textbf{语言支持}：C\# 有原生的 \texttt{event}/\texttt{delegate} 以及 \texttt{IObservable<T>}/\texttt{IObserver<T>} 接口（配合 Rx.NET 提供强大的响应式流操作）；C++ 需要自行实现或使用 Boost.Signals2 / RxCPP。
+
+\textbf{类型安全}：C++ 使用模板 + \texttt{std::function}；C++20 Concepts 进一步约束回调签名，编译时检查。
+
+\textbf{生命周期}：C++ 需要手动管理（令牌取消订阅或 \texttt{weak\_ptr}）；C\# 的 \texttt{IDisposable} 订阅令牌（\texttt{Subscribe()} 返回 \texttt{IDisposable}）提供了更结构化的取消订阅方式。
+
+\textbf{泛型能力}：C++ 模板可以在编译时完全参数化事件类型；C\# 泛型同样支持，但无法表达 C++ 风格的变参模板（\texttt{Args...}）。
+\end{compare}
+
+\section{常用使用场景}
+
+\begin{longtable}{p{4.5cm} p{8.5cm}}
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+GUI 事件处理 & 按钮点击、键盘输入、窗口关闭等 UI 事件通知 \\
+发布/订阅消息 & Kafka/RabbitMQ 等消息中间件的核心模型 \\
+实时行情推送 & 股票/加密货币价格变化通知多个交易终端 \\
+响应式编程 & Rx.NET/RxCPP 的 \texttt{Observable} 流，组合过滤转换事件流 \\
+数据绑定 & MVVM 框架（WPF、Avalonia）中 ViewModel 属性变化通知 View \\
+缓存失效 & 数据变更时通知缓存层清除或更新对应条目 \\
+配置热更新 & 配置文件变更时通知所有依赖配置的组件重新加载 \\
+\end{longtable}
+
+% ------------------------------------------------------------
+% Chapter 10: 策略模式
+% ------------------------------------------------------------
+\chapter{策略模式 (Strategy)}
+
+\section{意图}
+
+定义一系列算法，把它们一个个封装起来，并使它们可互换。策略模式使算法可独立于使用它的客户而变化。
+
+\section{C++ 实现}
+
+现代 C++ 可以使用 \texttt{std::function} 实现轻量级的策略模式，无需定义接口层次：
+
+\begin{lstlisting}[style=cppstyle, caption={策略模式 --- std::function 方式}]
+class Sorter {
+public:
+    using Strategy = std::function<void(std::vector<int>&)>;
+
+    explicit Sorter(Strategy strategy)
+        : strategy_(std::move(strategy)) {}
+
+    void sort(std::vector<int>& data) const {
+        strategy_(data);
+    }
+
+    void setStrategy(Strategy strategy) {
+        strategy_ = std::move(strategy);
+    }
+
+private:
+    Strategy strategy_;
+};
+
+// 定义策略
+auto ascending = [](std::vector<int>& v) {
+    std::ranges::sort(v);
+};
+
+auto descending = [](std::vector<int>& v) {
+    std::ranges::sort(v, std::greater{});
+};
+
+// 使用
+Sorter sorter(ascending);
+std::vector<int> data = {5, 3, 8, 1, 9};
+sorter.sort(data);       // 升序: 1,3,5,8,9
+sorter.setStrategy(descending);
+sorter.sort(data);       // 降序: 9,8,5,3,1
+\end{lstlisting}
+
+传统的虚函数方式同样适用：
+
+\begin{lstlisting}[style=cppstyle, caption={策略模式 --- 传统虚函数方式}]
+class SortStrategy {
+public:
+    virtual ~SortStrategy() = default;
+    virtual void sort(std::vector<int>& data) = 0;
+};
+
+class QuickSort : public SortStrategy {
+public:
+    void sort(std::vector<int>& data) override {
+        std::ranges::sort(data);  // 简化示例
+    }
+};
+
+class MergeSort : public SortStrategy {
+public:
+    void sort(std::vector<int>& data) override {
+        std::ranges::stable_sort(data);
+    }
+};
+\end{lstlisting}
+
+\section{模板版本：编译时策略（C++20 Concepts）}
+
+当策略在编译时即可确定时，使用模板参数 + Concepts 可以实现\textbf{零开销}的策略模式——没有虚函数表，没有 \texttt{std::function} 的间接调用，编译器可以完全内联：
+
+\begin{lstlisting}[style=cppstyle, caption={编译时策略 --- C++20 Concepts}]
+// 定义策略的概念约束
+template<typename S, typename Container>
+concept SortStrategy = requires(S s, Container& c) {
+    s.sort(c);
+};
+
+// 编译时策略：零开销
+template<typename Container, SortStrategy<Container> S>
+class StaticSorter {
+public:
+    void sort(Container& data) {
+        strategy_.sort(data);  // 编译器内联，无虚函数开销
+    }
+private:
+    S strategy_;  // 空基类优化(EBO)，零额外空间
+};
+
+// 具体策略（无需继承任何基类，只需满足 concept）
+struct AscendingSort {
+    void sort(std::vector<int>& v) const {
+        std::ranges::sort(v);
+    }
+};
+
+struct DescendingSort {
+    void sort(std::vector<int>& v) const {
+        std::ranges::sort(v, std::greater{});
+    }
+};
+
+// 使用：策略在编译时确定
+StaticSorter<std::vector<int>, AscendingSort> sorter;
+std::vector<int> data = {5, 3, 8, 1, 9};
+sorter.sort(data);  // 直接调用 AscendingSort::sort，可内联
+\end{lstlisting}
+
+\begin{compare}[title={运行时 vs 编译时策略}]
+\textbf{运行时策略}（\texttt{std::function} / 虚函数）：策略可以在运行时切换，灵活但有间接调用开销。
+
+\textbf{编译时策略}（模板 + Concepts）：零开销，编译器可完全内联优化；但策略在编译时固定，无法运行时切换。
+
+\textbf{选择原则}：\guideref{P.5}（编译时能检查的东西不要留到运行时）。如果策略不需要运行时切换，优先使用编译时版本。标准库的 \texttt{std::sort(begin, end, comp)} 本身就是编译时策略的典范——比较器作为模板参数传入。
+\end{compare}
+
+\begin{guideline}
+\guideref{C.120}：如果策略是固定的（不需要运行时替换），优先使用模板参数（编译时多态），避免虚函数开销。
+
+\guideref{F.1}：将"打包"操作封装为函数。Lambda 表达式作为策略传入，正是这一原则的体现。
+
+\guideref{ES.1}：适当使用抽象，避免原始语言特性。使用 \texttt{std::function} 而非函数指针，提供了更丰富的语义。
+\end{guideline}
+
+\section{C\# 对比}
+
+\begin{lstlisting}[style=csharpstyle, caption={策略模式 --- C\# 实现}]
+public class Sorter
+{
+    private Action<List<int>> _strategy;
+
+    public Sorter(Action<List<int>> strategy) =>
+        _strategy = strategy;
+
+    public void Sort(List<int> data) => _strategy(data);
+
+    public void SetStrategy(Action<List<int>> strategy) =>
+        _strategy = strategy;
+}
+
+// 使用
+var sorter = new Sorter(data => data.Sort());
+var nums = new List<int> { 5, 3, 8, 1, 9 };
+sorter.Sort(nums);
+
+sorter.SetStrategy(data => data.Sort((a, b) => b.CompareTo(a)));
+sorter.Sort(nums);
+\end{lstlisting}
+
+\begin{compare}
+\textbf{函数式策略}：C++ 的 \texttt{std::function} 和 C\# 的 \texttt{Action<T>}/\texttt{Func<T>} 都可以将 Lambda 作为策略使用，代码极其相似。
+
+\textbf{编译时 vs 运行时}：C++ 可以用模板 + Concepts 实现零开销的编译时策略，编译器可完全内联；C\# 的泛型虽然也避免了装箱，但仍通过委托间接调用，无法达到同等程度的内联优化。
+
+\textbf{泛型约束}：C++ 20 的 \texttt{concept} 可以约束策略的结构要求（如 \texttt{requires s.sort(c)}）；C\# 使用泛型约束（\texttt{where T : IComparable<T>}），表达能力弱于 Concepts。
+
+\textbf{性能}：C++ 模板策略的空状态类可被 EBO（Empty Base Optimization）优化为零空间；C\# 的 \texttt{Action<T>} 委托始终是堆分配对象。
+\end{compare}
+
+\section{常用使用场景}
+
+\begin{longtable}{p{4.5cm} p{8.5cm}}
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+排序/比较策略 & \texttt{std::sort} 的比较器就是编译时策略；运行时可切换排序规则 \\
+压缩算法 & 根据场景选择 gzip/zstd/lz4 等不同压缩算法 \\
+哈希算法 & 密码学中切换 SHA-256/SHA-3/BLAKE2 等哈希函数 \\
+支付方式 & 电商系统中切换支付宝/微信/信用卡等不同支付策略 \\
+路由选择 & 导航系统中切换最短路径/最快路径/避开高速等路线策略 \\
+输入校验 & 表单中切换不同校验规则（邮箱格式/手机号/自定义正则） \\
+序列化格式 & 根据 Content-Type 切换 JSON/XML/MessagePack 序列化器 \\
+负载均衡 & 在轮询/加权/最少连接/一致性哈希等策略间切换 \\
+\end{longtable}
+
+% ------------------------------------------------------------
+% Chapter 11: 命令模式
+% ------------------------------------------------------------
+\chapter{命令模式 (Command)}
+
+\section{意图}
+
+将请求封装为对象，从而支持请求的排队、日志、撤销和重做等操作。
+
+\section{C++ 实现}
+
+\begin{lstlisting}[style=cppstyle, caption={命令模式 --- 文本编辑器撤销/重做}]
+class Command {
+public:
+    virtual ~Command() = default;
+    virtual void execute() = 0;
+    virtual void undo() = 0;
+    virtual std::string description() const = 0;
+};
+
+class TextEditor {
+public:
+    void insert(const std::string& text) {
+        content_ += text;
+    }
+    void erase(size_t pos, size_t len) {
+        content_.erase(pos, len);
+    }
+    const std::string& content() const { return content_; }
+
+private:
+    std::string content_;
+};
+
+class InsertCommand : public Command {
+public:
+    InsertCommand(TextEditor& editor, std::string text)
+        : editor_(editor), text_(std::move(text)) {}
+
+    void execute() override {
+        pos_ = editor_.content().size();
+        editor_.insert(text_);
+    }
+    void undo() override {
+        editor_.erase(pos_, text_.size());
+    }
+    std::string description() const override {
+        return "Insert: " + text_;
+    }
+
+private:
+    TextEditor& editor_;
+    std::string text_;
+    size_t pos_ = 0;
+};
+
+// 命令历史管理器
+class CommandHistory {
+public:
+    void execute(std::unique_ptr<Command> cmd) {
+        cmd->execute();
+        undoStack_.push_back(std::move(cmd));
+        redoStack_.clear();
+    }
+
+    void undo() {
+        if (undoStack_.empty()) return;
+        auto cmd = std::move(undoStack_.back());
+        undoStack_.pop_back();
+        cmd->undo();
+        redoStack_.push_back(std::move(cmd));
+    }
+
+    void redo() {
+        if (redoStack_.empty()) return;
+        auto cmd = std::move(redoStack_.back());
+        redoStack_.pop_back();
+        cmd->execute();
+        undoStack_.push_back(std::move(cmd));
+    }
+
+private:
+    std::vector<std::unique_ptr<Command>> undoStack_;
+    std::vector<std::unique_ptr<Command>> redoStack_;
+};
+\end{lstlisting}
+
+\begin{guideline}
+\guideref{R.20}：\texttt{unique\_ptr} 管理命令对象，命令历史拥有命令的所有权。
+
+\guideref{C.35}：\texttt{Command} 基类声明了虚析构函数。
+
+\guideref{C.120}：\texttt{Command} 是典型的多态基类，不同的命令有不同的执行和撤销逻辑。
+\end{guideline}
+
+\section{C\# 对比}
+
+\begin{lstlisting}[style=csharpstyle, caption={命令模式 --- C\# 实现}]
+public interface ICommand
+{
+    void Execute();
+    void Undo();
+    string Description { get; }
+}
+
+public class InsertCommand : ICommand
+{
+    private readonly TextEditor _editor;
+    private readonly string _text;
+    private int _pos;
+
+    public InsertCommand(TextEditor editor, string text)
+    { _editor = editor; _text = text; }
+
+    public void Execute()
+    {
+        _pos = _editor.Content.Length;
+        _editor.Insert(_text);
+    }
+
+    public void Undo() => _editor.Erase(_pos, _text.Length);
+
+    public string Description => $"Insert: {_text}";
+}
+
+// 命令历史
+public class CommandHistory
+{
+    private readonly Stack<ICommand> _undoStack = new();
+    private readonly Stack<ICommand> _redoStack = new();
+
+    public void Execute(ICommand cmd)
+    {
+        cmd.Execute();
+        _undoStack.Push(cmd);
+        _redoStack.Clear();
+    }
+
+    public void Undo()
+    {
+        if (_undoStack.Count == 0) return;
+        var cmd = _undoStack.Pop();
+        cmd.Undo();
+        _redoStack.Push(cmd);
+    }
+}
+\end{lstlisting}
+
+\begin{compare}
+\textbf{容器选择}：C++ 使用 \texttt{vector} 模拟栈（便于 \texttt{unique\_ptr} 的移动语义）；C\# 使用内置 \texttt{Stack<T>}。
+
+\textbf{所有权}：C++ 的 \texttt{unique\_ptr} 明确表达命令的所有权转移；C\# 由 GC 管理。
+
+\textbf{轻量替代}：两种语言都可以用 \texttt{Action}/\texttt{std::function} 对（execute + undo）实现简化版命令模式，适用于不需要序列化的场景。
+\end{compare}
+
+\section{常用使用场景}
+
+\begin{longtable}{p{4.5cm} p{8.5cm}}
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+撤销/重做 & 文本编辑器、绘图软件、IDE 中的 Undo/Redo 功能 \\
+宏录制 & 将一系列用户操作录制为可回放的宏命令序列 \\
+任务队列 & 后台任务调度系统，命令入队后由工作线程异步执行 \\
+数据库事务 & 将 SQL 操作封装为命令，支持事务回滚（undo） \\
+UI 按钮绑定 & 将按钮点击事件绑定为命令对象（MVVM 的 ICommand） \\
+多人协作 & 将操作序列化后通过网络传输，在多个客户端同步执行 \\
+日志持久化 & 将命令序列写入日志，用于崩溃恢复时重放操作 \\
+\end{longtable}
+
+% ------------------------------------------------------------
+% Chapter 12: 模板方法模式
+% ------------------------------------------------------------
+\chapter{模板方法模式 (Template Method)}
+
+\section{意图}
+
+在基类中定义算法的骨架，将某些步骤延迟到子类。模板方法让子类在不改变算法结构的前提下重新定义算法的某些步骤。
+
+\section{C++ 实现}
+
+\begin{lstlisting}[style=cppstyle, caption={模板方法模式 --- 数据解析器}]
+class DataParser {
+public:
+    virtual ~DataParser() = default;
+
+    // 模板方法：定义算法骨架
+    void parse(const std::string& rawData) {
+        auto tokens = tokenize(rawData);
+        auto data = transform(tokens);
+        validate(data);
+        store(data);
+    }
+
+protected:
+    // 子类必须实现的步骤
+    virtual std::vector<std::string>
+        tokenize(const std::string& raw) = 0;
+    virtual std::map<std::string, std::string>
+        transform(const std::vector<std::string>& tokens) = 0;
+
+    // 带默认实现的可选步骤
+    virtual void validate(
+        const std::map<std::string, std::string>& data) {
+        // 默认：不校验
+    }
+
+    virtual void store(
+        const std::map<std::string, std::string>& data) = 0;
+};
+
+class CsvParser : public DataParser {
+protected:
+    std::vector<std::string>
+    tokenize(const std::string& raw) override {
+        // 按逗号分割
+        std::vector<std::string> tokens;
+        std::istringstream ss(raw);
+        std::string token;
+        while (std::getline(ss, token, ','))
+            tokens.push_back(token);
+        return tokens;
+    }
+
+    std::map<std::string, std::string>
+    transform(const std::vector<std::string>& tokens) override {
+        std::map<std::string, std::string> data;
+        for (size_t i = 0; i + 1 < tokens.size(); i += 2)
+            data[tokens[i]] = tokens[i + 1];
+        return data;
+    }
+
+    void store(const std::map<std::string, std::string>& data)
+    override {
+        for (const auto& [k, v] : data)
+            std::println("  {} = {}", k, v);
+    }
+};
+\end{lstlisting}
+
+\section{模板版本：CRTP 编译时模板方法}
+
+模板方法模式是 CRTP 最自然的应用场景。通过 CRTP，算法骨架在编译时确定，所有步骤调用变为静态分派，消除虚函数开销：
+
+\begin{lstlisting}[style=cppstyle, caption={CRTP 模板方法 --- 编译时算法骨架}]
+// CRTP 基类：定义算法骨架
+template<typename Derived>
+class ParserBase {
+public:
+    // 模板方法：算法骨架，编译时确定所有调用
+    void parse(const std::string& raw) {
+        auto tokens = self().tokenize(raw);
+        auto data = self().transform(tokens);
+        self().validate(data);     // 可带默认实现
+        self().store(data);
+    }
+
+    // 带默认实现的可选步骤
+    void validate(
+        const std::map<std::string, std::string>&) {}
+
+protected:
+    Derived& self() { return static_cast<Derived&>(*this); }
+};
+
+// C++20 Concept 约束派生类必须实现的方法
+template<typename D>
+concept Parser = requires(D d) {
+    { d.tokenize(std::declval<std::string>()) }
+        -> std::same_as<std::vector<std::string>>;
+    { d.transform(std::declval<std::vector<std::string>>()) }
+        -> std::same_as<std::map<std::string, std::string>>;
+    d.store(std::declval<std::map<std::string, std::string>>());
+};
+
+// 具体实现：无需继承，只需满足 concept
+class CsvParser : public ParserBase<CsvParser> {
+public:
+    std::vector<std::string> tokenize(const std::string& raw) {
+        std::vector<std::string> tokens;
+        std::istringstream ss(raw);
+        std::string token;
+        while (std::getline(ss, token, ','))
+            tokens.push_back(token);
+        return tokens;
+    }
+
+    std::map<std::string, std::string>
+    transform(const std::vector<std::string>& tokens) {
+        std::map<std::string, std::string> data;
+        for (size_t i = 0; i + 1 < tokens.size(); i += 2)
+            data[tokens[i]] = tokens[i + 1];
+        return data;
+    }
+
+    void store(const std::map<std::string, std::string>& data) {
+        for (const auto& [k, v] : data)
+            std::println("  {} = {}", k, v);
+    }
+};
+
+// 使用：零开销的模板方法
+CsvParser parser;
+parser.parse("name,Alice,age,30");
+\end{lstlisting}
+
+\begin{compare}[title={运行时 vs 编译时模板方法}]
+\textbf{虚函数版本}：支持运行时多态，可以在运行时选择不同的解析器；但有虚函数表开销和动态分派。
+
+\textbf{CRTP 版本}：所有步骤调用在编译时解析为静态分派，编译器可完全内联；零额外开销；但不支持运行时多态。
+
+\textbf{选择原则}：如果解析器类型在编译时确定（大多数情况如此），CRTP 版本更优。如果需要将不同的解析器存入同一个容器（运行时多态），则使用虚函数版本。
+\end{compare}
+
+\begin{guideline}
+\guideref{C.120}：模板方法是类层次设计的经典应用，基类定义算法骨架，子类填充具体步骤。
+
+\guideref{C.128}：子类的覆写方法应标记 \texttt{override}，编译器会检查签名匹配。
+
+\guideref{C.129}：设计类层次时区分"接口继承"和"实现继承"。模板方法中的纯虚函数是接口继承，带默认实现的虚函数则提供可选的默认行为。
+\end{guideline}
+
+\section{C\# 对比}
+
+\begin{lstlisting}[style=csharpstyle, caption={模板方法模式 --- C\# 实现}]
+public abstract class DataParser
+{
+    // 模板方法
+    public void Parse(string rawData)
+    {
+        var tokens = Tokenize(rawData);
+        var data = Transform(tokens);
+        Validate(data);
+        Store(data);
+    }
+
+    protected abstract string[] Tokenize(string raw);
+    protected abstract Dictionary<string, string>
+        Transform(string[] tokens);
+
+    protected virtual void Validate(
+        Dictionary<string, string> data) { }
+
+    protected abstract void Store(
+        Dictionary<string, string> data);
+}
+
+public class CsvParser : DataParser
+{
+    protected override string[] Tokenize(string raw) =>
+        raw.Split(',');
+
+    protected override Dictionary<string, string>
+        Transform(string[] tokens)
+    {
+        var dict = new Dictionary<string, string>();
+        for (int i = 0; i + 1 < tokens.Length; i += 2)
+            dict[tokens[i]] = tokens[i + 1];
+        return dict;
+    }
+
+    protected override void Store(Dictionary<string, string> data)
+    {
+        foreach (var (k, v) in data)
+            Console.WriteLine($"  {k} = {v}");
+    }
+}
+\end{lstlisting}
+
+\begin{compare}
+\textbf{访问控制}：C++ 用 \texttt{protected} 纯虚函数；C\# 同样用 \texttt{protected abstract}。两者语义一致。
+
+\textbf{默认实现}：C++ 的虚函数可以有默认实现（非纯虚）；C\# 的 \texttt{virtual} 方法同样可以有默认实现。
+
+\textbf{CRTP 编译时版本}：C++ 可用 CRTP 实现零开销的编译时模板方法，所有步骤调用变为静态分派并可内联优化；C\# 没有等价机制，泛型无法模拟 CRTP 的向下转型。
+
+\textbf{选择原则}：不需要运行时多态时优先使用 CRTP；需要将不同类型存入同一容器时使用虚函数版本。
+\end{compare}
+
+\section{常用使用场景}
+
+\begin{longtable}{p{4.5cm} p{8.5cm}}
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+数据解析器 & 统一的解析骨架（分词 → 转换 → 校验 → 存储），子类实现各步骤 \\
+单元测试框架 & \texttt{setUp() → testMethod() → tearDown()} 生命周期（JUnit/NUnit） \\
+构建系统 & 编译 → 链接 → 打包 → 部署的固定流程，各项目自定义步骤 \\
+游戏 AI 框架 & 感知 → 决策 → 行动 的固定 AI 循环，不同敌人有不同行为 \\
+ETL 管道 & 提取（Extract） → 转换（Transform） → 加载（Load）的数据管道 \\
+网络请求处理 & 解析请求 → 鉴权 → 业务逻辑 → 格式化响应 的中间件骨架 \\
+算法框架 & 固定算法步骤（如回溯法的 \texttt{choose → explore → unchoose}） \\
+\end{longtable}
+
+% ------------------------------------------------------------
+% Chapter 13: 迭代器模式
+% ------------------------------------------------------------
+\chapter{迭代器模式 (Iterator)}
+
+\section{意图}
+
+提供一种方法顺序访问聚合对象中的各个元素，而不暴露其内部表示。
+
+\section{C++ 实现}
+
+C++ 标准库的迭代器体系是迭代器模式最完善的实现。自定义容器只需提供 \texttt{begin()}/\texttt{end()} 方法即可与所有标准算法兼容：
+
+\begin{lstlisting}[style=cppstyle, caption={自定义迭代器 --- 环形缓冲区}]
+template<typename T, size_t N>
+class RingBuffer {
+public:
+    void push(const T& value) {
+        data_[tail_] = value;
+        tail_ = (tail_ + 1) % N;
+        if (size_ < N) ++size_;
+        else head_ = (head_ + 1) % N;
+    }
+
+    class Iterator {
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = const T*;
+        using reference = const T&;
+
+        Iterator(const RingBuffer* buf, size_t pos, size_t count)
+            : buf_(buf), pos_(pos), remaining_(count) {}
+
+        reference operator*() const { return buf_->data_[pos_]; }
+        pointer operator->() const { return &buf_->data_[pos_]; }
+
+        Iterator& operator++() {
+            pos_ = (pos_ + 1) % N;
+            --remaining_;
+            return *this;
+        }
+
+        Iterator operator++(int) {
+            auto tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+
+        bool operator==(const Iterator& other) const {
+            return remaining_ == other.remaining_;
+        }
+        bool operator!=(const Iterator& other) const {
+            return !(*this == other);
+        }
+
+    private:
+        const RingBuffer* buf_;
+        size_t pos_;
+        size_t remaining_;
+    };
+
+    Iterator begin() const { return {this, head_, size_}; }
+    Iterator end() const { return {this, tail_, 0}; }
+    size_t size() const { return size_; }
+
+private:
+    std::array<T, N> data_{};
+    size_t head_ = 0;
+    size_t tail_ = 0;
+    size_t size_ = 0;
+};
+
+// 使用
+RingBuffer<int, 5> buf;
+for (int i = 1; i <= 7; ++i) buf.push(i);
+for (const auto& val : buf)   // 输出 3,4,5,6,7
+    std::print("{} ", val);
+\end{lstlisting}
+
+\begin{guideline}
+\guideref{SL.1}：使用标准库。自定义迭代器应遵循标准库迭代器的概念要求，这样可以与所有标准算法无缝配合。
+
+\guideref{P.5}：编译时能检查的东西不要留到运行时。迭代器的类型标签（\texttt{forward\_iterator\_tag} 等）使编译器能够选择最优算法。
+\end{guideline}
+
+\section{C\# 对比}
+
+C\# 使用 \texttt{IEnumerable<T>} 和 \texttt{yield return} 实现迭代器极其简洁：
+
+\begin{lstlisting}[style=csharpstyle, caption={C\# 迭代器 --- yield return}]
+public class RingBuffer<T> : IEnumerable<T>
+{
+    private readonly T[] _data;
+    private int _head, _tail, _size;
+
+    public RingBuffer(int capacity) => _data = new T[capacity];
+
+    public void Push(T value)
+    {
+        _data[_tail] = value;
+        _tail = (_tail + 1) % _data.Length;
+        if (_size < _data.Length) _size++;
+        else _head = (_head + 1) % _data.Length;
+    }
+
+    public IEnumerator<T> GetEnumerator()
+    {
+        int pos = _head;
+        for (int i = 0; i < _size; i++)
+        {
+            yield return _data[pos];
+            pos = (pos + 1) % _data.Length;
+        }
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+}
+
+// 使用
+var buf = new RingBuffer<int>(5);
+for (int i = 1; i <= 7; i++) buf.Push(i);
+foreach (var val in buf)  // 输出 3,4,5,6,7
+    Console.Write($"{val} ");
+\end{lstlisting}
+
+\begin{compare}
+\textbf{实现复杂度}：C\# 的 \texttt{yield return} 由编译器生成状态机，极大简化了迭代器实现；C++ 需要手动编写迭代器类。
+
+\textbf{与算法的兼容}：C++ 的迭代器与标准算法（\texttt{std::sort}、\texttt{std::find} 等）无缝配合；C\# 的 \texttt{IEnumerable<T>} 与 LINQ 配合。
+
+\textbf{性能}：C++ 的迭代器是零开销抽象，编译器可以内联迭代器操作；C\# 的 \texttt{yield return} 生成状态机，有少量开销。
+
+\textbf{C++ 20 Ranges}：\texttt{std::ranges} 引入了 \texttt{view} 概念，可以用声明式方式组合迭代器操作（过滤、映射等），接近 LINQ 的体验。
+\end{compare}
+
+\section{常用使用场景}
+
+\begin{longtable}{p{4.5cm} p{8.5cm}}
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{场景} & \textbf{说明} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+自定义容器 & 为环形缓冲区、跳表、B 树等自定义数据结构提供标准迭代器接口 \\
+数据库游标 & 逐行遍历查询结果集，无需一次加载所有数据到内存 \\
+文件系统遍历 & 递归遍历目录树中的所有文件（如 \texttt{std::filesystem::recursive\_directory\_iterator}） \\
+无限序列 & 延迟生成斐波那契数列、随机数序列等无限流（C++ Ranges 的 \texttt{views::iota}） \\
+图/树遍历 & 深度优先（DFS）、广度优先（BFS）等图遍历算法封装为迭代器 \\
+分页查询 & 将 API 分页结果封装为迭代器，对外表现为连续的完整数据集 \\
+组合视图 & C++20 Ranges 的 \texttt{filter}/\texttt{transform}/\texttt{take} 可组合为惰性视图链 \\
+\end{longtable}
+
+% ============================================================
+% 附录
+% ============================================================
+\appendix
+
+% ------------------------------------------------------------
+% 附录 A: 模式速查表
+% ------------------------------------------------------------
+\chapter{模式速查表}
+
+本附录汇总全书涉及的设计模式及其关键信息，方便快速查阅。
+
+\begin{longtable}{p{2.2cm} p{2cm} p{3.5cm} p{3cm} p{3cm}}
+\toprule
+\textbf{模式} & \textbf{类型} & \textbf{C++ 实现要点} & \textbf{Core Guidelines} & \textbf{典型场景} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{模式} & \textbf{类型} & \textbf{C++ 实现要点} & \textbf{Core Guidelines} & \textbf{典型场景} \\
+\midrule
+\endhead
+
+\bottomrule
+\endfoot
+
+Singleton & 创建型 & \textbf{慎用}；\textbf{CRTP 基类}；优先 DI & I.3, R.6 & 硬件配置、日志 \\
+Factory Method & 创建型 & \texttt{unique\_ptr}；\textbf{模板注册工厂} & R.20, C.35 & 插件、DB 连接 \\
+Abstract Factory & 创建型 & 纯虚工厂 + 产品族 & C.122, C.128 & 跨平台 UI、主题 \\
+Builder & 创建型 & \texttt{build() \&\&}；\textbf{CRTP + Concepts} & C.41, F.5 & HTTP 请求、SQL \\
+Adapter & 结构型 & 接口继承 + 组合 & C.120 & 遗留系统、SDK \\
+Decorator & 结构型 & \texttt{unique\_ptr} 链式包装 & R.20, C.120 & I/O 流、中间件 \\
+Proxy & 结构型 & \texttt{unique\_ptr} 延迟初始化 & R.20, P.9 & ORM、RPC、AOP \\
+Composite & 结构型 & \texttt{vector<unique\_ptr>} & C.35, R.20 & 文件系统、AST \\
+Observer & 行为型 & 模板事件；\textbf{Concept 约束} & F.16, P.5 & GUI、Pub/Sub \\
+Strategy & 行为型 & \texttt{std::function}；\textbf{编译时 + Concepts} & C.120, P.5 & 压缩、支付、路由 \\
+Command & 行为型 & \texttt{unique\_ptr} 命令栈 & R.20, C.35 & Undo/Redo、宏 \\
+Template Method & 行为型 & 虚函数；\textbf{CRTP 编译时} & C.120, C.129 & 解析器、ETL、AI \\
+Iterator & 行为型 & \texttt{begin()}/\texttt{end()}；Ranges & SL.1, P.5 & 游标、分页、遍历 \\
+\end{longtable}
+
+% ------------------------------------------------------------
+% 附录 B: 推荐阅读
+% ------------------------------------------------------------
+\chapter{推荐阅读}
+
+\section*{经典参考}
+
+\begin{enumerate}[label=\textbf{[\arabic*]}]
+  \item Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides. \textit{Design Patterns: Elements of Reusable Object-Oriented Software}. Addison-Wesley, 1994.\\
+  设计模式的开山之作，23 种 GoF 模式的权威定义。
+
+  \item Bjarne Stroustrup, Herb Sutter. \textit{C\texttt{++} Core Guidelines}.\\
+  \href{https://isocpp.github.io/CppCoreGuidelines/}{https://isocpp.github.io/CppCoreGuidelines/}\\
+  现代 C++ 编程规范的官方文档。
+
+  \item Andrei Alexandrescu. \textit{Modern C++ Design}. Addison-Wesley, 2001.\\
+  泛型编程与设计模式的高级融合，Policy-Based Design 的提出者。
+\end{enumerate}
+
+\section*{现代 C++ 实践}
+
+\begin{enumerate}[label=\textbf{[\arabic*]}, start=4]
+  \item Scott Meyers. \textit{Effective Modern C++}. O'Reilly Media, 2014.\\
+  C++11/14 的 42 条实践建议，与 Core Guidelines 高度互补。
+
+  \item Fedor G. Pikus. \textit{Hands-On Design Patterns with C++}. Packt, 2018.\\
+  面向现代 C++ 的设计模式实战指南。
+
+  \item Nicolai M. Josuttis. \textit{C++17 --- The Complete Guide}. leanpub, 2020.\\
+  全面覆盖 C++17 特性，包括 \texttt{std::variant}、\texttt{std::optional} 等对设计模式有深远影响的特性。
+\end{enumerate}
+
+\section*{C\# 参考}
+
+\begin{enumerate}[label=\textbf{[\arabic*]}, start=7]
+  \item Jon Skeet. \textit{C\# in Depth, 4th Edition}. Manning, 2019.\\
+  C\# 语言特性的权威解读，涵盖 C\# 7/8 的新特性。
+
+  \item Microsoft. \textit{.NET API Reference}.\\
+  \href{https://learn.microsoft.com/en-us/dotnet/api/}{https://learn.microsoft.com/en-us/dotnet/api/}\\
+  C\# 标准库参考，包含设计模式的内置实现（如 \texttt{IObservable<T>}、\texttt{Lazy<T>} 等）。
+\end{enumerate}
+
+% ------------------------------------------------------------
+% 后记
+% ------------------------------------------------------------
+\backmatter
+
+\chapter{后记}
+
+设计模式不是银弹。它们是经过实践检验的通用解决方案，但并非适用于所有场景。在应用设计模式时，应始终遵循"简单优先"的原则——不要为了使用模式而增加不必要的复杂度。
+
+现代 C++ 和 C\# 的语言特性持续演进，许多曾经需要手动实现的模式现在已经有了语言级别的支持（如 C\# 的事件、迭代器、C++ 的 \texttt{std::function}、Ranges）。理解模式的本质思想，而非拘泥于特定的代码结构，才能在新场景下灵活运用。
+
+C++ Core Guidelines 为设计模式的实现提供了重要的质量约束。遵循这些指南，可以写出既优雅又安全的代码——在享受设计模式带来的架构优势的同时，避免 C++ 语言本身的陷阱。
+
+\printindex
+
+\end{document}

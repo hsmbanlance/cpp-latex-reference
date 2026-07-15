@@ -1,0 +1,3194 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{cmakekw}{HTML}{0050A0}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{posixheadbg}{HTML}{2E5090}
+\definecolor{winheadbg}{HTML}{5B3A8C}
+\definecolor{asioheadbg}{HTML}{C62828}
+\definecolor{fileheadbg}{HTML}{00695C}
+\definecolor{pimplheadbg}{HTML}{4A148C}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+% ---- listing styles ----
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,system\_error,error\_code,error\_category,
+    ifstream,ofstream,fstream,iostream,filebuf,
+    ostream,istream,stringstream,ostringstream,
+    streambuf,basic\_streambuf,basic\_ostream,basic\_istream,
+    path,filesystem,file\_status,directory\_entry,
+    tcp,udp,socket,acceptor,resolver,
+    steady\_timer,deadline\_timer,io\_context,strand,executor},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+\lstdefinestyle{cstyle}{
+  language=C,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cmakekw}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  moreemph={FILE,size_t,ssize_t,off_t,socklen_t,
+    sockaddr,sockaddr\_in,sockaddr\_in6,sockaddr\_un,sockaddr\_storage,
+    addrinfo,in\_addr,in6\_addr,hostent,servent,
+    fd_set,WSADATA,SOCKET,WSABUF,WSAOVERLAPPED,OVERLAPPED,
+    HANDLE,BOOL,DWORD,LPVOID,iovec,pollfd,epoll\_event},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+\lstset{style=cppstyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,
+  title=I/O 要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,
+  title=API 对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,
+  title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,
+  title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,
+  title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{seqsplit}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={C/C++ I/O Reference},
+  pdftitle={C/C++ 文件、网络与进程间 I/O 参考手册},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+% 语言标签
+\newcommand{\clabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=fileheadbg,colframe=fileheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily C}\end{tcolorbox}%
+}
+\newcommand{\cpplabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=algheadbg,colframe=algheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily C++}\end{tcolorbox}%
+}
+\newcommand{\posixlabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=posixheadbg,colframe=posixheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily POSIX Sockets}\end{tcolorbox}%
+}
+\newcommand{\winlabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=winheadbg,colframe=winheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily Winsock}\end{tcolorbox}%
+}
+\newcommand{\asiolabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=asioheadbg,colframe=asioheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily Asio}\end{tcolorbox}%
+}
+\newcommand{\pimplabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=pimplheadbg,colframe=pimplheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily pImpl}\end{tcolorbox}%
+}
+
+% ====================================================================
+\begin{document}
+
+% ==================== 封面 ====================
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\Huge\bfseries\color{algheadbg} C/C++ 文件、网络与进程间 I/O 参考手册\par}
+\vspace{1cm}
+{\LARGE\color{blue!70!black} File I/O \textbullet{} Socket API \textbullet{} IPC \textbullet{} Asio \textbullet{} pImpl 模式\par}
+\vfill
+{\large\color{gray} \today\par}
+\end{titlepage}
+
+% ==================== 前言 ====================
+\chapter*{前言}
+\addcontentsline{toc}{chapter}{前言}
+
+本手册系统介绍 C/C++ 中文件 I/O、网络 I/O 与进程间通信的核心技术与 API，覆盖 C 标准库、POSIX 系统调用、Winsock、C++ iostream、\Tp{std::filesystem}、内存映射文件、Asio 异步网络库，以及管道、共享内存、消息队列和 Boost.Interprocess 跨平台 IPC 抽象。
+
+文件 I/O、网络 I/O 与进程间通信共享许多底层概念——文件描述符、非阻塞模式、I/O 多路复用、异步通知、内存映射——但三者的编程模型差异显著。文件 I/O 的数据源是确定性的本地存储，网络 I/O 面对的是不可预测的远端对等体，而 IPC 则专注于同一主机上进程间的高效数据传递。正因如此，在网络 I/O 的类设计中，\textbf{pImpl（Pointer to Implementation）模式}成为一种被广泛采用的架构实践：它隔离了平台相关的头文件污染，保证了库的 ABI 稳定性，并为将来 \cpp{} 标准引入 \Tp{std::net} 预留了平滑迁移路径。
+
+本手册最后以完整的 \Tp{TcpSocket} pImpl 实现为例，展示如何将上述原则落地。
+
+% ==================== 目录 ====================
+\makeatletter
+\IfFileExists{\jobname-manual.toc}{%
+  \chapter*{目录}
+  \@input{\jobname-manual.toc}%
+}{%
+  \tableofcontents
+}
+\makeatother
+
+% ====================================================================
+\mainmatter
+
+\part{文件 I/O}
+
+% ==================== 第一章 ====================
+\chapter{C/C++ 文件 I/O}
+
+本章涵盖 C 标准库的 \Tp{FILE*} 接口和 C++ 的 iostream 文件流。两种 API 各有适用场景：C 接口轻量且可预测，适合嵌入式和系统编程；C++ 流提供了类型安全和 RAII 语义。
+
+\section{C 标准库文件操作}
+
+\subsection{基本文件操作函数}
+
+C 标准库（\Tp{<stdio.h>}）提供了一组面向 \Tp{FILE*} 的文件操作函数。所有操作围绕"打开—读写—关闭"的生命周期展开。
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+    /* 以写模式创建文件 */
+    FILE *fp = fopen("data.bin", "wb");
+    if (!fp) {
+        perror("fopen");
+        return EXIT_FAILURE;
+    }
+
+    /* 写入二进制数据 */
+    int values[] = {10, 20, 30, 40, 50};
+    size_t written = fwrite(values, sizeof(int),
+                            sizeof(values)/sizeof(values[0]), fp);
+    printf("wrote %zu elements\n", written);
+    fclose(fp);
+
+    /* 以读模式重新打开 */
+    fp = fopen("data.bin", "rb");
+    if (!fp) { perror("fopen"); return EXIT_FAILURE; }
+
+    /* 定位到文件末尾获取大小 */
+    fseek(fp, 0, SEEK_END);
+    long fsize = ftell(fp);
+    rewind(fp);
+    printf("file size: %ld bytes\n", fsize);
+
+    /* 读取全部数据 */
+    int buf[5];
+    size_t nread = fread(buf, sizeof(int), 5, fp);
+    for (size_t i = 0; i < nread; ++i)
+        printf("buf[%zu] = %d\n", i, buf[i]);
+
+    fclose(fp);
+    return EXIT_SUCCESS;
+}
+\end{lstlisting}
+
+\begin{guideline}[title=打开模式总结]
+\begin{tabular}{ll}
+\toprule
+\textbf{模式} & \textbf{含义} \\
+\midrule
+\Tp{"r"}  & 只读，文件必须存在 \\
+\Tp{"w"}  & 只写，截断或创建 \\
+\Tp{"a"}  & 追加写入，不存在则创建 \\
+\Tp{"r+"} & 读写，文件必须存在 \\
+\Tp{"w+"} & 读写，截断或创建 \\
+\Tp{"a+"} & 读 + 追加，不存在则创建 \\
+\midrule
+附加 \Tp{b} & 二进制模式（Windows 必需） \\
+附加 \Tp{x} & 排他创建（C11，若已存在则失败） \\
+\bottomrule
+\end{tabular}
+\end{guideline}
+
+\subsection{缓冲与刷新}
+
+C 标准 I/O 库对用户态缓冲有三种策略：全缓冲（\Fn{setvbuf} 的 \Tp{\_IOFBF}）、行缓冲（\Tp{\_IOLBF}，通常用于 \Tp{stdout} 连接到终端时）和无缓冲（\Tp{\_IONBF}，通常用于 \Tp{stderr}）。
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+/* 自定义 8KB 缓冲区 */
+char mybuf[8192];
+setvbuf(fp, mybuf, _IOFBF, sizeof(mybuf));
+
+/* 强制刷新到内核 */
+fflush(fp);   /* 用户态 -> 内核 */
+/* fsync(fileno(fp)) -- 内核 -> 磁盘（POSIX） */
+\end{lstlisting}
+
+\begin{warning}[title=fclose 的返回值]
+\Tp{fclose()} 可能失败——当缓冲区数据未能成功刷写到磁盘时，返回 \Tp{EOF}。忽略返回值意味着可能丢失数据。正确做法：
+
+\begin{lstlisting}[style=cstyle]
+if (fclose(fp) != 0) {
+    perror("fclose failed");
+    /* 数据可能丢失 */
+}
+\end{lstlisting}
+\end{warning}
+
+\subsection{文件定位}
+
+对于大于 2\,GB 的文件，应使用 64 位安全的定位函数：
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+/* POSIX: fseeko / ftello (off_t, 64-bit safe) */
+fseeko(fp, offset, SEEK_SET);
+off_t pos = ftello(fp);
+
+/* Windows MSVC: _fseeki64 / _ftelli64 */
+_fseeki64(fp, offset, SEEK_SET);
+__int64 pos = _ftelli64(fp);
+\end{lstlisting}
+
+\section{C++ iostream 文件流}
+
+C++ 标准库通过 \Tp{<fstream>} 提供面向对象的文件 I/O。
+核心类有三个：\Tp{ifstream}（输入）、\Tp{ofstream}（输出）、\Tp{fstream}（读写）。
+
+\subsection{基本用法}
+
+\cpplabel
+\begin{lstlisting}
+#include <fstream>
+#include <iostream>
+#include <string>
+
+void write_lines() {
+    std::ofstream ofs("output.txt");
+    if (!ofs) {
+        std::cerr << "cannot open file\n";
+        return;
+    }
+    ofs << "line 1\n" << "line 2\n" << "line 3\n";
+    // 析构自动关闭文件 (RAII)
+}
+
+void read_lines() {
+    std::ifstream ifs("output.txt");
+    std::string line;
+    while (std::getline(ifs, line)) {
+        std::cout << line << '\n';
+    }
+}
+\end{lstlisting}
+
+\subsection{二进制读写与异常}
+
+\cpplabel
+\begin{lstlisting}
+#include <fstream>
+#include <vector>
+
+void binary_io() {
+    std::vector<int> data = {100, 200, 300};
+
+    // 写入
+    std::ofstream ofs("data.bin", std::ios::binary);
+    ofs.write(reinterpret_cast<const char*>(data.data()),
+              data.size() * sizeof(int));
+
+    // 读取
+    std::ifstream ifs("data.bin", std::ios::binary);
+    std::vector<int> buf(data.size());
+    ifs.read(reinterpret_cast<char*>(buf.data()),
+             buf.size() * sizeof(int));
+
+    // 检查实际读取量
+    auto bytes_read = ifs.gcount();
+    std::cout << "read " << bytes_read << " bytes\n";
+}
+\end{lstlisting}
+
+\begin{note}[title=流异常与错误处理]
+默认情况下 iostream 不抛异常，而是设置状态位（\Tp{failbit}, \Tp{badbit}, \Tp{eofbit}）。如需异常模式：
+\begin{lstlisting}
+ifs.exceptions(std::ios::failbit | std::ios::badbit);
+try {
+    ifs.read(buf, size);
+} catch (const std::ios::failure& e) {
+    std::cerr << "I/O error: " << e.what() << '\n';
+}
+\end{lstlisting}
+在 C++17 起可配合 \Tp{std::error\_code} 使用更结构化的错误处理。
+\end{note}
+
+\subsection{C++17/20 增强}
+
+C++17 引入了 \Tp{std::filesystem::path} 对文件流的直接支持：
+
+\cpplabel
+\begin{lstlisting}
+#include <fstream>
+#include <filesystem>
+namespace fs = std::filesystem;
+
+void modern_file_io() {
+    fs::path p = fs::current_path() / "logs" / "app.log";
+    std::ofstream ofs(p);  // C++17: 直接传 path 对象
+    ofs << "log entry\n";
+}
+\end{lstlisting}
+
+\section{C 与 C++ 文件 I/O 对比}
+
+\begin{compare}[title=C FILE* vs C++ fstream]
+\begin{tabular}{lcc}
+\toprule
+\textbf{特性} & \textbf{C (\Tp{FILE*})} & \textbf{C++ (fstream)} \\
+\midrule
+类型安全 & 否 & 是（模板化 \Tp{operator<<}） \\
+资源管理 & 手动 \Fn{fclose} & RAII 自动关闭 \\
+二进制 I/O & \Fn{fread}/\Fn{fwrite} & \Fn{read}/\Fn{write} \\
+错误处理 & \Fn{ferror}/\Tp{errno} & 状态位 / 异常 \\
+自定义缓冲 & \Fn{setvbuf} & \Fn{pubsetbuf}（有限） \\
+性能（大批量） & 通常略优 & 取决于实现 \\
+格式化输出 & \Fn{fprintf} & \Tp{operator<<} + manipulators \\
+64 位定位 & \Fn{fseeko}/\Fn{ftello} & \Fn{seekg}/\Fn{seekp}（\Tp{streamoff}） \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+% ==================== 第二章 ====================
+\chapter{文件系统与内存映射}
+
+\section{std::filesystem 概述}
+
+C++17 的 \Tp{std::filesystem}（头文件 \Tp{<filesystem>}）
+为跨平台文件系统操作提供了标准化接口。它取代了各平台特有的 API，
+例如 POSIX \Fn{stat} 和 Windows \Fn{GetFileAttributes}。
+
+\cpplabel
+\begin{lstlisting}
+#include <filesystem>
+#include <iostream>
+namespace fs = std::filesystem;
+
+void filesystem_demo() {
+    fs::path dir = fs::current_path();
+
+    // 递归遍历目录
+    for (const auto& entry : fs::recursive_directory_iterator(dir)) {
+        if (entry.is_regular_file()) {
+            std::cout << entry.path()
+                      << " (" << entry.file_size() << " bytes)\n";
+        }
+    }
+
+    // 创建目录
+    fs::create_directories(dir / "new" / "nested" / "dir");
+
+    // 复制文件
+    fs::copy_file("src.txt", "dst.txt",
+                  fs::copy_options::overwrite_existing);
+
+    // 获取文件信息
+    fs::file_status st = fs::status("data.bin");
+    std::cout << "is regular: " << fs::is_regular_file(st) << '\n';
+    std::cout << "permissions: " << std::oct
+              << static_cast<int>(st.permissions()) << '\n';
+}
+\end{lstlisting}
+
+\begin{guideline}[title=错误处理：异常 vs error\_code]
+\Tp{std::filesystem} 的几乎每个函数都有两个重载版本：抛 \Tp{std::filesystem::filesystem\_error} 异常版和接受 \Tp{std::error\_code\&} 输出版。在热路径或性能敏感代码中，优先使用 \Tp{error\_code} 版本以避免异常开销：
+
+\begin{lstlisting}
+std::error_code ec;
+auto sz = fs::file_size("data.bin", ec);
+if (ec) {
+    std::cerr << "error: " << ec.message() << '\n';
+}
+\end{lstlisting}
+\end{guideline}
+
+\section{内存映射文件（Memory-Mapped I/O）}
+
+内存映射将文件内容直接映射到虚拟地址空间，使文件读写变为内存访问，由操作系统管理页面的加载和刷回。适用于大文件的随机访问和共享数据。
+
+\subsection{POSIX mmap}
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+
+void* map_file(const char* path, size_t* out_size) {
+    int fd = open(path, O_RDWR);
+    if (fd < 0) return NULL;
+
+    struct stat sb;
+    fstat(fd, &sb);
+    *out_size = sb.st_size;
+
+    /* MAP_SHARED: 修改对其它进程可见, 最终刷回磁盘 */
+    void* ptr = mmap(NULL, *out_size, PROT_READ | PROT_WRITE,
+                     MAP_SHARED, fd, 0);
+    close(fd);  /* 映射后可关闭 fd */
+    return (ptr == MAP_FAILED) ? NULL : ptr;
+}
+
+void use_mmap(void) {
+    size_t sz;
+    char* data = (char*)map_file("data.bin", &sz);
+    if (!data) return;
+
+    data[0] = 'H';   /* 直接写入, 由内核延迟刷盘 */
+    msync(data, sz, MS_SYNC);  /* 强制刷盘 */
+
+    munmap(data, sz);
+}
+\end{lstlisting}
+
+\subsection{Windows CreateFileMapping}
+
+\winlabel
+\begin{lstlisting}[style=cstyle]
+#include <windows.h>
+
+void* map_file_win(const wchar_t* path, size_t* out_size) {
+    HANDLE hFile = CreateFileW(path, GENERIC_READ | GENERIC_WRITE,
+                               FILE_SHARE_READ, NULL,
+                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return NULL;
+
+    LARGE_INTEGER li;
+    GetFileSizeEx(hFile, &li);
+    *out_size = (size_t)li.QuadPart;
+
+    HANDLE hMap = CreateFileMappingW(hFile, NULL, PAGE_READWRITE, 0, 0, NULL);
+    void* ptr = MapViewOfFile(hMap, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+
+    CloseHandle(hMap);
+    CloseHandle(hFile);
+    return ptr;
+}
+
+/* 使用完毕后 */
+/* UnmapViewOfFile(ptr); */
+\end{lstlisting}
+
+\begin{compare}[title=mmap vs CreateFileMapping]
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{特性} & \textbf{POSIX \Fn{mmap}} & \textbf{Windows \Fn{MapViewOfFile}} \\
+\midrule
+映射单位 & 页（通常 4\,KB） & 页（通常 4\,KB） \\
+共享方式 & \Tp{MAP\_SHARED}\newline / \Tp{MAP\_PRIVATE} & 由 \Tp{CreateFileMapping} 保护属性决定 \\
+刷盘 & \Fn{msync} & \Fn{FlushViewOfFile} \\
+匿名映射 & \Tp{MAP\_ANONYMOUS} & 传 \Tp{INVALID\_HANDLE\_VALUE} \\
+大页支持 & \Tp{MAP\_HUGETLB}（Linux） & \Tp{SEC\_LARGE\_PAGES} \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+\subsection{C++ 封装建议}
+
+在实际项目中，建议将 \Fn{mmap} / \Fn{MapViewOfFile} 封装为 RAII 类：
+
+\cpplabel
+\begin{lstlisting}
+#include <cstddef>
+#include <system_error>
+
+class MappedFile {
+public:
+    MappedFile(const char* path, bool writable = false);
+    ~MappedFile();  // munmap / UnmapViewOfFile
+
+    MappedFile(const MappedFile&) = delete;
+    MappedFile& operator=(const MappedFile&) = delete;
+    MappedFile(MappedFile&& other) noexcept;
+    MappedFile& operator=(MappedFile&& other) noexcept;
+
+    std::byte*       data()       noexcept { return data_; }
+    const std::byte* data() const noexcept { return data_; }
+    std::size_t      size() const noexcept { return size_; }
+
+    void flush();  // msync / FlushViewOfFile
+
+private:
+    std::byte*  data_ = nullptr;
+    std::size_t size_ = 0;
+    // 平台相关句柄放在 pImpl 中
+    struct Impl;
+    Impl* impl_ = nullptr;
+};
+\end{lstlisting}
+
+% ====================================================================
+\part{网络 I/O}
+
+% ==================== 第三章 ====================
+\chapter{网络 I/O 基础}
+
+\section{Socket 概念模型}
+
+Socket 是网络通信的端点抽象。操作系统将 socket 暴露为文件描述符（POSIX）或句柄（Windows），使得网络 I/O 可复用文件 I/O 的 \Fn{read}/\Fn{write} 语义。
+
+一个 TCP 连接由四元组唯一标识：\texttt{\seqsplit{(local\_ip,\ local\_port,\ remote\_ip,\ remote\_port)}}。
+
+\begin{guideline}[title=TCP vs UDP 选型]
+\textbf{TCP}：面向连接、可靠字节流、有序交付。适用于 HTTP、数据库协议、文件传输。代价是连接建立延迟（三次握手）和拥塞控制开销。
+
+\textbf{UDP}：无连接、尽力交付、不保证顺序。适用于实时音视频、DNS 查询、游戏同步。需自行处理丢包和乱序。
+\end{guideline}
+
+\section{地址族与协议}
+
+\begin{tabular}{lll}
+\toprule
+\textbf{地址族} & \textbf{头文件结构} & \textbf{用途} \\
+\midrule
+\Tp{AF\_INET}  & \Tp{sockaddr\_in}  & IPv4 \\
+\Tp{AF\_INET6} & \Tp{sockaddr\_in6} & IPv6 \\
+\Tp{AF\_UNIX}  & \Tp{sockaddr\_un}  & 本地进程间通信 \\
+\bottomrule
+\end{tabular}
+
+\subsection{地址解析：getaddrinfo}
+
+\Tp{getaddrinfo()} 是现代化的地址解析函数，同时支持 IPv4 和 IPv6，取代了旧的 \Fn{gethostbyname}。
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <stdio.h>
+
+void resolve(const char* host, const char* service) {
+    struct addrinfo hints = {0};
+    hints.ai_family   = AF_UNSPEC;    /* IPv4 或 IPv6 */
+    hints.ai_socktype = SOCK_STREAM;  /* TCP */
+
+    struct addrinfo* result = NULL;
+    int rc = getaddrinfo(host, service, &hints, &result);
+    if (rc != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rc));
+        return;
+    }
+
+    for (struct addrinfo* rp = result; rp != NULL; rp = rp->ai_next) {
+        char addrstr[INET6_ADDRSTRLEN];
+        void* addr_ptr;
+        if (rp->ai_family == AF_INET)
+            addr_ptr = &((struct sockaddr_in*)rp->ai_addr)->sin_addr;
+        else
+            addr_ptr = &((struct sockaddr_in6*)rp->ai_addr)->sin6_addr;
+        inet_ntop(rp->ai_family, addr_ptr, addrstr, sizeof(addrstr));
+        printf("  %s\n", addrstr);
+    }
+
+    freeaddrinfo(result);
+}
+\end{lstlisting}
+
+% ==================== 第四章 ====================
+\chapter{POSIX Socket API}
+
+\section{TCP 服务器与客户端}
+
+\subsection{TCP 服务器}
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+
+int tcp_server(uint16_t port) {
+    int listenfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (listenfd < 0) { perror("socket"); return -1; }
+
+    /* 允许地址复用，避免 TIME_WAIT 导致的重启失败 */
+    int opt = 1;
+    setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
+    struct sockaddr_in addr = {0};
+    addr.sin_family      = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port        = htons(port);
+
+    if (bind(listenfd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+        perror("bind");
+        close(listenfd);
+        return -1;
+    }
+
+    listen(listenfd, 128);  /* backlog = 128 */
+    printf("listening on port %d\n", port);
+
+    while (1) {
+        struct sockaddr_in client;
+        socklen_t clen = sizeof(client);
+        int connfd = accept(listenfd, (struct sockaddr*)&client, &clen);
+        if (connfd < 0) { perror("accept"); continue; }
+
+        char buf[4096];
+        ssize_t n;
+        while ((n = read(connfd, buf, sizeof(buf))) > 0) {
+            write(connfd, buf, n);  /* echo 回客户端 */
+        }
+        close(connfd);
+    }
+
+    close(listenfd);
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{TCP 客户端}
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+
+int tcp_client(const char* host, uint16_t port) {
+    int fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0) { perror("socket"); return -1; }
+
+    struct sockaddr_in addr = {0};
+    addr.sin_family = AF_INET;
+    addr.sin_port   = htons(port);
+    inet_pton(AF_INET, host, &addr.sin_addr);
+
+    if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+        perror("connect");
+        close(fd);
+        return -1;
+    }
+
+    const char* msg = "Hello, Server!";
+    write(fd, msg, strlen(msg));
+
+    char buf[1024];
+    ssize_t n = read(fd, buf, sizeof(buf) - 1);
+    if (n > 0) {
+        buf[n] = '\0';
+        printf("received: %s\n", buf);
+    }
+
+    close(fd);
+    return 0;
+}
+\end{lstlisting}
+
+\section{UDP 通信}
+
+UDP 不需要 \Fn{connect}/\Fn{accept}，直接使用 \Fn{sendto}/\Fn{recvfrom}：
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdio.h>
+
+void udp_echo_server(uint16_t port) {
+    int fd = socket(AF_INET, SOCK_DGRAM, 0);
+
+    struct sockaddr_in addr = {0};
+    addr.sin_family      = AF_INET;
+    addr.sin_addr.s_addr = INADDR_ANY;
+    addr.sin_port        = htons(port);
+    bind(fd, (struct sockaddr*)&addr, sizeof(addr));
+
+    char buf[65536];
+    struct sockaddr_in sender;
+    socklen_t slen;
+    while (1) {
+        slen = sizeof(sender);
+        ssize_t n = recvfrom(fd, buf, sizeof(buf), 0,
+                             (struct sockaddr*)&sender, &slen);
+        if (n > 0) {
+            sendto(fd, buf, n, 0,
+                   (struct sockaddr*)&sender, slen);
+        }
+    }
+    close(fd);
+}
+\end{lstlisting}
+
+\section{非阻塞 I/O 与超时}
+
+\subsection{fcntl 设置非阻塞}
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <fcntl.h>
+
+void set_nonblocking(int fd) {
+    int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+}
+\end{lstlisting}
+
+非阻塞模式下，\Fn{read}/\Fn{write} 在无法立即完成时返回 \Tp{-1}
+并设置 \Tp{errno} 为 \Tp{EAGAIN}（或 \Tp{EWOULDBLOCK}）。
+
+\subsection{select / poll / epoll}
+
+I/O 多路复用允许单线程同时监控多个 socket。三种主流方案的对比：
+
+\begin{compare}[title=I/O 多路复用对比]
+\begin{tabular}{lccc}
+\toprule
+\textbf{特性} & \textbf{select} & \textbf{poll} & \textbf{epoll} \\
+\midrule
+最大 fd 数 & \Tp{FD\_SETSIZE}（通常 1024） & 无限制 & 无限制 \\
+时间复杂度 & $O(n)$ & $O(n)$ & $O(1)$ 事件通知 \\
+触发模式 & 水平触发 & 水平触发 & 水平 / 边缘触发 \\
+平台 & 全平台 & POSIX & Linux only \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <sys/epoll.h>
+#include <unistd.h>
+
+/* epoll 基本用法 */
+int epfd = epoll_create1(0);
+
+struct epoll_event ev;
+ev.events  = EPOLLIN | EPOLLET;  /* 读就绪 + 边缘触发 */
+ev.data.fd = connfd;
+epoll_ctl(epfd, EPOLL_CTL_ADD, connfd, &ev);
+
+struct epoll_event events[64];
+int nready = epoll_wait(epfd, events, 64, -1 /* 阻塞等待 */);
+for (int i = 0; i < nready; ++i) {
+    if (events[i].events & EPOLLIN) {
+        /* 可读, events[i].data.fd */
+    }
+}
+close(epfd);
+\end{lstlisting}
+
+% ==================== 第五章 ====================
+\chapter{Winsock 与跨平台差异}
+
+Windows 的网络 API 基于 Winsock 2（\Tp{<winsock2.h>} + \Tp{ws2\_32.lib}），与 POSIX socket 在语义上相似但存在重要差异。
+
+\section{Winsock 初始化与清理}
+
+\winlabel
+\begin{lstlisting}[style=cstyle]
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+
+int winsock_init() {
+    WSADATA wsa;
+    int rc = WSAStartup(MAKEWORD(2, 2), &wsa);
+    if (rc != 0) {
+        printf("WSAStartup failed: %d\n", rc);
+        return -1;
+    }
+    return 0;
+}
+
+/* 程序退出时 */
+/* WSACleanup(); */
+\end{lstlisting}
+
+\begin{warning}[title=Winsock 与 POSIX 的关键差异]
+\begin{tabular}{ll}
+\toprule
+\textbf{差异点} & \textbf{说明} \\
+\midrule
+初始化 & 必须 \Fn{WSAStartup}，POSIX 无需初始化 \\
+socket 类型 & \Tp{SOCKET}（\Tp{UINT\_PTR}），不是 \Tp{int} \\
+错误码 & \Fn{WSAGetLastError()}，不是 \Tp{errno} \\
+关闭 & \Fn{closesocket()}，不是 \Fn{close()} \\
+\Tp{EAGAIN} & 对应 \Tp{WSAEWOULDBLOCK} (10035) \\
+非阻塞 & \Fn{ioctlsocket()}，不是 \Fn{fcntl} \\
+多路复用 & \Fn{select()} 可用但低效；推荐 \Tp{WSAEventSelect} 或 IOCP \\
+\bottomrule
+\end{tabular}
+\end{warning}
+
+\section{Winsock TCP 示例}
+
+\winlabel
+\begin{lstlisting}[style=cstyle]
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <stdio.h>
+#pragma comment(lib, "ws2_32.lib")
+
+int win_tcp_client(const char* host, const char* port) {
+    struct addrinfo hints = {0};
+    hints.ai_family   = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    struct addrinfo* result = NULL;
+    getaddrinfo(host, port, &hints, &result);
+
+    SOCKET s = INVALID_SOCKET;
+    for (struct addrinfo* rp = result; rp; rp = rp->ai_next) {
+        s = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+        if (s == INVALID_SOCKET) continue;
+        if (connect(s, rp->ai_addr, (int)rp->ai_addrlen) == 0) break;
+        closesocket(s);
+        s = INVALID_SOCKET;
+    }
+    freeaddrinfo(result);
+
+    if (s == INVALID_SOCKET) {
+        printf("connect failed: %d\n", WSAGetLastError());
+        return -1;
+    }
+
+    const char* msg = "Hello!";
+    send(s, msg, (int)strlen(msg), 0);
+
+    char buf[1024];
+    int n = recv(s, buf, sizeof(buf) - 1, 0);
+    if (n > 0) { buf[n] = '\0'; printf("got: %s\n", buf); }
+
+    closesocket(s);
+    return 0;
+}
+\end{lstlisting}
+
+\section{跨平台抽象层}
+
+由于 POSIX 和 Winsock 的差异，实际项目通常引入一层薄抽象。下面展示一种常见的宏策略：
+
+\cpplabel
+\begin{lstlisting}
+// platform_socket.h
+#ifdef _WIN32
+  #include <winsock2.h>
+  #include <ws2tcpip.h>
+  using socket_t = SOCKET;
+  constexpr socket_t INVALID_SOCK = INVALID_SOCKET;
+  inline int  close_socket(socket_t s) { return closesocket(s); }
+  inline int  get_last_error() { return WSAGetLastError(); }
+#else
+  #include <sys/socket.h>
+  #include <netinet/in.h>
+  #include <unistd.h>
+  using socket_t = int;
+  constexpr socket_t INVALID_SOCK = -1;
+  inline int  close_socket(socket_t s) { return close(s); }
+  inline int  get_last_error() { return errno; }
+#endif
+\end{lstlisting}
+
+\begin{note}[title=这种宏策略的局限性]
+上面的做法虽然简单直接，但存在严重问题：\textbf{平台头文件被暴露到了公共接口}。任何包含此头文件的翻译单元都会间接引入 \Tp{<winsock2.h>} 或 \Tp{<sys/socket.h>}，导致编译时间膨胀和名称污染。这正是下一章 pImpl 模式要解决的核心问题。
+\end{note}
+
+% ==================== 第六章 ====================
+\chapter{现代 C++ 网络编程：Asio}
+
+Asio（非 Boost 版本为 standalone Asio，Boost 版本为 \Tp{boost::asio}）是 C++ 生态中最成熟的异步网络库。它为 \cpp{} 标准的 \Tp{std::net} 提案提供了参考实现。
+
+\section{核心概念}
+
+\begin{guideline}[title=Asio 核心组件]
+\Tp{io\_context}：I/O 执行引擎，管理异步操作的事件循环。可绑定到单线程或多线程。
+
+\Tp{tcp::socket} / \Tp{udp::socket}：网络端点，封装平台 socket 细节。
+
+\Tp{tcp::acceptor}：监听并接收传入连接。
+
+\Tp{ip::tcp::resolver}：异步 DNS 解析。
+
+\Tp{steady\_timer}：基于 \Tp{std::chrono::steady\_clock} 的定时器。
+\end{guideline}
+
+\section{同步 Echo 服务器}
+
+\asiolabel
+\begin{lstlisting}
+#include <asio.hpp>
+#include <iostream>
+
+void sync_echo_server(unsigned short port) {
+    asio::io_context io;
+    asio::ip::tcp::acceptor acceptor(
+        io, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port));
+
+    while (true) {
+        asio::ip::tcp::socket socket(io);
+        acceptor.accept(socket);
+
+        try {
+            char buf[4096];
+            while (true) {
+                std::size_t n = socket.read_some(asio::buffer(buf));
+                asio::write(socket, asio::buffer(buf, n));
+            }
+        } catch (const std::system_error& e) {
+            std::cerr << "client disconnected: "
+                      << e.what() << '\n';
+        }
+    }
+}
+\end{lstlisting}
+
+\section{异步 Echo 服务器（C++20 协程）}
+
+Asio 的 \Tp{co\_await} 支持将异步代码写成顺序风格，避免回调地狱：
+
+\asiolabel
+\begin{lstlisting}
+#include <asio.hpp>
+#include <asio/co_spawn.hpp>
+#include <asio/use_awaitable.hpp>
+#include <asio/detached.hpp>
+#include <iostream>
+
+using asio::ip::tcp;
+using asio::awaitable;
+using asio::co_spawn;
+using asio::detached;
+using asio::use_awaitable;
+
+awaitable<void> echo_session(tcp::socket socket) {
+    try {
+        char buf[4096];
+        for (;;) {
+            std::size_t n = co_await socket.async_read_some(
+                asio::buffer(buf), use_awaitable);
+            co_await asio::async_write(
+                socket, asio::buffer(buf, n), use_awaitable);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "session error: " << e.what() << '\n';
+    }
+}
+
+awaitable<void> listen(asio::io_context& io, unsigned short port) {
+    tcp::acceptor acceptor(io, tcp::endpoint(tcp::v4(), port));
+    for (;;) {
+        tcp::socket socket = co_await acceptor.async_accept(
+            use_awaitable);
+        co_spawn(io, echo_session(std::move(socket)), detached);
+    }
+}
+
+int main() {
+    asio::io_context io;
+    co_spawn(io, listen(io, 8080), detached);
+    io.run();
+}
+\end{lstlisting}
+
+\begin{bestpractice}[title=Asio 中的错误处理]
+Asio 的同步和异步接口都支持两种错误处理：抛异常版和 \Tp{std::error\_code} 输出版。在高并发场景下，使用 \Tp{error\_code} 版本可避免频繁异常的开销：
+
+\begin{lstlisting}
+std::error_code ec;
+std::size_t n = socket.read_some(asio::buffer(buf), ec);
+if (ec == asio::error::eof) {
+    // 对端正常关闭
+} else if (ec) {
+    // 其它错误
+}
+\end{lstlisting}
+\end{bestpractice}
+
+% ====================================================================
+\part{进程间通信}
+
+% ==================== 第七章：进程间 I/O ====================
+\chapter{进程间 I/O}
+
+进程间通信（Inter-Process Communication, IPC）是操作系统提供的机制，允许多个进程交换数据和同步执行。与文件 I/O（持久化到磁盘）和网络 I/O（跨越网络节点）不同，IPC 专注于\textbf{同一主机上}的进程间数据传递，通常具有更低的延迟和更高的吞吐。
+
+本章覆盖三大类 IPC 机制：管道（匿名管道与命名管道）、共享内存、以及消息队列。每类机制都从 POSIX 系统 API 和 Windows 系统 API 两个角度展开，最后介绍 Boost.Interprocess 库如何提供统一的跨平台抽象。
+
+\section{IPC 机制概览}
+
+\begin{compare}[title=IPC 机制选型]
+\begin{tabularx}{\textwidth}{lXXX}
+\toprule
+\textbf{机制} & \textbf{数据模型} & \textbf{关系要求} & \textbf{典型延迟} \\
+\midrule
+匿名管道 & 字节流，单向 & 父子进程 & 极低 \\
+命名管道 (FIFO) & 字节流，双向 & 无关系 & 极低 \\
+共享内存 & 内存页 & 无关系 & 最低（无拷贝） \\
+消息队列 & 结构化消息 & 无关系 & 低 \\
+Mailslot & 数据报，单向 & 无关系（含网络） & 中等 \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+\begin{guideline}[title=选型建议]
+\textbf{单向父子通信}（如 shell 管道、子进程 stdout 捕获）$\to$ 匿名管道。
+
+\textbf{无亲缘关系进程的双向通信} $\to$ 命名管道（FIFO / Named Pipe）。
+
+\textbf{大数据量、零拷贝} $\to$ 共享内存 + 同步原语（mutex + condition variable）。
+
+\textbf{结构化消息传递} $\to$ 消息队列（POSIX mq 或 Boost.Interprocess message\_queue）。
+\end{guideline}
+
+\section{POSIX 管道}
+
+\subsection{匿名管道（pipe）}
+
+匿名管道是最基本的 IPC 机制，由 \Fn{pipe()} 系统调用创建一对文件描述符（读端和写端），通常与 \Fn{fork()} 配合使用。
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <unistd.h>
+#include <sys/wait.h>
+#include <string.h>
+#include <stdio.h>
+
+void pipe_demo(void) {
+    int pipefd[2];
+    pipe(pipefd);  /* pipefd[0]=读端, pipefd[1]=写端 */
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        /* 子进程：写入管道 */
+        close(pipefd[0]);  /* 关闭读端 */
+        const char* msg = "Hello from child";
+        write(pipefd[1], msg, strlen(msg));
+        close(pipefd[1]);
+        _exit(0);
+    }
+
+    /* 父进程：读取管道 */
+    close(pipefd[1]);  /* 关闭写端 */
+    char buf[256];
+    ssize_t n = read(pipefd[0], buf, sizeof(buf) - 1);
+    if (n > 0) {
+        buf[n] = '\0';
+        printf("parent got: %s\n", buf);
+    }
+    close(pipefd[0]);
+    waitpid(pid, NULL, 0);
+}
+\end{lstlisting}
+
+\begin{note}[title=管道容量]
+匿名管道的内核缓冲区大小有限（Linux 默认 64\,KB，可通过 \Tp{/proc/sys/fs/pipe-max-size} 调整）。写端满时 \Fn{write()} 阻塞（或返回 \Tp{EAGAIN}），读端空时 \Fn{read()} 阻塞。使用 \Fn{fcntl()} 的 \Tp{F\_SETPIPE\_SZ} 可以调整单个管道的容量。
+\end{note}
+
+\subsection{管道重定向与 shell 管道}
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <unistd.h>
+#include <sys/wait.h>
+
+/* 模拟 shell: ls | sort */
+void shell_pipe(void) {
+    int pipefd[2];
+    pipe(pipefd);
+
+    if (fork() == 0) {
+        /* ls 进程: stdout -> 管道写端 */
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+        close(pipefd[1]);
+        execlp("ls", "ls", "-la", NULL);
+    }
+
+    if (fork() == 0) {
+        /* sort 进程: 管道读端 -> stdin */
+        close(pipefd[1]);
+        dup2(pipefd[0], STDIN_FILENO);
+        close(pipefd[0]);
+        execlp("sort", "sort", NULL);
+    }
+
+    /* 父进程关闭所有管道端口，等待子进程 */
+    close(pipefd[0]);
+    close(pipefd[1]);
+    wait(NULL);
+    wait(NULL);
+}
+\end{lstlisting}
+
+\subsection{命名管道（FIFO）}
+
+命名管道通过 \Fn{mkfifo()} 创建，以文件系统路径为标识，\textbf{无亲缘关系}的进程也可以通信。
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+
+#define FIFO_PATH "/tmp/my_fifo"
+
+/* 写入端 */
+void fifo_writer(void) {
+    mkfifo(FIFO_PATH, 0666);  /* 已存在则忽略错误 */
+    int fd = open(FIFO_PATH, O_WRONLY);
+    const char* msg = "data from writer";
+    write(fd, msg, strlen(msg));
+    close(fd);
+    unlink(FIFO_PATH);
+}
+
+/* 读取端（另一个进程） */
+void fifo_reader(void) {
+    int fd = open(FIFO_PATH, O_RDONLY);  /* 阻塞直到写端打开 */
+    char buf[256];
+    ssize_t n = read(fd, buf, sizeof(buf) - 1);
+    if (n > 0) { buf[n] = '\0'; printf("got: %s\n", buf); }
+    close(fd);
+}
+\end{lstlisting}
+
+\begin{warning}[title=FIFO 打开语义]
+\Tp{open()} 打开 FIFO 时的行为取决于方向：\textbf{只写打开}（\Tp{O\_WRONLY}）会阻塞，直到有进程以只读方式打开同一 FIFO；反之亦然。使用 \Tp{O\_NONBLOCK} 可避免阻塞，但写端在没有读端时 \Fn{open()} 会返回 \Tp{-1}（\Tp{ENXIO}）。
+\end{warning}
+
+\section{POSIX 共享内存}
+
+共享内存是最快的 IPC 机制——数据无需在内核和用户态之间拷贝，多个进程直接读写同一段物理内存。
+
+\subsection{shm\_open + mmap}
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+
+#define SHM_NAME "/my_shared_mem"
+#define SHM_SIZE 4096
+
+/* 写入进程 */
+void shm_writer(void) {
+    /* 创建共享内存对象 */
+    int fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0666);
+    ftruncate(fd, SHM_SIZE);
+
+    /* 映射到地址空间 */
+    void* ptr = mmap(NULL, SHM_SIZE, PROT_READ | PROT_WRITE,
+                     MAP_SHARED, fd, 0);
+    close(fd);
+
+    /* 写入数据 */
+    snprintf((char*)ptr, SHM_SIZE, "Hello from writer, pid=%d",
+             getpid());
+
+    /* 通知读取方（此处省略信号量，实际应配合同步机制） */
+    sleep(2);
+
+    munmap(ptr, SHM_SIZE);
+    shm_unlink(SHM_NAME);
+}
+
+/* 读取进程 */
+void shm_reader(void) {
+    int fd = shm_open(SHM_NAME, O_RDONLY, 0);
+    void* ptr = mmap(NULL, SHM_SIZE, PROT_READ,
+                     MAP_SHARED, fd, 0);
+    close(fd);
+
+    printf("shm data: %s\n", (char*)ptr);
+
+    munmap(ptr, SHM_SIZE);
+}
+\end{lstlisting}
+
+\begin{guideline}[title=POSIX 共享内存要点]
+\textbf{命名规则}：名称必须以 \texttt{/} 开头（如 \texttt{/my\_shm}），在 Linux 上对应 \texttt{/dev/shm/} 目录下的文件。
+
+\textbf{生命周期}：\Fn{shm\_unlink()} 删除名称，但已映射的进程仍可访问，直到所有映射解除后内存才释放。
+
+\textbf{同步}：共享内存本身不提供同步。必须配合 POSIX 信号量（\Fn{sem\_open}/\Fn{sem\_wait}/\Fn{sem\_post}）或互斥锁使用。
+
+\textbf{编译链接}：需要 \texttt{-lrt}（Linux）链接 POSIX 实时库。
+\end{guideline}
+
+\section{POSIX 消息队列}
+
+POSIX 消息队列（\Tp{<mqueue.h>}）提供有类型、有优先级的消息传递，比管道和 FIFO 更适合结构化通信。
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <mqueue.h>
+#include <string.h>
+#include <stdio.h>
+
+#define MQ_NAME "/my_mq"
+
+struct SensorData {
+    int    id;
+    double temperature;
+    double pressure;
+};
+
+/* 发送方 */
+void mq_sender(void) {
+    struct mq_attr attr = {
+        .mq_maxsize  = 1024,
+        .mq_msgsize  = sizeof(struct SensorData),
+    };
+    mqd_t mq = mq_open(MQ_NAME, O_CREAT | O_WRONLY, 0666, &attr);
+
+    struct SensorData data = { .id = 1, .temperature = 23.5,
+                               .pressure = 1013.25 };
+    mq_send(mq, (const char*)&data, sizeof(data), 0 /* 优先级 */);
+
+    mq_close(mq);
+    mq_unlink(MQ_NAME);
+}
+
+/* 接收方 */
+void mq_receiver(void) {
+    mqd_t mq = mq_open(MQ_NAME, O_RDONLY);
+
+    struct mq_attr attr;
+    mq_getattr(mq, &attr);
+    char* buf = malloc(attr.mq_msgsize);
+
+    unsigned int prio;
+    ssize_t n = mq_receive(mq, buf, attr.mq_msgsize, &prio);
+    if (n > 0) {
+        struct SensorData* d = (struct SensorData*)buf;
+        printf("sensor %d: T=%.1f P=%.2f (prio=%u)\n",
+               d->id, d->temperature, d->pressure, prio);
+    }
+
+    free(buf);
+    mq_close(mq);
+}
+\end{lstlisting}
+
+\section{Windows 进程间通信}
+
+\subsection{Windows 命名管道}
+
+Windows 命名管道（Named Pipe）功能比 POSIX FIFO 更丰富：支持双向通信、消息模式、重叠 I/O、以及基于安全描述符的访问控制。
+
+\winlabel
+\begin{lstlisting}[style=cstyle]
+#include <windows.h>
+#include <stdio.h>
+
+#define PIPE_NAME "\\\\.\\pipe\\my_pipe"
+
+/* 服务端 */
+void win_named_pipe_server(void) {
+    HANDLE hPipe = CreateNamedPipeA(
+        PIPE_NAME,
+        PIPE_ACCESS_DUPLEX,           /* 双向通信 */
+        PIPE_TYPE_MESSAGE |           /* 消息模式 */
+        PIPE_READMODE_MESSAGE |
+        PIPE_WAIT,
+        5,                            /* 最大实例数 */
+        4096, 4096,                   /* 输出/输入缓冲区 */
+        0, NULL);
+
+    if (hPipe == INVALID_HANDLE_VALUE) {
+        printf("CreateNamedPipe failed: %lu\n", GetLastError());
+        return;
+    }
+
+    /* 等待客户端连接 */
+    ConnectNamedPipe(hPipe, NULL);
+
+    char buf[4096];
+    DWORD bytes_read;
+    while (ReadFile(hPipe, buf, sizeof(buf), &bytes_read, NULL)) {
+        printf("server got: %.*s\n", (int)bytes_read, buf);
+        /* Echo 回客户端 */
+        DWORD bytes_written;
+        WriteFile(hPipe, buf, bytes_read, &bytes_written, NULL);
+    }
+
+    CloseHandle(hPipe);
+}
+
+/* 客户端 */
+void win_named_pipe_client(void) {
+    /* 等待管道可用 */
+    WaitNamedPipeA(PIPE_NAME, NMPWAIT_WAIT_FOREVER);
+
+    HANDLE hPipe = CreateFileA(
+        PIPE_NAME,
+        GENERIC_READ | GENERIC_WRITE,
+        0, NULL, OPEN_EXISTING, 0, NULL);
+
+    if (hPipe == INVALID_HANDLE_VALUE) {
+        printf("CreateFile failed: %lu\n", GetLastError());
+        return;
+    }
+
+    const char* msg = "Hello from client";
+    DWORD written;
+    WriteFile(hPipe, msg, (DWORD)strlen(msg), &written, NULL);
+
+    char buf[4096];
+    DWORD bytes_read;
+    ReadFile(hPipe, buf, sizeof(buf) - 1, &bytes_read, NULL);
+    buf[bytes_read] = '\0';
+    printf("client got: %s\n", buf);
+
+    CloseHandle(hPipe);
+}
+\end{lstlisting}
+
+\begin{compare}[title=POSIX FIFO vs Windows Named Pipe]
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{特性} & \textbf{POSIX FIFO} & \textbf{Windows Named Pipe} \\
+\midrule
+通信方向 & 单向（需两个 FIFO 实现双向） & 双向（\Tp{PIPE\_ACCESS\_DUPLEX}） \\
+数据模式 & 字节流 & 字节流 / 消息模式 \\
+多实例 & 不支持 & 支持（最多 256 实例） \\
+异步 I/O & \Fn{select}/\Fn{poll} & \Tp{OVERLAPPED} + \Fn{GetOverlappedResult} \\
+安全控制 & 文件权限 & 安全描述符（ACL） \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+\subsection{Windows 共享内存}
+
+Windows 共享内存通过 \Fn{CreateFileMapping} + \Fn{MapViewOfFile} 实现，传入 \Tp{INVALID\_HANDLE\_VALUE} 表示不关联文件，创建纯内存映射。
+
+\winlabel
+\begin{lstlisting}[style=cstyle]
+#include <windows.h>
+#include <stdio.h>
+
+#define SHM_NAME "Global\\MySharedMem"
+#define SHM_SIZE 4096
+
+/* 写入进程 */
+void win_shm_writer(void) {
+    HANDLE hMap = CreateFileMappingA(
+        INVALID_HANDLE_VALUE,  /* 不关联文件 = 纯共享内存 */
+        NULL, PAGE_READWRITE,
+        0, SHM_SIZE, SHM_NAME);
+
+    char* ptr = (char*)MapViewOfFile(hMap, FILE_MAP_WRITE, 0, 0, 0);
+    snprintf(ptr, SHM_SIZE, "Hello from writer, pid=%lu",
+             GetCurrentProcessId());
+
+    Sleep(2000);  /* 等待读取方 */
+
+    UnmapViewOfFile(ptr);
+    CloseHandle(hMap);
+}
+
+/* 读取进程 */
+void win_shm_reader(void) {
+    HANDLE hMap = OpenFileMappingA(
+        FILE_MAP_READ, FALSE, SHM_NAME);
+    if (!hMap) {
+        printf("OpenFileMapping failed: %lu\n", GetLastError());
+        return;
+    }
+
+    const char* ptr = (const char*)MapViewOfFile(
+        hMap, FILE_MAP_READ, 0, 0, 0);
+    printf("shm data: %s\n", ptr);
+
+    UnmapViewOfFile(ptr);
+    CloseHandle(hMap);
+}
+\end{lstlisting}
+
+\begin{note}[title=命名前缀 Global\textbackslash{} vs Local\textbackslash{}]
+在启用了终端服务的 Windows 系统上，\Tp{Global\textbackslash{}} 前缀使共享内存在\textbf{所有会话}间可见，\Tp{Local\textbackslash{}} 限制在当前会话。跨会话通信必须使用 \Tp{Global\textbackslash{}}，但需要 \Tp{SeCreateGlobalPrivilege} 权限。
+\end{note}
+
+\subsection{Windows Mailslot}
+
+Mailslot 是 Windows 特有的单向数据报通信机制，支持跨网络广播。
+
+\winlabel
+\begin{lstlisting}[style=cstyle]
+#include <windows.h>
+#include <stdio.h>
+
+#define SLOT_NAME "\\\\.\\mailslot\\my_slot"
+
+/* 接收方 */
+void win_mailslot_reader(void) {
+    HANDLE hSlot = CreateMailslotA(
+        SLOT_NAME,
+        0,          /* 最大消息大小, 0=不限 */
+        MAILSLOT_WAIT_FOREVER,
+        NULL);
+
+    char buf[4096];
+    DWORD bytes_read;
+    while (ReadFile(hSlot, buf, sizeof(buf) - 1,
+                    &bytes_read, NULL)) {
+        buf[bytes_read] = '\0';
+        printf("mailslot got: %s\n", buf);
+    }
+    CloseHandle(hSlot);
+}
+
+/* 发送方 */
+void win_mailslot_writer(void) {
+    HANDLE hSlot = CreateFileA(
+        SLOT_NAME, GENERIC_WRITE,
+        FILE_SHARE_READ, NULL,
+        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    const char* msg = "broadcast message";
+    DWORD written;
+    WriteFile(hSlot, msg, (DWORD)strlen(msg), &written, NULL);
+    CloseHandle(hSlot);
+}
+\end{lstlisting}
+
+\section{Boost.Interprocess}
+
+Boost.Interprocess 提供了跨平台的 C++ IPC 抽象，封装了 POSIX 和 Windows 的共享内存、消息队列、同步原语。它不需要 Boost 的其他模块，可以单独使用（头文件 \Tp{<boost/interprocess/>}）。
+
+\subsection{托管共享内存}
+
+Boost.Interprocess 的托管共享内存（Managed Shared Memory）在原始共享内存之上构建了一个\textbf{命名对象管理器}，允许在共享内存段中构造和查找 C++ 对象。
+
+\cpplabel
+\begin{lstlisting}
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/containers/vector.hpp>
+#include <boost/interprocess/allocators/allocator.hpp>
+#include <string>
+#include <iostream>
+
+namespace bip = boost::interprocess;
+
+// 共享内存中的 vector 需要特殊分配器
+using ShmemAllocator = bip::allocator<int,
+    bip::managed_shared_memory::segment_manager>;
+using IntVector = boost::container::vector<int, ShmemAllocator>;
+
+constexpr const char* SHM_NAME = "MySharedMemory";
+
+/* 写入进程 */
+void bip_writer() {
+    // 先清理可能残留的共享内存
+    bip::shared_memory_object::remove(SHM_NAME);
+
+    // 创建 64KB 托管共享内存段
+    bip::managed_shared_memory segment(
+        bip::create_only, SHM_NAME, 65536);
+
+    // 在共享内存中构造一个 vector
+    ShmemAllocator alloc(segment.get_segment_manager());
+    IntVector* vec = segment.construct<IntVector>("MyVector")(alloc);
+
+    for (int i = 0; i < 10; ++i)
+        vec->push_back(i * 100);
+
+    // 写入完成，等待读取方消费后销毁
+    // （实际应配合 condition variable）
+    std::cout << "vector written with " << vec->size()
+              << " elements\n";
+}
+
+/* 读取进程 */
+void bip_reader() {
+    // 打开已有的共享内存段
+    bip::managed_shared_memory segment(
+        bip::open_only, SHM_NAME);
+
+    // 查找命名对象
+    auto result = segment.find<IntVector>("MyVector");
+    IntVector* vec = result.first;
+
+    if (vec) {
+        std::cout << "got " << vec->size() << " elements: ";
+        for (int v : *vec) std::cout << v << ' ';
+        std::cout << '\n';
+
+        // 销毁共享内存中的对象
+        segment.destroy<IntVector>("MyVector");
+    }
+
+    bip::shared_memory_object::remove(SHM_NAME);
+}
+\end{lstlisting}
+
+\begin{warning}[title=共享内存中的 STL 容器]
+标准 \Tp{std::vector<int>} \textbf{不能}直接放入共享内存——它内部使用默认分配器，在堆上分配缓冲区，而另一个进程的堆地址是不同的。必须使用 \Tp{boost::interprocess::allocator} 或 \cpp{}17 的 polymorphic allocator，让容器的所有内存分配都发生在共享内存段内。
+\end{warning}
+
+\subsection{进程间字符串}
+
+同样的原则适用于字符串：\Tp{std::string} 在短字符串优化（SSO）之外会使用堆内存。Boost.Interprocess 提供了 \Tp{boost::container::string} 配合共享内存分配器：
+
+\cpplabel
+\begin{lstlisting}
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/containers/string.hpp>
+#include <iostream>
+
+namespace bip = boost::interprocess;
+
+using CharAllocator = bip::allocator<char,
+    bip::managed_shared_memory::segment_manager>;
+using ShmString = boost::container::basic_string<
+    char, std::char_traits<char>, CharAllocator>;
+
+void string_in_shm() {
+    bip::managed_shared_memory segment(
+        bip::open_or_create, "StringShm", 4096);
+
+    // 在共享内存中构造字符串
+    CharAllocator alloc(segment.get_segment_manager());
+    ShmString* str = segment.construct<ShmString>(
+        "SharedStr")(alloc);
+    *str = "Hello from shared memory";
+
+    // 另一个进程可以 find 并读取
+    auto result = segment.find<ShmString>("SharedStr");
+    if (result.first) {
+        std::cout << *result.first << '\n';
+    }
+}
+\end{lstlisting}
+
+\subsection{消息队列}
+
+Boost.Interprocess 的消息队列封装了平台差异，提供了类型安全、固定大小消息的传递接口。
+
+\cpplabel
+\begin{lstlisting}
+#include <boost/interprocess/ipc/message_queue.hpp>
+#include <iostream>
+#include <string>
+
+namespace bip = boost::interprocess;
+
+constexpr const char* MQ_NAME = "my_bip_mq";
+
+struct Task {
+    int    priority;
+    char   payload[256];
+};
+
+/* 发送方 */
+void bip_mq_sender() {
+    bip::message_queue::remove(MQ_NAME);
+    bip::message_queue mq(
+        bip::create_only, MQ_NAME,
+        10,              /* 最大消息数 */
+        sizeof(Task)     /* 每条消息最大大小 */);
+
+    Task t{};
+    t.priority = 1;
+    std::strcpy(t.payload, "process data file");
+    mq.send(&t, sizeof(t), t.priority);
+
+    std::cout << "message sent with priority "
+              << t.priority << '\n';
+}
+
+/* 接收方 */
+void bip_mq_receiver() {
+    bip::message_queue mq(bip::open_only, MQ_NAME);
+
+    Task t{};
+    std::size_t received_size;
+    unsigned int received_priority;
+
+    mq.receive(&t, sizeof(t), received_size,
+               received_priority);
+
+    std::cout << "got task (prio=" << received_priority
+              << "): " << t.payload << '\n';
+
+    bip::message_queue::remove(MQ_NAME);
+}
+\end{lstlisting}
+
+\begin{bestpractice}[title=消息队列设计要点]
+\textbf{固定大小消息}：Boost.Interprocess 消息队列要求每条消息不超过构造时指定的 \Tp{max\_msg\_size}。对于变长数据，建议将实际数据放入共享内存，消息队列仅传递偏移量和长度。
+
+\textbf{优先级}：\Fn{send()} 的优先级参数使高优先级消息先被 \Fn{receive()} 取出。
+
+\textbf{清理}：程序退出前应调用 \Tp{message\_queue::remove()} 删除队列。若异常退出，POSIX 上队列名在 \texttt{/dev/mqueue/} 中残留，需手动清理。
+\end{bestpractice}
+
+\subsection{进程间同步原语}
+
+共享内存和消息队列都需要配合同步机制。Boost.Interprocess 提供了可放在共享内存中的互斥锁、条件变量、信号量和读写锁：
+
+\cpplabel
+\begin{lstlisting}
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/sync/interprocess_mutex.hpp>
+#include <boost/interprocess/sync/interprocess_condition.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
+#include <iostream>
+
+namespace bip = boost::interprocess;
+
+// 共享内存中的数据结构
+struct SharedData {
+    bip::interprocess_mutex       mutex;
+    bip::interprocess_condition   cond;
+    int counter = 0;
+    bool ready = false;
+};
+
+/* 生产者进程 */
+void producer() {
+    bip::managed_shared_memory segment(
+        bip::open_or_create, "SyncShm", 4096);
+
+    auto* data = segment.find_or_construct<SharedData>("Data")();
+
+    for (int i = 0; i < 5; ++i) {
+        bip::scoped_lock<bip::interprocess_mutex> lock(
+            data->mutex);
+        data->counter = i;
+        data->ready = true;
+        data->cond.notify_one();
+        std::cout << "produced: " << i << '\n';
+
+        // 等待消费者消费完毕
+        while (data->ready)
+            data->cond.wait(lock);
+    }
+}
+
+/* 消费者进程 */
+void consumer() {
+    bip::managed_shared_memory segment(
+        bip::open_only, "SyncShm");
+
+    auto* data = segment.find<SharedData>("Data").first;
+
+    for (int i = 0; i < 5; ++i) {
+        bip::scoped_lock<bip::interprocess_mutex> lock(
+            data->mutex);
+        while (!data->ready)
+            data->cond.wait(lock);
+
+        std::cout << "consumed: " << data->counter << '\n';
+        data->ready = false;
+        data->cond.notify_one();
+    }
+}
+\end{lstlisting}
+
+\begin{guideline}[title=Boost.Interprocess 同步原语要点]
+\Tp{interprocess\_mutex}：与 \Tp{std::mutex} 接口类似，但存放在共享内存中，可跨进程加锁。支持 \Tp{timed\_lock} 超时获取。
+
+\Tp{interprocess\_condition}：跨进程条件变量。\textbf{必须}与 \Tp{scoped\_lock<interprocess\_mutex>} 配合使用。
+
+\Tp{scoped\_lock}：RAII 封装，等价于 \Tp{std::lock\_guard}。
+
+\Tp{interprocess\_semaphore}：计数信号量，用于限制并发访问资源的进程数。
+
+\Tp{interprocess\_recursive\_mutex}：允许同一进程多次加锁（递归锁）。
+
+\textbf{注意}：如果持有锁的进程崩溃，POSIX 上互斥锁可能永久锁死。可以使用 \Fn{pthread\_mutexattr\_setrobust} 设置健壮属性（Boost.Interprocess 在支持的平台上自动启用）。
+\end{guideline}
+
+\subsection{命名同步对象}
+
+如果不想在共享内存中手动管理同步原语，Boost.Interprocess 还提供了\textbf{命名互斥锁}和\textbf{命名条件变量}，由操作系统管理生命周期：
+
+\cpplabel
+\begin{lstlisting}
+#include <boost/interprocess/sync/named_mutex.hpp>
+#include <boost/interprocess/sync/named_condition.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
+#include <iostream>
+
+namespace bip = boost::interprocess;
+
+void named_sync_demo() {
+    // 命名互斥锁（操作系统级，不需要共享内存段）
+    bip::named_mutex mutex(bip::open_or_create, "MyMutex");
+
+    bip::scoped_lock<bip::named_mutex> lock(mutex);
+    std::cout << "critical section entered\n";
+
+    // 程序退出或显式调用后自动释放
+    // 清理：bip::named_mutex::remove("MyMutex");
+}
+\end{lstlisting}
+
+\section{System V IPC 简介}
+
+System V IPC 是更早期的 IPC 标准，仍被广泛支持。它使用整数 key（而非文件路径）标识对象：
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/sem.h>
+#include <string.h>
+#include <stdio.h>
+
+void sysv_shm_demo(void) {
+    /* 生成 key (基于文件路径 + 项目 ID) */
+    key_t key = ftok("/tmp/shm_key_file", 'A');
+
+    /* 创建共享内存段 */
+    int shmid = shmget(key, 4096, IPC_CREAT | 0666);
+    char* ptr = (char*)shmat(shmid, NULL, 0);
+
+    strcpy(ptr, "SysV shared memory data");
+    printf("wrote: %s\n", ptr);
+
+    /* 分离 */
+    shmdt(ptr);
+
+    /* 销毁（通常在读取方完成后执行） */
+    /* shmctl(shmid, IPC_RMID, NULL); */
+}
+\end{lstlisting}
+
+\begin{compare}[title=POSIX IPC vs System V IPC]
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{特性} & \textbf{POSIX IPC} & \textbf{System V IPC} \\
+\midrule
+标识方式 & 名称（\Tp{/name}） & 整数 key（\Fn{ftok}） \\
+共享内存 & \Fn{shm\_open} + \Fn{mmap} & \Fn{shmget} + \Fn{shmat} \\
+消息队列 & \Fn{mq\_open}（优先级） & \Fn{msgget}（消息类型） \\
+信号量 & \Fn{sem\_open}（命名） & \Fn{semget}（集合） \\
+线程安全 & 天然支持 & 需额外注意 \\
+清理 & \Fn{*\_unlink()} & \Fn{*ctl(*, IPC\_RMID)} \\
+推荐度 & \textbf{首选} & 遗留系统维护 \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+% ====================================================================
+\part{架构模式}
+
+% ==================== 第七章 ====================
+\chapter{pImpl 模式与网络 I/O 设计}
+
+pImpl（Pointer to Implementation）是一种将类的公共接口与内部实现解耦的设计模式。在 C++ 中，它也被称为"编译器防火墙"（Compiler Firewall）或"Handle-Body"模式。
+
+本章首先解释 pImpl 的一般性优势，然后重点论述\textbf{为什么网络 I/O 类是 pImpl 最典型、最有价值的应用场景}，最后给出一个完整的、可编译的 \Tp{TcpSocket} pImpl 实现。
+
+\section{pImpl 模式概述}
+
+\subsection{基本结构}
+
+\pimplabel
+\begin{lstlisting}
+// widget.h —— 公共头文件
+class Widget {
+public:
+    Widget();
+    ~Widget();
+
+    Widget(const Widget& other);
+    Widget& operator=(const Widget& other);
+    Widget(Widget&& other) noexcept;
+    Widget& operator=(Widget&& other) noexcept;
+
+    void do_something();
+    int  get_value() const;
+
+private:
+    struct Impl;                  // 仅前向声明
+    std::unique_ptr<Impl> impl_;  // 指向实际实现
+};
+\end{lstlisting}
+
+\pimplabel
+\begin{lstlisting}
+// widget.cpp —— 实现文件（不暴露给用户）
+#include "widget.h"
+#include <vector>
+#include <string>
+// ... 任何重量级头文件都在这里
+
+struct Widget::Impl {
+    std::vector<std::string> data;
+    int value = 0;
+    // 任何复杂的内部状态
+};
+
+Widget::Widget()  : impl_(std::make_unique<Impl>()) {}
+Widget::~Widget() = default;  // 必须在 .cpp 中定义
+
+Widget::Widget(const Widget& other)
+    : impl_(std::make_unique<Impl>(*other.impl_)) {}
+
+Widget& Widget::operator=(const Widget& other) {
+    if (this != &other)
+        impl_ = std::make_unique<Impl>(*other.impl_);
+    return *this;
+}
+
+Widget::Widget(Widget&&) noexcept = default;
+Widget& Widget::operator=(Widget&&) noexcept = default;
+
+void Widget::do_something() { impl_->data.push_back("hello"); }
+int  Widget::get_value() const { return impl_->value; }
+\end{lstlisting}
+
+\begin{warning}[title=析构函数必须在 .cpp 中定义]
+\Tp{std::unique\_ptr} 在析构时需要看到 \Tp{Impl} 的完整定义。如果在头文件中使用 \Tp{= default}，编译器在实例化析构时会报错（incomplete type）。必须在 \Tp{.cpp} 中写 \Tp{Widget::\textasciitilde Widget() = default;}。
+\end{warning}
+
+\subsection{pImpl 的一般性优势}
+
+\begin{enumerate}
+\item \textbf{ABI 稳定性}：公共对象的大小和布局不再因内部成员的增删而改变，共享库可以在不破坏 ABI 的前提下升级。
+\item \textbf{编译隔离}：头文件不包含内部实现所需的头文件，减少了编译依赖链，显著缩短增量编译时间。
+\item \textbf{二进制兼容}：不同版本的共享库可共存于同一进程，只要公共接口不变。
+\end{enumerate}
+
+\section{为什么网络 I/O 特别需要 pImpl}
+
+网络 I/O 类是 pImpl 模式\textbf{最有说服力的应用场景}，原因可归纳为四点。
+
+\subsection{平台头文件污染极其严重}
+
+POSIX socket API 的头文件链会引入数百个宏和类型定义（\Tp{<sys/socket.h>}, \Tp{<netinet/in.h>}, \Tp{<arpa/inet.h>} 等），Windows Winsock 更是会引入 \Tp{<winsock2.h>} 和大量 \Tp{WSA*} 前缀的符号。如果这些头文件出现在公共头文件中，\textbf{每一个包含该头文件的翻译单元都会承受编译开销和名称污染}。
+
+\subsection{平台类型不兼容}
+
+POSIX 的 socket 类型是 \Tp{int}（文件描述符），Windows 是 \Tp{SOCKET}（\Tp{UINT\_PTR}，64 位系统上为 8 字节）。POSIX 的无效值是 \Tp{-1}，Windows 是 \Tp{INVALID\_SOCKET}。将这些差异暴露在公共接口中意味着要么用宏做条件编译（脆弱），要么提供两套 API（冗余）。pImpl 让公共接口统一为一个干净的前向声明。
+
+\subsection{ABI 稳定性需求迫切}
+
+网络库通常以共享库（\Tp{.so} / \Tp{.dll}）形式分发。如果公共类包含平台特定的成员（如 \Tp{int fd\_} 或 \Tp{SOCKET handle\_}），一旦内部改用 epoll 事件结构、添加 TLS 上下文、或为 IPv6 增加 \Tp{sockaddr\_in6} 成员，对象布局就会改变，\textbf{所有依赖该库的应用程序必须重新编译}。
+
+pImpl 的 \Tp{unique\_ptr<Impl>} 保证了公共类的大小始终为一个指针（8 字节 on 64-bit），无论内部如何变化。
+
+\subsection{为 std::net 预留迁移路径}
+
+C++ 标准委员会正在推进 \Tp{std::net}（基于 Networking TS，即 Asio 的标准化版本）。一旦 \Tp{std::net} 落地，底层实现可以从手写 socket 代码无缝切换到标准库，而无需修改任何公共接口——这正是 pImpl 带来的架构灵活性。
+
+\begin{bestpractice}[title=网络类 pImpl 设计原则]
+\begin{enumerate}
+\item 公共头文件 \textbf{不包含} 任何平台网络头文件。
+\item 公共接口使用标准 C++ 类型（\Tp{std::string}, \Tp{uint16\_t}, \Tp{std::error\_code}）。
+\item 平台类型（\Tp{SOCKET}, \Tp{int fd}, \Tp{epoll\_event} 等）\textbf{仅出现在} \Tp{.cpp} 文件中。
+\item 所有异步回调使用 \Tp{std::function} 或 \Tp{std::move\_only\_function}。
+\item 为未来 \Tp{std::net} 保留替换 \Tp{Impl} 的自由度。
+\end{enumerate}
+\end{bestpractice}
+
+\section{完整实现：TcpSocket pImpl}
+
+以下是一个完整的、跨平台（POSIX / Winsock）的 TCP socket 封装。公共头文件不包含任何平台头文件。
+
+\subsection{公共头文件}
+
+\pimplabel
+\begin{lstlisting}
+// tcp_socket.h —— 不包含任何平台头文件
+#pragma once
+
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <span>
+#include <string>
+#include <system_error>
+
+class TcpSocket {
+public:
+    TcpSocket();
+    ~TcpSocket();
+
+    TcpSocket(const TcpSocket&) = delete;
+    TcpSocket& operator=(const TcpSocket&) = delete;
+    TcpSocket(TcpSocket&& other) noexcept;
+    TcpSocket& operator=(TcpSocket&& other) noexcept;
+
+    // 连接到远程主机 (host 可以是 IP 或域名)
+    void connect(const std::string& host, uint16_t port,
+                 std::error_code& ec);
+
+    // 阻塞发送
+    std::size_t send(std::span<const std::byte> data,
+                     std::error_code& ec);
+
+    // 阻塞接收
+    std::size_t recv(std::span<std::byte> buffer,
+                     std::error_code& ec);
+
+    // 关闭连接
+    void close();
+
+    // 查询状态
+    bool is_open() const noexcept;
+    std::string remote_address() const;
+    uint16_t    remote_port() const;
+
+    // 设置超时 (毫秒)
+    void set_send_timeout(int ms, std::error_code& ec);
+    void set_recv_timeout(int ms, std::error_code& ec);
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+};
+\end{lstlisting}
+
+注意上面的头文件：\textbf{没有任何平台头文件}——
+不包含 \Tp{\#include <sys/socket.h>}，
+也不包含 \Tp{\#include <winsock2.h>}。
+所有类型都是标准 C++ 类型。
+
+\subsection{实现文件——POSIX 部分}
+
+\pimplabel
+\begin{lstlisting}
+// tcp_socket_posix.cpp (Linux / macOS)
+#include "tcp_socket.h"
+
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <cerrno>
+#include <cstring>
+
+struct TcpSocket::Impl {
+    int fd = -1;
+    std::string remote_addr;
+    uint16_t    remote_port = 0;
+};
+
+TcpSocket::TcpSocket()  : impl_(std::make_unique<Impl>()) {}
+TcpSocket::~TcpSocket() { close(); }
+
+TcpSocket::TcpSocket(TcpSocket&&) noexcept = default;
+TcpSocket& TcpSocket::operator=(TcpSocket&&) noexcept = default;
+
+void TcpSocket::connect(const std::string& host, uint16_t port,
+                        std::error_code& ec) {
+    struct addrinfo hints{};
+    hints.ai_family   = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    auto port_str = std::to_string(port);
+    struct addrinfo* res = nullptr;
+    if (int rc = getaddrinfo(host.c_str(), port_str.c_str(),
+                             &hints, &res); rc != 0) {
+        ec = std::make_error_code(
+            std::errc::address_not_available);
+        return;
+    }
+
+    impl_->fd = ::socket(res->ai_family, res->ai_socktype,
+                         res->ai_protocol);
+    if (impl_->fd < 0) {
+        ec = std::error_code(errno, std::system_category());
+        freeaddrinfo(res);
+        return;
+    }
+
+    if (::connect(impl_->fd, res->ai_addr, res->ai_addrlen) < 0) {
+        ec = std::error_code(errno, std::system_category());
+        ::close(impl_->fd);
+        impl_->fd = -1;
+        freeaddrinfo(res);
+        return;
+    }
+
+    // 保存远端信息
+    char addrbuf[INET6_ADDRSTRLEN];
+    void* addr_ptr;
+    if (res->ai_family == AF_INET) {
+        auto* sin = (sockaddr_in*)res->ai_addr;
+        addr_ptr = &sin->sin_addr;
+        impl_->remote_port = ntohs(sin->sin_port);
+    } else {
+        auto* sin6 = (sockaddr_in6*)res->ai_addr;
+        addr_ptr = &sin6->sin6_addr;
+        impl_->remote_port = ntohs(sin6->sin6_port);
+    }
+    inet_ntop(res->ai_family, addr_ptr,
+              addrbuf, sizeof(addrbuf));
+    impl_->remote_addr = addrbuf;
+
+    freeaddrinfo(res);
+    ec.clear();
+}
+
+std::size_t TcpSocket::send(std::span<const std::byte> data,
+                            std::error_code& ec) {
+    ssize_t n = ::send(impl_->fd, data.data(), data.size(),
+                       MSG_NOSIGNAL);
+    if (n < 0) {
+        ec = std::error_code(errno, std::system_category());
+        return 0;
+    }
+    ec.clear();
+    return static_cast<std::size_t>(n);
+}
+
+std::size_t TcpSocket::recv(std::span<std::byte> buffer,
+                            std::error_code& ec) {
+    ssize_t n = ::recv(impl_->fd, buffer.data(), buffer.size(), 0);
+    if (n < 0) {
+        ec = std::error_code(errno, std::system_category());
+        return 0;
+    }
+    if (n == 0) {
+        ec = std::make_error_code(std::errc::not_connected);
+        return 0;
+    }
+    ec.clear();
+    return static_cast<std::size_t>(n);
+}
+
+void TcpSocket::close() {
+    if (impl_ && impl_->fd >= 0) {
+        ::close(impl_->fd);
+        impl_->fd = -1;
+    }
+}
+
+bool TcpSocket::is_open() const noexcept {
+    return impl_ && impl_->fd >= 0;
+}
+
+std::string TcpSocket::remote_address() const {
+    return impl_ ? impl_->remote_addr : "";
+}
+
+uint16_t TcpSocket::remote_port() const {
+    return impl_ ? impl_->remote_port : 0;
+}
+
+void TcpSocket::set_send_timeout(int ms, std::error_code& ec) {
+    struct timeval tv;
+    tv.tv_sec  = ms / 1000;
+    tv.tv_usec = (ms % 1000) * 1000;
+    if (::setsockopt(impl_->fd, SOL_SOCKET, SO_SNDTIMEO,
+                     &tv, sizeof(tv)) < 0)
+        ec = std::error_code(errno, std::system_category());
+    else
+        ec.clear();
+}
+
+void TcpSocket::set_recv_timeout(int ms, std::error_code& ec) {
+    struct timeval tv;
+    tv.tv_sec  = ms / 1000;
+    tv.tv_usec = (ms % 1000) * 1000;
+    if (::setsockopt(impl_->fd, SOL_SOCKET, SO_RCVTIMEO,
+                     &tv, sizeof(tv)) < 0)
+        ec = std::error_code(errno, std::system_category());
+    else
+        ec.clear();
+}
+\end{lstlisting}
+
+\subsection{实现文件——Windows 部分}
+
+\pimplabel
+\begin{lstlisting}
+// tcp_socket_win.cpp (Windows)
+#include "tcp_socket.h"
+
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+
+namespace {
+struct WinsockInit {
+    WinsockInit()  { WSADATA w; WSAStartup(MAKEWORD(2,2), &w); }
+    ~WinsockInit() { WSACleanup(); }
+} g_winsock;
+}
+
+struct TcpSocket::Impl {
+    SOCKET sock = INVALID_SOCKET;
+    std::string remote_addr;
+    uint16_t    remote_port = 0;
+};
+
+TcpSocket::TcpSocket()  : impl_(std::make_unique<Impl>()) {}
+TcpSocket::~TcpSocket() { close(); }
+TcpSocket::TcpSocket(TcpSocket&&) noexcept = default;
+TcpSocket& TcpSocket::operator=(TcpSocket&&) noexcept = default;
+
+void TcpSocket::connect(const std::string& host, uint16_t port,
+                        std::error_code& ec) {
+    struct addrinfo hints{};
+    hints.ai_family   = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    auto port_str = std::to_string(port);
+    struct addrinfo* res = nullptr;
+    if (int rc = getaddrinfo(host.c_str(), port_str.c_str(),
+                             &hints, &res); rc != 0) {
+        ec = std::make_error_code(
+            std::errc::address_not_available);
+        return;
+    }
+
+    impl_->sock = ::socket(res->ai_family, res->ai_socktype,
+                           res->ai_protocol);
+    if (impl_->sock == INVALID_SOCKET) {
+        ec = std::error_code(WSAGetLastError(),
+                             std::system_category());
+        freeaddrinfo(res);
+        return;
+    }
+
+    if (::connect(impl_->sock, res->ai_addr,
+                  (int)res->ai_addrlen) != 0) {
+        ec = std::error_code(WSAGetLastError(),
+                             std::system_category());
+        closesocket(impl_->sock);
+        impl_->sock = INVALID_SOCKET;
+        freeaddrinfo(res);
+        return;
+    }
+
+    char addrbuf[INET6_ADDRSTRLEN];
+    void* addr_ptr;
+    if (res->ai_family == AF_INET) {
+        auto* sin = (sockaddr_in*)res->ai_addr;
+        addr_ptr = &sin->sin_addr;
+        impl_->remote_port = ntohs(sin->sin_port);
+    } else {
+        auto* sin6 = (sockaddr_in6*)res->ai_addr;
+        addr_ptr = &sin6->sin6_addr;
+        impl_->remote_port = ntohs(sin6->sin6_port);
+    }
+    inet_ntop(res->ai_family, addr_ptr,
+              addrbuf, sizeof(addrbuf));
+    impl_->remote_addr = addrbuf;
+
+    freeaddrinfo(res);
+    ec.clear();
+}
+
+std::size_t TcpSocket::send(std::span<const std::byte> data,
+                            std::error_code& ec) {
+    int n = ::send(impl_->sock,
+                   (const char*)data.data(),
+                   (int)data.size(), 0);
+    if (n == SOCKET_ERROR) {
+        ec = std::error_code(WSAGetLastError(),
+                             std::system_category());
+        return 0;
+    }
+    ec.clear();
+    return static_cast<std::size_t>(n);
+}
+
+std::size_t TcpSocket::recv(std::span<std::byte> buffer,
+                            std::error_code& ec) {
+    int n = ::recv(impl_->sock, (char*)buffer.data(),
+                   (int)buffer.size(), 0);
+    if (n == SOCKET_ERROR) {
+        ec = std::error_code(WSAGetLastError(),
+                             std::system_category());
+        return 0;
+    }
+    if (n == 0) {
+        ec = std::make_error_code(std::errc::not_connected);
+        return 0;
+    }
+    ec.clear();
+    return static_cast<std::size_t>(n);
+}
+
+void TcpSocket::close() {
+    if (impl_ && impl_->sock != INVALID_SOCKET) {
+        closesocket(impl_->sock);
+        impl_->sock = INVALID_SOCKET;
+    }
+}
+
+bool TcpSocket::is_open() const noexcept {
+    return impl_ && impl_->sock != INVALID_SOCKET;
+}
+
+std::string TcpSocket::remote_address() const {
+    return impl_ ? impl_->remote_addr : "";
+}
+
+uint16_t TcpSocket::remote_port() const {
+    return impl_ ? impl_->remote_port : 0;
+}
+
+void TcpSocket::set_send_timeout(int ms, std::error_code& ec) {
+    DWORD tv = static_cast<DWORD>(ms);
+    if (::setsockopt(impl_->sock, SOL_SOCKET, SO_SNDTIMEO,
+                     (const char*)&tv, sizeof(tv)) != 0)
+        ec = std::error_code(WSAGetLastError(),
+                             std::system_category());
+    else
+        ec.clear();
+}
+
+void TcpSocket::set_recv_timeout(int ms, std::error_code& ec) {
+    DWORD tv = static_cast<DWORD>(ms);
+    if (::setsockopt(impl_->sock, SOL_SOCKET, SO_RCVTIMEO,
+                     (const char*)&tv, sizeof(tv)) != 0)
+        ec = std::error_code(WSAGetLastError(),
+                             std::system_category());
+    else
+        ec.clear();
+}
+\end{lstlisting}
+
+\section{使用示例}
+
+\pimplabel
+\begin{lstlisting}
+// main.cpp —— 注意: 不包含任何平台头文件!
+#include "tcp_socket.h"
+#include <iostream>
+#include <array>
+
+int main() {
+    TcpSocket sock;
+    std::error_code ec;
+
+    sock.connect("example.com", 80, ec);
+    if (ec) {
+        std::cerr << "connect: " << ec.message() << '\n';
+        return 1;
+    }
+
+    std::cout << "connected to " << sock.remote_address()
+              << ":" << sock.remote_port() << '\n';
+
+    // 发送 HTTP GET 请求
+    std::string request =
+        "GET / HTTP/1.1\r\nHost: example.com\r\n\r\n";
+    auto sent = sock.send(
+        std::as_bytes(std::span(request)), ec);
+    std::cout << "sent " << sent << " bytes\n";
+
+    // 接收响应
+    std::array<std::byte, 8192> buf{};
+    auto received = sock.recv(buf, ec);
+    if (!ec) {
+        std::string response(
+            reinterpret_cast<const char*>(buf.data()), received);
+        std::cout << response.substr(0, 200) << "...\n";
+    }
+
+    // 析构自动关闭
+    return 0;
+}
+\end{lstlisting}
+
+\section{编译方式}
+
+\begin{lstlisting}[style=bashstyle]
+(*@\textcolor{gray}{\# Linux / macOS}@*)
+g++ -std=c++20 -o client main.cpp tcp_socket_posix.cpp
+
+(*@\textcolor{gray}{\# Windows MSVC}@*)
+cl /std:c++20 /EHsc main.cpp tcp_socket_win.cpp ws2_32.lib
+\end{lstlisting}
+
+\section{pImpl 在网络 I/O 中的收益总结}
+
+\begin{compare}[title=有无 pImpl 的网络类对比]
+\begin{tabular}{lcc}
+\toprule
+\textbf{维度} & \textbf{无 pImpl} & \textbf{有 pImpl} \\
+\midrule
+公共头文件体积 & 大（含平台头文件） & 小（纯标准库） \\
+增量编译时间 & 长（头文件依赖链） & 短 \\
+ABI 兼容性 & 脆弱（改内部即破） & 稳定（对象大小 = 指针） \\
+跨平台维护 & 宏条件编译在头文件中 & 完全隔离在 \Tp{.cpp} 中 \\
+迁移到 \Tp{std::net} & 需改公共接口 & 仅替换 \Tp{Impl} \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+% ====================================================================
+\appendix
+
+% ==================== 附录 A ====================
+\chapter{I/O 多路复用详解}
+
+\section{select 详解}
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <sys/select.h>
+#include <sys/time.h>
+
+int select_example(int fd1, int fd2) {
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(fd1, &readfds);
+    FD_SET(fd2, &readfds);
+
+    int maxfd = (fd1 > fd2) ? fd1 : fd2;
+
+    struct timeval tv;
+    tv.tv_sec  = 5;
+    tv.tv_usec = 0;
+
+    int nready = select(maxfd + 1, &readfds, NULL, NULL, &tv);
+    if (nready < 0) { perror("select"); return -1; }
+    if (nready == 0) { printf("timeout\n"); return 0; }
+
+    if (FD_ISSET(fd1, &readfds)) { /* fd1 可读 */ }
+    if (FD_ISSET(fd2, &readfds)) { /* fd2 可读 */ }
+    return nready;
+}
+\end{lstlisting}
+
+\section{epoll 详解（Linux）}
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <sys/epoll.h>
+#include <unistd.h>
+
+/* 创建 epoll 实例 */
+int epfd = epoll_create1(EPOLL_CLOEXEC);
+
+/* 添加监控: 水平触发 (EPOLLIN) */
+struct epoll_event ev;
+ev.events  = EPOLLIN;
+ev.data.fd = connfd;
+epoll_ctl(epfd, EPOLL_CTL_ADD, connfd, &ev);
+
+/* 边缘触发模式: 仅在状态变化时通知 */
+ev.events = EPOLLIN | EPOLLET;
+
+/* 一次性模式: 事件触发后自动移除 */
+ev.events = EPOLLIN | EPOLLONESHOT;
+
+/* 等待事件 */
+struct epoll_event events[128];
+int nfds = epoll_wait(epfd, events, 128, timeout_ms);
+
+/* EPOLLRDHUP: 对端关闭连接（需 _GNU_SOURCE） */
+/* EPOLLPRI:   紧急数据 (TCP OOB) */
+\end{lstlisting}
+
+\section{kqueue（BSD / macOS）}
+
+\posixlabel
+\begin{lstlisting}[style=cstyle]
+#include <sys/event.h>
+#include <sys/time.h>
+
+int kq = kqueue();
+
+struct kevent ev;
+EV_SET(&ev, connfd, EVFILT_READ, EV_ADD | EV_ENABLE, 0, 0, NULL);
+kevent(kq, &ev, 1, NULL, 0, NULL);
+
+/* 等待事件 */
+struct kevent events[64];
+struct timespec ts = { .tv_sec = 5, .tv_nsec = 0 };
+int n = kevent(kq, NULL, 0, events, 64, &ts);
+
+for (int i = 0; i < n; ++i) {
+    if (events[i].filter == EVFILT_READ) {
+        /* events[i].ident 可读, events[i].data = 可用字节数 */
+    }
+    if (events[i].flags & EV_EOF) {
+        /* 对端关闭 */
+    }
+}
+close(kq);
+\end{lstlisting}
+
+% ==================== 附录 B ====================
+\chapter{错误处理模式汇总}
+
+\section{C 风格：errno 与返回值}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+#include <errno.h>
+#include <string.h>
+
+ssize_t n = read(fd, buf, sizeof(buf));
+if (n < 0) {
+    int saved_errno = errno;  /* 先保存，避免被后续调用覆盖 */
+    fprintf(stderr, "read failed: %s (errno=%d)\n",
+            strerror(saved_errno), saved_errno);
+
+    /* 可重试错误 */
+    if (saved_errno == EINTR || saved_errno == EAGAIN) {
+        /* 重试 */
+    }
+}
+\end{lstlisting}
+
+\section{C++ 风格：system\_error}
+
+\cpplabel
+\begin{lstlisting}
+#include <system_error>
+
+// 构造错误码
+std::error_code ec(errno, std::system_category());
+
+// 跨平台通用错误
+auto ec2 = std::make_error_code(std::errc::connection_refused);
+
+// 自定义错误类别
+class net_error_category : public std::error_category {
+public:
+    const char* name() const noexcept override { return "net"; }
+    std::string message(int code) const override {
+        switch (code) {
+            case 1: return "connection refused";
+            case 2: return "connection timed out";
+            default: return "unknown network error";
+        }
+    }
+};
+
+const std::error_category& net_category() {
+    static net_error_category instance;
+    return instance;
+}
+\end{lstlisting}
+
+% ==================== 附录 C ====================
+\chapter{C++ 自定义流}
+
+C++ 的 iostream 体系是一套可扩展的分层架构。通过继承 \Tp{std::basic\_streambuf} 并重写其虚函数，可以将任何数据目标（内存缓冲区、网络 socket、加密引擎等）包装为标准 C++ 流，从而复用 \Tp{operator<<}、格式化输出、manipulators 等全部流功能。
+
+本附录从底层 \Tp{streambuf} 架构讲起，逐步构建四个实用的自定义流：\textbf{NullStream}（丢弃所有输出）、\textbf{TeeStream}（同时写入多个目标）、\textbf{NetworkStream}（将 socket 包装为流）和 \textbf{HexDumpStream}（以十六进制格式显示二进制数据）。
+
+\section{流架构概述}
+
+C++ iostream 的设计分为两层：
+
+\begin{itemize}
+\item \textbf{格式化层}：\Tp{basic\_ostream} / \Tp{basic\_istream} / \Tp{basic\_iostream} 负责类型安全的格式化操作（\Tp{operator<<}、\Tp{operator>>}、manipulators）。它们\textbf{不直接处理 I/O}。
+\item \textbf{传输层}：\Tp{basic\_streambuf} 负责实际的字符读写。格式化层通过调用 \Tp{streambuf} 的公共接口（\Fn{sputc}, \Fn{sputn}, \Fn{sbumpc}, \Fn{sgetn} 等）完成数据传输。
+\end{itemize}
+
+\begin{guideline}[title=自定义流的核心原则]
+\textbf{只继承 \Tp{streambuf}}，不要继承 \Tp{ostream}。正确的做法是：
+\begin{enumerate}
+\item 创建自定义 \Tp{streambuf} 子类，重写必要的虚函数。
+\item 创建一个轻量的 \Tp{ostream}（或 \Tp{istream}）包装类，在构造函数中将内部 \Tp{streambuf} 指针设置为自定义 buffer。
+\item 用户通过标准 \Tp{operator<<} 使用你的流——无需学习新 API。
+\end{enumerate}
+\end{guideline}
+
+\section{streambuf 关键虚函数}
+
+\begin{compare}[title=输出方向的关键虚函数]
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{虚函数} & \textbf{触发时机} & \textbf{重写要求} \\
+\midrule
+\Fn{overflow(int\_type)} & 输出缓冲区满，或无缓冲区时每次写入 & \textbf{必须} \\
+\Fn{xsputn(const char*, n)} & \Fn{sputn()} 批量写入 & 可选（性能优化） \\
+\Fn{sync()} & \Fn{flush()} 或 \Tp{std::endl} & 可选 \\
+\Fn{setbuf(char*, n)} & \Fn{pubsetbuf()} 设置缓冲区 & 可选 \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+\begin{compare}[title=输入方向的关键虚函数]
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{虚函数} & \textbf{触发时机} & \textbf{重写要求} \\
+\midrule
+\Fn{underflow()} & 输入缓冲区空，需要填充更多数据 & \textbf{必须} \\
+\Fn{uflow()} & 类似 \Fn{underflow}，但推进读指针 & 可选（有默认实现） \\
+\Fn{xsgetn(char*, n)} & \Fn{sgetn()} 批量读取 & 可选（性能优化） \\
+\Fn{showmanyc()} & 查询可用字符数 & 可选 \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+\section{streambuf 缓冲区管理}
+
+\Tp{streambuf} 维护两个独立的缓冲区区域：
+
+\textbf{输出区（put area）}：由 \Fn{setp()} 设置，包含三个指针——\Tp{pbase()}（起始）、\Tp{pptr()}（当前写入位置）、\Tp{epptr()}（末尾）。当 \Tp{pptr() == epptr()} 时，\Fn{overflow()} 被调用。
+
+\textbf{输入区（get area）}：由 \Fn{setg()} 设置，包含三个指针——\Tp{eback()}（起始）、\Tp{gptr()}（当前读取位置）、\Tp{egptr()}（末尾）。当 \Tp{gptr() == egptr()} 时，\Fn{underflow()} 被调用。
+
+\begin{note}[title=有缓冲 vs 无缓冲]
+\textbf{有缓冲模式}：在构造函数中分配缓冲区并调用 \Fn{setp()}。写入操作先进入缓冲区，满时触发 \Fn{overflow()} 批量刷出。吞吐量更高。
+
+\textbf{无缓冲模式}：不调用 \Fn{setp()}。每次写入都立即触发 \Fn{overflow()}。实现更简单，但性能较低。适合对延迟敏感的场景（如日志立即刷盘）。
+\end{note}
+
+\section{示例 1：NullStream（丢弃所有输出）}
+
+最简单的自定义流——类似 \texttt{/dev/null}。所有写入操作被静默丢弃。可用于性能测试中消除 I/O 开销。
+
+\cpplabel
+\begin{lstlisting}
+#include <ostream>
+#include <streambuf>
+
+// ---- streambuf：丢弃所有输出 ----
+class NullStreambuf : public std::streambuf {
+protected:
+    // 无缓冲模式：每个字符都调用 overflow
+    int_type overflow(int_type ch) override {
+        return ch;  // 返回非 EOF = 成功（但不做任何事）
+    }
+
+    // 批量写入也直接丢弃
+    std::streamsize xsputn(const char*,
+                           std::streamsize n) override {
+        return n;  // 报告全部"写入成功"
+    }
+};
+
+// ---- ostream 包装 ----
+class NullStream : public std::ostream {
+public:
+    NullStream() : std::ostream(&buf_) {}
+private:
+    NullStreambuf buf_;
+};
+\end{lstlisting}
+
+使用方式与标准流完全一致：
+
+\begin{lstlisting}
+NullStream null;
+null << "this is discarded " << 42 << " " << 3.14;
+// 无任何输出，但编译通过且无运行时开销
+\end{lstlisting}
+
+\section{示例 2：TeeStream（分流到多个目标）}
+
+TeeStream 将输出同时发送到两个 \Tp{ostream}，类似 Unix 的 \texttt{tee} 命令。适用于同时写入文件和控制台、或同时发送到日志和网络。
+
+\cpplabel
+\begin{lstlisting}
+#include <ostream>
+#include <streambuf>
+#include <vector>
+
+class TeeStreambuf : public std::streambuf {
+public:
+    TeeStreambuf(std::ostream& a, std::ostream& b)
+        : a_(a), b_(b) {}
+
+protected:
+    int_type overflow(int_type ch) override {
+        if (ch != traits_type::eof()) {
+            a_.put(static_cast<char>(ch));
+            b_.put(static_cast<char>(ch));
+        }
+        return ch;
+    }
+
+    std::streamsize xsputn(const char* s,
+                           std::streamsize n) override {
+        a_.write(s, n);
+        b_.write(s, n);
+        return n;
+    }
+
+    int sync() override {
+        a_.flush();
+        b_.flush();
+        return 0;
+    }
+
+private:
+    std::ostream& a_;
+    std::ostream& b_;
+};
+
+class TeeStream : public std::ostream {
+public:
+    TeeStream(std::ostream& a, std::ostream& b)
+        : std::ostream(&buf_), buf_(a, b) {}
+private:
+    TeeStreambuf buf_;
+};
+\end{lstlisting}
+
+使用示例——同时输出到 \Tp{cout} 和文件：
+
+\begin{lstlisting}
+std::ofstream log_file("app.log");
+TeeStream tee(std::cout, log_file);
+
+tee << "Server started on port " << 8080 << std::endl;
+// 同时出现在终端和 app.log 中
+\end{lstlisting}
+
+\begin{bestpractice}[title=扩展为 N 路 Tee]
+如果需要分流到超过两个目标，可以用 \Tp{vector<ostream*>} 替代两个引用：
+
+\begin{lstlisting}
+class MultiTeeStreambuf : public std::streambuf {
+    std::vector<std::ostream*> targets_;
+public:
+    template <typename... Streams>
+    MultiTeeStreambuf(Streams&... streams)
+        : targets_{&streams...} {}
+protected:
+    int_type overflow(int_type ch) override {
+        if (ch != traits_type::eof())
+            for (auto* os : targets_) os->put(char(ch));
+        return ch;
+    }
+    std::streamsize xsputn(const char* s,
+                           std::streamsize n) override {
+        for (auto* os : targets_) os->write(s, n);
+        return n;
+    }
+    int sync() override {
+        for (auto* os : targets_) os->flush();
+        return 0;
+    }
+};
+\end{lstlisting}
+\end{bestpractice}
+
+\section{示例 3：NetworkStream（socket 包装为流）}
+
+将 TCP socket 包装为标准输出流，使 \Tp{operator<<} 直接将数据发送到网络。这允许复用所有格式化功能而无需手动序列化。
+
+\cpplabel
+\begin{lstlisting}
+#include <ostream>
+#include <streambuf>
+#include <vector>
+#include <cstring>
+
+#ifdef _WIN32
+  #include <winsock2.h>
+  using raw_socket_t = SOCKET;
+  constexpr raw_socket_t BAD_SOCK = INVALID_SOCKET;
+#else
+  #include <sys/socket.h>
+  using raw_socket_t = int;
+  constexpr raw_socket_t BAD_SOCK = -1;
+#endif
+
+class NetworkStreambuf : public std::streambuf {
+public:
+    explicit NetworkStreambuf(raw_socket_t sock,
+                              std::size_t buf_size = 4096)
+        : sock_(sock), buffer_(buf_size)
+    {
+        // 设置输出缓冲区（有缓冲模式）
+        setp(buffer_.data(),
+             buffer_.data() + buffer_.size());
+    }
+
+    ~NetworkStreambuf() override {
+        sync();  // 析构时刷出剩余数据
+    }
+
+protected:
+    // 缓冲区满时调用：刷出已有数据 + 写入当前字符
+    int_type overflow(int_type ch) override {
+        if (sync() != 0)
+            return traits_type::eof();
+        if (ch != traits_type::eof()) {
+            *pptr() = static_cast<char>(ch);
+            pbump(1);
+        }
+        return ch;
+    }
+
+    // 批量写入：先刷出缓冲区，再直接发送大数据块
+    std::streamsize xsputn(const char* s,
+                           std::streamsize n) override {
+        // 先刷出缓冲区中已有数据
+        if (sync() != 0) return 0;
+
+        std::size_t total = 0;
+        while (total < static_cast<std::size_t>(n)) {
+            std::size_t remaining =
+                static_cast<std::size_t>(n) - total;
+
+            if (remaining <= buffer_.size()) {
+                // 剩余数据放入缓冲区
+                std::memcpy(pptr(), s + total, remaining);
+                pbump(static_cast<int>(remaining));
+                total += remaining;
+            } else {
+                // 大块直接发送
+                auto sent = raw_send(s + total, remaining);
+                if (sent <= 0) break;
+                total += static_cast<std::size_t>(sent);
+            }
+        }
+        return static_cast<std::streamsize>(total);
+    }
+
+    // flush / endl 触发
+    int sync() override {
+        auto pending = pptr() - pbase();
+        if (pending > 0) {
+            auto sent = raw_send(pbase(),
+                                 static_cast<std::size_t>(pending));
+            if (sent <= 0) return -1;
+        }
+        // 重置缓冲区指针
+        setp(buffer_.data(),
+             buffer_.data() + buffer_.size());
+        return 0;
+    }
+
+private:
+    raw_socket_t sock_;
+    std::vector<char> buffer_;
+
+    // 平台无关的 send 封装
+    std::ptrdiff_t raw_send(const char* data, std::size_t len) {
+#ifdef _WIN32
+        return ::send(sock_, data, static_cast<int>(len), 0);
+#else
+        return ::send(sock_, data, len, MSG_NOSIGNAL);
+#endif
+    }
+};
+
+class NetworkStream : public std::ostream {
+public:
+    explicit NetworkStream(raw_socket_t sock,
+                           std::size_t buf_size = 4096)
+        : std::ostream(nullptr)
+        , buf_(sock, buf_size)
+    {
+        init(&buf_);  // 将 streambuf 绑定到 ostream
+    }
+private:
+    NetworkStreambuf buf_;
+};
+\end{lstlisting}
+
+使用示例——HTTP 响应直接通过流发送：
+
+\begin{lstlisting}
+// 假设 connfd 是已连接的 TCP socket
+NetworkStream net(connfd);
+
+net << "HTTP/1.1 200 OK\r\n"
+    << "Content-Type: text/html\r\n"
+    << "Content-Length: 13\r\n"
+    << "\r\n"
+    << "Hello, World!"
+    << std::flush;
+// 所有格式化数据通过 socket 发送到客户端
+\end{lstlisting}
+
+\begin{warning}[title=流中的错误传播]
+上面的实现中，\Fn{raw\_send} 失败时 \Fn{overflow} 返回 \Tp{traits\_type::eof()}，这会设置流的 \Tp{badbit}。调用方可以通过检查流状态检测网络错误：
+
+\begin{lstlisting}
+net << data;
+if (!net) {
+    std::cerr << "network send failed\n";
+}
+\end{lstlisting}
+\end{warning}
+
+\section{示例 4：HexDumpStream（十六进制显示）}
+
+调试和协议分析中常用的工具——将写入的二进制数据以经典的 hex dump 格式输出到另一个流。
+
+\cpplabel
+\begin{lstlisting}
+#include <ostream>
+#include <streambuf>
+#include <iomanip>
+#include <cctype>
+
+class HexDumpStreambuf : public std::streambuf {
+public:
+    explicit HexDumpStreambuf(std::ostream& sink,
+                              int bytes_per_line = 16)
+        : sink_(sink), bpl_(bytes_per_line) {}
+
+    ~HexDumpStreambuf() override {
+        flush_line();  // 输出最后一行（可能不满 16 字节）
+    }
+
+protected:
+    int_type overflow(int_type ch) override {
+        if (ch != traits_type::eof()) {
+            line_bytes_.push_back(
+                static_cast<unsigned char>(ch));
+
+            if (static_cast<int>(line_bytes_.size())
+                    == bpl_) {
+                flush_line();
+            }
+        }
+        return ch;
+    }
+
+    int sync() override {
+        flush_line();
+        sink_.flush();
+        return 0;
+    }
+
+private:
+    std::ostream& sink_;
+    int bpl_;
+    std::size_t total_offset_ = 0;
+    std::vector<unsigned char> line_bytes_;
+
+    void flush_line() {
+        if (line_bytes_.empty()) return;
+
+        // 偏移量 (8位十六进制)
+        sink_ << std::hex << std::setfill('0')
+              << std::setw(8) << total_offset_ << "  ";
+
+        // 十六进制部分
+        for (int i = 0; i < bpl_; ++i) {
+            if (i < static_cast<int>(line_bytes_.size())) {
+                sink_ << std::setw(2)
+                      << static_cast<int>(line_bytes_[i]);
+            } else {
+                sink_ << "  ";
+            }
+            if (i == bpl_ / 2 - 1) sink_ << ' ';
+            else sink_ << ' ';
+        }
+
+        // ASCII 可打印部分
+        sink_ << " |";
+        for (auto b : line_bytes_) {
+            sink_ << (std::isprint(b)
+                      ? static_cast<char>(b) : '.');
+        }
+        sink_ << "|\n";
+
+        total_offset_ += line_bytes_.size();
+        line_bytes_.clear();
+    }
+};
+
+class HexDumpStream : public std::ostream {
+public:
+    explicit HexDumpStream(std::ostream& sink,
+                           int bytes_per_line = 16)
+        : std::ostream(&buf_), buf_(sink, bytes_per_line) {}
+private:
+    HexDumpStreambuf buf_;
+};
+\end{lstlisting}
+
+输出效果示例：
+
+\begin{lstlisting}
+// 将任意二进制数据以 hex dump 格式输出到 cout
+HexDumpStream hex(std::cout);
+
+const char data[] = "Hello, HexDump Stream!";
+hex.write(data, sizeof(data) - 1);
+hex.flush();
+\end{lstlisting}
+
+\begin{lstlisting}
+(*@\textcolor{gray}{// 输出:}@*)
+00000000  48 65 6c 6c 6f 2c 20 48  65 78 44 75 6d 70 20 53 |Hello, HexDump S|
+00000010  74 72 65 61 6d 21                                 |tream!|
+\end{lstlisting}
+
+\section{自定义输入流（istream）}
+
+与输出流对称，自定义输入流需要继承 \Tp{streambuf} 并重写输入方向的虚函数。以下是一个从内存缓冲区读取的示例：
+
+\cpplabel
+\begin{lstlisting}
+#include <istream>
+#include <streambuf>
+#include <cstring>
+
+class MemoryReadBuf : public std::streambuf {
+public:
+    // 从外部缓冲区读取（不拥有内存）
+    MemoryReadBuf(const char* data, std::size_t size) {
+        // setg: 设置 get area 的三个指针
+        auto p = const_cast<char*>(data);
+        setg(p, p, p + size);
+    }
+
+protected:
+    // setg 设置的 get area 耗尽时调用（本例中不需要，
+    // 因为数据已在内存中，但提供以防 setg 被重新调用）
+    int_type underflow() override {
+        if (gptr() < egptr())
+            return traits_type::to_int_type(*gptr());
+        return traits_type::eof();
+    }
+};
+
+class MemoryIStream : public std::istream {
+public:
+    MemoryIStream(const char* data, std::size_t size)
+        : std::istream(&buf_), buf_(data, size) {}
+private:
+    MemoryReadBuf buf_;
+};
+\end{lstlisting}
+
+使用示例：
+
+\begin{lstlisting}
+const char raw[] = "42 3.14 hello";
+MemoryIStream mis(raw, sizeof(raw) - 1);
+
+int n; double d; std::string s;
+mis >> n >> d >> s;
+// n = 42, d = 3.14, s = "hello"
+\end{lstlisting}
+
+\section{完整双向流（iostream）}
+
+如果需要同时支持输入和输出（如双向 socket 或管道），可以创建一个同时实现 \Fn{overflow} 和 \Fn{underflow} 的 \Tp{streambuf}，然后继承 \Tp{std::iostream}：
+
+\cpplabel
+\begin{lstlisting}
+#include <iostream>
+#include <streambuf>
+#include <vector>
+
+class DuplexStreambuf : public std::streambuf {
+public:
+    // 抽象接口：子类实现实际的读/写
+    // （例如委托给 socket 的 send/recv）
+
+protected:
+    // 输出
+    int_type overflow(int_type ch) override {
+        // ... 调用实际写入逻辑
+        return ch;
+    }
+
+    // 输入
+    int_type underflow() override {
+        // ... 调用实际读取逻辑，填充 get area
+        // setg(buf, buf, buf + bytes_read);
+        if (gptr() < egptr())
+            return traits_type::to_int_type(*gptr());
+        return traits_type::eof();
+    }
+
+    int sync() override {
+        // ... 刷出输出缓冲
+        return 0;
+    }
+};
+
+class DuplexStream : public std::iostream {
+public:
+    DuplexStream() : std::iostream(&buf_) {}
+private:
+    DuplexStreambuf buf_;
+};
+\end{lstlisting}
+
+\section{设计模式总结}
+
+\begin{compare}[title=自定义流设计模式]
+\begin{tabularx}{\textwidth}{lXXX}
+\toprule
+\textbf{模式} & \textbf{继承} & \textbf{重写} & \textbf{适用场景} \\
+\midrule
+NullStream & \Tp{streambuf} & \Fn{overflow}, \Fn{xsputn} & 基准测试、条件禁用输出 \\
+TeeStream & \Tp{streambuf} & \Fn{overflow}, \Fn{xsputn}, \Fn{sync} & 日志分流、调试监控 \\
+NetworkStream & \Tp{streambuf} & \Fn{overflow}, \Fn{xsputn}, \Fn{sync} & socket 包装、协议实现 \\
+HexDump & \Tp{streambuf} & \Fn{overflow}, \Fn{sync} & 调试、协议分析 \\
+MemoryRead & \Tp{streambuf} & \Fn{underflow}, \Fn{setg} & 内存反序列化、测试 \\
+DuplexStream & \Tp{streambuf} & \Fn{overflow}, \Fn{underflow}, \Fn{sync} & 双向 socket、管道 \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+\begin{bestpractice}[title=自定义流最佳实践]
+\textbf{缓冲区大小}：输出流应使用有缓冲模式（\Fn{setp}），典型大小 4\,KB--64\,KB。无缓冲模式仅用于 \Tp{NullStream} 或对延迟极度敏感的场景。
+
+\textbf{线程安全}：\Tp{streambuf} 本身\textbf{不是}线程安全的。如果多个线程共享同一个流，需要外部加锁或在 \Tp{streambuf} 内部加锁。
+
+\textbf{异常安全}：\Fn{overflow} 和 \Fn{sync} 中应捕获异常并通过 \Fn{setstate(ios::badbit)} 通知流状态，而不是让异常穿透——除非用户显式启用了异常（\Fn{exceptions(ios::badbit)}）。
+
+\textbf{析构函数}：\Tp{streambuf} 的析构函数\textbf{不会}自动调用 \Fn{sync()}。在子类的析构函数中显式调用 \Fn{sync()} 以确保缓冲区数据被刷出。
+
+\textbf{移动语义}：\Tp{streambuf} 不可移动或拷贝（包含原始指针）。如果需要移动流对象，使用 \Tp{unique\_ptr<streambuf>} 管理生命周期。
+\end{bestpractice}
+
+% ==================== 后记 ====================
+\chapter*{后记}
+\addcontentsline{toc}{chapter}{后记}
+
+C/C++ 的 I/O 体系横跨多个抽象层级：从 C 标准库的 \Tp{FILE*}，到 POSIX 文件描述符和 socket，再到 C++ 的 iostream、\Tp{std::filesystem}、进程间通信以及 Asio 这样的异步框架。每一层都在前一层之上提供更安全、更高级的抽象。
+
+而 \Tp{streambuf} 的可扩展性则展示了 C++ I/O 体系的另一面——它不仅是"被使用"的标准库，更是"被继承"的框架。通过自定义 \Tp{streambuf}，任何数据源或数据目标都可以无缝接入 \Tp{operator<<} 的格式化生态。
+
+在网络 I/O 领域，平台差异是最大的复杂性来源。pImpl 模式提供了一种务实的解决方案：以极小的运行时开销（一次堆分配 + 一次指针间接），换来编译隔离、ABI 稳定和跨平台可维护性。在 \Tp{std::net} 正式纳入标准之前，这仍然是 C++ 网络库设计中最推荐的架构模式。
+
+\end{document}

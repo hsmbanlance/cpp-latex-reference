@@ -1,0 +1,2809 @@
+% ============================================================
+% Part I: 基础与哲学 (Foundations & Philosophy)
+% ============================================================
+
+\part{基础与哲学}
+
+% ------------------------------------------------------------
+% Chapter 1: 引言
+% ------------------------------------------------------------
+\chapter{引言}
+
+\section{C++ 核心指南的目标}
+
+C++ 核心指南（C++ Core Guidelines）是由 Bjarne Stroustrup 和 Herb Sutter 于 2015 年发起的一项社区工程，旨在为现代 C++ 编程提供一套经过实践检验的编程规范。这套指南并非要取代 C++ 语言标准，而是在语言标准之上提炼出一组\textbf{高层原则}与\textbf{具体规则}，帮助程序员写出更加安全、高效、可维护的代码。
+
+核心指南的设计目标可以归纳为以下几点：
+
+\begin{enumerate}
+  \item \textbf{帮助程序员拥抱现代 C++：}许多程序员对 C++ 的印象停留在 C with Classes 的阶段。核心指南通过具体示例展示 C++11、C++14、C++17 乃至 C++20 的新特性如何在实际项目中发挥作用。
+  \item \textbf{提升代码的安全性：}所谓"安全"并非仅指内存安全，而是涵盖类型安全（type safety）、边界安全（bounds safety）和生命周期安全（lifetime safety）三个维度。
+  \item \textbf{提供可执行的规范：}指南中的规则力求足够精确，使得静态分析工具能够自动检查大部分规则的遵守情况。
+  \item \textbf{保持务实：}指南承认遗留代码的存在，提供了渐进式迁移的建议，而非要求一夜之间推倒重来。
+\end{enumerate}
+
+\section{目标读者}
+
+核心指南面向所有使用 C++ 进行开发的程序员，无论你是：
+\begin{itemize}
+  \item 刚刚学习 C++ 的新手——指南可以帮助你从一开始就养成良好的编程习惯；
+  \item 有多年经验的 C++ 老手——指南可以帮助你了解现代 C++ 的最佳实践；
+  \item 系统架构师——指南中的接口设计原则和抽象策略对架构决策至关重要；
+  \item 技术主管——指南可以作为团队编码规范的基础。
+\end{itemize}
+
+\section{安全剖面（Safety Profiles）}
+
+核心指南定义了三个关键的安全剖面，它们分别关注程序安全性的不同方面：
+
+\subsection{类型安全（Type Safety）}
+
+类型安全意味着每个对象都以其被声明的类型来使用。类型安全的代码不会出现"将一个 \texttt{int} 当作指针来解引用"这样的错误。通过强类型接口、\texttt{enum class}、智能指针等手段，可以在编译期消除大量类型混淆的缺陷。
+
+\begin{lstlisting}[language=C++]
+// 类型不安全的示例
+void process(int* p) {
+    *p = 42;  // p 是否有效？p 是否指向一个 int？
+}
+
+void caller() {
+    int x = 0;
+    process(&x);  // OK
+    process(nullptr);  // 未定义行为！
+    int arr[10];
+    process(arr);  // 可以编译，但语义可能不对
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 类型安全的示例
+void process(std::span<int> data) {
+    if (!data.empty()) {
+        data[0] = 42;  // 安全：有边界检查
+    }
+}
+
+void caller() {
+    std::vector<int> v = {1, 2, 3};
+    process(v);  // OK，类型明确
+}
+\end{lstlisting}
+
+\subsection{边界安全（Bounds Safety）}
+
+边界安全要求所有对数组和容器的访问都在有效范围内进行。C 风格的数组退化是指针后，编译器无法追踪其大小，这导致越界访问成为 C/C++ 中最常见的安全漏洞之一。核心指南推荐使用 \texttt{std::array}、\texttt{std::vector}、\texttt{std::span} 等带有边界信息的类型。
+
+\begin{lstlisting}[language=C++]
+// 边界不安全的示例
+void fill(int* arr, int size) {
+    for (int i = 0; i <= size; ++i) {  // 错误：off-by-one
+        arr[i] = 0;
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 边界安全的示例
+void fill(std::span<int> arr) {
+    for (auto& elem : arr) {  // 安全：范围 for 自动在边界内
+        elem = 0;
+    }
+}
+\end{lstlisting}
+
+\subsection{生命周期安全（Lifetime Safety）}
+
+生命周期安全关注的是对象在其被访问时确实存在。悬垂指针（dangling pointer）和使用已释放的内存是 C++ 中最难调试的问题之一。核心指南通过所有权语义（智能指针）、\texttt{not\_null}、\texttt{owner} 等机制来帮助程序员管理对象的生命周期。
+
+\begin{lstlisting}[language=C++]
+// 生命周期不安全的示例
+int* dangerous() {
+    int local = 42;
+    return &local;  // 返回局部变量的地址——悬垂指针！
+}
+
+void also_dangerous() {
+    int* p = new int(42);
+    delete p;
+    std::cout << *p << std::endl;  // 使用已释放的内存！
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 生命周期安全的示例
+std::unique_ptr<int> safe_factory() {
+    return std::make_unique<int>(42);  // 所有权明确转移
+}
+
+void safe_usage() {
+    auto ptr = safe_factory();
+    std::cout << *ptr << std::endl;  // 安全：ptr 拥有有效的对象
+}  // 自动释放
+\end{lstlisting}
+
+\section{如何使用本指南}
+
+核心指南的规则按类别组织，每个类别用一个简短的前缀标识：
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\hline
+\textbf{前缀} & \textbf{含义} \\
+\hline
+P & 哲学（Philosophy） \\
+I & 接口（Interface） \\
+F & 函数（Function） \\
+C & 类与类层次（Class & Class Hierarchy） \\
+Enum & 枚举（Enumeration） \\
+Con & 常量与不可变性（Constancy） \\
+T & 模板与泛型编程（Templates） \\
+R & 资源管理（Resource Management） \\
+ES & 表达式与语句（Expressions & Statements） \\
+E & 错误处理（Error Handling） \\
+Con & 并发（Concurrency） \\
+SL & 标准库（Standard Library） \\
+\hline
+\end{tabular}
+\end{table}
+
+每条规则的编号格式为"类别.序号"，例如 \textbf{P.1} 表示哲学类的第一条规则。规则之间经常相互引用，形成一张有机的规则网络。
+
+\section{关键概念与记号}
+
+在阅读核心指南时，以下概念和记号反复出现，需要首先理解：
+
+\subsection{不变量（Invariant）}
+
+不变量是指在对象的生命周期中始终为真的条件。例如，一个表示日期的类，其月份字段应始终在 1 到 12 之间。不变量是类的契约的核心。
+
+\subsection{所有权（Ownership）}
+
+所有权决定了谁负责释放资源。核心指南强调所有权应该是明确的：要么通过值语义（对象自己管理自己的生命周期），要么通过智能指针（\texttt{unique\_ptr} 表示独占所有权，\texttt{shared\_ptr} 表示共享所有权）。
+
+\subsection{前置条件与后置条件}
+
+前置条件（precondition）是调用函数时必须满足的条件；后置条件（postcondition）是函数执行完毕后保证满足的条件。核心指南使用 \texttt{Expects()} 宏表示前置条件，\texttt{Ensures()} 宏表示后置条件。
+
+\subsection{零规则、五规则}
+
+零规则（Rule of Zero）建议类不应该自定义析构函数、拷贝/移动构造函数和拷贝/移动赋值运算符，而应该让编译器自动生成。如果类需要自定义其中任何一个，则通常需要自定义全部五个（五规则，Rule of Five）。
+
+\section*{练习题}
+
+\begin{enumerate}
+  \item 解释类型安全、边界安全和生命周期安全之间的区别，并各举一个违反对应安全规则的代码示例。
+  \item 核心指南的目标读者是谁？你认为它对于维护大型遗留 C++ 代码库有什么实际价值？
+  \item 阅读以下代码，指出其中违反了哪些安全剖面，并给出修复方案：
+\begin{lstlisting}[language=C++]
+char* get_name() {
+    char name[100];
+    strcpy(name, "Hello World");
+    return name;
+}
+\end{lstlisting}
+  \item 为什么核心指南推荐使用 \texttt{std::span} 而非 \texttt{(pointer, size)} 对来传递数组？
+  \item 用自己的话解释"不变量"的概念，并设计一个具有有意义不变量的 \texttt{Date} 类。
+\end{enumerate}
+
+
+% ------------------------------------------------------------
+% Chapter 2: 编程哲学
+% ------------------------------------------------------------
+\chapter{编程哲学}
+
+编程哲学是核心指南中最基础的部分。它确立了所有后续规则的指导思想。理解这些哲学原则，有助于在面对指南未明确覆盖的场景时做出正确的判断。
+
+% === P.1 ===
+\section{规则 P.1：直接在代码中表达思想}
+
+\textbf{规则 P.1:} \textit{直接在代码中表达思想。}
+
+\subsection{为什么重要}
+
+代码是设计思想的最精确、最可靠的记录。注释会过时，文档会丢失，但代码始终与程序同步。如果一段逻辑无法直接用语言特性表达，说明可能需要寻找更好的抽象方式，或者需要自定义一个类型来封装这个概念。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 用注释来表达"这个 int 表示米为单位的距离"
+int d;  // 距离，单位：米
+// ... 200 行代码之后 ...
+d = 5;  // 这里的 5 是什么意思？需要回去找注释
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 用类型来表达
+class Distance {
+    double value_in_meters_;
+public:
+    constexpr explicit Distance(double m) : value_in_meters_(m) {}
+    double in_meters() const { return value_in_meters_; }
+};
+
+Distance d{5.0};  // 清晰明确
+\end{lstlisting}
+
+\subsection{要点}
+直接在代码中表达思想意味着使用类型系统、标准库算法和语言特性来传达设计意图，而不是依赖注释和约定。当你发现自己在写大段注释来解释"为什么"时，应该考虑是否可以用更好的代码结构来替代。
+
+% === P.2 ===
+\section{规则 P.2：使用 ISO 标准 C++ 编写}
+
+\textbf{规则 P.2:} \textit{使用 ISO 标准 C++ 编写。}
+
+\subsection{为什么重要}
+
+依赖特定编译器扩展会使代码不可移植，阻碍不同平台和工具链之间的协作。标准 C++ 经过了精心设计，绝大多数需求都可以通过标准特性来满足。当确实需要平台特定功能时，应该将其封装在明确的接口之后。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// GCC 扩展：可变长数组（VLA）
+void process(int n) {
+    int arr[n];  // 非标准！某些编译器不支持
+    // ...
+}
+
+// MSVC 扩展：__declspec
+__declspec(dllexport) void my_function() { }
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 使用标准容器替代 VLA
+void process(int n) {
+    std::vector<int> arr(n);
+    // ...
+}
+
+// 使用标准属性或条件编译
+#ifdef _MSC_VER
+  #define EXPORT __declspec(dllexport)
+#else
+  #define EXPORT __attribute__((visibility("default")))
+#endif
+
+EXPORT void my_function() { }
+\end{lstlisting}
+
+\subsection{要点}
+坚持使用标准 C++ 可以确保代码的可移植性和长期可维护性。如果必须使用平台特定功能，应通过封装将其影响限制在最小范围内，并使用条件编译来保证在其他平台上的可编译性。
+
+% === P.3 ===
+\section{规则 P.3：表达意图}
+
+\textbf{规则 P.3:} \textit{表达意图。}
+
+\subsection{为什么重要}
+
+代码的读者（包括未来的你自己）需要快速理解代码的\textbf{目的}，而不仅仅是它的\textbf{行为}。表达意图的代码是自解释的，它让读者无需深入实现细节就能理解高层逻辑。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 读者需要仔细分析才能理解意图
+for (int i = 0; i < v.size(); ++i) {
+    if (v[i] == target) {
+        result = i;
+        break;
+    }
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 意图一目了然
+auto it = std::find(v.begin(), v.end(), target);
+if (it != v.end()) {
+    result = std::distance(v.begin(), it);
+}
+\end{lstlisting}
+
+\subsection{要点}
+使用标准库算法（如 \texttt{std::find}、\texttt{std::sort}、\texttt{std::accumulate}）不仅使代码更简洁，更重要的是它直接表达了"我在做什么"而非"我怎么做"。当标准库不能满足需求时，应该通过命名良好的函数和类型来传达意图。
+
+% === P.4 ===
+\section{规则 P.4：理想情况下程序应该是静态类型安全的}
+
+\textbf{规则 P.4:} \textit{理想情况下，程序应该是静态类型安全的。}
+
+\subsection{为什么重要}
+
+静态类型安全意味着在编译时就能捕获类型错误。这比在运行时才发现错误要好得多——编译时错误零成本，而运行时错误可能导致崩溃、数据损坏甚至安全漏洞。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 使用 union 进行类型双关——未定义行为
+union Value {
+    int i;
+    float f;
+};
+
+Value v;
+v.f = 3.14f;
+int x = v.i;  // 未定义行为！读取不活跃的 union 成员
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 使用 std::variant 进行类型安全的联合
+std::variant<int, float> v;
+v = 3.14f;
+// int x = std::get<int>(v);  // 运行时异常（类型不匹配）
+if (auto pval = std::get_if<float>(&v)) {
+    float fval = *pval;  // 类型安全
+}
+\end{lstlisting}
+
+\subsection{要点}
+完全消除所有动态类型检查既不现实也不必要，但应该将不安全的代码限制在尽可能小的范围内，并通过安全的接口将其封装起来。使用 \texttt{std::variant}、\texttt{std::any}、\texttt{enum class} 等现代 C++ 特性来替代不安全的类型转换和联合体。
+
+% === P.5 ===
+\section{规则 P.5：优先编译时检查而非运行时检查}
+
+\textbf{规则 P.5:} \textit{优先在编译时进行检查，而非运行时。}
+
+\subsection{为什么重要}
+
+编译时检查是免费的——它不增加运行时开销，不会导致运行时失败，并且能在开发阶段就发现问题。\texttt{constexpr}、\texttt{static\_assert}、类型系统和模板元编程都是实现编译时检查的有力工具。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 运行时检查——增加了运行时开销
+int factorial(int n) {
+    if (n < 0) {
+        throw std::invalid_argument("n must be non-negative");
+    }
+    if (n == 0) return 1;
+    return n * factorial(n - 1);
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 编译时计算——零运行时开销
+constexpr int factorial(int n) {
+    if (n < 0) {
+        // 在 C++26 中可以用 std::unreachable()
+        // 在 constexpr 上下文中，负数会导致编译错误
+        return -1;  // 哨兵值，或者抛出异常
+    }
+    if (n == 0) return 1;
+    return n * factorial(n - 1);
+}
+
+constexpr int fact5 = factorial(5);  // 编译时计算
+static_assert(factorial(5) == 120);  // 编译时验证
+\end{lstlisting}
+
+\subsection{要点}
+尽可能将计算和检查推到编译时。\texttt{constexpr} 函数既可以在编译时求值，也可以在运行时调用，是最灵活的编译时计算工具。\texttt{static\_assert} 则用于在编译时验证条件。
+
+% === P.6 ===
+\section{规则 P.6：编译时无法检查的应该在运行时可检查}
+
+\textbf{规则 P.6:} \textit{编译时无法检查的内容，应该使其在运行时可检查。}
+
+\subsection{为什么重要}
+
+有些属性（例如函数的前置条件、输入的合法性）无法在编译时完全验证。但这不意味着我们应该放弃检查——相反，应该让这些属性在运行时容易验证，并在可能的情况下使用工具（如静态分析器、sanitizer）来辅助检查。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 完全无法在运行时检查的隐式约定
+void process(const int* data) {
+    // data 必须指向至少 100 个元素的数组
+    // 但没有任何机制来保证这一点
+    for (int i = 0; i < 100; ++i) {
+        // 使用 data[i]...
+    }
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 运行时可检查
+void process(std::span<const int> data) {
+    Expects(data.size() >= 100);  // 前置条件，可检查
+    for (size_t i = 0; i < 100; ++i) {
+        // 使用 data[i]，且 span 提供边界信息
+    }
+}
+\end{lstlisting}
+
+\subsection{要点}
+使用带有大小信息的类型（如 \texttt{std::span}、\texttt{std::string\_view}）替代裸指针，使得运行时检查成为可能。使用 \texttt{Expects()} 和 \texttt{Ensures()} 宏来标注前置条件和后置条件，使其对工具和读者都可见。
+
+% === P.7 ===
+\section{规则 P.7：尽早捕获运行时错误}
+
+\textbf{规则 P.7:} \textit{尽早捕获运行时错误。}
+
+\subsection{为什么重要}
+
+错误被发现的时机越晚，诊断和修复的成本就越高。一个在输入验证阶段就能发现的错误，不应该等到它导致数据库中出现脏数据后才被察觉。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 错误在很晚之后才被发现
+void process(std::vector<int>& v) {
+    // 没有检查 v 是否为空
+    int first = v[0];  // 如果 v 为空，未定义行为
+    // ... 大量处理 ...
+    // 最终在某个深层调用中崩溃
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 在入口处就检查
+void process(std::vector<int>& v) {
+    Expects(!v.empty());  // 尽早检查前置条件
+    int first = v.at(0);  // 使用 at() 进行边界检查
+    // ...
+}
+\end{lstlisting}
+
+\subsection{要点}
+在函数的入口处验证前置条件，在出口处验证后置条件。使用断言、异常和标准库提供的安全接口（如 \texttt{at()} 而非 \texttt{operator[]}）来确保错误在发生点附近被捕获。
+
+% === P.8 ===
+\section{规则 P.8：不要泄漏任何资源}
+
+\textbf{规则 P.8:} \textit{不要泄漏任何资源。}
+
+\subsection{为什么重要}
+
+资源泄漏（内存、文件句柄、网络连接、互斥锁等）会导致程序性能逐渐下降，最终可能导致系统崩溃。在长期运行的服务器程序中，即使是微小的泄漏也会造成严重后果。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+void read_data(const char* filename) {
+    FILE* f = fopen(filename, "r");
+    if (!f) return;
+    char* buffer = new char[1024];
+    fread(buffer, 1, 1024, f);
+    // 如果 fread 抛出异常，f 和 buffer 都泄漏了
+    // 即使正常返回，也忘记释放了
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+void read_data(const std::string& filename) {
+    std::ifstream f(filename);
+    if (!f) return;
+    std::vector<char> buffer(1024);
+    f.read(buffer.data(), 1024);
+    // 所有资源自动释放：ifstream 和 vector 的析构函数
+}
+\end{lstlisting}
+
+\subsection{要点}
+使用 RAII（资源获取即初始化）原则管理所有资源。标准库中的智能指针、容器、锁和文件流都是 RAII 的范例。避免直接使用 \texttt{new}/\texttt{delete}、\texttt{malloc}/\texttt{free} 和手动的 \texttt{open}/\texttt{close}。
+
+% === P.9 ===
+\section{规则 P.9：不要浪费时间和空间}
+
+\textbf{规则 P.9:} \textit{不要浪费时间和空间。}
+
+\subsection{为什么重要}
+
+这条规则体现了 C++ 的核心设计哲学："你不需要为你不使用的东西付出代价"。在保证安全和可维护的前提下，应该选择高效的实现方式。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 不必要的拷贝
+std::string get_greeting() {
+    std::string result = "Hello, World!";
+    return result;  // 某些旧编译器可能无法执行 NRVO
+}
+
+void use() {
+    std::string s = get_greeting();
+    std::string s2 = s;       // 不必要的拷贝
+    std::string s3 = s2;      // 又一次不必要的拷贝
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 避免不必要的拷贝
+std::string_view get_greeting() {
+    return "Hello, World!";  // 零拷贝
+}
+
+void use() {
+    std::string s(get_greeting());  // 只在需要可变字符串时构造
+    std::string_view sv = s;        // 视图，零拷贝
+}
+\end{lstlisting}
+
+\subsection{要点}
+这条规则与 P.8 看似矛盾（安全 vs. 效率），实际上它们互补：RAII 本身几乎不带来运行时开销，智能指针的开销微乎其微。应该先保证正确和安全，然后在此基础上进行有针对性的优化。不要过早优化，但也不要故意低效。
+
+% === P.10 ===
+\section{规则 P.10：优先使用不可变数据}
+
+\textbf{规则 P.10:} \textit{优先使用不可变数据而非可变数据。}
+
+\subsection{为什么重要}
+
+不可变数据（immutable data）天然是线程安全的——既然不能被修改，就不存在数据竞争。不可变数据也更易于推理：你不需要追踪它的修改历史。在函数式编程中，不可变性是核心原则；在 C++ 中，\texttt{const} 和 \texttt{constexpr} 提供了类似的能力。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 可变状态导致难以追踪的 bug
+int counter = 0;
+
+void increment() { counter++; }
+void print() { std::cout << counter << std::endl; }
+
+// 在多线程环境中，counter 的值不可预测
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 不可变数据
+class Counter {
+    int value_;
+public:
+    constexpr explicit Counter(int v) : value_(v) {}
+    constexpr int value() const { return value_; }
+    constexpr Counter incremented() const {
+        return Counter(value_ + 1);  // 返回新对象，不修改原对象
+    }
+};
+
+const Counter c{0};
+Counter c2 = c.incremented();  // c 仍然是 0，c2 是 1
+\end{lstlisting}
+
+\subsection{要点}
+默认将变量声明为 \texttt{const}，只在确实需要修改时才去掉 \texttt{const}。优先使用值语义和纯函数来替代可变状态。在并发编程中，不可变数据可以完全消除对锁的需求。
+
+% === P.11 ===
+\section{规则 P.11：封装杂乱的构造}
+
+\textbf{规则 P.11:} \textit{封装杂乱的构造，而不是让它们散落在代码中。}
+
+\subsection{为什么重要}
+
+低级、容易出错的代码（如裸指针操作、C 风格 API 调用）应该被封装在紧凑的、经过充分测试的抽象之后。这样，代码库的大部分都是安全、清晰的高层代码，而复杂性被限制在少数几个经过审查的模块中。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 杂乱的 C API 调用散落在业务逻辑中
+void display_image(const char* path) {
+    FILE* f = fopen(path, "rb");
+    fseek(f, 0, SEEK_END);
+    long size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    char* data = (char*)malloc(size);
+    fread(data, 1, size, f);
+    fclose(f);
+    // ... 图像处理 ...
+    free(data);
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 封装在 RAII 类中
+class ImageFile {
+    std::vector<char> data_;
+public:
+    explicit ImageFile(const std::string& path) {
+        std::ifstream f(path, std::ios::binary);
+        f.seekg(0, std::ios::end);
+        data_.resize(f.tellg());
+        f.seekg(0, std::ios::beg);
+        f.read(data_.data(), data_.size());
+    }
+    std::span<const char> data() const { return data_; }
+};
+
+void display_image(const std::string& path) {
+    ImageFile img(path);  // 所有 messy 细节被封装
+    process(img.data());
+}
+\end{lstlisting}
+
+\subsection{要点}
+将不安全、低层的代码封装在小的、有明确接口的函数或类中。这样，代码库中 95\% 的代码可以是安全、高层的，只有 5\% 的代码需要处理底层细节。这 5\% 的代码需要更仔细的审查和测试。
+
+% === P.12 ===
+\section{规则 P.12：适当使用辅助工具}
+
+\textbf{规则 P.12:} \textit{适当使用辅助工具。}
+
+\subsection{为什么重要}
+
+现代 C++ 开发有丰富的工具支持：编译器警告、静态分析器（如 clang-tidy、Coverity）、动态分析器（如 Valgrind、AddressSanitizer）、格式化工具（如 clang-format）等。这些工具可以发现人工审查难以察觉的错误。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 不使用任何工具，完全依赖人工审查
+// 以下代码中的问题可能逃过人眼：
+void process(int* p, int n) {
+    for (int i = 0; i <= n; ++i) {  // off-by-one
+        p[i] *= 2;
+    }
+    char buf[10];
+    strcpy(buf, "long string");  // 缓冲区溢出
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 使用工具链来捕获问题
+// 编译时：-Wall -Wextra -Werror -Wpedantic
+// 静态分析：clang-tidy
+// 运行时：-fsanitize=address,undefined
+void process(std::span<int> data) {
+    for (auto& elem : data) {  // 安全：范围 for
+        elem *= 2;
+    }
+    std::string buf = "long string";  // 安全：自动管理内存
+}
+\end{lstlisting}
+
+\subsection{要点}
+将工具集成到开发流程中。启用所有编译器警告并将它们视为错误。在 CI/CD 流水线中运行静态分析和 sanitizer。这些工具的投入产出比极高。
+
+% === P.13 ===
+\section{规则 P.13：适当使用支持库}
+
+\textbf{规则 P.13:} \textit{适当使用支持库。}
+
+\subsection{为什么重要}
+
+C++ 标准库提供了大量经过优化和测试的组件。使用标准库而非自己造轮子，可以减少 bug、提高性能、增强可移植性。同样，经过验证的第三方库（如 Boost、fmt、nlohmann/json）也值得信赖。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 自己实现链表——容易出错且低效
+template<typename T>
+struct Node {
+    T data;
+    Node* next;
+};
+
+// 自己实现字符串分割
+std::vector<std::string> split(const std::string& s, char delim) {
+    std::vector<std::string> result;
+    // 50 行容易出错的代码...
+    return result;
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 使用标准库
+std::list<int> lst;  // 标准库链表
+std::vector<int> vec;  // 通常更好的选择
+
+// 使用标准库算法
+std::vector<std::string> split(const std::string& s, char delim) {
+    std::vector<std::string> result;
+    std::istringstream iss(s);
+    std::string token;
+    while (std::getline(iss, token, delim)) {
+        result.push_back(token);
+    }
+    return result;
+}
+\end{lstlisting}
+
+\subsection{要点}
+优先使用标准库的容器、算法和工具。当标准库不能满足需求时，考虑使用经过社区验证的第三方库。只有在充分理由的情况下才自己实现基础设施，并且要确保实现经过充分测试。
+
+\section*{练习题}
+
+\begin{enumerate}
+  \item 选择规则 P.1 到 P.3 中的一条，在你熟悉的代码库中找到一个违反该规则的实例，并说明如何修复。
+  \item 规则 P.8（不泄漏资源）和规则 P.9（不浪费时间和空间）看似可能冲突。讨论在什么情况下它们可能冲突，以及如何平衡。
+  \item 使用 \texttt{constexpr} 重写一个你熟悉的运行时计算函数，使其能在编译时求值。使用 \texttt{static\_assert} 验证结果。
+  \item 设计一个 RAII 包装类，封装 POSIX 的 \texttt{socket}/\texttt{close} 接口，确保套接字资源不会泄漏。
+  \item 解释为什么"封装杂乱的构造"（P.11）与"直接在代码中表达思想"（P.1）并不矛盾。
+\end{enumerate}
+
+
+% ============================================================
+% Part II: 接口与函数
+% ============================================================
+
+\part{接口与函数}
+
+% ------------------------------------------------------------
+% Chapter 3: 接口设计
+% ------------------------------------------------------------
+\chapter{接口设计}
+
+接口是代码模块之间的契约。好的接口使得使用者无需了解实现细节就能正确地使用模块；坏的接口则导致误用、耦合和维护噩梦。本章涵盖核心指南中关于接口设计的规则。
+
+\section{使接口显式化}
+
+\subsection{规则 I.1：使接口显式化}
+
+\textbf{规则 I.1:} \textit{使接口显式化。}
+
+\subsection{为什么重要}
+
+函数的签名（参数的类型和数量、返回类型、是否 \texttt{const}、是否 \texttt{noexcept}）是调用者与实现之间的第一道契约。如果接口的信息被隐藏在注释或约定中，就容易被忽视和违反。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 接口信息隐藏在注释中
+void draw(int x, int y, int w, int h);
+// x, y 是左上角坐标
+// w, h 是宽度和高度
+// 调用者需要查看文档才能知道参数含义
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 接口信息显式化
+struct Point { int x; int y; };
+struct Size  { int w; int h; };
+
+void draw(Point top_left, Size dimensions);
+// 参数含义一目了然，且类型系统防止参数顺序错误
+\end{lstlisting}
+
+\subsection{要点}
+使用强类型来替代注释。如果两个参数的类型相同但含义不同（如 \texttt{int x, int y}），调用者很容易搞混顺序。使用不同的类型（如 \texttt{Point} 和 \texttt{Size}）可以让编译器帮你捕获这类错误。
+
+\subsection{规则 I.2：避免非 const 全局变量}
+
+\textbf{规则 I.2:} \textit{避免非 const 全局变量。}
+
+全局变量破坏了模块化——任何代码都可能在任何时候修改它们，这使得推理程序行为变得极其困难。全局变量还导致线程安全问题，并且使单元测试变得复杂（因为测试之间可能通过全局变量产生隐式依赖）。
+
+\begin{lstlisting}[language=C++]
+// 错误：全局可变状态
+int g_counter = 0;
+std::string g_config_path;
+
+void increment() { g_counter++; }
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 正确：使用局部变量或通过参数传递
+class Counter {
+    int value_ = 0;
+public:
+    void increment() { ++value_; }
+    int value() const { return value_; }
+};
+
+// 如果确实需要全局配置，使用 const 或受控访问
+const std::string config_path = "/etc/app.conf";
+\end{lstlisting}
+
+\subsection{规则 I.3：避免单例}
+
+\textbf{规则 I.3:} \textit{避免单例。}
+
+单例本质上是伪装成面向对象的全局变量。它带来与全局变量相同的问题：隐式依赖、难以测试、线程安全问题。
+
+\begin{lstlisting}[language=C++]
+// 错误：单例
+class Database {
+public:
+    static Database& instance() {
+        static Database db;
+        return db;
+    }
+    void query(const std::string& sql);
+private:
+    Database() = default;
+};
+
+// 使用
+Database::instance().query("SELECT ...");
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 正确：依赖注入
+class Database {
+public:
+    explicit Database(const std::string& conn_str);
+    void query(const std::string& sql);
+};
+
+class UserService {
+    Database& db_;  // 通过构造函数注入
+public:
+    explicit UserService(Database& db) : db_(db) {}
+    User find_user(int id) { /* 使用 db_ */ }
+};
+\end{lstlisting}
+
+\section{精确和强类型的接口}
+
+\subsection{规则 I.4：使接口精确和强类型}
+
+\textbf{规则 I.4:} \textit{使接口精确和强类型。}
+
+精确和强类型的接口能在编译时捕获错误。当参数类型精确地反映了其含义和约束时，许多常见的编程错误就不可能发生。
+
+\begin{lstlisting}[language=C++]
+// 不精确的接口
+void set_speed(double value);  // 单位是什么？km/h? m/s?
+void connect(int timeout);     // 毫秒？秒？
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 精确的接口
+enum class SpeedUnit { km_per_hour, meters_per_second };
+void set_speed(double value, SpeedUnit unit);
+
+// 或者更好的方式
+class Speed {
+    double meters_per_second_;
+public:
+    static Speed from_kmh(double kmh) {
+        return Speed{kmh / 3.6};
+    }
+    static Speed from_mps(double mps) {
+        return Speed{mps};
+    }
+    double kmh() const { return meters_per_second_ * 3.6; }
+    double mps() const { return meters_per_second_; }
+};
+
+using namespace std::chrono_literals;
+void connect(5s);  // 使用 chrono _DURATION 类型，无歧义
+\end{lstlisting}
+
+\section{前置条件与后置条件}
+
+\subsection{规则 I.5：明确声明前置条件}
+
+\textbf{规则 I.5:} \textit{明确声明前置条件。}
+
+前置条件是调用者有责任满足的条件。使用 \texttt{Expects()} 宏（来自 GSL）来显式声明前置条件，使其对读者和工具都可见。
+
+\begin{lstlisting}[language=C++]
+// 未声明前置条件
+double sqrt(double x);  // x 必须 >= 0，但接口没有说明
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 显式声明前置条件
+double my_sqrt(double x) {
+    Expects(x >= 0);
+    // ...
+}
+
+// 更好的方式：用类型系统消除前置条件
+double sqrt_non_negative(double x) {
+    // x 的类型是 double，但函数名表达了约束
+    // 或者使用 std::optional<double> 来处理负数输入
+}
+\end{lstlisting}
+
+\subsection{规则 I.6：优先用类型表达前置条件}
+
+\textbf{规则 I.6:} \textit{优先使用类型来表达前置条件，使其不可能被违反。}
+
+如果前置条件可以用类型系统表达，那么违反它就会成为编译错误，而非运行时检查。这比 \texttt{Expects()} 更强。
+
+\begin{lstlisting}[language=C++]
+// 使用 Expects 的前置条件——运行时检查
+void set_age(int age) {
+    Expects(age >= 0 && age < 150);
+    // ...
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 使用类型系统——编译时保证
+class Age {
+    int value_;
+    Age(int v) : value_(v) {
+        if (v < 0 || v >= 150)
+            throw std::invalid_argument("invalid age");
+    }
+public:
+    static Age make(int v) { return Age(v); }
+    int value() const { return value_; }
+};
+
+void set_age(Age age);  // 不可能传入无效值
+\end{lstlisting}
+
+\subsection{规则 I.7：明确声明后置条件}
+
+\textbf{规则 I.7:} \textit{明确声明后置条件。}
+
+后置条件是函数保证在返回时成立的条件。对于没有副作用的函数，后置条件由返回值完全描述。对于有副作用的函数，\texttt{Ensures()} 宏可以帮助文档化和验证后置条件。
+
+\begin{lstlisting}[language=C++]
+// 后置条件不明确
+void sort(std::vector<int>& v);
+// 排序后 v 是有序的——但这只是约定
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 显式声明后置条件
+void my_sort(std::vector<int>& v) {
+    auto copy = v;
+    // ... 排序实现 ...
+    Ensures(std::is_sorted(v.begin(), v.end()));
+    Ensures(std::is_permutation(v.begin(), v.end(), copy.begin()));
+}
+\end{lstlisting}
+
+\subsection{规则 I.8：尽量使接口具有强异常安全性}
+
+\textbf{规则 I.8:} \textit{尽量使接口具有强异常安全性保证。}
+
+强异常安全性保证意味着：如果函数抛出异常，程序状态就像该函数从未被调用过一样。这极大地简化了错误处理逻辑。
+
+\begin{lstlisting}[language=C++]
+// 弱异常安全性——出错后对象处于未知状态
+void Account::transfer_to(Account& target, double amount) {
+    balance_ -= amount;      // 第一步：扣款
+    target.balance_ += amount;  // 第二步：入账——如果这里抛异常？
+    // balance_ 已经被扣款但 target 没有入账！
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 强异常安全性
+void Account::transfer_to(Account& target, double amount) {
+    // 先准备所有可能失败的操作
+    auto guard = std::make_unique<Guard>(*this, amount);
+    target.balance_ += amount;
+    balance_ -= amount;
+    guard->dismiss();  // 全部成功，取消回滚
+}
+\end{lstlisting}
+
+\section{模板接口与概念}
+
+\subsection{规则 I.9：当接口是模板时，用概念（Concepts）记录参数}
+
+\textbf{规则 I.9:} \textit{当接口是模板时，使用概念（Concepts）来明确记录模板参数的要求。}
+
+在 C++20 引入概念之前，模板参数的要求只能通过文档和 \texttt{static\_assert} 来表达。概念使得模板参数的要求成为接口的一部分，编译器可以在实例化时检查这些要求，并给出更清晰的错误信息。
+
+\begin{lstlisting}[language=C++]
+// 没有概念——错误信息难以理解
+template<typename T>
+T add(T a, T b) {
+    return a + b;
+}
+// add(std::vector<int>{}, std::vector<int>{});
+// 编译器报错可能涉及数十行模板实例化信息
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 使用概念——错误信息清晰
+template<std::regular T>
+T add(T a, T b) {
+    return a + b;
+}
+
+// 或者自定义概念
+template<typename T>
+concept Addable = requires(T a, T b) {
+    { a + b } -> std::convertible_to<T>;
+};
+
+template<Addable T>
+T add(T a, T b) {
+    return a + b;
+}
+\end{lstlisting}
+
+\section{错误处理与所有权}
+
+\subsection{规则 I.10：使用异常表示失败}
+
+\textbf{规则 I.10:} \textit{不要使用返回码来处理失败。使用异常。}
+
+返回码容易被忽略，而且会污染正常逻辑。异常不能被静默忽略，并且可以将错误处理逻辑与正常逻辑分离。
+
+\begin{lstlisting}[language=C++]
+// 使用返回码——容易被忽略
+int connect(const char* host) {
+    if (/* 连接失败 */) return -1;
+    if (/* 认证失败 */) return -2;
+    return 0;  // 成功
+}
+
+int fd = connect("example.com");
+// 忘记检查返回值——错误被忽略
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 使用异常——无法被忽略
+class ConnectionError : public std::runtime_error {
+public:
+    using std::runtime_error::runtime_error;
+};
+
+Connection connect(const std::string& host) {
+    if (/* 连接失败 */)
+        throw ConnectionError("Cannot connect to " + host);
+    // ...
+}
+
+auto conn = connect("example.com");  // 异常会自动传播
+\end{lstlisting}
+
+\subsection{规则 I.11：永远不要通过裸指针或裸引用转移所有权}
+
+\textbf{规则 I.11:} \textit{永远不要通过裸指针（raw pointer）或裸引用转移所有权。使用 \texttt{unique\_ptr} 或 \texttt{shared\_ptr}。}
+
+如果函数返回一个裸指针，调用者无法知道是否需要释放它，或者它指向的对象何时失效。
+
+\begin{lstlisting}[language=C++]
+// 所有权不明确
+Widget* create_widget() {
+    return new Widget();  // 调用者需要 delete 吗？
+}
+
+Widget* get_widget() {
+    static Widget w;
+    return &w;  // 这个呢？能 delete 吗？
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 所有权明确
+std::unique_ptr<Widget> create_widget() {
+    return std::make_unique<Widget>();  // 明确：调用者拥有所有权
+}
+
+Widget& get_widget() {
+    static Widget w;
+    return w;  // 明确：调用者不拥有所有权
+}
+\end{lstlisting}
+
+\subsection{规则 I.12：使用 not\_null 指针表明不应为 null}
+
+\textbf{规则 I.12:} \textit{如果指针不应为 null，使用 \texttt{not\_null} 或引用。}
+
+\begin{lstlisting}[language=C++]
+// 不确定是否可以为 null
+int get_length(const char* str);
+// get_length(nullptr) 会怎样？
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 明确不可为 null
+int get_length(gsl::not_null<const char*> str);
+// 或者使用引用
+int get_length(const char& first_char);
+// 或者使用 string_view
+int get_length(std::string_view str);
+\end{lstlisting}
+
+\subsection{规则 I.13：不要将数组作为单指针传递}
+
+\textbf{规则 I.13:} \textit{不要将数组作为单个指针传递。}
+
+\begin{lstlisting}[language=C++]
+// 丢失了大小信息
+void print(const int* arr);  // arr 有多少个元素？
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 保留大小信息
+void print(std::span<const int> arr);
+// 或
+void print(const std::vector<int>& arr);
+\end{lstlisting}
+
+\section{复杂初始化与参数设计}
+
+\subsection{规则 I.22：避免复杂初始化}
+
+\textbf{规则 I.22:} \textit{对于使用复杂或默认构造的对象，避免隐式初始化。}
+
+当对象的初始化涉及多个步骤或可能失败时，应该使用显式的工厂函数或构造函数来确保对象在创建时就处于有效状态。
+
+\begin{lstlisting}[language=C++]
+// 复杂且容易出错的初始化
+Socket s;
+s.set_protocol(TCP);
+s.set_timeout(30);
+s.bind("0.0.0.0", 8080);
+s.listen();  // 如果忘记调用 listen 就使用 s？
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 工厂函数确保完整初始化
+class Socket {
+    Socket(/* 参数 */) { /* 完整初始化 */ }
+public:
+    static Socket create_tcp(int port) {
+        Socket s(/* ... */);
+        s.bind_and_listen(port);
+        return s;
+    }
+};
+
+auto s = Socket::create_tcp(8080);  // 保证已完全初始化
+\end{lstlisting}
+
+\subsection{规则 I.23：保持参数数量较少}
+
+\textbf{规则 I.23:} \textit{保持函数的参数数量较少。}
+
+参数过多是接口设计不良的信号。超过三到四个参数通常意味着需要将这些参数组织成结构体，或者函数承担了过多的职责。
+
+\begin{lstlisting}[language=C++]
+// 参数过多
+void create_user(const std::string& first,
+                 const std::string& last,
+                 const std::string& email,
+                 int age,
+                 const std::string& phone,
+                 const std::string& address);
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 使用结构体组织参数
+struct UserInfo {
+    std::string first_name;
+    std::string last_name;
+    std::string email;
+    int age;
+    std::string phone;
+    std::string address;
+};
+
+void create_user(const UserInfo& info);
+\end{lstlisting}
+
+\subsection{规则 I.24：避免相邻的同类型参数}
+
+\textbf{规则 I.24:} \textit{避免相邻的参数具有相同的类型且可以互换。}
+
+相邻的同类型参数极易被搞混，编译器无法帮你检测这种错误。
+
+\begin{lstlisting}[language=C++]
+// 容易搞混参数顺序
+void copy(char* dest, const char* src, size_t n);
+// 调用时：copy(buf, input, len) 还是 copy(input, buf, len)？
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 使用不同类型来防止搞混
+void copy(std::span<char> dest, std::span<const char> src);
+// 编译器确保不会搞混 dest 和 src
+\end{lstlisting}
+
+\subsection{规则 I.25：优先使用抽象类作为接口}
+
+\textbf{规则 I.25:} \textit{优先使用抽象类作为接口。}
+
+抽象类（纯虚基类）定义了清晰的接口契约，强制派生类实现特定方法，并且支持多态。
+
+\begin{lstlisting}[language=C++]
+// 好的接口设计
+class ISensor {
+public:
+    virtual ~ISensor() = default;
+    virtual double read() = 0;
+    virtual std::string name() const = 0;
+};
+
+class TemperatureSensor : public ISensor {
+public:
+    double read() override;
+    std::string name() const override;
+};
+\end{lstlisting}
+
+\subsection{规则 I.26--I.27：ABI 稳定与 Pimpl 惯用法}
+
+\textbf{规则 I.26:} \textit{如果你想跨"ABI 边界"保留一组实现，使用 Pimpl 惯用法。}
+
+\textbf{规则 I.27:} \textit{为了稳定的 ABI，将类声明与实现分离。}
+
+Pimpl（Pointer to Implementation）惯用法将类的实现细节隐藏在指针之后，使得修改实现不影响 ABI。
+
+\begin{lstlisting}[language=C++]
+// 头文件
+class Widget {
+public:
+    Widget();
+    ~Widget();
+    Widget(const Widget& rhs);
+    Widget& operator=(const Widget& rhs);
+    void draw();
+private:
+    struct Impl;
+    std::unique_ptr<Impl> pimpl_;
+};
+
+// 实现文件
+struct Widget::Impl {
+    int internal_data;
+    std::string internal_string;
+    // 修改这些不影响 Widget 的 ABI
+};
+
+Widget::Widget() : pimpl_(std::make_unique<Impl>()) {}
+Widget::~Widget() = default;
+void Widget::draw() { /* 使用 pimpl_ */ }
+\end{lstlisting}
+
+\subsection{规则 I.30：封装变化的部分}
+
+\textbf{规则 I.30:} \textit{封装变化的部分。}
+
+这是面向对象设计中最核心的原则之一。识别系统中可能变化的部分，将它们封装在接口之后，使得修改不影响其他部分。
+
+\begin{lstlisting}[language=C++]
+// 未封装变化——硬编码了数据库类型
+class UserService {
+    SQLiteDatabase db_;  // 直接依赖具体实现
+public:
+    User find(int id) { return db_.query<User>(id); }
+};
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 封装变化——通过接口解耦
+class IDatabase {
+public:
+    virtual ~IDatabase() = default;
+    virtual User find_user(int id) = 0;
+};
+
+class UserService {
+    std::unique_ptr<IDatabase> db_;
+public:
+    explicit UserService(std::unique_ptr<IDatabase> db)
+        : db_(std::move(db)) {}
+    User find(int id) { return db_->find_user(id); }
+};
+\end{lstlisting}
+
+\section*{练习题}
+
+\begin{enumerate}
+  \item 设计一个表示二维平面上"矩形"的类，使接口尽可能精确和强类型。考虑如何防止宽度和高度为负值。
+  \item 将以下函数签名改进为更安全的接口：\texttt{void process(char* buf, int size, char* out, int out\_size)}。
+  \item 使用 Pimpl 惯用法重构一个你熟悉的类，解释这样做的好处和代价。
+  \item 为一个"消息队列"系统设计接口，使用抽象类来定义接口，使用工厂函数来创建实例。
+  \item 解释为什么 \texttt{std::span} 比 \texttt{(pointer, size)} 对更安全，列出至少三个理由。
+\end{enumerate}
+
+
+% ------------------------------------------------------------
+% Chapter 4: 函数设计
+% ------------------------------------------------------------
+\chapter{函数设计}
+
+函数是 C++ 程序的基本构建块。好的函数设计使得代码易于理解、测试和维护。本章按照核心指南的分类，从定义、参数传递、返回值和其他方面来讨论函数设计的最佳实践。
+
+\section{函数定义}
+
+\subsection{规则 F.1：将每个合理的操作封装为函数}
+
+\textbf{规则 F.1:} \textit{"合理"的操作应该打包为函数。}
+
+\subsection{为什么重要}
+
+将操作封装为函数提供了命名（自文档化）、参数化、可重用性和可测试性。但函数也不应过小——如果一个函数只有一行且只在一个地方使用，直接内联可能更清晰。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 200 行的 main 函数，所有逻辑都在里面
+int main() {
+    // 读取配置
+    // 初始化数据库
+    // 启动网络服务
+    // 处理请求循环
+    // 清理资源
+    // ... 全部写在一起 ...
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+int main() {
+    auto config = load_config("app.conf");
+    auto db = initialize_database(config);
+    auto server = start_server(config, db);
+    server.run();
+    // 清理由 RAII 自动处理
+}
+\end{lstlisting}
+
+\subsection{规则 F.2：函数应该执行单一操作}
+
+\textbf{规则 F.2:} \textit{函数应该执行单一且完整的操作。}
+
+如果一个函数名需要用"和"来描述（如"读取文件\textbf{和}解析数据\textbf{和}写入数据库"），它很可能应该被拆分为多个函数。
+
+\begin{lstlisting}[language=C++]
+// 做了太多事情
+void process_order(Order& order) {
+    // 验证订单
+    // 计算价格
+    // 检查库存
+    // 扣减库存
+    // 生成发票
+    // 发送邮件通知
+    // 更新统计信息
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 每个函数做一件事
+void process_order(Order& order) {
+    validate_order(order);
+    auto price = calculate_price(order);
+    if (check_and_reserve_inventory(order)) {
+        auto invoice = generate_invoice(order, price);
+        send_notification(order, invoice);
+        update_statistics(order);
+    }
+}
+\end{lstlisting}
+
+\subsection{规则 F.3：保持函数短小}
+
+\textbf{规则 F.3:} \textit{保持函数短小。}
+
+长函数难以理解、难以测试、难以维护。虽然没有绝对的行数限制，但一个函数如果超过一屏（约 40--60 行），通常意味着它需要拆分。
+
+\subsection{规则 F.4：如果函数可能在编译时求值，使其成为 constexpr}
+
+\textbf{规则 F.4:} \textit{如果函数有可能在编译时求值，就将其声明为 \texttt{constexpr}。}
+
+\begin{lstlisting}[language=C++]
+// 编译时求值
+constexpr int fibonacci(int n) {
+    if (n <= 1) return n;
+    int a = 0, b = 1;
+    for (int i = 2; i <= n; ++i) {
+        int temp = a + b;
+        a = b;
+        b = temp;
+    }
+    return b;
+}
+
+constexpr int fib10 = fibonacci(10);  // 编译时计算
+static_assert(fib10 == 55);
+\end{lstlisting}
+
+\subsection{规则 F.5：小型函数使用 inline}
+
+\textbf{规则 F.5:} \textit{对于非常小型的、性能关键的函数，使用 \texttt{inline}。}
+
+在类定义中定义的成员函数隐式地是 \texttt{inline} 的。对于头文件中的小型辅助函数，\texttt{inline} 可以避免多重定义错误。但现代编译器的内联优化不依赖于 \texttt{inline} 关键字——它只是一个链接提示。
+
+\subsection{规则 F.6：使用 noexcept 标记不抛出异常的函数}
+
+\textbf{规则 F.6:} \textit{使用 \texttt{noexcept} 标记不会抛出异常的函数。}
+
+\texttt{noexcept} 不仅是对读者的文档——它还给编译器优化提供了信息，并且影响移动语义（\texttt{std::vector} 在重新分配时只使用 \texttt{noexcept} 的移动操作）。
+
+\begin{lstlisting}[language=C++]
+class Widget {
+    int value_;
+public:
+    // 明确不会抛出异常
+    int value() const noexcept { return value_; }
+
+    // noexcept 的移动操作使得 vector 可以高效地重新分配
+    Widget(Widget&& other) noexcept
+        : value_(other.value_) { other.value_ = 0; }
+
+    Widget& operator=(Widget&& other) noexcept {
+        value_ = other.value_;
+        other.value_ = 0;
+        return *this;
+    }
+};
+\end{lstlisting}
+
+\subsection{规则 F.7：对于所有权转移，使用 unique\_ptr 而非裸指针}
+
+\textbf{规则 F.7:} \textit{如果函数需要转移所有权，使用 \texttt{unique\_ptr} 而非裸指针或 \texttt{owner}。}
+
+\begin{lstlisting}[language=C++]
+// 不明确
+Widget* make_widget();  // 需要 delete 吗？
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 明确
+std::unique_ptr<Widget> make_widget();  // 明确转移所有权
+\end{lstlisting}
+
+\subsection{规则 F.8：优先使用纯函数}
+
+\textbf{规则 F.8:} \textit{优先使用纯函数。}
+
+纯函数是指给定相同的输入总是返回相同的结果，并且没有副作用的函数。纯函数易于理解、测试、并行化和优化。
+
+\begin{lstlisting}[language=C++]
+// 纯函数
+constexpr int add(int a, int b) noexcept {
+    return a + b;
+}
+
+// 非纯函数——依赖外部状态
+int g_offset = 0;
+int add_with_offset(int a, int b) {
+    return a + b + g_offset;
+}
+\end{lstlisting}
+
+\subsection{规则 F.9：未使用的参数应该去掉}
+
+\textbf{规则 F.9:} \textit{未使用的函数参数应该去掉。}
+
+未使用的参数增加了认知负担，使读者困惑。如果因为接口兼容性必须保留参数，使用 \texttt{[[maybe\_unused]]} 属性或注释掉参数名。
+
+\begin{lstlisting}[language=C++]
+// 未使用的参数
+void callback(int event_type, void* data, int flags) {
+    // 只使用了 event_type
+    handle(event_type);
+}
+
+// 正确：去掉未使用的参数，或标注
+void callback(int event_type,
+              void* /*data*/,
+              int /*flags*/) {
+    handle(event_type);
+}
+\end{lstlisting}
+
+\subsection{规则 F.10--F.11：可复用操作与 Lambda}
+
+\textbf{规则 F.10:} \textit{如果操作可以被重用，将其转化为独立的可复用操作。}
+
+\textbf{规则 F.11:} \textit{使用 Lambda 来封装简单的局部操作。}
+
+\begin{lstlisting}[language=C++]
+// 使用 Lambda 封装局部逻辑
+auto normalize = [](std::vector<double>& v) {
+    double sum = std::accumulate(v.begin(), v.end(), 0.0);
+    for (auto& x : v) x /= sum;
+};
+
+std::vector<double> data = {1.0, 2.0, 3.0};
+normalize(data);
+\end{lstlisting}
+
+\section{参数传递}
+
+\subsection{规则 F.15：按照惯例传递参数}
+
+\textbf{规则 F.15:} \textit{按照惯例传递参数：廉价的用值传递，其他的用 const 引用传递。}
+
+这是核心指南中最实用的规则之一。它定义了参数传递的标准方式：
+
+\begin{itemize}
+  \item 对于廉价的类型（如 \texttt{int}、\texttt{double}、\texttt{char}、小结构体、指针），使用普通的值传递。
+  \item 对于其他类型，使用 \texttt{const T\&} 传递只读参数。
+  \item 对于需要修改的参数，使用 \texttt{T\&} 传递（输入输出参数）。
+  \item 对于需要转移所有权的参数，使用 \texttt{unique\_ptr<T>}。
+  \item 对于需要共享所有权的参数，使用 \texttt{shared\_ptr<T>}。
+\end{itemize}
+
+\begin{lstlisting}[language=C++]
+// 正确的参数传递方式
+void process(int n,                    // 廉价类型：值传递
+             const std::string& name,  // 只读大对象：const 引用
+             std::vector<int>& output, // 输出参数：非 const 引用
+             std::unique_ptr<Widget> widget);  // 所有权转移
+\end{lstlisting}
+
+\subsection{规则 F.16--F.17：输入参数}
+
+\textbf{规则 F.16:} \textit{对于输入参数，廉价的用值传递，其他的用 const 引用传递。}
+
+\textbf{规则 F.17:} \textit{对于"仅输入"的参数，如果调用者不需要看到修改结果，使用按值传递后移动。}
+
+\begin{lstlisting}[language=C++]
+// 对于需要拷贝的输入参数，按值传递然后移动
+void set_name(std::string name) {  // 按值传递
+    name_ = std::move(name);       // 移动赋值
+}
+
+// 调用
+set_name("hello");           // 一次移动
+set_name(std::move(my_str)); // 一次移动（不拷贝）
+\end{lstlisting}
+
+\subsection{规则 F.18--F.21：输入输出参数}
+
+\textbf{规则 F.18:} \textit{对于"将被修改"的参数，使用非 const 引用传递。}
+
+\textbf{规则 F.19:} \textit{对于"前向移动"参数，使用 \texttt{Forward} 类型参数。}
+
+\textbf{规则 F.20:} \textit{对于"输出"值，优先使用返回值而非输出参数。}
+
+\textbf{规则 F.21:} \textit{要返回多个"输出"值，优先返回结构体或使用元组。}
+
+\begin{lstlisting}[language=C++]
+// 不好：通过输出参数返回
+void find_min_max(const std::vector<int>& v, int& min, int& max) {
+    min = *std::min_element(v.begin(), v.end());
+    max = *std::max_element(v.begin(), v.end());
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 好：返回结构体
+struct MinMax { int min; int max; };
+
+MinMax find_min_max(const std::vector<int>& v) {
+    return {
+        *std::min_element(v.begin(), v.end()),
+        *std::max_element(v.begin(), v.end())
+    };
+}
+
+auto [min, max] = find_min_max(data);  // C++17 结构化绑定
+\end{lstlisting}
+
+\subsection{规则 F.22--F.26：各种参数类型}
+
+\textbf{规则 F.22:} \textit{使用 \texttt{T*} 或 \texttt{T\&} 参数来表示单个对象（不表示数组）。}
+
+\textbf{规则 F.23:} \textit{使用 \texttt{not\_null<T>} 来表示不允许 null 的指针。}
+
+\textbf{规则 F.24:} \textit{使用 \texttt{span<T>} 或 \texttt{(T*, size\_t)} 来表示半开区间。}
+
+\textbf{规则 F.25:} \textit{使用 \texttt{zstring} 或 \texttt{not\_null<zstring>} 来表示 C 风格字符串。}
+
+\textbf{规则 F.26:} \textit{对于数据传递，使用 \texttt{unique\_ptr} 而非裸指针。}
+
+\begin{lstlisting}[language=C++]
+// 使用 span 传递数组视图
+void process(std::span<const int> data);
+
+// 使用 zstring 传递 C 风格字符串
+void print(gsl::zstring msg);
+
+// 使用 unique_ptr 传递所有权
+void take_ownership(std::unique_ptr<Widget> w);
+\end{lstlisting}
+
+\section{返回值}
+
+\subsection{规则 F.42：返回位置时不要返回指针}
+
+\textbf{规则 F.42:} \textit{返回位置（索引、迭代器）时，不要返回指针。}
+
+指针可能被误认为指向一个对象，而实际上它表示的是一个位置。使用迭代器或索引更清晰。
+
+\begin{lstlisting}[language=C++]
+// 不好：返回指针表示位置
+int* find(std::vector<int>& v, int target) {
+    for (auto& elem : v) {
+        if (elem == target) return &elem;
+    }
+    return nullptr;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 好：返回迭代器
+auto it = std::find(v.begin(), v.end(), target);
+\end{lstlisting}
+
+\subsection{规则 F.43：不要直接返回指向局部变量的指针（引用）}
+
+\textbf{规则 F.43:} \textit{永远不要（直接或间接）返回指向局部变量的指针。}
+
+这是 C++ 中最常见的错误之一。局部变量在函数返回后被销毁，指向它的指针成为悬垂指针。
+
+\begin{lstlisting}[language=C++]
+// 严重错误
+int& get_value() {
+    int local = 42;
+    return local;  // 返回局部变量的引用——未定义行为！
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 正确：返回值或使用动态分配
+int get_value() {
+    return 42;  // 返回值——安全
+}
+
+// 或使用 static（注意线程安全）
+int& get_singleton_value() {
+    static int value = 42;
+    return value;
+}
+\end{lstlisting}
+
+\subsection{规则 F.44--F.49：返回值的其他规则}
+
+\textbf{规则 F.44:} \textit{当不需要拷贝时，返回 \texttt{T\&}。}
+
+\textbf{规则 F.45:} \textit{不要返回 \texttt{T\&\&}（右值引用）来绑定到临时对象。}
+
+\textbf{规则 F.46:} \textit{\texttt{main()} 的返回类型是 \texttt{int}。}
+
+\textbf{规则 F.47:} \textit{赋值运算符返回 \texttt{T\&}。}
+
+\textbf{规则 F.48:} \textit{不要 \texttt{return std::move(local)}。}
+
+\textbf{规则 F.49:} \textit{不要返回 \texttt{const T}（值类型）。}
+
+\begin{lstlisting}[language=C++]
+// 错误：return std::move(local) 阻止了 NRVO
+Widget make_widget() {
+    Widget w;
+    // ... 初始化 w ...
+    return std::move(w);  // 阻止了编译器优化！
+}
+
+// 正确：直接返回
+Widget make_widget() {
+    Widget w;
+    // ... 初始化 w ...
+    return w;  // 编译器自动应用 NRVO 或移动语义
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 错误：返回 const T 阻止了移动语义
+const std::string get_name();  // const 返回值无意义
+
+// 正确
+std::string get_name();
+\end{lstlisting}
+
+\section{Lambda 与其他规则}
+
+\subsection{规则 F.50：当需要闭包时使用 Lambda}
+
+\textbf{规则 F.50:} \textit{当函数需要捕获局部状态时使用 Lambda。}
+
+Lambda 是 C++11 引入的最有用的特性之一。它允许在调用点定义匿名函数，并捕获周围的变量。
+
+\begin{lstlisting}[language=C++]
+// Lambda 捕获局部变量
+double threshold = 0.5;
+auto above_threshold = [threshold](double value) {
+    return value > threshold;
+};
+
+std::vector<double> data = {0.1, 0.6, 0.3, 0.8};
+auto count = std::count_if(data.begin(), data.end(), above_threshold);
+\end{lstlisting}
+
+\subsection{规则 F.51--F.52：参数绑定与 Lambda 捕获}
+
+\textbf{规则 F.51:} \textit{当需要绑定参数时，优先使用 Lambda 而非 \texttt{std::bind}。}
+
+\textbf{规则 F.52:} \textit{谨慎使用按引用捕获。}
+
+按引用捕获的 Lambda 在被调用时，引用的变量必须仍然存活。如果 Lambda 的生命周期可能超过被捕获的变量（例如在异步操作中），应该按值捕获。
+
+\begin{lstlisting}[language=C++]
+// 危险：按引用捕获局部变量
+std::function<void()> make_callback() {
+    int local = 42;
+    return [&local]() {  // 悬垂引用！
+        std::cout << local;
+    };
+}
+
+// 安全：按值捕获
+std::function<void()> make_callback_safe() {
+    int local = 42;
+    return [local]() {  // 拷贝到闭包中
+        std::cout << local;
+    };
+}
+\end{lstlisting}
+
+\subsection{规则 F.53--F.56：其他函数设计规则}
+
+\textbf{规则 F.53:} \textit{避免捕获非局部变量（包括 \texttt{this}）。}
+
+\textbf{规则 F.54:} \textit{当使用 \texttt{this} 捕获时，显式写 \texttt{capture this}。}
+
+\textbf{规则 F.55:} \textit{不要使用 \texttt{va\_arg} 宏。}
+
+\textbf{规则 F.56:} \textit{避免过深的条件嵌套——使用提前返回和辅助函数。}
+
+\begin{lstlisting}[language=C++]
+// 错误：深层嵌套
+void process(Data& d) {
+    if (d.is_valid()) {
+        if (d.has_data()) {
+            if (d.data_size() > 0) {
+                // 终于开始处理了
+                handle(d);
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 正确：提前返回
+void process(Data& d) {
+    if (!d.is_valid()) return;
+    if (!d.has_data()) return;
+    if (d.data_size() <= 0) return;
+    handle(d);
+}
+\end{lstlisting}
+
+\section*{练习题}
+
+\begin{enumerate}
+  \item 将以下函数重构为符合核心指南的函数设计：
+\begin{lstlisting}[language=C++]
+void do_everything(char* input, int len, char* output,
+                   int* out_len, int* error_code) {
+    // 100 行代码...
+}
+\end{lstlisting}
+  \item 解释为什么 \texttt{return std::move(local\_variable)} 是一个反模式，以及它如何影响 NRVO。
+  \item 设计一个函数，它需要返回三个值（最小值、最大值和平均值）。使用结构体返回值，并展示调用代码。
+  \item 编写一个 \texttt{constexpr} 函数来计算字符串的长度（不使用 \texttt{strlen}），并用 \texttt{static\_assert} 验证。
+  \item 解释 \texttt{noexcept} 对 \texttt{std::vector} 的移动操作的影响。为什么移动构造函数应该标记为 \texttt{noexcept}？
+\end{enumerate}
+
+
+% ============================================================
+% Part III: 类型系统
+% ============================================================
+
+\part{类型系统}
+
+% ------------------------------------------------------------
+% Chapter 5: 类与类层次
+% ------------------------------------------------------------
+\chapter{类与类层次}
+
+类是 C++ 中组织数据和行为的基本单位。核心指南将类相关的规则分为几个类别：具体类型（concrete types）、类层次（class hierarchy）和运算符（operators）。本章按照这些类别来组织讨论。
+
+\section{具体类型}
+
+具体类型是最基本、最常用的类——它们不是基类，不用于多态，而是直接实例化使用。\texttt{std::vector}、\texttt{std::string}、\texttt{std::complex} 都是具体类型的例子。
+
+\subsection{规则 C.1：用类来组织相关数据}
+
+\textbf{规则 C.1:} \textit{将相关的数据组织到一个类中（而非使用裸的结构体或全局变量）。}
+
+\begin{lstlisting}[language=C++]
+// 不好：分散的数据
+std::string name;
+int age;
+std::string email;
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 好：组织到类中
+class Person {
+public:
+    std::string name;
+    int age;
+    std::string email;
+};
+\end{lstlisting}
+
+\subsection{规则 C.2：使用类来保证不变量}
+
+\textbf{规则 C.2:} \textit{如果类有不变量，则不变量不应由调用者来维护。}
+
+不变量是类的核心契约。如果不变量的维护依赖于调用者的"自觉"，那么它迟早会被违反。
+
+\begin{lstlisting}[language=C++]
+// 不变量可以被外部破坏
+struct Date {
+    int year, month, day;  // 不变量：month 1-12, day 1-31
+};
+
+Date d;
+d.month = 13;  // 不变量被破坏！
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 不变量由类自己维护
+class Date {
+    int year_, month_, day_;
+public:
+    Date(int y, int m, int d) {
+        if (!is_valid(y, m, d))
+            throw std::invalid_argument("invalid date");
+        year_ = y; month_ = m; day_ = d;
+    }
+    void set_month(int m) {
+        if (m < 1 || m > 12)
+            throw std::invalid_argument("invalid month");
+        month_ = m;
+    }
+    int month() const { return month_; }
+    // ...
+private:
+    static bool is_valid(int y, int m, int d);
+};
+\end{lstlisting}
+
+\subsection{规则 C.3--C.5：成员访问与默认操作}
+
+\textbf{规则 C.3:} \textit{默认将成员声明为 private。}
+
+将成员声明为 private 可以强制通过成员函数来访问，从而保证不变量。只在确实需要公开访问时才使用 \texttt{public}。对于简单的聚合体（如 \texttt{struct Point \{ int x, y; \}}），使用 public 成员是可以接受的。
+
+\textbf{规则 C.4：使类的对象可以被安全地销毁。}
+
+\textbf{规则 C.5：将辅助函数放在同一个命名空间中。}
+
+\subsection{规则 C.6--C.10：默认操作与构造}
+
+\textbf{规则 C.6:} \textit{遵循零规则——如果不需要自定义析构，就不要自定义。}
+
+零规则是现代 C++ 最重要的设计原则之一。如果类的所有成员都能正确管理自己的资源（使用标准容器、智能指针等），那么类本身不需要自定义任何特殊成员函数。
+
+\begin{lstlisting}[language=C++]
+// 零规则——编译器生成的特殊成员函数就足够了
+class Person {
+    std::string name_;
+    std::vector<Address> addresses_;
+    std::unique_ptr<Profile> profile_;
+    // 编译器自动生成的析构、拷贝、移动操作都是正确的
+};
+\end{lstlisting}
+
+\textbf{规则 C.7：不要定义拷贝或移动操作，除非类确实需要。}
+
+\textbf{规则 C.8：定义析构函数当且仅当类需要清理资源。}
+
+\textbf{规则 C.9：最小化暴露——优先使用 private 而非 protected。}
+
+\texttt{protected} 意味着派生类可以直接访问基类的内部实现，这增加了耦合。优先使用 private 成员加 protected 访问函数。
+
+\textbf{规则 C.10：优先使用 \texttt{constexpr} 构造函数。}
+
+\begin{lstlisting}[language=C++]
+class Point {
+    double x_, y_;
+public:
+    constexpr Point(double x, double y) : x_(x), y_(y) {}
+    constexpr double x() const { return x_; }
+    constexpr double y() const { return y_; }
+};
+
+constexpr Point origin{0.0, 0.0};  // 编译时构造
+static_assert(origin.x() == 0.0);
+\end{lstlisting}
+
+\section{类层次}
+
+类层次是 C++ 实现运行时多态的机制。核心指南对类层次的使用持谨慎态度——过度使用继承是许多 C++ 代码库中的常见问题。
+
+\subsection{规则 C.35：有虚函数的基类必须有虚析构函数}
+
+\textbf{规则 C.35:} \textit{有虚函数的类必须有虚析构函数。}
+
+这是 C++ 中最经典的规则之一。如果通过基类指针删除派生类对象，而基类的析构函数不是虚函数，行为是未定义的。
+
+\begin{lstlisting}[language=C++]
+// 严重错误
+class Base {
+public:
+    virtual void do_something() = 0;
+    // 没有虚析构函数！
+};
+
+class Derived : public Base {
+    std::vector<int> data_;
+public:
+    void do_something() override { /* ... */ }
+};
+
+std::unique_ptr<Base> p = std::make_unique<Derived>();
+// 删除时只调用 Base 的析构函数——data_ 泄漏！
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 正确
+class Base {
+public:
+    virtual ~Base() = default;  // 虚析构函数
+    virtual void do_something() = 0;
+};
+\end{lstlisting}
+
+\subsection{规则 C.36--C.39：基类设计}
+
+\textbf{规则 C.36:} \textit{基类析构函数要么是 public 且 virtual 的，要么是 protected 且非 virtual 的。}
+
+如果析构函数是 protected 的，那么对象只能通过派生类来销毁，此时不需要 virtual。
+
+\textbf{规则 C.37:} \textit{将基类设计为接口或具体类（不要混合）。}
+
+\textbf{规则 C.38:} \textit{接口类不应有数据成员。}
+
+\textbf{规则 C.39:} \textit{接口类不应有非纯虚函数。}
+
+\begin{lstlisting}[language=C++]
+// 好的接口类
+class IDrawable {
+public:
+    virtual ~IDrawable() = default;
+    virtual void draw(Canvas& c) const = 0;
+    virtual BoundingBox bounds() const = 0;
+    // 没有数据成员，没有非纯虚函数
+};
+
+// 好的具体基类（提供默认实现）
+class Shape {
+public:
+    virtual ~Shape() = default;
+    virtual void draw(Canvas& c) const = 0;
+    // 提供通用的默认实现
+    virtual Color color() const { return Color::black; }
+private:
+    Color color_;  // 具体基类可以有数据成员
+};
+\end{lstlisting}
+
+\subsection{规则 C.40--C.45：构造函数与继承}
+
+\textbf{规则 C.40:} \textit{如果类有虚函数，它就不应该有非虚的拷贝构造或拷贝赋值运算符。}
+
+\textbf{规则 C.41:} \textit{构造函数应该创建完全初始化的对象。}
+
+\textbf{规则 C.42:} \textit{不要在构造函数中调用虚函数。}
+
+在构造函数中调用虚函数时，派生类的部分尚未构造，因此调用不会到达派生类的重写版本——这是一个常见的陷阱。
+
+\begin{lstlisting}[language=C++]
+class Base {
+public:
+    Base() {
+        init();  // 调用的是 Base::init()，不是 Derived::init()！
+    }
+    virtual void init() { /* Base 的初始化 */ }
+};
+
+class Derived : public Base {
+    std::vector<int> data_;
+public:
+    void init() override {
+        data_.push_back(42);  // 不会被调用！
+    }
+};
+\end{lstlisting}
+
+\textbf{规则 C.43--C.45:} 关于默认构造、拷贝和移动操作的进一步规则。具体类型应该有明确的拷贝和移动语义，避免"部分移动"的状态。
+
+\subsection{规则 C.50--C.55：工厂模式与多态}
+
+\textbf{规则 C.50:} \textit{使用"虚函数构造器"（工厂模式）当需要多态地创建对象时。}
+
+\begin{lstlisting}[language=C++]
+class Shape {
+public:
+    virtual ~Shape() = default;
+    virtual std::unique_ptr<Shape> clone() const = 0;
+    virtual void draw() const = 0;
+};
+
+class Circle : public Shape {
+    double radius_;
+public:
+    explicit Circle(double r) : radius_(r) {}
+    std::unique_ptr<Shape> clone() const override {
+        return std::make_unique<Circle>(*this);
+    }
+    void draw() const override { /* ... */ }
+};
+
+// 使用
+std::vector<std::unique_ptr<Shape>> shapes;
+shapes.push_back(std::make_unique<Circle>(5.0));
+shapes.push_back(shapes.back()->clone());  // 多态拷贝
+\end{lstlisting}
+
+\section{运算符}
+
+\subsection{规则 C.60：二元运算符应为非成员函数}
+
+\textbf{规则 C.60:} \textit{使二元运算符为非成员函数。}
+
+将二元运算符（如 \texttt{operator+}）定义为非成员函数可以确保两侧的操作数都能进行隐式转换。
+
+\begin{lstlisting}[language=C++]
+class Complex {
+    double re_, im_;
+public:
+    Complex(double re = 0, double im = 0) : re_(re), im_(im) {}
+
+    // 作为成员函数——左侧不能隐式转换
+    // Complex operator+(const Complex& rhs) const;
+
+    // 友元非成员函数——两侧都可以隐式转换
+    friend Complex operator+(const Complex& a, const Complex& b) {
+        return Complex(a.re_ + b.re_, a.im_ + b.im_);
+    }
+
+    Complex& operator+=(const Complex& rhs) {
+        re_ += rhs.re_;
+        im_ += rhs.im_;
+        return *this;
+    }
+};
+
+// 现在两种调用都可以
+Complex c = Complex(1, 2) + Complex(3, 4);
+Complex c2 = 1.0 + Complex(3, 4);  // 1.0 隐式转换为 Complex
+\end{lstlisting}
+
+\subsection{规则 C.61--C.65：惯用运算符}
+
+\textbf{规则 C.61:} \textit{拷贝操作应该是语义上的拷贝。}
+
+\textbf{规则 C.62:} \textit{使拷贝赋值运算符可以安全地自赋值。}
+
+\textbf{规则 C.63--C.65:} 关于移动赋值、赋值运算符的返回值等规则。核心原则是：运算符应该遵循最小惊讶原则——\texttt{=} 应该做拷贝，\texttt{+} 应该做加法，等等。
+
+\subsection{规则 C.70--C.75：转换运算符}
+
+\textbf{规则 C.70:} \textit{避免复杂的转换运算符。使用命名函数替代隐式转换。}
+
+\begin{lstlisting}[language=C++]
+// 危险：隐式转换
+class Money {
+    double amount_;
+public:
+    operator double() const { return amount_; }  // 隐式转换！
+};
+
+Money m{100.0};
+double d = m + 50.0;  // 意外地将 Money 转换为 double
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 安全：显式转换
+class Money {
+    double amount_;
+public:
+    explicit operator double() const { return amount_; }
+    double to_double() const { return amount_; }  // 命名函数更清晰
+};
+
+Money m{100.0};
+double d = static_cast<double>(m) + 50.0;  // 显式转换
+double d2 = m.to_double() + 50.0;          // 更清晰
+\end{lstlisting}
+
+\subsection{规则 C.80--C.85：继承的替代方案}
+
+\textbf{规则 C.80:} \textit{如果只是想用"类似继承"的方式来复用实现，使用组合而非私有继承。}
+
+\textbf{规则 C.81--C.85:} 关于何时使用继承、何时使用组合、何时使用模板的讨论。核心原则是：继承表示"is-a"关系，组合表示"has-a"关系。不要为了代码复用而滥用继承。
+
+\section*{练习题}
+
+\begin{enumerate}
+  \item 设计一个 \texttt{Matrix} 类，遵循零规则（使用 \texttt{std::vector} 存储数据）。实现加法、减法和矩阵乘法运算符。
+  \item 解释为什么"在构造函数中调用虚函数"是一个陷阱。给出一个具体的例子来说明问题。
+  \item 设计一个图形编辑器中的类层次结构，包括 \texttt{Shape}（抽象基类）、\texttt{Circle}、\texttt{Rectangle} 和 \texttt{Triangle}。使用工厂模式创建对象。
+  \item 实现一个 \texttt{Temperature} 类，支持摄氏度、华氏度和开尔文之间的转换。使用运算符重载使得 \texttt{Temperature} 对象可以进行比较和算术运算。
+  \item 讨论"优先使用组合而非继承"这条原则。给出一个应该使用组合但被错误地使用继承的例子。
+\end{enumerate}
+
+
+% ------------------------------------------------------------
+% Chapter 6: 枚举
+% ------------------------------------------------------------
+\chapter{枚举}
+
+枚举类型用于表示一组相关的命名常量。C++ 提供了两种枚举：传统的无作用域枚举（\texttt{enum}）和 C++11 引入的有作用域枚举（\texttt{enum class}）。核心指南强烈推荐使用后者。
+
+\section{规则 Enum.1：优先使用枚举而非宏}
+
+\textbf{规则 Enum.1:} \textit{优先使用枚举而非宏来定义命名常量。}
+
+\subsection{为什么重要}
+
+宏常量没有类型信息，不参与作用域规则，并且难以调试。枚举提供了类型安全和作用域控制。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 使用宏——没有类型安全
+#define RED   0
+#define GREEN 1
+#define BLUE  2
+// 宏是全局的，可能与其他宏冲突
+// 没有类型检查：int x = RED + 100; 可以编译
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 使用枚举——有类型和作用域
+enum class Color { red, green, blue };
+Color c = Color::red;
+// int x = c + 100;  // 编译错误——类型安全！
+\end{lstlisting}
+
+\section{规则 Enum.2：使用枚举表示相关命名常量集合}
+
+\textbf{规则 Enum.2:} \textit{使用枚举来表示一组相关的命名常量。}
+
+枚举将相关的常量组织在一起，使得代码更加清晰和可维护。
+
+\begin{lstlisting}[language=C++]
+// 不好：分散的常量
+const int STATUS_OK = 0;
+const int STATUS_ERROR = 1;
+const int STATUS_PENDING = 2;
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 好：使用枚举组织
+enum class Status { ok, error, pending };
+\end{lstlisting}
+
+\section{规则 Enum.3：优先使用 enum class}
+
+\textbf{规则 Enum.3:} \textit{优先使用 \texttt{enum class} 而非"普通"的 \texttt{enum}。}
+
+\subsection{为什么重要}
+
+传统的 \texttt{enum} 有三个主要问题：
+\begin{enumerate}
+  \item 枚举值泄漏到外层作用域，可能导致命名冲突。
+  \item 枚举值可以隐式转换为整数，破坏了类型安全。
+  \item 底层类型不明确。
+\end{enumerate}
+
+\texttt{enum class} 解决了所有这三个问题。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 传统 enum——问题多多
+enum Color { red, green, blue };
+enum TrafficLight { red, yellow, green };  // 编译错误！red 和 green 重复
+
+Color c = red;
+int x = c;  // 隐式转换为 int——类型不安全
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// enum class——类型安全
+enum class Color { red, green, blue };
+enum class TrafficLight { red, yellow, green };  // 没有问题
+
+Color c = Color::red;
+TrafficLight t = TrafficLight::red;
+// int x = c;  // 编译错误——需要显式转换
+int x = static_cast<int>(c);  // 显式转换——意图明确
+\end{lstlisting}
+
+\section{规则 Enum.4：为枚举定义操作}
+
+\textbf{规则 Enum.4:} \textit{为枚举定义相关操作。}
+
+\texttt{enum class} 不会自动提供递增、位运算等操作。如果需要这些操作，应该显式定义。
+
+\begin{lstlisting}[language=C++]
+enum class Day { mon, tue, wed, thu, fri, sat, sun };
+
+// 定义递增操作
+Day& operator++(Day& d) {
+    d = (d == Day::sun) ? Day::mon
+                        : static_cast<Day>(static_cast<int>(d) + 1);
+    return d;
+}
+
+// 定义输出操作
+std::ostream& operator<<(std::ostream& os, Day d) {
+    switch (d) {
+        case Day::mon: return os << "Monday";
+        case Day::tue: return os << "Tuesday";
+        case Day::wed: return os << "Wednesday";
+        case Day::thu: return os << "Thursday";
+        case Day::fri: return os << "Friday";
+        case Day::sat: return os << "Saturday";
+        case Day::sun: return os << "Sunday";
+    }
+    return os;
+}
+\end{lstlisting}
+
+对于位标志枚举：
+
+\begin{lstlisting}[language=C++]
+enum class Permission : unsigned {
+    none    = 0,
+    read    = 1 << 0,
+    write   = 1 << 1,
+    execute = 1 << 2
+};
+
+Permission operator|(Permission a, Permission b) {
+    return static_cast<Permission>(
+        static_cast<unsigned>(a) | static_cast<unsigned>(b));
+}
+
+Permission operator&(Permission a, Permission b) {
+    return static_cast<Permission>(
+        static_cast<unsigned>(a) & static_cast<unsigned>(b));
+}
+
+Permission p = Permission::read | Permission::write;
+bool can_read = (p & Permission::read) != Permission::none;
+\end{lstlisting}
+
+\section{规则 Enum.5：不要用全大写命名枚举值}
+
+\textbf{规则 Enum.5:} \textit{不要对枚举值使用全大写命名。}
+
+\subsection{为什么重要}
+
+全大写命名是宏的惯例。使用全大写的枚举值容易与宏冲突，并且在代码中视觉上过于突出。由于 \texttt{enum class} 的值需要带作用域前缀（如 \texttt{Color::red}），使用小写或驼峰命名更加自然。
+
+\begin{lstlisting}[language=C++]
+// 不好：全大写——像宏
+enum class Color { RED, GREEN, BLUE };
+auto c = Color::RED;  // 视觉上太突出
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 好：小写——与 enum class 的作用域配合自然
+enum class Color { red, green, blue };
+auto c = Color::red;  // 清晰自然
+\end{lstlisting}
+
+\section*{练习题}
+
+\begin{enumerate}
+  \item 将以下宏常量转换为 \texttt{enum class}：
+\begin{lstlisting}[language=C++]
+#define HTTP_OK 200
+#define HTTP_NOT_FOUND 404
+#define HTTP_SERVER_ERROR 500
+\end{lstlisting}
+  \item 为一个表示"方向"的 \texttt{enum class Direction \{ north, south, east, west \}} 定义递增运算符（顺时针旋转 90 度）和反向运算符（旋转 180 度）。
+  \item 设计一个位标志枚举来表示文件权限（读、写、执行），并定义必要的位运算符。
+  \item 解释为什么 \texttt{enum class} 比传统 \texttt{enum} 更安全。列出至少三个具体的安全问题。
+  \item 为一个表示"月份"的 \texttt{enum class Month} 定义输出运算符和"下一个月份"运算符。
+\end{enumerate}
+
+
+% ------------------------------------------------------------
+% Chapter 7: 常量与不可变性
+% ------------------------------------------------------------
+\chapter{常量与不可变性}
+
+在 C++ 中，\texttt{const} 和 \texttt{constexpr} 是实现不可变性和编译时计算的关键工具。核心指南对 \texttt{const} 的使用持积极态度——默认使用 \texttt{const} 是写出安全、清晰代码的重要手段。
+
+\section{规则 Con.1：默认使对象不可变}
+
+\textbf{规则 Con.1:} \textit{默认情况下，使对象不可变（\texttt{const}）。}
+
+\subsection{为什么重要}
+
+不可变对象更容易推理——你不需要追踪它的修改历史。不可变对象天然是线程安全的。将变量默认声明为 \texttt{const} 可以防止意外的修改，并使代码意图更加清晰。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 默认可变——容易意外修改
+void process(const std::vector<int>& data) {
+    int total = 0;
+    for (int i = 0; i < data.size(); ++i) {
+        total += data[i];
+        data[i] = 0;  // 意外修改了输入数据！
+    }
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 默认 const——防止意外修改
+void process(const std::vector<int>& data) {
+    int total = 0;
+    for (const auto& elem : data) {
+        total += elem;
+        // elem = 0;  // 编译错误——const 引用不可修改
+    }
+}
+
+// 局部变量也默认 const
+void calculate() {
+    const double pi = 3.14159265358979;
+    const auto result = compute(pi);
+    // pi = 3.0;  // 编译错误——防止意外修改
+}
+\end{lstlisting}
+
+\subsection{要点}
+养成在声明变量时首先写 \texttt{const} 的习惯。只有当确实需要修改变量时，才去掉 \texttt{const}。这个简单的习惯可以消除一大类 bug。
+
+\section{规则 Con.2：默认使成员函数为 const}
+
+\textbf{规则 Con.2:} \textit{默认情况下，使成员函数为 \texttt{const}。}
+
+\subsection{为什么重要}
+
+\texttt{const} 成员函数承诺不修改对象的状态。这个承诺使得：
+\begin{itemize}
+  \item \texttt{const} 对象可以调用该函数。
+  \item 读者可以立即知道该函数不会改变对象状态。
+  \item 编译器可以强制这个承诺。
+\end{itemize}
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+class Widget {
+    int value_;
+public:
+    int get_value() { return value_; }  // 不是 const！
+    // const Widget 对象无法调用 get_value()
+};
+
+void print(const Widget& w) {
+    // w.get_value();  // 编译错误！
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+class Widget {
+    int value_;
+public:
+    int get_value() const { return value_; }  // const 成员函数
+};
+
+void print(const Widget& w) {
+    std::cout << w.get_value();  // OK
+}
+\end{lstlisting}
+
+\subsection{要点}
+写完一个成员函数后，问自己："这个函数需要修改对象的状态吗？"如果答案是否定的，就加上 \texttt{const}。如果你不确定，先加上 \texttt{const}——如果编译器报错说需要修改某个成员，再考虑将该成员声明为 \texttt{mutable} 或去掉函数的 \texttt{const}。
+
+\section{规则 Con.3：默认传递 const 指针和引用}
+
+\textbf{规则 Con.3:} \textit{默认情况下，传递指向 \texttt{const} 的指针和引用。}
+
+\subsection{为什么重要}
+
+如果函数不需要修改参数，就应该使用 \texttt{const} 引用或 \texttt{const} 指针。这向调用者保证他们的数据不会被修改，并且允许函数接受临时对象和 \texttt{const} 对象的参数。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 非 const 引用——调用者不知道数据是否会被修改
+double compute_average(std::vector<int>& data);
+
+std::vector<int> get_data();
+double avg = compute_average(get_data());  // 编译错误！临时对象不能绑定到非 const 引用
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// const 引用——明确不修改
+double compute_average(const std::vector<int>& data);
+
+double avg = compute_average(get_data());  // OK
+\end{lstlisting}
+
+\section{规则 Con.4：使用 const 定义构造后不变的值}
+
+\textbf{规则 Con.4:} \textit{使用 \texttt{const} 来定义在构造后值不改变的对象。}
+
+\subsection{为什么重要}
+
+许多变量在初始化之后就不应该再被修改。使用 \texttt{const} 可以将这个意图编码到类型系统中。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 可以意外修改
+int max_connections = 100;
+// ... 200 行代码之后 ...
+max_connections = 50;  // 意外修改！
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 不可修改
+const int max_connections = 100;
+// max_connections = 50;  // 编译错误
+\end{lstlisting}
+
+\section{规则 Con.5：使用 constexpr 表示编译时可计算的值}
+
+\textbf{规则 Con.5:} \textit{使用 \texttt{constexpr} 来定义可以在编译时计算的值。}
+
+\subsection{为什么重要}
+
+\texttt{constexpr} 变量在编译时就已经有了确定的值，这意味着：
+\begin{itemize}
+  \item 零运行时开销。
+  \item 可以用于需要编译时常量的上下文（如数组大小、模板参数、\texttt{case} 标签）。
+  \item 编译器可以进行更积极的优化。
+\end{itemize}
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 运行时计算——不必要的开销
+double circle_area(double radius) {
+    double pi = 3.14159265358979;  // 每次调用都"初始化"
+    return pi * radius * radius;
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 编译时计算
+constexpr double pi = 3.14159265358979;
+
+constexpr double circle_area(double radius) {
+    return pi * radius * radius;
+}
+
+constexpr double area = circle_area(5.0);  // 编译时计算
+static_assert(circle_area(1.0) > 3.0);     // 编译时验证
+
+// 可以用于需要编译时常量的上下文
+constexpr int table_size = 256;
+std::array<int, table_size> lookup_table;
+\end{lstlisting}
+
+\subsection{constexpr 与 const 的区别}
+
+理解 \texttt{const} 和 \texttt{constexpr} 的区别很重要：
+
+\begin{itemize}
+  \item \texttt{const} 表示"运行时不可修改"——值在运行时确定后就不能改变。
+  \item \texttt{constexpr} 表示"编译时可计算"——值在编译时就已经确定。
+\end{itemize}
+
+\begin{lstlisting}[language=C++]
+const int runtime_const = get_value();    // 运行时确定，之后不可修改
+constexpr int compile_const = 42;         // 编译时确定
+
+// constexpr 函数可以在运行时调用
+void process(int n) {
+    constexpr int block_size = 256;  // 编译时常量
+    int chunk_count = n / block_size;
+}
+\end{lstlisting}
+
+\section*{练习题}
+
+\begin{enumerate}
+  \item 在以下代码中添加所有可能的 \texttt{const}，并解释每处添加的理由：
+\begin{lstlisting}[language=C++]
+class StringProcessor {
+    std::string prefix_;
+public:
+    StringProcessor(std::string prefix) : prefix_(prefix) {}
+    std::string process(std::string input) {
+        std::string result = prefix_ + input;
+        std::transform(result.begin(), result.end(),
+                       result.begin(), ::toupper);
+        return result;
+    }
+    std::string get_prefix() { return prefix_; }
+};
+\end{lstlisting}
+  \item 编写一个 \texttt{constexpr} 函数来计算阶乘，并验证 \texttt{factorial(12) == 479001600}。
+  \item 解释为什么成员函数默认应该是 \texttt{const} 的。\texttt{mutable} 关键字在什么情况下是合理的？
+  \item 设计一个 \texttt{constexpr} 的 \texttt{Point2D} 类，支持距离计算（使用 \texttt{constexpr} 的平方根近似）。
+  \item 讨论"默认 const"原则在多线程编程中的优势。
+\end{enumerate}
+
+
+% ------------------------------------------------------------
+% Chapter 8: 模板与泛型编程
+% ------------------------------------------------------------
+\chapter{模板与泛型编程}
+
+模板是 C++ 泛型编程的基础。通过模板，我们可以编写不依赖于具体类型的通用代码。C++20 引入的概念（Concepts）极大地改善了模板编程的体验——更清晰的接口、更好的错误信息、更强的表达力。
+
+\section{模板抽象与概念基础}
+
+\subsection{规则 T.1：使用模板来提高代码的抽象层次}
+
+\textbf{规则 T.1:} \textit{使用模板来提高代码的抽象层次。}
+
+\subsection{为什么重要}
+
+模板使得我们可以编写一次代码而用于多种类型。这不仅减少了代码重复，更重要的是它提高了代码的抽象层次——我们可以讨论"任意可排序的类型"而非"int 的排序"和"string 的排序"。
+
+\subsection{错误示例}
+
+\begin{lstlisting}[language=C++]
+// 为每种类型重复代码
+int max_int(int a, int b) { return a > b ? a : b; }
+double max_double(double a, double b) { return a > b ? a : b; }
+std::string max_string(const std::string& a, const std::string& b) {
+    return a > b ? a : b;
+}
+\end{lstlisting}
+
+\subsection{正确示例}
+
+\begin{lstlisting}[language=C++]
+// 一个模板适用于所有可比较类型
+template<typename T>
+T max_val(T a, T b) {
+    return a > b ? a : b;
+}
+
+auto m1 = max_val(3, 5);
+auto m2 = max_val(3.14, 2.71);
+auto m3 = max_val(std::string("abc"), std::string("xyz"));
+\end{lstlisting}
+
+\subsection{规则 T.2：使用概念（Concepts）来指定模板参数的要求}
+
+\textbf{规则 T.2:} \textit{使用概念（Concepts）来指定模板参数的要求。}
+
+概念是 C++20 最重要的特性之一。它为模板参数提供了命名化的约束集合，使得模板接口更加清晰，错误信息更加可读。
+
+\begin{lstlisting}[language=C++]
+// 没有概念——错误信息难以理解
+template<typename T>
+T add(T a, T b) {
+    return a + b;
+}
+// add(std::vector<int>{}, std::vector<int>{});
+// 产生数十行难以理解的错误信息
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 使用概念——错误信息清晰
+template<std::regular T>
+T add(T a, T b) {
+    return a + b;
+}
+// add(std::vector<int>{}, std::vector<int>{});
+// 错误：vector<int> 不满足 regular 概念
+
+// 自定义概念
+template<typename T>
+concept Numeric = std::is_arithmetic_v<T>;
+
+template<Numeric T>
+T safe_divide(T a, T b) {
+    if (b == T{0}) throw std::domain_error("division by zero");
+    return a / b;
+}
+\end{lstlisting}
+
+\subsection{规则 T.3--T.10：类型要求与概念设计}
+
+\textbf{规则 T.3:} \textit{使用概念来指定类型的精确要求（而非使用 \texttt{requires} 子句或 \texttt{static\_assert}）。}
+
+虽然 \texttt{requires} 子句和 \texttt{static\_assert} 也可以约束模板参数，但概念更加可重用、可组合，并且提供更好的错误信息。
+
+\textbf{规则 T.10：为所有模板参数指定概念。}
+
+没有概念约束的模板参数可以接受任何类型，这使得接口文档不完整，错误信息难以理解。
+
+\begin{lstlisting}[language=C++]
+// 不好：无约束的模板参数
+template<typename T, typename U>
+auto combine(T t, U u) {
+    return t + u;  // T 和 U 需要什么操作？不清楚
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++]
+// 好：有概念约束
+template<std::regular T, std::regular U>
+    requires std::convertible_to<T, U> || std::convertible_to<U, T>
+auto combine(T t, U u) {
+    return t + u;
+}
+\end{lstlisting}
+
+\section{模板工厂与类型函数}
+
+\subsection{规则 T.40：使用工厂函数来创建多态对象}
+
+\textbf{规则 T.40:} \textit{使用工厂函数来创建需要多态行为的对象。}
+
+工厂函数可以封装对象的创建细节，返回基类指针或智能指针，使得调用者不需要知道具体的派生类。
+
+\begin{lstlisting}[language=C++]
+// 工厂函数模板
+template<typename Derived, typename... Args>
+std::unique_ptr<Base> make_shape(Args&&... args) {
+    return std::make_unique<Derived>(std::forward<Args>(args)...);
+}
+
+auto circle = make_shape<Circle>(5.0);
+auto rect = make_shape<Rectangle>(3.0, 4.0);
+\end{lstlisting}
+
+\subsection{规则 T.41--T.45：类型函数}
+
+\textbf{规则 T.41:} \textit{使用类型特征（type traits）来查询类型的属性。}
+
+\textbf{规则 T.42:} \textit{使用别名模板（alias templates）来简化类型的使用。}
+
+\begin{lstlisting}[language=C++]
+// 类型特征
+static_assert(std::is_integral_v<int>);
+static_assert(std::is_base_of_v<Base, Derived>);
+static_assert(std::is_copy_constructible_v<Widget>);
+
+// 别名模板
+template<typename T>
+using Vec = std::vector<T>;
+
+template<typename T>
+using Unique = std::unique_ptr<T>;
+
+Vec<int> numbers;  // 比 std::vector<int> 更简洁
+Unique<Widget> w = std::make_unique<Widget>();
+\end{lstlisting}
+
+\section{模板命名与概念定义}
+
+\subsection{规则 T.80--T.85：模板命名与声明}
+
+\textbf{规则 T.80:} \textit{对于泛型代码，优先使用概念约束的模板而非 \texttt{requires} 子句。}
+
+\textbf{规则 T.81--T.83:} 关于概念的定义和组合。概念应该遵循命名惯例（通常使用小写或描述性的名称），应该原子化（每个概念检查一个语义属性），并且应该可组合（通过 \texttt{\&\&} 和 \texttt{||} 组合）。
+
+\begin{lstlisting}[language=C++]
+// 原子概念
+template<typename T>
+concept Incrementable = requires(T a) {
+    { ++a } -> std::same_as<T&>;
+    { a++ } -> std::same_as<T>;
+};
+
+template<typename T>
+concept Decrementable = requires(T a) {
+    { --a } -> std::same_as<T&>;
+    { a-- } -> std::same_as<T>;
+};
+
+// 组合概念
+template<typename T>
+concept BidirectionalIterator = Incrementable<T> && Decrementable<T>;
+\end{lstlisting}
+
+\subsection{规则 T.100--T.110：概念的设计原则}
+
+\textbf{规则 T.100:} \textit{使用概念来表达语义类别（而非仅仅是语法要求）。}
+
+好的概念不仅描述类型"能做什么"（语法），还描述类型"代表什么"（语义）。例如，\texttt{std::regular} 不仅要求类型可以拷贝和比较，还要求这些操作具有"值语义"——拷贝后的对象与原对象等价。
+
+\begin{lstlisting}[language=C++]
+// 仅语法要求——不够
+template<typename T>
+concept HasPlus = requires(T a, T b) {
+    { a + b } -> std::same_as<T>;
+};
+
+// 语义要求——更好
+// std::regular 包含了：
+// - 可默认构造
+// - 可拷贝构造和赋值
+// - 可比较（== 和 !=）
+// - 可交换（swap）
+// - 这些操作具有正确的语义
+template<std::regular T>
+T add(T a, T b) { return a + b; }
+\end{lstlisting}
+
+\subsection{规则 T.120--T.140：模板的高级使用}
+
+\textbf{规则 T.120:} \textit{当需要编译时多态时使用模板。}
+
+模板提供编译时多态（静态多态），虚函数提供运行时多态（动态多态）。当类型在编译时已知且性能至关重要时，使用模板。
+
+\begin{lstlisting}[language=C++]
+// 编译时多态——零开销
+template<typename Container>
+auto sum(const Container& c) {
+    typename Container::value_type total{};
+    for (const auto& elem : c) {
+        total += elem;
+    }
+    return total;
+}
+
+// 运行时多态——有虚函数开销
+// 当需要存储不同类型的对象时使用
+\end{lstlisting}
+
+\textbf{规则 T.140：如果函数不需要被重写，不要使用虚函数。}
+
+如果一个操作不需要在运行时改变行为，就不应该使用虚函数。模板或概念可以提供更好的性能。
+
+\subsection{变量模板与 constexpr if}
+
+C++14 的变量模板和 C++17 的 \texttt{constexpr if} 进一步增强了模板编程的表达力：
+
+\begin{lstlisting}[language=C++]
+// 变量模板
+template<typename T>
+constexpr T pi = T(3.14159265358979323846);
+
+double area_d = pi<double> * 5.0 * 5.0;
+float area_f = pi<float> * 5.0f * 5.0f;
+
+// constexpr if——编译时分支
+template<typename T>
+std::string to_string(const T& value) {
+    if constexpr (std::is_arithmetic_v<T>) {
+        return std::to_string(value);
+    } else if constexpr (requires { value.to_string(); }) {
+        return value.to_string();
+    } else {
+        return "unknown";
+    }
+}
+\end{lstlisting}
+
+\section*{练习题}
+
+\begin{enumerate}
+  \item 定义一个概念 \texttt{Printable}，要求类型支持 \texttt{operator<<} 输出到 \texttt{std::ostream}。使用该概念约束一个泛型的 \texttt{print} 函数。
+  \item 实现一个泛型的 \texttt{Stack<T>} 容器，使用 \texttt{std::vector<T>} 作为底层存储。要求 \texttt{T} 满足 \texttt{std::regular} 概念。
+  \item 使用 \texttt{constexpr if} 实现一个泛型的 \texttt{serialize} 函数，对于算术类型直接写入字节，对于 \texttt{std::string} 先写入长度再写入内容，对于 \texttt{std::vector<T>} 递归序列化每个元素。
+  \item 定义概念 \texttt{Container} 来约束标准容器的通用接口（\texttt{begin()}、\texttt{end()}、\texttt{size()}、\texttt{empty()}）。使用该概念编写一个泛型的 \texttt{print\_container} 函数。
+  \item 比较编译时多态（模板）和运行时多态（虚函数）的优缺点。在什么场景下应该选择哪种方式？
+\end{enumerate}

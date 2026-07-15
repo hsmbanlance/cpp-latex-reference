@@ -1,0 +1,1198 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+% ---- listing style ----
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,
+    ifstream,ofstream,fstream,iostream,
+    ostream,istream,stringstream,ostringstream,
+    path,filesystem},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+
+% ---- 文档特定语言定义 ----
+\lstdefinelanguage{Cpp26}{
+  language=C++,
+  morekeywords={consteval,constinit,requires,concept,co_await,co_return,co_yield,
+                meta,info,reflexpr,define_enum,define_static_array,define_static_function},
+  morecomment=[l][\color{codecmt}\itshape]{//},
+  morecomment=[s][\color{codecmt}\itshape]{/*}{*/},
+}
+\lstset{style=cppstyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,
+  title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,
+  title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,
+  title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,
+  title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,
+  title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={C++ Reflection Survey},
+  pdftitle={C++ 反射机制全景对比},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+% ====================================================================
+\begin{document}
+\maketitle
+
+% ═══════════════════════════════════════════════
+\section{引言}\label{sec:intro}
+% ═══════════════════════════════════════════════
+
+\textbf{反射（Reflection）}是指程序在运行时或编译时检查自身结构的能力：枚举类的成员、获取字段的名称和类型、动态调用函数等。在 Java 和 C\# 中，反射是语言基础设施的一部分，开发者可以毫不费力地遍历对象的字段和方法。然而 C++ 由于 ``you don't pay for what you don't use'' 的哲学，标准语言层面长期缺乏反射支持，迫使社区发展出多种替代方案。
+
+本文档系统对比五大类 C++ 反射机制：
+
+\begin{enumerate}[label=\textbf{(\arabic*)},itemsep=2pt]
+  \item \textbf{聚合体反射}：Boost.PFR 与雅兰亭（yalantinglibs），要求聚合体类型；
+  \item \textbf{宏/模板元信息反射}：通过宏或模板特化手动注册元信息（以 RTTR 为代表）；
+  \item \textbf{框架反射}：Qt QObject 与 Unreal UObject，框架内置；
+  \item \textbf{C++26 静态反射}：P2996 提案引入的 \texttt{std::meta} 标准库；
+  \item \textbf{反射的常用应用场景}：序列化、属性编辑器、ORM、调试等典型用例；
+  \item \textbf{反射序列化 vs Protobuf/FlatBuffers}：两种序列化哲学的差异与选型；
+  \item \textbf{与 Java/C\# 的对比}：运行时反射 vs 编译时反射的本质差异。
+\end{enumerate}
+
+% ═══════════════════════════════════════════════
+\section{聚合体反射：Boost.PFR 与雅兰亭}\label{sec:aggregate}
+% ═══════════════════════════════════════════════
+
+聚合体（aggregate）是没有用户声明构造函数、没有私有/保护非静态数据成员、没有虚函数、没有虚基类的类或结构体。Boost.PFR 和雅兰亭都利用了聚合体可以被结构化绑定（structured binding）或聚合初始化的特性来实现编译期反射。
+
+\subsection{Boost.PFR}\label{subsec:pfr}
+
+Boost.PFR（Precise and Flat Reflection）由 Peter Dimov 和 Antony Polukhin 开发，是 Boost 库的一部分。其核心思想是利用结构化绑定将聚合体拆解为成员元组，然后通过 \texttt{std::tuple\_element} 和 \texttt{std::tuple\_size} 提供编译期访问。
+
+\begin{lstlisting}[caption={Boost.PFR: 遍历聚合体成员}]
+#include <boost/pfr.hpp>
+#include <iostream>
+#include <string>
+
+struct Player {
+    std::string name;
+    int         hp;
+    double      speed;
+};
+
+int main() {
+    Player p{"Alice", 100, 3.5};
+
+    // for_each_field: iterate all members
+    boost::pfr::for_each_field(p, [](const auto& field, size_t idx) {
+        std::cout << "field[" << idx << "] = " << field << '\n';
+    });
+
+    // get<N>: access by index
+    auto& hp = boost::pfr::get<1>(p);
+    std::cout << "HP = " << hp << '\n';
+
+    // tuple_size: member count
+    constexpr auto N = boost::pfr::tuple_size_v<Player>;
+    std::cout << "field count = " << N << '\n';  // 3
+
+    // to_tuple: convert to std::tuple
+    auto t = boost::pfr::to_tuple(p);
+}
+\end{lstlisting}
+
+\subsubsection*{成员名获取：\texttt{name\_of} 魔法宏}
+
+从 Boost.PFR 1.84 起，库提供了 \texttt{boost::pfr::name\_of} 和 \texttt{BOOST\_PFR\_NAMEOF} 宏，利用编译器内置的函数签名反射（\texttt{\_\_PRETTY\_FUNCTION\_\_} / \texttt{\_\_FUNCSIG\_\_}）在编译期提取成员名称。这一功能\textbf{要求 C++20 以上}，且仅支持以下编译器：
+
+\begin{itemize}[nosep,itemsep=1pt]
+  \item \textbf{MSVC}（Visual Studio 2019 16.10+ 或 Visual Studio 2022）
+  \item \textbf{GCC}（g++ 11+）
+  \item \textbf{Clang}（clang++ 13+，包括 Apple Clang++ 14+）
+\end{itemize}
+
+\begin{lstlisting}[caption={Boost.PFR name\_of: 编译期获取成员名 (C++20)}]
+#include <boost/pfr/core_name.hpp>
+#include <iostream>
+#include <string>
+
+struct Config {
+    std::string host;
+    int         port;
+    bool        ssl;
+};
+
+int main() {
+    // name_of<N>: get member name by index at compile time
+    constexpr auto n0 = boost::pfr::name_of<0, Config>;
+    constexpr auto n1 = boost::pfr::name_of<1, Config>;
+    constexpr auto n2 = boost::pfr::name_of<2, Config>;
+
+    std::cout << n0 << '\n';  // "host"
+    std::cout << n1 << '\n';  // "port"
+    std::cout << n2 << '\n';  // "ssl"
+
+    // for_each_field_with_name: iterate with names
+    Config cfg{"127.0.0.1", 8080, true};
+    boost::pfr::for_each_field(cfg, [](const auto& val, auto idx) {
+        constexpr auto name = boost::pfr::name_of<idx, Config>();
+        std::cout << name << " = " << val << '\n';
+    });
+    // host = 127.0.0.1
+    // port = 8080
+    // ssl  = 1
+}
+\end{lstlisting}
+
+\begin{note}[title={Boost.PFR 技术要点}]
+\begin{itemize}[nosep]
+  \item 仅支持聚合体类型（POD-like structs）
+  \item 完全编译期，零运行时开销
+  \item 基础功能（索引访问、遍历）只需 C++14；\textbf{成员名获取需要 C++20+}
+  \item \texttt{name\_of} 魔法宏依赖编译器签名反射，\textbf{仅支持 MSVC / GCC / Clang（含 Apple Clang）}
+  \item 非主流编译器（ICC、NVCC 等）不支持 \texttt{name\_of}，回退为仅索引访问
+  \item 嵌套聚合体需要 \texttt{boost::pfr::flatten}
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{雅兰亭（yalantinglibs）}\label{subsec:ylt}
+
+雅兰亭是阿里巴巴开源的现代 C++20 工具库，其 \texttt{struct\_unpack} 和 \texttt{iguana} 组件提供了基于聚合体的反射能力。雅兰亭的核心优势是深度整合序列化（JSON/XML/Protobuf/YAML）和 RPC 框架。
+
+\begin{lstlisting}[caption={雅兰亭: 聚合体序列化与反射}]
+#include <ylt/reflection/user_reflect_macro.hpp>
+#include <ylt/struct_pack.hpp>
+#include <ylt/iguana/json_writer.hpp>
+#include <ylt/iguana/json_reader.hpp>
+
+struct Player {
+    std::string name;
+    int         hp;
+    double      speed;
+};
+// YLT_REFL marks aggregate + enables reflection
+YLT_REFL(Player, name, hp, speed);
+
+int main() {
+    Player p{"Alice", 100, 3.5};
+
+    // --- JSON serialization ---
+    std::string json;
+    iguana::to_json(p, json);
+    // {"name":"Alice","hp":100,"speed":3.5}
+
+    // --- JSON deserialization ---
+    Player p2{};
+    iguana::from_json(p2, json);
+
+    // --- struct_pack binary serialization ---
+    auto buf = struct_pack::serialize(p);
+    auto res = struct_pack::deserialize<Player>(buf);
+}
+\end{lstlisting}
+
+雅兰亭还提供无需宏的纯聚合体反射（依赖编译器内置 \texttt{\_\_builtin\_reflect}或模板元编程推断成员数量），但对非聚合体仍需使用 \texttt{YLT\_REFL} 宏注册。
+
+\begin{lstlisting}[caption={雅兰亭: 无宏聚合体自动反射}]
+#include <ylt/reflection/member_count.hpp>
+#include <ylt/reflection/member_names.hpp>
+
+struct Point { double x; double y; double z; };
+
+// No macro needed -- pure aggregate introspection
+static_assert(ylt::refl::member_count_v<Point> == 3);
+
+// Get member names at compile time
+constexpr auto names = ylt::refl::member_names_v<Point>;
+// names = {"x", "y", "z"}
+\end{lstlisting}
+
+\begin{note}[title={雅兰亭技术要点}]
+\begin{itemize}[nosep]
+  \item 支持 C++20 以上，深度整合序列化生态
+  \item \texttt{YLT\_REFL} 宏可以同时支持聚合体和非聚合体
+  \item 纯聚合体模式可以自动推断成员数量和名称（C++20 编译期技巧）
+  \item 提供 JSON、XML、Protobuf、MsgPack 等多种序列化后端
+  \item 成员名称获取利用了编译期字符串技巧，不是语言内建能力
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Boost.PFR vs 雅兰亭对比}
+
+\begin{table}[H]
+\centering
+\caption{Boost.PFR 与雅兰亭对比}
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{特性} & \textbf{Boost.PFR} & \textbf{雅兰亭} \\
+\midrule
+最低标准 & C++14（基础）/ C++20（成员名） & C++20 \\
+成员名获取 & C++20 + MSVC/GCC/Clang & 支持（编译期技巧） \\
+序列化整合 & 无（仅反射） & JSON/XML/Protobuf/YAML \\
+类型要求 & 纯聚合体 & 聚合体或宏注册 \\
+嵌套支持 & flatten 递归 & 自动递归序列化 \\
+生态 & Boost 通用库 & 独立完整框架 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ═══════════════════════════════════════════════
+\section{宏/模板元信息反射}\label{sec:macro}
+% ═══════════════════════════════════════════════
+
+对于不满足聚合体条件的类（有构造函数、私有成员、虚函数等），最常见的反射方式是通过宏或模板特化手动注册元信息。这类方案在编译期或运行前构建一套元数据描述系统。
+
+\subsection{RTTR（Run Time Type Reflection）}\label{subsec:rttr}
+
+RTTR 是目前最成熟的 C++ 运行时反射库，其设计理念接近 Qt 的 MOC 但不依赖外部工具，完全通过头文件宏实现。
+
+\begin{lstlisting}[caption={RTTR: 类注册与运行时访问}]
+#include <rttr/registration.h>
+#include <iostream>
+
+class GameObject {
+public:
+    GameObject() = default;
+    GameObject(std::string n, int h) : name(std::move(n)), hp(h) {}
+
+    std::string get_name() const { return name; }
+    void set_name(const std::string& n) { name = n; }
+
+    int get_hp() const { return hp; }
+    void set_hp(int h) { hp = h; }
+
+    void take_damage(int dmg) { hp -= dmg; }
+
+private:
+    std::string name;
+    int hp = 0;
+
+    RTTR_ENABLE()  // enables polymorphic support
+};
+
+// Registration (usually in .cpp file)
+RTTR_REGISTRATION
+{
+    rttr::registration::class_<GameObject>("GameObject")
+        .constructor<std::string, int>()
+        .property("name", &GameObject::get_name, &GameObject::set_name)
+        .property("hp",   &GameObject::get_hp,   &GameObject::set_hp)
+        .method("take_damage", &GameObject::take_damage)
+    ;
+}
+
+int main() {
+    // Create instance by type name
+    auto type = rttr::type::get_by_name("GameObject");
+    rttr::variant obj = type.create(
+        std::string("Boss"), 500
+    );
+
+    // Access property by name
+    auto name_prop = type.get_property("name");
+    name_prop.set_value(obj, std::string("Dragon"));
+    std::cout << name_prop.get_value(obj).to_string() << '\n';
+
+    // Call method by name
+    auto method = type.get_method("take_damage");
+    method.invoke(obj, 50);
+
+    auto hp_prop = type.get_property("hp");
+    std::cout << "HP = " << hp_prop.get_value(obj).to_int() << '\n';
+    // HP = 450
+}
+\end{lstlisting}
+
+\subsection{类外模板特化方案}\label{subsec:trait}
+
+另一种轻量级方式是利用模板特化在类外部提供元信息，无需任何第三方库：
+
+\begin{lstlisting}[caption={模板特化: 类外元信息注册}]
+#include <string_view>
+#include <tuple>
+#include <array>
+
+// Generic trait: default = no reflection
+template <typename T>
+struct reflect {
+    static constexpr bool has_reflection = false;
+};
+
+// --- User-defined types ---
+struct Point {
+    double x, y, z;
+};
+
+struct Color {
+    uint8_t r, g, b, a;
+};
+
+// --- Specialization: provide metadata ---
+template <>
+struct reflect<Point> {
+    static constexpr bool has_reflection = true;
+    static constexpr std::string_view name = "Point";
+    static constexpr auto fields = std::tuple{
+        std::pair{"x", &Point::x},
+        std::pair{"y", &Point::y},
+        std::pair{"z", &Point::z}
+    };
+};
+
+template <>
+struct reflect<Color> {
+    static constexpr bool has_reflection = true;
+    static constexpr std::string_view name = "Color";
+    static constexpr auto fields = std::tuple{
+        std::pair{"r", &Color::r},
+        std::pair{"g", &Color::g},
+        std::pair{"b", &Color::b},
+        std::pair{"a", &Color::a}
+    };
+};
+
+// Generic serializer using reflection
+template <typename T>
+void print_fields(const T& obj) {
+    if constexpr (reflect<T>::has_reflection) {
+        std::cout << reflect<T>::name << " { ";
+        std::apply([&](auto... pairs) {
+            ((std::cout << pairs.first << "="
+                       << obj.*(pairs.second) << ", "), ...);
+        }, reflect<T>::fields);
+        std::cout << "}\n";
+    }
+}
+\end{lstlisting}
+
+\subsection{宏展开方案}\label{subsec:macro_expand}
+
+利用 X-Macro 或 Boost.Preprocessor 可以将重复的注册代码压缩为声明式宏：
+
+\begin{lstlisting}[caption={X-Macro 反射: 一处定义多处展开}]
+#include <string>
+#include <vector>
+#include <functional>
+#include <iostream>
+
+// --- X-Macro definition ---
+#define PLAYER_FIELDS(X) \
+    X(std::string, name) \
+    X(int,         hp)   \
+    X(double,      speed)
+
+// --- Generate struct ---
+struct Player {
+#define DECLARE_FIELD(Type, Name) Type Name;
+    PLAYER_FIELDS(DECLARE_FIELD)
+#undef DECLARE_FIELD
+};
+
+// --- Generate field metadata ---
+struct PlayerMeta {
+    struct FieldInfo {
+        std::string name;
+        size_t offset;
+    };
+
+    static std::vector<FieldInfo> fields() {
+        return {
+#define FIELD_ENTRY(Type, Name) \
+            { #Name, offsetof(Player, Name) },
+            PLAYER_FIELDS(FIELD_ENTRY)
+#undef FIELD_ENTRY
+        };
+    }
+};
+
+// Usage
+int main() {
+    for (auto& f : PlayerMeta::fields()) {
+        std::cout << f.name << " @ offset " << f.offset << '\n';
+    }
+    // name  @ offset 0
+    // hp    @ offset 32
+    // speed @ offset 40
+}
+\end{lstlisting}
+
+\begin{note}[title={宏/模板反射方案要点}]
+\begin{itemize}[nosep]
+  \item 适用于任意类（不要求聚合体），支持私有成员、虚函数、继承
+  \item RTTR 提供完整的运行时反射能力（按名查找、动态创建、方法调用）
+  \item 模板特化方案完全编译期，零开销，但需要为每个类手写特化
+  \item X-Macro 方案将声明和元信息合一，但可读性较差
+  \item 共同缺点：注册代码冗余，容易与类定义不同步
+\end{itemize}
+\end{tcolorbox}
+
+% ═══════════════════════════════════════════════
+\section{框架反射：QObject 与 UObject}\label{sec:framework}
+% ═══════════════════════════════════════════════
+
+Qt 和 Unreal Engine 各自实现了完善的反射系统，作为框架核心基础设施的一部分。两者都采用了 ``源码生成 + 运行时查表'' 的混合模式。
+
+\subsection{Qt QObject 反射}\label{subsec:qt}
+
+Qt 的反射系统围绕 \texttt{Q\_OBJECT} 宏和 MOC（Meta-Object Compiler）工具构建。MOC 是一个预处理器，扫描头文件中的 \texttt{Q\_OBJECT} 宏，生成包含元信息的 C++ 源文件（\texttt{moc\_*.cpp}），与用户代码一起编译。
+
+\begin{lstlisting}[caption={Qt QObject: 信号槽与属性反射}]
+// --- header: player.h ---
+#include <QObject>
+#include <QString>
+
+class Player : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(int hp READ hp WRITE setHp)
+
+public:
+    explicit Player(QObject* parent = nullptr) : QObject(parent) {}
+
+    QString name() const { return m_name; }
+    void setName(const QString& n) {
+        if (m_name != n) {
+            m_name = n;
+            emit nameChanged(n);
+        }
+    }
+
+    int hp() const { return m_hp; }
+    void setHp(int h) { m_hp = h; }
+
+signals:
+    void nameChanged(const QString& newName);
+
+private:
+    QString m_name;
+    int m_hp = 0;
+};
+
+// --- usage ---
+#include <QMetaObject>
+#include <QDebug>
+
+void inspect_player(Player& p) {
+    const QMetaObject* mo = p.metaObject();
+
+    qDebug() << "Class:" << mo->className();
+    qDebug() << "Properties:";
+    for (int i = 0; i < mo->propertyCount(); ++i) {
+        QMetaProperty prop = mo->property(i);
+        qDebug() << "  " << prop.name()
+                 << ":" << prop.read(&p);
+    }
+
+    // Invoke method by name
+    QMetaObject::invokeMethod(
+        &p, "setName", Q_ARG(QString, "Hero")
+    );
+}
+\end{lstlisting}
+
+\begin{note}[title={Qt 反射要点}]
+\begin{itemize}[nosep]
+  \item 必须继承 \texttt{QObject}，类中声明 \texttt{Q\_OBJECT} 宏
+  \item 需要 MOC 预处理步骤（CMake 的 \texttt{AUTOMOC} 或 qmake 自动处理）
+  \item 支持信号槽（\texttt{signals/slots}）、属性系统（\texttt{Q\_PROPERTY}）、动态方法调用
+  \item \texttt{Q\_INVOKABLE} 标记的函数可通过元对象系统调用
+  \item Qt6 开始使用 \texttt{moc} 的改进版本，部分元信息在编译期生成
+  \item 运行时开销：每个 \texttt{QObject} 实例多一个 \texttt{d\_ptr} 指针，类元信息为全局常量表
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Unreal UObject 反射}\label{subsec:ue}
+
+Unreal Engine 的反射系统更为庞大，围绕 \texttt{UCLASS()}、\texttt{UPROPERTY()}、\texttt{UFUNCTION()} 等宏和 UHT（Unreal Header Tool）构建。UHT 是一个 C\# 编写的预处理器，扫描带标记的头文件，生成 \texttt{*.generated.h} 和 \texttt{*.gen.cpp} 文件。
+
+\begin{lstlisting}[language=C,caption={Unreal UObject: 属性与函数反射}]
+// --- header: MyActor.h ---
+#pragma once
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "MyActor.generated.h"  // UHT-generated
+
+UCLASS()
+class AMyActor : public AActor {
+    GENERATED_BODY()
+
+public:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+    int32 Health = 100;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    FString ActorName;
+
+    UFUNCTION(BlueprintCallable, Category = "Actions")
+    void TakeDamage(int32 Amount);
+
+    UFUNCTION(BlueprintPure)
+    bool IsAlive() const { return Health > 0; }
+};
+
+// --- gen.cpp (UHT auto-generated, simplified) ---
+// UHT generates registration code like:
+//   FProperty* prop = new FIntProperty(classObj,
+//       "Health", offset_of(Health), ...);
+//   classObj->AddProperty(prop);
+\end{lstlisting}
+
+\begin{note}[title={Unreal 反射要点}]
+\begin{itemize}[nosep]
+  \item 必须继承 \texttt{UObject}（或其子类如 \texttt{AActor}）
+  \item 使用 \texttt{GENERATED\_BODY()} 宏（替代旧版 \texttt{GENERATED\_UCLASS\_BODY()}）
+  \item UHT 预处理生成 \texttt{*.generated.h} 和 \texttt{*.gen.cpp}
+  \item 元信息用于：蓝图系统、序列化（存档/读档）、网络复制、GC、编辑器 UI
+  \item \texttt{UPROPERTY()} 的 specifier（\texttt{Replicated}, \texttt{SaveGame} 等）控制引擎行为
+  \item 运行时开销较大：每个 \texttt{UClass} 对象包含完整的属性/函数描述树
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{QObject vs UObject 对比}
+
+\begin{table}[H]
+\centering
+\caption{Qt QObject 与 Unreal UObject 对比}
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{特性} & \textbf{QObject} & \textbf{UObject} \\
+\midrule
+预处理工具 & MOC (C++) & UHT (C\#) \\
+基类要求 & \texttt{QObject} & \texttt{UObject} \\
+标记宏 & \texttt{Q\_OBJECT, Q\_PROPERTY} & \texttt{UCLASS, UPROPERTY, UFUNCTION} \\
+生成文件 & \texttt{moc\_*.cpp} & \texttt{*.generated.h + *.gen.cpp} \\
+信号槽 & 原生支持 & 委托（Delegate）系统 \\
+序列化 & \texttt{QDataStream} & 内置存档系统 \\
+编辑器集成 & Qt Designer & UE 蓝图/细节面板 \\
+内存管理 & 父子树 + 智能指针 & GC + 引用计数 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ═══════════════════════════════════════════════
+\section{C++26 静态反射}\label{sec:cpp26}
+% ═══════════════════════════════════════════════
+
+C++26 将通过 P2996 提案（Wyatt Green, Barry Revzin, Daveed Vandevoorde 等）引入标准静态反射。这是 C++ 历史上首次将反射能力纳入语言标准，被 Herb Sutter 称为 ``C++ 的十年级火箭引擎''。
+
+\subsection{核心 API：std::meta}
+
+C++26 反射在 \texttt{<meta>} 头文件的 \texttt{std::meta} 命名空间下提供了一组 \texttt{consteval} 函数：
+
+\begin{lstlisting}[language=Cpp26,caption={C++26 反射: 核心 API 一览}]
+#include <meta>
+
+struct Point { double x, y, z; };
+
+consteval void demo() {
+    // members_of: enumerate all members
+    for (auto m : std::meta::members_of(^Point)) {
+        // name_of: get member name as string_view
+        // type_of: get member type
+    }
+
+    // identifier_of: get the name of a reflection
+    auto name = std::meta::identifier_of(^Point);
+    // name == "Point"
+
+    // bases_of: enumerate base classes
+    // (for polymorphic types)
+}
+
+// Substitution: splice reflection back into code
+template <typename T>
+void print_struct(const T& obj) {
+    // [: :] splices reflected entities into code
+    template for (constexpr auto m : std::meta::members_of(^T)) {
+        std::cout << std::meta::name_of(m) << " = "
+                  << obj.[:m:] << '\n';
+    }
+}
+\end{lstlisting}
+
+\subsection{完整示例：泛型序列化}
+
+\begin{lstlisting}[language=Cpp26,caption={C++26 反射: 泛型 JSON 序列化器}]
+#include <meta>
+#include <string>
+#include <sstream>
+
+template <typename T>
+std::string to_json(const T& obj) {
+    std::ostringstream os;
+    os << '{';
+    bool first = true;
+    template for (constexpr auto m : std::meta::nonstatic_data_members_of(^T)) {
+        if (!first) os << ", ";
+        first = false;
+        os << '"' << std::meta::name_of(m) << '"' << ':';
+        if constexpr (std::is_same_v<std::meta::type_of(m), std::string>) {
+            os << '"' << obj.[:m:] << '"';
+        } else {
+            os << obj.[:m:];
+        }
+    }
+    os << '}';
+    return os.str();
+}
+
+struct Player {
+    std::string name;
+    int         hp;
+    double      speed;
+};
+
+// Usage:
+// Player p{"Alice", 100, 3.5};
+// to_json(p);  =>  {"name":"Alice", "hp":100, "speed":3.5}
+\end{lstlisting}
+
+\subsection{代码注入与动态枚举}
+
+C++26 反射不仅是读取（introspection），还支持代码生成（injection）：
+
+\begin{lstlisting}[language=Cpp26,caption={C++26 反射: 枚举反射与代码注入}]
+#include <meta>
+
+enum class Color { Red, Green, Blue };
+
+// to_string for any reflected enum
+template <typename E>
+    requires std::is_enum_v<E>
+std::string enum_to_string(E val) {
+    template for (constexpr auto e : std::meta::enumerators_of(^E)) {
+        if (val == [:e:])
+            return std::string(std::meta::name_of(e));
+    }
+    return "unknown";
+}
+
+// Auto-generate from_string
+template <typename E>
+    requires std::is_enum_v<E>
+E enum_from_string(std::string_view name) {
+    template for (constexpr auto e : std::meta::enumerators_of(^E)) {
+        if (name == std::meta::name_of(e))
+            return [:e:];
+    }
+    throw std::runtime_error("unknown enum value");
+}
+
+// Color c = enum_from_string<Color>("Green");
+// enum_to_string(c)  =>  "Green"
+\end{lstlisting}
+
+\begin{warning}[title={C++26 反射的局限与注意事项}]
+\begin{itemize}[nosep]
+  \item 截至 2026 年 6 月，尚无编译器完整实现 C++26 反射（clang 和 GCC 正在开发中）
+  \item \texttt{template for} 和 \texttt{[: :]} splice 语法需要编译器深度支持
+  \item 仅支持完整类型（complete types），不能在类定义内部反射自身
+  \item 当前仅编译期反射，没有运行时按字符串查找的能力（需自行构建查找表）
+  \item 对非聚合体类的私有成员访问仍有争议，P2996 允许反射非静态数据成员
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{C++26 反射 vs 现有方案}
+
+C++26 反射的核心优势在于它是\textbf{标准语言特性}：不需要外部工具、不需要宏注册、不需要第三方库。它将 ``手动注册元信息'' 的工作交给了编译器，实现了 ``一次定义，随处反射'' 的愿景。
+
+与现有方案的关键区别在于：C++26 反射可以在编译时\textbf{生成代码}（通过 splice 和 code injection），而不是仅仅在运行时查表。这意味着泛型序列化、枚举转字符串、工厂模式等常见需求可以用几十行泛型代码解决，而不需要为每个类手写注册代码。
+
+% ═══════════════════════════════════════════════
+\section{反射的常用应用场景}\label{sec:usecases}
+% ═══════════════════════════════════════════════
+
+反射不是目的，而是手段。理解反射的典型使用场景，有助于判断何时需要引入反射、以及选择哪种反射方案。
+
+\subsection{序列化与反序列化}
+
+序列化是反射最核心的应用场景。无论是 JSON、XML、二进制协议还是数据库存储，都需要遍历对象的所有字段并将其转换为特定格式。没有反射时，每个类都需要手写 \texttt{to\_json} / \texttt{from\_json} 函数；有了反射，一个泛型函数即可处理所有可反射类型：
+
+\begin{lstlisting}[caption={反射驱动序列化: 一个泛型函数处理所有类型}]
+// Pseudocode: generic JSON serializer using reflection
+template <typename T>
+std::string to_json(const T& obj) {
+    json j;
+    for_each_field_with_name(obj, [&](auto name, auto val) {
+        j[name] = val;  // works for any reflected struct
+    });
+    return j.dump();
+}
+
+// One function, any struct -- no per-class boilerplate
+to_json(player);   // {"name":"Alice","hp":100,...}
+to_json(config);   // {"host":"127.0.0.1","port":8080,...}
+to_json(order);    // {"id":42,"total":99.5,...}
+\end{lstlisting}
+
+这一模式在雅兰亭（iguana）、Boost.PFR + 自定义序列化器、RTTR、以及未来的 C++26 静态反射中都有体现。
+
+\subsection{属性编辑器与 Inspector}
+
+游戏引擎、GUI 框架和科学计算工具经常需要 ``属性面板''：给定任意对象，在 UI 中列出所有字段并允许用户编辑。Unreal 的 Details Panel、Qt 的 Property Browser、Unity 的 Inspector 都依赖反射实现。运行时反射（RTTR、QObject、UObject）特别适合此场景，因为 UI 交互天然是运行时的。
+
+\subsection{调试与日志输出}
+
+自动生成 \texttt{operator<<} 或 \texttt{toString()} 是反射最轻量的应用。无需为每个结构体手写打印函数，编译器即可生成字段级的格式化输出：
+
+\begin{lstlisting}[caption={反射驱动日志: 自动打印任意结构体}]
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const T& obj) {
+    os << "{ ";
+    boost::pfr::for_each_field(obj, [&](const auto& f, size_t i) {
+        if (i > 0) os << ", ";
+        os << f;
+    });
+    return os << " }";
+}
+// Now any aggregate is printable:
+// Player p{"Alice", 100, 3.5};
+// std::cout << p;  =>  { Alice, 100, 3.5 }
+\end{lstlisting}
+
+\subsection{命令行参数与配置文件解析}
+
+将命令行参数或 INI/TOML/YAML 配置文件自动映射到结构体字段，是反射的另一个高频应用。结合成员名称，可以自动生成 ``--name=Alice --hp=100'' 风格的命令行解析器，或从配置文件中按字段名读取值。
+
+\subsection{ORM 与数据库映射}
+
+对象-关系映射（ORM）需要将结构体字段映射到数据库表的列。反射可以自动提取字段名作为列名、字段类型作为列类型，从而消除手写 SQL 的冗余。这在服务器端框架（如 Drogon、OATPP）中非常常见。
+
+\subsection{依赖注入与服务容器}
+
+依赖注入容器需要在运行时检查构造函数的参数类型，自动从容器中查找并注入依赖。这要求类型系统能够 ``告诉'' 容器它需要什么——这正是 RTTR 和框架反射的用武之地。
+
+\subsection{单元测试与数据驱动}
+
+反射可以自动生成测试数据（如随机填充结构体所有字段）、比较两个对象的逐字段差异、或为 Golden File 测试自动序列化/反序列化对象。这些能力在大型项目的测试基础设施中非常有价值。
+
+\begin{note}[title={场景与方案选型速查}]
+\begin{itemize}[nosep]
+  \item \textbf{序列化}（JSON/XML/二进制）$\to$ Boost.PFR、雅兰亭、C++26（编译期零开销）
+  \item \textbf{属性编辑器 / Inspector} $\to$ RTTR、QObject、UObject（运行时按名访问）
+  \item \textbf{调试日志} $\to$ Boost.PFR（最轻量，\texttt{for\_each\_field} 即可）
+  \item \textbf{命令行/配置解析} $\to$ Boost.PFR \texttt{name\_of}、雅兰亭、C++26
+  \item \textbf{ORM / 数据库映射} $\to$ RTTR、模板特化、C++26（需字段名 + 类型信息）
+  \item \textbf{依赖注入} $\to$ RTTR、QObject（需运行时构造函数反射）
+  \item \textbf{测试辅助} $\to$ Boost.PFR（\texttt{to\_tuple} 自动比较）
+\end{itemize}
+\end{tcolorbox}
+
+% ═══════════════════════════════════════════════
+\section{反射序列化 vs Protobuf / FlatBuffers}\label{sec:proto}
+% ═══════════════════════════════════════════════
+
+在序列化场景中，反射驱动的序列化（Boost.PFR / 雅兰亭 / RTTR / C++26）与 Schema 驱动的序列化（Protocol Buffers / FlatBuffers）是两种截然不同的技术路线。理解它们的差异对于架构选型至关重要。
+
+\subsection{工作原理对比}
+
+\textbf{反射序列化}直接作用于 C++ 结构体：编译器或库在编译期读取结构体的字段布局和名称，自动生成序列化代码。数据格式由 C++ 类型定义直接决定，没有额外的 Schema 文件。
+
+\textbf{Protobuf / FlatBuffers} 则采用 ``Schema 优先'' 的模式：开发者首先编写 \texttt{.proto} 或 \texttt{.fbs} 文件定义数据结构，然后由代码生成器（\texttt{protoc} / \texttt{flatc}）为目标语言生成访问代码。C++ 代码不直接操作原始数据，而是通过生成的 accessor 类进行读写。
+
+\begin{lstlisting}[caption={Protobuf: Schema 优先}]
+// --- player.proto ---
+syntax = "proto3";
+message Player {
+    string name  = 1;
+    int32  hp    = 2;
+    double speed = 3;
+}
+
+// --- generated code usage ---
+Player p;
+p.set_name("Alice");
+p.set_hp(100);
+p.set_speed(3.5);
+
+std::string buf;
+p.SerializeToString(&buf);    // serialize
+Player p2;
+p2.ParseFromString(buf);      // deserialize
+\end{lstlisting}
+
+\begin{lstlisting}[caption={FlatBuffers: Schema 优先 + 零拷贝}]
+// --- player.fbs ---
+table Player {
+    name:  string;
+    hp:    int32;
+    speed: float64;
+}
+
+// --- generated code usage ---
+flatbuffers::FlatBufferBuilder builder;
+auto name = builder.CreateString("Alice");
+auto p = CreatePlayer(builder, name, 100, 3.5);
+builder.Finish(p);
+
+// Zero-copy read: no deserialization needed
+auto buf = builder.GetBufferPointer();
+auto rp = GetPlayer(buf);
+std::cout << rp->name()->c_str();  // "Alice"
+\end{lstlisting}
+
+\subsection{核心差异分析}
+
+\begin{table}[H]
+\centering
+\caption{反射序列化 vs Protobuf / FlatBuffers}
+\begin{tabularx}{\textwidth}{l p{4cm} p{4cm}}
+\toprule
+\textbf{维度} & \textbf{反射序列化} & \textbf{Protobuf / FlatBuffers} \\
+\midrule
+\textbf{数据契约} & C++ struct 即契约 & 独立 .proto / .fbs 文件 \\
+\addlinespace
+\textbf{跨语言} & 仅 C++ & 原生支持 10+ 语言 \\
+\addlinespace
+\textbf{版本兼容} & 无内建版本机制 & 字段编号天然支持增删 \\
+  & （需自行处理） & （向前/向后兼容） \\
+\addlinespace
+\textbf{序列化格式} & 取决于库实现 & 紧凑二进制（Protobuf） \\
+  & （JSON/XML/自定义） & 零拷贝二进制（FlatBuffers） \\
+\addlinespace
+\textbf{性能} & 编译期内联，可极快 & Protobuf: 编解码有开销 \\
+  & & FlatBuffers: 零拷贝读取 \\
+\addlinespace
+\textbf{Schema 演进} & 修改 struct 即改格式 & 修改 .proto 需重新生成代码 \\
+\addlinespace
+\textbf{工具链} & 无需额外工具 & 需要 protoc / flatc \\
+\addlinespace
+\textbf{网络传输} & 需自建协议封装 & 天然适合 RPC（gRPC 等） \\
+\addlinespace
+\textbf{自描述} & 可内嵌字段名 & 需附带 .proto 或反射服务 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{选型指南}
+
+\textbf{选择反射序列化的场景}：项目完全在 C++ 内部闭环（如单机游戏存档、进程间共享内存通信、嵌入式设备通信）；需要直接操作 C++ 结构体而不愿引入中间层；追求极致编译期内联性能；数据结构变更频繁且不需要跨语言兼容。
+
+\textbf{选择 Protobuf 的场景}：需要跨语言通信（C++ 后端与 Java/Go/Python 前端交互）；需要严格的版本兼容和 Schema 演进（微服务之间的 RPC）；使用 gRPC 等框架；数据需要在不同系统间长期稳定传递。
+
+\textbf{选择 FlatBuffers 的场景}：对读取延迟极度敏感（游戏客户端、高频交易）；需要零拷贝访问序列化数据；数据大小在 MB 级以上，反序列化开销不可接受；移动端 App 需要最小化内存分配。
+
+\begin{warning}[title={混合使用的常见模式}]
+许多大型项目会同时使用两种技术：内部高性能通信用反射序列化（如雅兰亭的 struct\_pack），跨服务通信用 Protobuf。雅兰亭的 iguana 组件甚至同时提供了反射式 JSON 和 Protobuf 兼容序列化，允许在同一代码库中无缝切换。
+\end{tcolorbox}
+
+% ═══════════════════════════════════════════════
+\section{与 Java/C\# 反射的对比}\label{sec:jvm_clr}
+% ═══════════════════════════════════════════════
+
+Java 和 C\# 的反射是语言核心特性，运行在托管运行时（JVM / CLR）之上。与 C++ 的各种反射方案相比，存在本质性的差异。
+
+\subsection{Java 反射示例}
+
+\begin{lstlisting}[language=Java,caption={Java: 运行时反射}]
+import java.lang.reflect.*;
+
+class Player {
+    private String name;
+    private int hp;
+
+    public Player(String name, int hp) {
+        this.name = name;
+        this.hp = hp;
+    }
+
+    public void takeDamage(int dmg) { hp -= dmg; }
+}
+
+public class ReflectDemo {
+    public static void main(String[] args) throws Exception {
+        // Get class by name at runtime
+        Class<?> cls = Class.forName("Player");
+
+        // Create instance dynamically
+        Constructor<?> ctor = cls.getConstructor(String.class, int.class);
+        Object obj = ctor.newInstance("Alice", 100);
+
+        // Access private field
+        Field nameField = cls.getDeclaredField("name");
+        nameField.setAccessible(true);
+        System.out.println("name = " + nameField.get(obj));
+
+        // List all fields
+        for (Field f : cls.getDeclaredFields()) {
+            f.setAccessible(true);
+            System.out.println(f.getName() + " = " + f.get(obj));
+        }
+
+        // Invoke method by name
+        Method method = cls.getMethod("takeDamage", int.class);
+        method.invoke(obj, 30);
+    }
+}
+\end{lstlisting}
+
+\subsection{C\# 反射示例}
+
+\begin{lstlisting}[language={[Sharp]C},caption={C\#: 运行时反射}]
+using System;
+using System.Reflection;
+
+class Player {
+    public string Name { get; set; }
+    public int Hp { get; set; }
+    public void TakeDamage(int dmg) => Hp -= dmg;
+}
+
+class ReflectDemo {
+    static void Main() {
+        Type t = typeof(Player);
+
+        // Create instance
+        object obj = Activator.CreateInstance(t);
+
+        // Set property by name
+        PropertyInfo nameProp = t.GetProperty("Name");
+        nameProp.SetValue(obj, "Alice");
+
+        // Get property by name
+        Console.WriteLine($"Name = {nameProp.GetValue(obj)}");
+
+        // List all properties
+        foreach (PropertyInfo p in t.GetProperties()) {
+            Console.WriteLine($"{p.Name} ({p.PropertyType.Name}) " +
+                            $"= {p.GetValue(obj)}");
+        }
+
+        // Invoke method
+        MethodInfo method = t.GetMethod("TakeDamage");
+        method.Invoke(obj, new object[] { 30 });
+    }
+}
+\end{lstlisting}
+
+\subsection{本质差异分析}
+
+\begin{table}[H]
+\centering
+\caption{Java/C\# 反射 vs C++ 反射}
+\begin{tabularx}{\textwidth}{l p{3.5cm} p{5cm}}
+\toprule
+\textbf{维度} & \textbf{Java / C\#} & \textbf{C++} \\
+\midrule
+反射时机 & 纯运行时 & 编译期为主（C++26）\\
+           &              & 或编译+运行混合（RTTR, Qt） \\
+\addlinespace
+类型信息存储 & 元数据嵌入 class 文件/程序集 & 手动注册或编译器生成 \\
+\addlinespace
+按名查找 & 原生支持 & 需构建查找表（C++26 可生成） \\
+\addlinespace
+性能开销 & 较大（JIT 可优化） & 编译期反射零开销；\\
+         &                    & 运行时反射开销取决于方案 \\
+\addlinespace
+私有成员访问 & \texttt{setAccessible(true)} & C++26 允许；其他方案需要\\
+             & 或 \texttt{BindingFlags}     & 公有接口或友元 \\
+\addlinespace
+动态加载 & \texttt{Class.forName()} & 无标准机制\\
+         & \texttt{Assembly.Load()}  & （dlopen 等平台相关） \\
+\addlinespace
+泛型约束 & 运行时检查 & 编译期 \texttt{static\_assert}\\
+\addlinespace
+代码生成 & 无（字节码层面除外） & C++26 splice / 代码注入 \\
+\addlinespace
+安全性 & 沙箱 + SecurityManager & 无标准安全模型 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Java 和 C\# 的反射建立在托管运行时之上：每个类在运行时都保留完整的类型信息（字段名、方法签名、注解等）。这种 ``pay for everything'' 的模型换来了极大的动态性——可以在运行时按字符串名查找任何类型和成员，可以动态加载程序集，可以绕过访问控制。
+
+C++ 的哲学恰恰相反。标准 C++ 在编译后不保留任何类型名称的字符串信息（RTTI 仅保留类名和继承关系）。因此 C++ 社区发展出了多种策略：需要运行时动态性时使用框架反射（Qt/UE），需要编译期泛型编程时使用聚合体反射（PFR/雅兰亭）或 C++26 静态反射，需要在两者之间取得平衡时使用 RTTR 类库。
+
+\begin{note}[title={选择建议}]
+\begin{itemize}[nosep]
+  \item 如果你在写 Qt/UE 应用：使用框架自带的反射系统，无需额外引入
+  \item 如果你需要零开销序列化：优先使用 Boost.PFR 或雅兰亭（聚合体），或等待 C++26
+  \item 如果你需要运行时按名查找：使用 RTTR 或自建注册表
+  \item 如果你在做新库设计：关注 C++26 反射，它将使大多数手动注册方案过时
+\end{itemize}
+\end{tcolorbox}
+
+% ═══════════════════════════════════════════════
+\section{综合对比总表}\label{sec:summary}
+% ═══════════════════════════════════════════════
+
+\begin{table}[H]
+\centering
+\caption{C++ 反射方案综合对比}
+\small
+\begin{tabularx}{\textwidth}{
+  >{\raggedright\arraybackslash}p{2.2cm}
+  >{\centering\arraybackslash}p{1.5cm}
+  >{\centering\arraybackslash}p{1.5cm}
+  >{\centering\arraybackslash}p{1.5cm}
+  >{\centering\arraybackslash}p{1.5cm}
+  >{\centering\arraybackslash}p{1.5cm}
+}
+\toprule
+ & \textbf{Boost.PFR} & \textbf{雅兰亭} & \textbf{RTTR} & \textbf{QObject/} & \textbf{C++26} \\
+ & & & & \textbf{UObject} & \textbf{反射} \\
+\midrule
+\textbf{反射时机} & 编译期 & 编译期 & 运行时 & 编译+运行 & 编译期 \\
+\textbf{类型限制} & 聚合体 & 聚合体/宏 & 任意 & 需继承 & 完整类型 \\
+\textbf{获取成员名} & C++20* & 是 & 是 & 是 & 是 \\
+\textbf{按名查找} & 否 & 否* & 是 & 是 & 可生成 \\
+\textbf{动态创建} & 否 & 否 & 是 & 是 & 可生成 \\
+\textbf{外部工具} & 无 & 无 & 无 & MOC/UHT & 无 \\
+\textbf{运行时开销} & 零 & 零 & 中等 & 中等 & 零 \\
+\textbf{C++ 标准} & $\ge$14/$\ge$20 & $\ge$20 & $\ge$11 & $\ge$11 & 26 \\
+\textbf{生态成熟度} & 高 & 中高 & 中 & 极高 & 未实现 \\
+\bottomrule
+\end{tabularx}
+
+\vspace{4pt}
+\footnotesize{* Boost.PFR 成员名获取需 C++20+ 且仅限 MSVC/GCC/Clang；雅兰亭纯聚合体模式不支持按名查找}
+\end{table}
+
+% ═══════════════════════════════════════════════
+\section{总结}\label{sec:conclusion}
+% ═══════════════════════════════════════════════
+
+C++ 反射的发展史，本质上是社区在 ``零开销原则'' 与 ``开发效率'' 之间不断寻找平衡的过程。
+
+Boost.PFR 代表了编译期反射的极简主义——利用结构化绑定，零依赖，零开销。C++20 以上，\texttt{name\_of} 魔法宏进一步赋予了它编译期获取成员名的能力（尽管仅限 MSVC/GCC/Clang），大幅提升了实用性。雅兰亭在此基础上将反射与序列化生态深度整合，并借助编译期技巧实现了更广泛的编译器兼容的成员名获取。
+
+宏/模板元信息方案（RTTR、X-Macro 等）提供了最灵活的运行时反射能力，适用于任意类型，代价是需要手动注册和维护元信息。这是当前最实用的 ``全能'' 方案。
+
+Qt 和 Unreal 证明了框架级反射系统的巨大价值：一旦基础设施建立，信号槽、属性编辑、蓝图系统、网络复制等高级功能便水到渠成。但框架反射与框架深度耦合，不可脱离使用。
+
+C++26 静态反射是这一切的 ``终结者''——它将编译期反射标准化，使得泛型序列化、枚举反射、工厂模式等需求可以用几十行标准代码解决。虽然截至 2026 年尚无编译器完整实现，但它代表了 C++ 反射的未来方向。
+
+在序列化领域，反射方案与 Protobuf/FlatBuffers 代表了两种截然不同的哲学：前者 ``C++ 类型即协议''，后者 ``Schema 即协议''。反射方案在 C++ 内部闭环场景中极致简洁高效；Protobuf/FlatBuffers 则在跨语言、跨服务、版本演进等场景中不可替代。理解这一区别，才能在实际项目中做出正确的架构选择。
+
+对于 Java/C\# 开发者而言，C++ 的反射方案可能显得繁琐和碎片化。但正是这种 ``按需付费'' 的设计哲学，使得 C++ 在嵌入式、游戏引擎、高频交易等对性能极度敏感的领域保持了不可替代的地位。理解各种反射方案的取舍，是编写高质量 C++ 代码的重要一环。
+
+\end{document}

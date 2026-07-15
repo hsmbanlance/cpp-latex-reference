@@ -1,0 +1,1443 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+% ---- listing style ----
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,
+    ifstream,ofstream,fstream,iostream,
+    ostream,istream,stringstream,ostringstream,
+    path,filesystem},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+
+\lstdefinelanguage{Bash}{
+  morekeywords={clang,clang++,cl,cmake,gcc,g++,export,./,cd,mkdir,rm,cp,mv,echo},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+}
+\lstdefinestyle{bashstyle}{
+  language=Bash,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+}
+
+% ---- 文档特定语言定义 ----
+\lstdefinelanguage{Bash}{
+  morekeywords={clang, clang++, cl, cmake, gcc, g++, export, ./, cd, mkdir},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+}
+\lstset{style=cppstyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,
+  title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,
+  title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,
+  title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,
+  title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,
+  title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={Memory Leak Reference},
+  pdftitle={C/C++ 内存泄漏：常见问题、检测与防御},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+% ====================================================================
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+% ──────────────────────────────────────────
+\section{引言}
+% ──────────────────────────────────────────
+
+内存泄漏（Memory Leak）是指程序在运行过程中动态分配的内存未能被正确释放，
+导致可用内存逐渐减少的现象。在 C/C++ 这类需要手动管理内存的语言中，
+内存泄漏是最常见也最难以排查的缺陷之一。
+
+轻微的内存泄漏在短生命周期的程序中可能不会造成可观察的影响，
+但在长时间运行的服务（如 Web 服务器、数据库引擎、嵌入式系统）中，
+持续的内存增长最终会导致系统性能下降、OOM（Out of Memory）崩溃，
+甚至影响同一系统上的其他进程。
+
+本文将系统性地介绍 C/C++ 中常见的内存泄漏模式、主流的检测工具与方案，
+以及为什么即便使用了所有现有工具，内存泄漏仍然难以被完全消除。
+
+
+% ──────────────────────────────────────────
+\section{C 语言中的常见内存泄漏}
+% ──────────────────────────────────────────
+
+\subsection{\texttt{malloc} 后未调用 \texttt{free}}
+
+这是最基础也最常见的泄漏模式：分配了内存但在某些执行路径上忘记释放。
+
+\begin{lstlisting}[style=cppstyle, caption={基本泄漏：忘记 free}]
+#include <stdlib.h>
+#include <string.h>
+
+char* duplicate_string(const char* src) {
+    size_t len = strlen(src) + 1;
+    char* dst = (char*)malloc(len);
+    if (dst) memcpy(dst, src, len);
+    return dst;
+}
+
+void process() {
+    char* name = duplicate_string("hello");
+    // ... 使用 name ...
+    // 忘记 free(name);
+}
+\end{lstlisting}
+
+\subsection{\texttt{realloc} 失败导致指针丢失}
+
+当 \texttt{realloc} 失败时返回 \texttt{NULL}，而原始指针保持不变。
+如果直接将结果赋给原指针变量，原地址就会丢失。
+
+\begin{lstlisting}[style=cppstyle, caption={realloc 失败时的指针丢失}]
+#include <stdlib.h>
+
+void grow_buffer(int** buf, size_t* cap, size_t new_cap) {
+    // 错误写法：如果 realloc 失败，*buf 变成 NULL，原内存泄漏
+    *buf = (int*)realloc(*buf, new_cap * sizeof(int));
+
+    // 正确写法：使用临时变量
+    // int* tmp = (int*)realloc(*buf, new_cap * sizeof(int));
+    // if (tmp) { *buf = tmp; *cap = new_cap; }
+}
+\end{lstlisting}
+
+\subsection{多路径返回遗漏释放}
+
+函数在多个分支返回时，某些路径上跳过了释放操作。
+
+\begin{lstlisting}[style=cppstyle, caption={多路径返回导致泄漏}]
+#include <stdlib.h>
+#include <stdio.h>
+
+int parse_file(const char* path) {
+    char* buffer = (char*)malloc(4096);
+    if (!buffer) return -1;
+
+    FILE* fp = fopen(path, "r");
+    if (!fp) {
+        // 此处忘记 free(buffer) 直接返回
+        return -1;
+    }
+
+    // ... 处理文件 ...
+    free(buffer);
+    fclose(fp);
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{数据结构清理不完整}
+
+释放链表、树等结构时，仅释放头节点而遗漏子节点。
+
+\begin{lstlisting}[style=cppstyle, caption={链表释放不完整}]
+typedef struct Node {
+    int data;
+    struct Node* next;
+} Node;
+
+void free_list_wrong(Node* head) {
+    free(head);  // 只释放了第一个节点，其余节点全部泄漏
+}
+
+void free_list_correct(Node* head) {
+    while (head) {
+        Node* tmp = head->next;
+        free(head);
+        head = tmp;
+    }
+}
+\end{lstlisting}
+
+
+% ──────────────────────────────────────────
+\section{C++ 中的常见内存泄漏}
+% ──────────────────────────────────────────
+
+\subsection{\texttt{new}/\texttt{delete} 不匹配}
+
+\texttt{new} 必须对应 \texttt{delete}，\texttt{new[]} 必须对应 \texttt{delete[]}。
+混用会导致未定义行为，部分情况下表现为内存泄漏。
+
+\begin{lstlisting}[style=cppstyle, caption={new/delete 不匹配}]
+void example() {
+    int* arr = new int[100];
+    delete arr;     // 错误！应该是 delete[] arr
+    // 可能导致只释放第一个元素，其余 99 个泄漏
+
+    MyClass* obj = new MyClass();
+    free(obj);      // 错误！跳过了析构函数调用
+    // 对象内部资源不会被清理
+}
+\end{lstlisting}
+
+\subsection{异常安全问题}
+
+C++ 中异常可能在 \texttt{new} 和 \texttt{delete} 之间抛出，
+导致释放代码永远不会执行。
+
+\begin{lstlisting}[style=cppstyle, caption={异常导致的内存泄漏}]
+void risky_function() {
+    MyClass* obj = new MyClass();
+
+    do_something();  // 如果这里抛出异常...
+    do_more();       // ...或者这里...
+
+    delete obj;      // ...这行永远不会执行
+}
+
+// 安全的做法：使用 RAII
+void safe_function() {
+    auto obj = std::make_unique<MyClass>();
+    do_something();  // 即使抛出异常
+    do_more();       // unique_ptr 的析构函数仍会被调用
+}
+\end{lstlisting}
+
+\subsection{缺少虚析构函数}
+
+通过基类指针删除派生类对象时，如果基类的析构函数不是虚函数，
+派生类的析构函数不会被调用，导致派生类分配的资源泄漏。
+
+\begin{lstlisting}[style=cppstyle, caption={缺少虚析构函数}]
+class Base {
+public:
+    // 缺少 virtual 关键字
+    ~Base() { /* 只清理 Base 的资源 */ }
+};
+
+class Derived : public Base {
+    int* data_;
+public:
+    Derived() : data_(new int[1000]) {}
+    ~Derived() override { delete[] data_; }  // 不会被调用！
+};
+
+void leak() {
+    Base* ptr = new Derived();
+    delete ptr;  // 只调用 ~Base()，data_ 泄漏
+}
+\end{lstlisting}
+
+\begin{warning}[关键规则]
+任何可能被继承的基类，其析构函数\textbf{必须}声明为 \texttt{virtual}。
+或者，如果类不打算被继承，使用 \texttt{final} 关键字阻止继承。
+\end{warning}
+
+\subsection{\texttt{shared\_ptr} 循环引用}
+
+当两个 \texttt{shared\_ptr} 互相引用时，引用计数永远不会降为零，
+两个对象都无法被销毁。
+
+\begin{lstlisting}[style=cppstyle, caption={shared\_ptr 循环引用}]
+#include <memory>
+
+struct NodeB;
+
+struct NodeA {
+    std::shared_ptr<NodeB> b_ptr;
+    ~NodeA() { /* 永远不会被调用 */ }
+};
+
+struct NodeB {
+    std::shared_ptr<NodeA> a_ptr;
+    ~NodeB() { /* 永远不会被调用 */ }
+};
+
+void circular_leak() {
+    auto a = std::make_shared<NodeA>();
+    auto b = std::make_shared<NodeB>();
+    a->b_ptr = b;
+    b->a_ptr = a;
+    // a 和 b 离开作用域后，引用计数均为 1，不会析构
+}
+
+// 修复：在其中一个方向使用 weak_ptr
+struct NodeB_fixed {
+    std::weak_ptr<NodeA> a_ptr;  // 弱引用打破循环
+};
+\end{lstlisting}
+
+\subsection{容器持有裸指针}
+
+STL 容器销毁时只会调用元素类型的析构函数。
+如果容器中存放的是裸指针，容器销毁不会 \texttt{delete} 这些指针。
+
+\begin{lstlisting}[style=cppstyle, caption={vector 中的裸指针泄漏}]
+#include <vector>
+
+class Widget { /* ... */ };
+
+void container_leak() {
+    std::vector<Widget*> widgets;
+    for (int i = 0; i < 100; ++i)
+        widgets.push_back(new Widget());
+
+    // widgets 销毁时只销毁了指针本身
+    // 不会 delete 指针指向的 Widget 对象
+}
+
+// 正确做法：使用智能指针
+void container_safe() {
+    std::vector<std::unique_ptr<Widget>> widgets;
+    for (int i = 0; i < 100; ++i)
+        widgets.push_back(std::make_unique<Widget>());
+    // widgets 销毁时自动释放所有 Widget
+}
+\end{lstlisting}
+
+\subsection{Lambda 与回调中的捕获泄漏}
+
+将裸指针通过值捕获到 lambda 中，且 lambda 的生命周期超过了指针指向对象的生命周期，
+可能在异步回调中造成难以追踪的泄漏。
+
+\begin{lstlisting}[style=cppstyle, caption={Lambda 捕获导致的泄漏}]
+#include <functional>
+
+std::function<void()> pending_callback;
+
+void register_task() {
+    int* data = new int[1024];
+    pending_callback = [data]() {
+        // 如果这个回调永远不会被调用，data 就泄漏了
+        delete[] data;
+    };
+    // 如果程序在回调执行前退出，data 永远不会被释放
+}
+\end{lstlisting}
+
+
+\subsection{从 \texttt{this} 指针构造 \texttt{shared\_ptr}}
+
+在成员函数中直接使用 \texttt{shared\_ptr(this)} 构造新的智能指针，
+会导致同一个对象被两个独立的引用计数链管理。当任一链的计数归零时
+都会析构对象，另一条链上的指针随即变成悬空指针（dangling pointer），
+后续对它的任何操作都是未定义行为。更隐蔽的是，如果对象由
+\texttt{shared\_ptr} 管理的同时又从内部创建了第二个 \texttt{shared\_ptr}，
+对象可能被析构两次，或者因为引用计数不一致而永远不被析构——
+具体表现取决于构造顺序和使用方式。
+
+\begin{lstlisting}[style=cppstyle, caption={从 this 构造 shared\_ptr 的两种泄漏/崩溃模式}]
+#include <memory>
+
+class Session {
+public:
+    // 错误：创建第二个独立的 shared_ptr，管理同一个 this
+    std::shared_ptr<Session> get_shared() {
+        return std::shared_ptr<Session>(this);  // 危险！
+    }
+
+    // 场景一：双重析构（崩溃）
+    //   shared_ptr<Session> sp1(new Session());
+    //   auto sp2 = sp1->get_shared();
+    //   // sp1 和 sp2 各自维护独立的引用计数
+    //   // 两者都归零时，对象被析构两次 -> UB
+
+    // 场景二：提前析构导致悬空指针（泄漏的变体）
+    //   Session* raw = new Session();
+    //   {
+    //       auto sp = raw->get_shared();
+    //       // sp 引用计数为 1
+    //   }
+    //   // sp 离开作用域，对象被析构
+    //   // raw 变成悬空指针，后续使用 -> UB
+};
+\end{lstlisting}
+
+正确的做法是让类继承 \texttt{std::enable\_shared\_from\_this}，
+它内部使用一个 \texttt{weak\_ptr} 来确保返回的 \texttt{shared\_ptr}
+与外部已有的共享同一个引用计数。
+
+\begin{lstlisting}[style=cppstyle, caption={enable\_shared\_from\_this 的正确用法}]
+#include <memory>
+
+class Session : public std::enable_shared_from_this<Session> {
+public:
+    std::shared_ptr<Session> get_shared() {
+        return shared_from_this();  // 安全：共享同一引用计数
+    }
+};
+
+// 使用前提：对象必须已经由 shared_ptr 管理
+void correct_usage() {
+    auto session = std::make_shared<Session>();
+    auto another_ref = session->get_shared();
+    // session 和 another_ref 共享同一个引用计数
+    // 引用计数为 2，两者都离开作用域后对象才被析构
+}
+\end{lstlisting}
+
+\begin{warning}[使用前提]
+\texttt{shared\_from\_this()} 要求对象\textbf{已经}被 \texttt{shared\_ptr}
+管理。如果在栈对象或裸 \texttt{new} 的对象上调用，会抛出
+\texttt{std::bad\_weak\_ptr} 异常（C++17 起）。
+在 C++17 之前，这种行为是未定义的，可能导致难以排查的崩溃或泄漏。
+\end{warning}
+
+\subsection{容器操作导致迭代器失效}
+
+STL 容器的某些修改操作会使已有迭代器失效。如果开发者在迭代器失效后
+仍然使用旧迭代器进行遍历或擦除操作，可能跳过部分元素的清理，
+或者触发未定义行为，间接导致容器内持有的资源泄漏。
+
+\begin{lstlisting}[style=cppstyle, caption={vector 迭代器失效导致跳过释放}]
+#include <vector>
+#include <memory>
+
+void process_and_clean(std::vector<std::unique_ptr<Task>>& tasks) {
+    for (auto it = tasks.begin(); it != tasks.end(); ++it) {
+        if ((*it)->is_complete()) {
+            // 错误！erase 会使当前及之后的所有迭代器失效
+            tasks.erase(it);
+            // 此时 it 已经失效，++it 是未定义行为
+            // 可能跳过后续元素，导致部分 Task 永远不被处理/释放
+        }
+    }
+
+    // 正确写法：使用 erase 的返回值更新迭代器
+    // for (auto it = tasks.begin(); it != tasks.end(); ) {
+    //     if ((*it)->is_complete())
+    //         it = tasks.erase(it);
+    //     else
+    //         ++it;
+    // }
+}
+\end{lstlisting}
+
+\texttt{std::vector} 在 \texttt{push\_back} 导致容量增长时，
+会使所有已有迭代器、指针和引用全部失效。如果某处缓存了旧迭代器，
+后续使用它访问或操作元素即为 UB。类似的，\texttt{std::unordered\_map}
+在 rehash 时会使所有迭代器失效，\texttt{std::deque} 在首尾之外的位置
+插入或删除时会使所有迭代器失效。
+
+\begin{lstlisting}[style=cppstyle, caption={缓存迭代器在容器增长后失效}]
+#include <vector>
+
+void cached_iterator_bug() {
+    std::vector<int*> ptrs;
+    ptrs.reserve(4);
+
+    ptrs.push_back(new int(1));
+    auto saved_it = ptrs.begin();  // 缓存迭代器
+
+    // 后续插入导致 realloc（容量不足时）
+    for (int i = 0; i < 100; ++i)
+        ptrs.push_back(new int(i));
+
+    // saved_it 已经失效！
+    delete *saved_it;  // 未定义行为
+    // 如果这里崩溃或静默失败，ptrs[0] 指向的 int 可能泄漏
+}
+\end{lstlisting}
+
+\begin{note}[安全实践]
+避免在遍历容器的同时修改容器。如果必须在遍历中删除元素，
+使用 erase-remove 惯用法（C++20 可用 \texttt{std::erase\_if}），
+或始终用 \texttt{erase()} 的返回值更新迭代器。
+对于裸指针容器，优先改为 \texttt{unique\_ptr} 容器，
+即使迭代器失效导致遍历中断，容器析构时仍会释放所有元素。
+\end{note}
+
+
+\subsection{未定义行为与数据竞争引发的泄漏}
+
+未定义行为（Undefined Behavior, UB）不仅可能导致程序崩溃，
+也可能间接引发内存泄漏。其中，数据竞争（data race）是最常见的一种：
+当多个线程同时对同一指针进行写操作且缺少同步时，一个线程写入的新地址
+可能覆盖另一个线程尚未释放的旧地址，导致旧内存永久丢失。
+
+\begin{lstlisting}[style=cppstyle, caption={数据竞争导致的内存泄漏}]
+#include <thread>
+
+struct SharedState {
+    int* data = nullptr;
+};
+
+void thread_a(SharedState& state) {
+    // 没有锁保护
+    delete state.data;
+    state.data = new int[200];  // 写入新地址
+}
+
+void thread_b(SharedState& state) {
+    // 没有锁保护
+    delete state.data;
+    state.data = new int[300];  // 可能覆盖 thread_a 刚写入的地址
+}
+
+void race_leak() {
+    SharedState state;
+    state.data = new int[100];
+
+    std::thread ta(thread_a, std::ref(state));
+    std::thread tb(thread_b, std::ref(state));
+    ta.join(); tb.join();
+
+    // state.data 只保留了最后一次写入的地址
+    // 另一个线程分配的内存永久丢失
+    delete[] state.data;
+}
+\end{lstlisting}
+
+除数据竞争外，其他 UB 也可能导致泄漏。例如，对已释放内存的写入
+（use-after-free）可能破坏堆管理器的内部元数据，使得后续的 \texttt{free} 或
+\texttt{delete} 调用静默失败，导致其他正常内存无法被释放。
+整数溢出导致的分配大小错误、通过空指针或野指针的间接写入等，
+都可能产生难以复现的泄漏现象。
+
+\begin{warning}[UB 与内存泄漏的隐蔽性]
+由 UB 引起的内存泄漏通常不会在每次运行时都出现，而是取决于线程调度、
+堆布局等不可控因素。传统的泄漏检测工具（ASan、CRT 调试堆）可能报告
+"有泄漏"但无法精确定位根因——因为真正的 bug 是数据竞争或 UAF，
+泄漏只是其症状。排查此类问题需要结合 ThreadSanitizer（TSan）
+等专门检测并发错误的工具。
+\end{warning}
+
+
+% ──────────────────────────────────────────
+\section{检测方案一：Clang AddressSanitizer}
+% ──────────────────────────────────────────
+
+AddressSanitizer（简称 ASan）是 LLVM/Clang 内置的内存错误检测工具，
+能够检测内存泄漏、越界访问、use-after-free、double-free 等多种内存错误。
+它通过在编译期对代码进行插桩（instrumentation），并在运行时维护影子内存（shadow memory）
+来追踪每一块内存的分配与释放状态。
+
+\subsection{基本原理}
+
+ASan 的核心机制包含三个部分：
+
+\begin{enumerate}[nosep]
+  \item \textbf{编译器插桩}：在每次 \texttt{malloc}/\texttt{free}（以及 \texttt{new}/\texttt{delete}）
+    调用前后插入检查代码。
+  \item \textbf{影子内存}：使用额外的内存映射来记录每个 8 字节内存块的可访问性状态。
+  \item \textbf{红区（Red Zones）}：在每块已分配内存的两侧插入不可访问的"毒化"区域，
+    任何对红区的访问都会立即触发报告。
+\end{enumerate}
+
+\subsection{使用方法}
+
+在编译和链接时添加 \texttt{-fsanitize=address} 标志，同时建议开启 \texttt{-g} 以获取
+行号信息。为了获得更详细的泄漏报告，设置环境变量 \texttt{ASAN\_OPTIONS}。
+
+\begin{lstlisting}[style=bashstyle, caption={使用 Clang ASan 编译和运行}]
+# 编译
+clang++ -std=c++17 -g -fsanitize=address \
+    -fno-omit-frame-pointer \
+    -o my_program main.cpp
+
+# 运行并启用泄漏检测
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=0 \
+    ./my_program
+\end{lstlisting}
+
+\subsection{ASan 泄漏报告解读}
+
+当 ASan 检测到泄漏时，会输出如下格式的报告：
+
+\begin{lstlisting}[style=bashstyle, caption={ASan 泄漏报告示例}]
+==12345==ERROR: LeakSanitizer: detected memory leaks
+
+Direct leak of 400 byte(s) in 1 object(s) allocated from:
+    #0 0x4c1a7f in operator new(unsigned long)
+        /llvm/projects/compiler-rt/lib/asan/asan_new_delete.cpp:99
+    #1 0x4f2b3c in main /home/user/main.cpp:15:14
+    #2 0x7f3a21 in __libc_start_main
+
+SUMMARY: AddressSanitizer: 400 byte(s) leaked in 1 allocation(s).
+\end{lstlisting}
+
+报告中的关键信息包括：泄漏大小与对象数量、完整的分配调用栈（含文件名和行号），
+以及泄漏是直接泄漏（direct leak）还是间接泄漏（indirect leak，
+由直接泄漏的对象间接持有的内存）。
+
+\subsection{ASan 的局限性}
+
+\begin{itemize}[nosep]
+  \item \textbf{性能开销}：CPU 开销约为 $2\times$，内存开销约为 $2$--$3\times$，
+    不适合直接用于生产环境。
+  \item \textbf{平台依赖}：在 Windows/MSVC 上的支持有限，
+    主要用于 Linux/macOS + Clang/GCC 环境。
+  \item \textbf{无法检测所有逻辑泄漏}：如果程序仍然持有指针（即使逻辑上不再需要），
+    ASan 不会将其报告为泄漏——因为从技术上讲，内存仍然"可达"。
+\end{itemize}
+
+
+% ──────────────────────────────────────────
+\section{检测方案二：MSVC CRT 调试堆}
+% ──────────────────────────────────────────
+
+Visual Studio 的 C 运行时库（CRT）提供了内置的调试堆功能，
+可以在 Debug 构建中追踪每一块堆内存的分配和释放。
+
+\subsection{基本使用}
+
+在代码中包含 \texttt{<crtdbg.h>} 并在程序启动时启用调试报告模式：
+
+\begin{lstlisting}[style=cppstyle, caption={MSVC CRT 调试堆基本用法}]
+#include <crtdbg.h>
+
+int main() {
+    // 在程序结束时自动输出泄漏报告
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+
+    // 可选：将报告输出到文件而非调试窗口
+    _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+    _CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+
+    int* leak = new int[42];  // 故意泄漏
+
+    return 0;  // 程序退出时 CRT 会报告此泄漏
+}
+\end{lstlisting}
+
+\subsection{定位泄漏位置}
+
+使用 \texttt{\_CRT\_DBG\_MAP\_ALLOC} 宏可以将 \texttt{new} 操作映射为
+包含文件名和行号的调试版本，从而精确定位泄漏位置。
+
+\begin{lstlisting}[style=cppstyle, caption={精确定位泄漏位置}]
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+
+// 在 Debug 模式下替换 new 操作符
+#ifdef _DEBUG
+    #define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+    #define new DEBUG_NEW
+#endif
+
+void some_function() {
+    char* buf = new char[256];
+    // 如果未 delete[] buf，报告将显示文件名和行号
+}
+\end{lstlisting}
+
+\subsection{CRT 调试堆的高级功能}
+
+\begin{lstlisting}[style=cppstyle, caption={CRT 调试堆高级用法}]
+#include <crtdbg.h>
+
+void advanced_debug() {
+    // 1. 快照对比：检查两个时间点之间是否有新的泄漏
+    _CrtMemState snap1, snap2, diff;
+    _CrtMemCheckpoint(&snap1);
+
+    // ... 执行一些操作 ...
+    void* p = malloc(100);
+    // ... 可能忘记 free(p) ...
+
+    _CrtMemCheckpoint(&snap2);
+    if (_CrtMemDifference(&diff, &snap1, &snap2)) {
+        _CrtMemDumpStatistics(&diff);
+        // 输出两次快照之间的分配差异
+    }
+
+    // 2. 在特定分配序号处中断
+    // 当第 N 次分配发生时自动中断到调试器
+    _CrtSetBreakAlloc(42);
+
+    // 3. 自定义分配钩子
+    _CrtSetAllocHook([](int allocType, void* userData, size_t size,
+                        int blockType, long requestNumber,
+                        const unsigned char* fileName, int lineNumber) {
+        // 自定义逻辑：记录、审计、或条件中断
+        return 1;  // 返回 1 继续分配，返回 0 失败
+    });
+}
+\end{lstlisting}
+
+\subsection{MSVC 方案的局限性}
+
+\begin{itemize}[nosep]
+  \item \textbf{仅限 Debug 构建}：Release 版本中调试堆被完全移除，
+    无法检测仅在 Release 构建中出现的泄漏。
+  \item \textbf{仅限 Windows + MSVC}：无法跨平台使用。
+  \item \textbf{无红区检测}：不像 ASan 那样能检测越界访问。
+  \item \textbf{报告精度有限}：调用栈信息不如 ASan 详细，
+    尤其是在未启用 PDB 的情况下。
+\end{itemize}
+
+
+% ──────────────────────────────────────────
+\section{检测方案三：自定义分配器与 operator new 覆盖}
+% ──────────────────────────────────────────
+
+对于需要精细控制的场景（如嵌入式系统、游戏引擎、或需要在 Release 构建中
+持续监控的场景），可以覆盖全局的 \texttt{operator new} 和 \texttt{operator delete}，
+或使用自定义分配器。
+
+\subsection{覆盖全局 operator new/delete}
+
+通过覆盖全局分配函数，可以记录每一次分配和释放操作，
+在程序退出时对比两者差异来检测泄漏。
+
+\begin{lstlisting}[style=cppstyle, caption={覆盖全局 operator new/delete}]
+#include <cstdlib>
+#include <cstdio>
+#include <mutex>
+#include <unordered_map>
+
+namespace {
+    struct AllocInfo {
+        size_t size;
+        const char* file;
+        int line;
+    };
+
+    std::mutex g_mutex;
+    std::unordered_map<void*, AllocInfo> g_allocations;
+    size_t g_total_allocated = 0;
+    size_t g_total_freed = 0;
+}
+
+// 覆盖全局 operator new
+void* operator new(size_t size, const char* file, int line) {
+    void* ptr = std::malloc(size);
+    if (!ptr) throw std::bad_alloc();
+
+    std::lock_guard<std::mutex> lock(g_mutex);
+    g_allocations[ptr] = {size, file, line};
+    g_total_allocated += size;
+    return ptr;
+}
+
+void* operator new(size_t size) {
+    return operator new(size, __FILE__, __LINE__);
+}
+
+void* operator new[](size_t size) {
+    return operator new(size, __FILE__, __LINE__);
+}
+
+// 覆盖全局 operator delete
+void operator delete(void* ptr) noexcept {
+    if (!ptr) return;
+
+    std::lock_guard<std::mutex> lock(g_mutex);
+    auto it = g_allocations.find(ptr);
+    if (it != g_allocations.end()) {
+        g_total_freed += it->second.size;
+        g_allocations.erase(it);
+    }
+    std::free(ptr);
+}
+
+void operator delete[](void* ptr) noexcept {
+    operator delete(ptr);
+}
+
+void operator delete(void* ptr, size_t) noexcept {
+    operator delete(ptr);
+}
+
+// 程序退出时报告泄漏
+struct LeakReporter {
+    ~LeakReporter() {
+        if (!g_allocations.empty()) {
+            fprintf(stderr,
+                "=== Memory Leak Report ===\n"
+                "Leaked %zu allocation(s), %zu bytes\n\n",
+                g_allocations.size(),
+                g_total_allocated - g_total_freed);
+
+            for (auto& [ptr, info] : g_allocations) {
+                fprintf(stderr,
+                    "  %p: %zu bytes at %s:%d\n",
+                    ptr, info.size, info.file, info.line);
+            }
+        }
+    }
+};
+
+static LeakReporter g_reporter;
+\end{lstlisting}
+
+\subsection{使用宏增强跟踪精度}
+
+为了使 \texttt{new} 操作自动携带文件名和行号信息，可以定义宏来替换
+标准的 \texttt{new} 表达式：
+
+\begin{lstlisting}[style=cppstyle, caption={追踪宏定义}]
+#ifdef ENABLE_LEAK_TRACKING
+    #define TRACKED_NEW new(__FILE__, __LINE__)
+#else
+    #define TRACKED_NEW new
+#endif
+
+// 使用
+auto* obj = TRACKED_NEW MyClass();
+auto* arr = TRACKED_NEW int[100];
+\end{lstlisting}
+
+\subsection{自定义分配器（Allocator）}
+
+对于 STL 容器，可以通过自定义分配器来追踪特定容器的内存使用情况：
+
+\begin{lstlisting}[style=cppstyle, caption={自定义 STL 分配器}]
+#include <memory>
+#include <cstdio>
+#include <atomic>
+
+template <typename T>
+class TrackingAllocator {
+public:
+    using value_type = T;
+
+    static std::atomic<size_t> total_bytes;
+
+    TrackingAllocator() noexcept = default;
+
+    template <typename U>
+    TrackingAllocator(const TrackingAllocator<U>&) noexcept {}
+
+    T* allocate(size_t n) {
+        size_t bytes = n * sizeof(T);
+        total_bytes.fetch_add(bytes, std::memory_order_relaxed);
+        return static_cast<T*>(::operator new(bytes));
+    }
+
+    void deallocate(T* p, size_t n) noexcept {
+        size_t bytes = n * sizeof(T);
+        total_bytes.fetch_sub(bytes, std::memory_order_relaxed);
+        ::operator delete(p);
+    }
+};
+
+template <typename T>
+std::atomic<size_t> TrackingAllocator<T>::total_bytes{0};
+
+// 使用
+#include <vector>
+std::vector<int, TrackingAllocator<int>> tracked_vec;
+\end{lstlisting}
+
+\subsection{自定义方案的注意事项}
+
+\begin{warning}[线程安全]
+覆盖全局 \texttt{operator new/delete} 时必须考虑线程安全。
+所有对共享数据结构的访问都需要加锁保护，但锁的争用可能严重影响
+多线程程序的性能。建议使用线程本地存储（\texttt{thread\_local}）
+或无锁数据结构来减少开销。
+\end{warning}
+
+
+% ──────────────────────────────────────────
+\section{检测方案对比}
+% ──────────────────────────────────────────
+
+\begin{table}[htbp]
+\centering
+\caption{主要检测工具对比}
+\label{tab:comparison}
+\begin{tabularx}{\textwidth}{lXXXXX}
+\toprule
+\textbf{特性} & \textbf{ASan} & \textbf{MSVC CRT} & \textbf{Valgrind} & \textbf{自定义} \\
+\midrule
+检测范围    & 泄漏+越界+UAF & 仅泄漏    & 泄漏+越界+UAF & 可定制       \\
+平台支持    & Linux/macOS   & Windows   & Linux/macOS   & 全平台       \\
+性能开销    & $\sim2\times$ & 低(Debug) & $10$--$50\times$ & 取决于实现 \\
+需重新编译  & 是            & 是        & 否            & 是           \\
+Release可用 & 否            & 否        & 是            & 是           \\
+调用栈精度  & 高            & 中        & 中            & 取决于实现   \\
+配置复杂度  & 低            & 低        & 低            & 高           \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{note}[推荐策略]
+在开发和测试阶段同时使用 ASan（Linux/macOS）和 MSVC CRT Debug（Windows），
+并在 Release 构建中集成轻量级的自定义分配器来持续监控生产环境的内存状态。
+这种多层防御策略可以覆盖尽可能多的场景。
+\end{note}
+
+
+% ──────────────────────────────────────────
+\section{减少内存泄漏的编程实践}
+% ──────────────────────────────────────────
+
+\subsection{RAII 原则}
+
+RAII（Resource Acquisition Is Initialization）是 C++ 中管理资源的核心范式：
+将资源的获取绑定到对象的构造，释放绑定到对象的析构。
+由于 C++ 保证栈对象在离开作用域时一定会调用析构函数（即使发生异常），
+RAII 能有效防止资源泄漏。
+
+\begin{lstlisting}[style=cppstyle, caption={RAII 实践}]
+#include <memory>
+#include <fstream>
+
+class Connection {
+    int* buffer_;
+    std::ofstream log_;
+public:
+    Connection()
+        : buffer_(new int[4096])
+        , log_("connection.log") {}
+
+    ~Connection() {
+        delete[] buffer_;
+        // log_ 的析构函数自动关闭文件
+    }
+
+    // 禁止拷贝以避免双重释放
+    Connection(const Connection&) = delete;
+    Connection& operator=(const Connection&) = delete;
+};
+
+// 更好的做法：内部也使用 RAII
+class ConnectionBetter {
+    std::unique_ptr<int[]> buffer_;
+    std::ofstream log_;
+public:
+    ConnectionBetter()
+        : buffer_(std::make_unique<int[]>(4096))
+        , log_("connection.log") {}
+    // 不需要手动析构
+};
+\end{lstlisting}
+
+\subsection{智能指针的正确使用}
+
+\begin{lstlisting}[style=cppstyle, caption={智能指针使用指南}]
+#include <memory>
+
+// 1. 独占所有权 -> unique_ptr
+auto widget = std::make_unique<Widget>();
+
+// 2. 共享所有权 -> shared_ptr
+auto config = std::make_shared<Config>();
+auto backup = config;  // 引用计数 +1
+
+// 3. 观察者（不拥有） -> weak_ptr
+std::weak_ptr<Config> observer = config;
+if (auto locked = observer.lock()) {
+    // 对象仍然存在，可以安全使用
+}
+
+// 4. 工厂函数返回 unique_ptr（可隐式转换为 shared_ptr）
+std::unique_ptr<Widget> create_widget() {
+    return std::make_unique<Widget>();
+}
+
+void use_widget() {
+    std::shared_ptr<Widget> sw = create_widget();  // OK
+}
+\end{lstlisting}
+
+\subsection{静态分析工具}
+
+除了运行时检测，静态分析工具可以在不执行程序的情况下发现潜在的泄漏模式。
+
+\subsubsection*{Clang Static Analyzer}
+
+Clang Static Analyzer（\texttt{scan-build}）在编译过程中进行路径敏感分析，
+能够追踪变量沿执行路径的生命周期，报告潜在的泄漏。
+
+\begin{lstlisting}[style=bashstyle, caption={使用 Clang Static Analyzer}]
+# 方式一：通过 scan-build 包装编译命令
+scan-build cmake -B build -DCMAKE_CXX_COMPILER=clang++
+scan-build cmake --build build
+
+# 方式二：直接分析单个文件
+clang++ --analyze -std=c++17 -o /dev/null main.cpp
+\end{lstlisting}
+
+\subsubsection*{Cppcheck}
+
+Cppcheck 是一款广泛使用的开源静态分析工具，专注于 C/C++ 代码中的
+未定义行为和危险构造，其中内存泄漏检测是其核心功能之一。
+它不需要代码能够编译通过即可分析，适合在 CI/CD 流水线中集成。
+
+\begin{lstlisting}[style=bashstyle, caption={Cppcheck 使用示例}]
+# 基本检查（启用泄漏检测）
+cppcheck --enable=warning,style,performance \
+         --inconclusive \
+         --std=c++17 \
+         src/
+
+# 生成 XML 报告用于 CI 集成
+cppcheck --enable=all --xml \
+         --output-file=report.xml \
+         src/
+
+# Cppcheck 输出示例：
+# [src/main.cpp:15]: (error) Memory leak: buffer
+# [src/parser.cpp:42]: (error) Memory leak: p
+#   when scope is left at line 50
+\end{lstlisting}
+
+Cppcheck 的优势在于速度快、误报率相对较低、且支持自定义规则。
+其局限性在于它只能分析单个翻译单元，跨文件的泄漏（如在一个文件中
+分配、在另一个文件中释放）可能无法被检测到。
+
+\subsubsection*{商业级静态分析}
+
+PVS-Studio 和 Coverity 等商业工具提供更深入的分析能力，
+包括跨翻译单元的全局分析、更精确的路径敏感分析和更低的误报率。
+它们通常集成在 CI/CD 系统中，作为代码提交的质量门禁。
+
+\subsubsection*{编译器警告}
+
+开启 \texttt{-Wall -Wextra -Werror} 可以捕获部分与资源管理相关的警告。
+GCC 和 Clang 的 \texttt{-Wunused-result} 也能提醒开发者检查
+可能返回需要释放资源的函数调用结果。
+
+\subsection{第三方运行时检测工具}
+
+\subsubsection*{Valgrind（Linux/macOS）}
+
+Valgrind 是最经典的动态内存分析工具套件，其中 Memcheck 组件专门用于
+检测内存泄漏和非法内存访问。与 ASan 不同，Valgrind 不需要重新编译程序，
+可以直接对已有的二进制文件进行分析。
+
+\begin{lstlisting}[style=bashstyle, caption={Valgrind Memcheck 使用}]
+# 基本泄漏检测
+valgrind --leak-check=full \
+         --show-leak-kinds=all \
+         --track-origins=yes \
+         ./my_program
+
+# 带子进程跟踪
+valgrind --leak-check=full \
+         --trace-children=yes \
+         ./my_program arg1 arg2
+
+# Valgrind 输出示例：
+# ==12345== HEAP SUMMARY:
+# ==12345==     in use at exit: 1,024 bytes in 4 blocks
+# ==12345==   total heap usage: 100 allocs, 96 frees, 50,000 bytes
+# ==12345==
+# ==12345== 256 bytes in 1 blocks are definitely lost
+# ==12345==    at 0x4C2AB80: operator new[](unsigned long)
+# ==12345==    by 0x401234: process_data() (main.cpp:25)
+\end{lstlisting}
+
+Valgrind 将泄漏分为四类：definitely lost（确定泄漏）、indirectly lost
+（间接泄漏）、possibly lost（可能泄漏）、still reachable（仍然可达）。
+这种分类有助于开发者优先处理最严重的泄漏。
+
+Valgrind 的主要缺点是性能开销巨大（通常为 $10$--$50\times$ 减速），
+不适合在性能敏感的测试或生产环境中使用。此外，它不支持 Windows 平台。
+
+\subsubsection*{Dr.Memory（跨平台）}
+
+Dr.Memory 是 Google 开发的开源内存调试工具，功能类似 Valgrind 的
+Memcheck，但基于 DynamoRIO 动态二进制插桩框架，性能开销显著低于 Valgrind
+（通常为 $2$--$3\times$）。它支持 Windows、Linux 和 macOS。
+
+\begin{lstlisting}[style=bashstyle, caption={Dr.Memory 使用}]
+# 基本使用
+drmemory -- ./my_program arg1 arg2
+
+# 仅检测泄漏（跳过越界检测以提升性能）
+drmemory -leaks_only -- ./my_program
+\end{lstlisting}
+
+\subsubsection*{jemalloc / tcmalloc 的调试功能}
+
+Google 的 tcmalloc 和 Facebook 的 jemalloc 等高性能分配器
+也提供了内置的调试和分析功能。例如 jemalloc 可以通过环境变量
+启用内存分析和泄漏检测：
+
+\begin{lstlisting}[style=bashstyle, caption={jemalloc 泄漏分析}]
+# 启用 jemalloc 的分析功能
+export MALLOC_CONF="prof:true,prof_active:true,lg_prof_sample:0"
+
+# 运行程序后生成 heap profile
+./my_program
+
+# 使用 jeprof 分析泄漏
+jeprof --show_bytes ./my_program jeprof.*.heap
+\end{lstlisting}
+
+\subsection{AI 辅助代码审查}
+
+近年来，基于大语言模型的 AI 编程助手（如 GitHub Copilot、Claude、GPT 等）
+也可以辅助检测内存泄漏。它们的价值主要体现在以下几个方面：
+
+对可疑代码段进行语义级别的审查，识别出传统静态分析工具难以捕获的
+\textbf{逻辑性泄漏}——例如"虽然在某个路径上有 \texttt{free}，但在另一个
+不太常见的路径上遗漏了"。AI 可以理解代码的业务意图，从而发现
+"技术上正确但逻辑上泄漏"的模式。
+
+\begin{lstlisting}[style=cppstyle, caption={AI 辅助识别逻辑泄漏示例}]
+// 人类审查者可能认为这段代码没有问题：
+// "每个 new 都有对应的 delete"
+// 但 AI 可以指出隐藏的泄漏风险：
+
+class ConnectionPool {
+    std::vector<Connection*> pool_;
+public:
+    void add(Connection* c) { pool_.push_back(c); }
+
+    void remove(int index) {
+        // AI 可以指出：这里只从 vector 中移除了指针
+        // 但没有 delete 对象，也没有返回给调用者
+        pool_.erase(pool_.begin() + index);
+    }
+
+    // 缺少析构函数来清理 pool_ 中的 Connection 对象
+};
+\end{lstlisting}
+
+然而，AI 工具也存在明显的局限：它可能产生\textbf{误报}（将正确的代码标记为泄漏）
+和\textbf{漏报}（未能发现真正的泄漏），且缺乏对项目整体架构和约定的理解。
+因此，AI 的分析结果\textbf{必须由开发者自行确认}，作为辅助手段而非最终判断。
+
+\begin{note}[AI 辅助的最佳实践]
+将 AI 工具作为代码审查的"第二双眼睛"：先用 AI 对关键代码段进行扫描，
+然后人工验证每一个报告的问题。对于 AI 标记的潜在泄漏，
+结合单元测试和 ASan/Valgrind 等运行时工具进行确认。
+\end{note}
+
+
+% ──────────────────────────────────────────
+\section{为什么内存泄漏难以完全避免}
+% ──────────────────────────────────────────
+
+即便拥有了上述所有工具和最佳实践，内存泄漏仍然是 C/C++ 项目中
+最难彻底消除的缺陷之一。以下是几个根本性的原因。
+
+\subsection{所有权语义的模糊性}
+
+在大型代码库中，一块内存的"所有者"（即负责释放它的代码）往往不够明确。
+当一个指针在多个模块之间传递时，很难判断究竟该由谁来释放它。
+即便使用了智能指针，所有权转移的边界仍然可能在代码演进中变得模糊。
+
+\begin{lstlisting}[style=cppstyle, caption={所有权歧义}]
+// 谁负责释放返回的指针？
+// 调用者？还是 process() 内部的某个缓存？
+Data* process(const Input& input);
+\end{lstlisting}
+
+\subsection{长生命周期对象中的累积泄漏}
+
+当泄漏发生在长期存活的对象（如全局管理器、单例、事件循环）中时，
+泄漏的内存从技术上讲仍然"可达"——因为持有它的对象还没有被销毁。
+这类泄漏不会被 ASan 或 CRT 调试堆检测到，因为检测发生在程序退出时，
+而那些对象在退出时仍持有指针。
+
+\subsection{第三方库与系统调用的黑盒}
+
+项目依赖的第三方库（如数据库驱动、图形库、网络库）内部可能存在泄漏，
+而这些代码通常不在项目的直接控制范围内。操作系统的某些 API 也可能
+在特定条件下泄漏内存（如 Windows 的 GDI 句柄泄漏）。
+
+\subsection{条件性泄漏与罕见路径}
+
+某些泄漏只在特定的执行条件下发生：错误处理分支、超时回调、
+信号处理程序、或极低概率的并发竞争条件。这些路径在测试中很难覆盖，
+可能在生产环境运行数月后才首次触发。
+
+\subsection{C 语言缺乏语言级保障}
+
+C 语言没有析构函数、RAII、智能指针或异常机制。
+在纯 C 代码中，资源管理完全依赖程序员的纪律性和代码审查，
+语言本身不提供任何安全保障。这也是为什么 Linux 内核等大型 C 项目
+需要投入大量精力维护自定义的引用计数和清理框架。
+
+\subsection{检测工具的固有盲区}
+
+\begin{guideline}[工具局限]
+所有现有的检测工具都存在盲区：
+ASan 无法检测"仍然可达但逻辑上已废弃"的内存；
+CRT 调试堆只在 Debug 构建中可用；
+自定义分配器只能检测它所覆盖的分配路径；
+静态分析会产生大量误报，导致开发者忽视真正的问题。
+\end{guideline}
+
+\subsection{GC 语言与内存安全语言同样存在泄漏}
+
+内存泄漏并非 C/C++ 独有的问题。自带垃圾回收（GC）的语言如 Java、C\#，
+以及以内存安全著称的 Rust，在实际工程中同样面临各种形式的"内存泄漏"。
+
+\subsubsection*{Java / C\# 中的内存泄漏}
+
+GC 只能回收不再被引用的堆内存对象，但无法处理以下场景：
+
+\begin{itemize}[nosep]
+  \item \textbf{静态集合累积}：将对象持续添加到静态的 \texttt{List}、\texttt{Map}
+    等集合中但从未移除，GC 认为这些对象仍然"可达"，不会回收。
+  \item \textbf{监听器/回调未注销}：注册了事件监听器但忘记注销，
+    导致监听器持有的整个对象图无法被 GC 回收。
+  \item \textbf{类加载器泄漏}（Java）：在应用服务器（如 Tomcat）中，
+    旧的类加载器未能被释放，导致其加载的所有类和静态字段永久驻留。
+  \item \textbf{非托管资源}（C\#）：\texttt{IDisposable} 对象（如数据库连接、
+    文件句柄、GDI+ 对象）未调用 \texttt{Dispose()}，
+    非托管内存和句柄持续增长。
+\end{itemize}
+
+\begin{lstlisting}[style=cppstyle, caption={Java 中的内存泄漏模式}]
+// Java 示例：静态缓存导致的泄漏
+public class CacheManager {
+    // 对象只进不出，GC 永远不会回收
+    private static final Map<String, byte[]> cache
+        = new HashMap<>();
+
+    public static void processRequest(String key) {
+        byte[] data = fetchDataFromDB(key);
+        cache.put(key, data);
+        // 没有任何机制清除过期条目
+    }
+}
+
+// C# 示例：未 Dispose 的非托管资源
+public class ImageProcessor {
+    public void Process(string path) {
+        var bitmap = new System.Drawing.Bitmap(path);
+        // 忘记 bitmap.Dispose()
+        // 非托管 GDI+ 内存泄漏
+        // 即使 GC 最终回收了托管包装对象，
+        // 非托管资源可能延迟释放或根本不释放
+    }
+}
+\end{lstlisting}
+
+\subsubsection*{Rust 中的内存泄漏}
+
+Rust 的所有权系统和借用检查器在编译期消除了绝大多数内存安全问题，
+但并不能完全杜绝泄漏：
+
+\begin{itemize}[nosep]
+  \item \textbf{\texttt{Rc}/\texttt{Arc} 循环引用}：与 C++ 的 \texttt{shared\_ptr}
+    循环引用完全类似，Rust 中的引用计数智能指针 \texttt{Rc} 和 \texttt{Arc}
+    在形成循环时同样无法释放。Rust 提供了 \texttt{Weak} 来打破循环，
+    但这依赖开发者主动使用。
+  \item \texttt{std::mem::forget}：此函数可以显式"忘记"一个值，
+    阻止其 \texttt{Drop} 实现被调用，导致内部资源泄漏。
+    虽然它是 unsafe 语义的"边缘"，但完全安全可用。
+  \item \textbf{逻辑泄漏}：将数据推入 \texttt{Vec}、\texttt{HashMap} 等容器
+    但从未清除，Rust 的类型系统无法判断这些数据是否"逻辑上已废弃"。
+\end{itemize}
+
+\begin{lstlisting}[style=cppstyle, caption={Rust 中的内存泄漏模式}]
+use std::rc::Rc;
+use std::cell::RefCell;
+
+struct Node {
+    next: Option<Rc<RefCell<Node>>>,
+}
+
+fn circular_leak() {
+    let a = Rc::new(RefCell::new(Node { next: None }));
+    let b = Rc::new(RefCell::new(Node { next: None }));
+
+    // 形成循环引用
+    a.borrow_mut().next = Some(Rc::clone(&b));
+    b.borrow_mut().next = Some(Rc::clone(&a));
+
+    // a 和 b 离开作用域后，引用计数为 1，不会 Drop
+}
+
+// std::mem::forget 示例
+fn forget_leak() {
+    let data = vec![0u8; 1024 * 1024]; // 1 MB
+    std::mem::forget(data);
+    // 这 1 MB 永远不会被释放
+}
+\end{lstlisting}
+
+\begin{guideline}[跨语言的共性]
+无论是手动管理内存的 C/C++、自动 GC 的 Java/C\#，
+还是所有权系统保护的 Rust，内存泄漏的根源最终都归结为同一类问题：
+程序持有了不再需要的资源的引用，且没有任何机制（语言的或人工的）
+来清除这个引用。语言提供的安全机制只能消除\textbf{特定类型}的泄漏，
+无法消除\textbf{所有}泄漏。
+\end{guideline}
+
+\subsection{人因与代码演进}
+
+最终的根源在于人：开发者会犯错，代码会在多人协作中演进，
+重构可能打破原有的资源管理约定，紧急修复可能跳过正常的清理流程。
+在数百万行级别的代码库中，保证每一处资源管理都正确无误，
+是一个接近不可能完成的任务。
+
+
+% ──────────────────────────────────────────
+\section{总结}
+% ──────────────────────────────────────────
+
+内存泄漏是 C/C++ 编程中一个持久的挑战，但它的范围远不止于此——
+即便是自带 GC 的 Java/C\#，或以内存安全著称的 Rust，
+同样存在各自形式的泄漏问题。泄漏的本质是程序持有了不再需要的资源引用，
+而没有任何机制来清除这个引用。
+
+在检测手段方面，本文介绍了多层次的工具体系：
+Clang ASan 和 Valgrind 提供了强大的运行时检测能力；
+MSVC CRT 调试堆为 Windows 开发者提供了低门槛的入口；
+自定义分配器允许在 Release 构建和生产环境中持续监控；
+Cppcheck、Clang Static Analyzer 等静态分析工具可以在编译前发现问题；
+Dr.Memory 和 jemalloc 等第三方库则在特定场景下补充了检测能力；
+AI 辅助工具为代码审查提供了新的视角，但其结论需要人工验证。
+
+然而，没有任何单一工具能够保证发现所有泄漏。最有效的防御策略是
+多层次、多维度的：在编码层面严格遵循 RAII 和智能指针规范，
+在构建层面启用静态分析和运行时检测，在运维层面监控长期内存趋势，
+在团队层面建立代码审查和所有权约定的文化。
+对于并发代码，还需结合 ThreadSanitizer 等工具排查数据竞争引发的隐性泄漏。
+
+承认内存泄漏难以完全避免，并不是为低质量代码开脱，
+而是对软件工程中内存管理复杂性的清醒认知。
+这种认知驱动我们采用防御性编程、持续集成和多层监控来将风险控制在可接受的范围内——
+也正是这种复杂性，推动了 Rust、Zig 等新一代系统语言的发展，
+它们试图在编译期从根本上缩小泄漏的攻击面，尽管仍然无法完全消除。
+
+
+\end{document}

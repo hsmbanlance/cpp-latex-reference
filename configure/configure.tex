@@ -1,0 +1,2045 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+\definecolor{cmakekw}{HTML}{0050A0}
+\definecolor{cmakeheadbg}{HTML}{2E5090}
+\definecolor{xmakeheadbg}{HTML}{5B3A8C}
+\definecolor{vsheadbg}{HTML}{0078D4}
+\definecolor{xcodeheadbg}{HTML}{1470B0}
+\definecolor{makeheadbg}{HTML}{6B8E23}
+\definecolor{androidheadbg}{HTML}{3DDC84}
+\definecolor{oeheadbg}{HTML}{C71A36}
+\definecolor{cmakekwcolor}{HTML}{003399}
+\definecolor{xmakekwcolor}{HTML}{6A1B9A}
+\definecolor{bashkw}{HTML}{1A1AFF}
+\definecolor{cfgheadbg}{HTML}{2E4057}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+\lstdefinelanguage{CMake}{
+  morekeywords={cmake\_minimum\_required,project,set,option,if,elseif,else,endif,
+    foreach,endforeach,while,endwhile,function,endfunction,macro,endmacro,
+    add\_executable,add\_library,add\_subdirectory,add\_custom\_target,add\_custom\_command,
+    target\_link\_libraries,target\_include\_directories,target\_compile\_features,
+    target\_compile\_definitions,target\_compile\_options,target\_sources,
+    find\_package,find\_path,find\_library,find\_program,
+    include,include\_directories,link\_directories,
+    install,export,configure\_file,file,
+    set\_target\_properties,set\_property,get\_property,
+    message,execute\_process,enable\_testing,add\_test,
+    include\_external\_msproject,add\_dependencies,
+    cmake\_parse\_arguments,list,string,math,
+    set\_source\_files\_properties,set\_directory\_properties,
+    generator,cmake\_policy,cmake\_path,fetchcontent\_declare,
+    fetchcontent\_makeavailable,fetchcontent\_getproperties,
+    cpack\_add\_component,include\_cpack,ctest},
+  sensitive=false,
+  morecomment=[l]{\#},
+  morestring=[b]",
+}
+
+\lstdefinelanguage{XMake}{
+  morekeywords={add\_requires,target,add\_files,set\_kind,set\_languages,
+    set\_warnings,set\_optimize,add\_includedirs,add\_linkdirs,add\_links,
+    add\_defines,add\_cxxflags,add\_cflags,add\_shflags,add\_ldflags,
+    set\_targetdir,set\_basename,set\_extension,
+    add\_rules,add\_deps,add\_packages,add\_imports,
+    on\_build,on\_clean,on\_install,on\_run,on\_package,
+    before\_build,after\_build,before\_clean,after\_clean,
+    set\_toolchains,set\_plat,set\_arch,
+    add\_requireconfs,add\_repositories,
+    option,add\_options,set\_showmenu,set\_description,
+    task,set\_menu,on\_run,includes},
+  sensitive=true,
+  morecomment=[l]{--},
+  morestring=[b]",
+  morestring=[b]',
+}
+
+\lstdefinelanguage{Bash}{
+  morekeywords={cmake,xmake,make,ninja,clang,clang++,gcc,g++,cl,
+    export,cd,mkdir,rm,cp,mv,echo,cat,grep,sed,awk,find,xargs,
+    curl,wget,sudo,apt,yum,brew,choco,winget,
+    powershell,pwsh,dotnet,nuget,bitbake,repo,source,
+    ./configure,./autogen.sh,autoreconf,meson,
+    ndk-build,gradle,./gradlew,source,inherit},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+}
+
+\lstdefinelanguage{MSBuild}{
+  morekeywords={Project,PropertyGroup,ItemGroup,Target,Import,
+    ItemDefinitionGroup,ClCompile,ClInclude,Link,ResourceCompile,
+    Configuration,Platform,OutputDirectory,IntermediateDirectory,
+    PreprocessorDefinitions,AdditionalIncludeDirectories,
+    AdditionalLibraryDirectories,AdditionalDependencies,
+    SubSystem,TargetMachine,GenerateDebugInformation,
+    ImportGroup,PropertySheet,ConfigurationType,
+    PlatformToolset,CharacterSet,WholeProgramOptimization,
+    RuntimeLibrary,WarningLevel,Optimization,
+    ItemDefinitionGroup,PreBuildEvent,PostBuildEvent,CustomBuildStep},
+  sensitive=true,
+  morecomment=[l]{<!--},
+  morecomment=[l]{-->},
+  morestring=[b]",
+}
+
+\lstdefinelanguage{BitBake}{
+  morekeywords={inherit,require,include,addtask,deltask,addhandler,
+    export,unset,INHERIT,PACKAGECONFIG,EXTRA\_OECONF,
+    do\_configure,do\_compile,do\_install,do\_fetch,do\_unpack,
+    do\_patch,do\_package,do\_populate\_sysroot,
+    S,B,D,WORKDIR,TMPDIR,PV,PR,PN,PE,
+    SRC\_URI,SRCREV,S,DEPENDS,RDEPENDS,RRECOMMENDS,
+    LICENSE,LIC\_FILES\_CHKSUM,
+    BBCLASSEXTEND,PROVIDES,ALTERNATIVE,
+    IMAGE\_INSTALL,IMAGE\_FEATURES,
+    PACKAGE\_ARCH,TUNE\_FEATURES,MACHINE},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+}
+
+\lstdefinelanguage{Plist}{
+  morekeywords={plist,dict,key,string,array,integer,true,false,
+    CFBundleDevelopmentRegion,CFBundleExecutable,CFBundleIdentifier,
+    CFBundleName,CFBundlePackageType,CFBundleShortVersionString,
+    CFBundleVersion,NSMainStoryboardFile},
+  sensitive=true,
+  morecomment=[l]{<!--},
+  morecomment=[l]{-->},
+  morestring=[b]",
+}
+
+% ---- listing styles ----
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,
+    if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,string,vector,map,set,
+    unique_ptr,shared_ptr,optional,variant,any,span,string_view},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+\lstdefinestyle{cstyle}{
+  language=C,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cmakekw}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  escapeinside={(*@}{@*)},
+}
+\lstdefinestyle{cmakestyle}{
+  language=CMake,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cmakekwcolor}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  escapeinside={(*@}{@*)},
+}
+\lstdefinestyle{xmakestyle}{
+  language=XMake,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{xmakekwcolor}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  escapeinside={(*@}{@*)},
+}
+\lstdefinestyle{bashstyle}{
+  language=Bash,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{bashkw}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  escapeinside={(*@}{@*)},
+}
+\lstdefinestyle{xmlstyle}{
+  language=MSBuild,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{vsheadbg}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  escapeinside={(*@}{@*)},
+}
+\lstdefinestyle{bbstyle}{
+  language=BitBake,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{oeheadbg}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  escapeinside={(*@}{@*)},
+}
+\lstset{style=cmakestyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,
+  title=配置要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,
+  title=构建系统对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,
+  title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,
+  title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,
+  title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage{seqsplit}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={Build Systems Reference},
+  pdftitle={C/C++ Build Systems: CMake, XMake, VS, Xcode, Makefile},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+% 语言标签
+\newcommand{\cmakelabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=cmakeheadbg,colframe=cmakeheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily CMake}\end{tcolorbox}%
+}
+\newcommand{\xmakelabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=xmakeheadbg,colframe=xmakeheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily XMake}\end{tcolorbox}%
+}
+\newcommand{\vslabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=vsheadbg,colframe=vsheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily Visual Studio / MSBuild}\end{tcolorbox}%
+}
+\newcommand{\xcodelabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=xcodeheadbg,colframe=xcodeheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily Xcode}\end{tcolorbox}%
+}
+\newcommand{\makelabelcmd}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=makeheadbg,colframe=makeheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily Makefile}\end{tcolorbox}%
+}
+\newcommand{\bashlabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=cfgheadbg,colframe=cfgheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily Shell}\end{tcolorbox}%
+}
+\newcommand{\androidlabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=androidheadbg!80!black,colframe=androidheadbg!80!black,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily Android}\end{tcolorbox}%
+}
+\newcommand{\oelabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=oeheadbg,colframe=oeheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily OpenEmbedded / BitBake}\end{tcolorbox}%
+}
+\newcommand{\cfglabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=cfgheadbg,colframe=cfgheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily Config}\end{tcolorbox}%
+}
+
+\makeindex
+
+% ====================================================================
+\begin{document}
+
+% ==================== 封面 ====================
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\Huge\bfseries\color{algheadbg} C/C++ 构建系统参考手册\par}
+\vspace{1cm}
+{\LARGE\color{blue!70!black} CMake \textbullet{} XMake \textbullet{} Visual Studio \textbullet{} Xcode \textbullet{} Makefile\par}
+\vspace{0.8cm}
+{\Large\color{gray} 附录：Android 构建系统 \textbullet{} OpenEmbedded\par}
+\vfill
+{\large\color{gray} \today\par}
+\end{titlepage}
+
+\chapter*{前言}
+\addcontentsline{toc}{chapter}{前言}
+
+C 和 C++ 的构建系统生态丰富而复杂。从最传统的 Makefile，到工业标准的 CMake，再到新兴的 XMake，以及各大 IDE 各自的项目格式（Visual Studio 的 MSBuild、Xcode 的 pbxproj），开发者在不同场景下面临着不同的选择。嵌入式与移动端还有各自专属的构建系统——Android 的 Gradle + NDK 与 AOSP 构建、OpenEmbedded 的 BitBake 配方。
+
+本文档系统梳理这些构建系统的核心概念、配置语法和最佳实践，帮助开发者在项目中选择合适的构建方案。每个构建系统都配有完整的配置示例和对比说明，附录部分介绍 Android 和 OpenEmbedded 这两个在嵌入式与移动开发中广泛使用的构建系统。
+
+% --- TOC：从 build.ps1 生成的 manual.toc 读取目录 ---
+\makeatletter
+\newif\ifhavemanualtoc
+\IfFileExists{\jobname-manual.toc}{\havemanualtoctrue}{}
+\ifhavemanualtoc
+  \clearpage
+  \chapter*{\contentsname}%
+  \@mkboth{\contentsname}{\contentsname}%
+  \@input{\jobname-manual.toc}%
+  \clearpage
+\else
+  \tableofcontents
+\fi
+\makeatother
+
+% ==================== 正文 ====================
+\mainmatter
+
+% ####################################################################
+\part{CMake}
+% ####################################################################
+
+% -------------------- Chapter 1 --------------------
+\chapter{CMake 基础}
+
+CMake（Cross-platform Make）是目前最广泛使用的跨平台构建系统。它本身不编译代码，而是根据 \Tp{CMakeLists.txt} 配置文件生成原生构建系统的文件（如 Unix 上的 Makefile、Windows 上的 Visual Studio 工程、macOS 上的 Xcode 工程），然后由原生工具完成实际编译。
+
+\section{最小项目}
+
+一个最简单的 CMake 项目只需要一个 \Tp{CMakeLists.txt} 文件：
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+cmake_minimum_required(VERSION 3.20)
+project(HelloWorld VERSION 1.0.0 LANGUAGES CXX)
+
+add_executable(hello main.cpp)
+\end{lstlisting}
+
+\noindent
+三行代码完成了三件事：指定最低 CMake 版本、声明项目名称和支持的语言、定义一个可执行文件目标。
+
+\begin{guideline}[title=CMake 版本选择]
+\begin{itemize}
+  \item \textbf{3.15+}：支持 \Tp{CMAKE\_MSVC\_RUNTIME\_LIBRARY}，Windows 上可控制 CRT 链接方式。
+  \item \textbf{3.20+}：支持 \Fn{cmake\_path}、\Tp{CMAKE\_CXX\_STANDARD} 设为 23。
+  \item \textbf{3.24+}：\Tp{CMAKE\_COMPILE\_WARNING\_AS\_ERROR}，\Tp{FETCHCONTENT\_BASE\_DIR} 改进。
+  \item \textbf{3.28+}：\Tp{CMAKE\_CXX\_STANDARD} 设为 26，\Tp{CMakePresets.json} v8。
+\end{itemize}
+\end{guideline}
+
+\section{构建类型}
+
+CMake 支持四种标准构建类型，通过 \Tp{CMAKE\_BUILD\_TYPE} 控制（仅对单配置生成器如 Makefile/Ninja 有效）：
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+# 在命令行指定
+# cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+# 或在 CMakeLists.txt 中设置默认值
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY
+    STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+\end{lstlisting}
+
+\begin{note}
+Visual Studio 和 Xcode 等多配置生成器忽略 \Tp{CMAKE\_BUILD\_TYPE}，它们在构建时选择配置。可以用 \Tp{CMAKE\_CONFIGURATION\_TYPES} 限制可用配置。
+\end{note}
+
+\section{添加库}
+
+CMake 支持静态库、共享库和接口库三种类型：
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+# 静态库
+add_library(mylib STATIC
+  src/mylib.cpp
+  src/utils.cpp
+)
+
+# 共享库（DLL / .so / .dylib）
+add_library(myshared SHARED src/shared.cpp)
+
+# 接口库（仅头文件，不生成二进制文件）
+add_library(myheader_only INTERFACE)
+target_include_directories(myheader_only
+  INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# 推荐：使用 BUILD_SHARED_LIBS 变量控制库类型
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+add_library(mylib src/mylib.cpp)  (*@\# 类型由 BUILD\_SHARED\_LIBS 决定@*)
+\end{lstlisting}
+
+\section{Modern CMake：目标属性}
+
+{\sloppy Modern CMake 的核心理念是 \textbf{一切皆目标}。避免使用目录级命令（如 \Fn{include\_directories}），改为目标级命令：\par}
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+add_library(mylib src/mylib.cpp)
+
+# 头文件路径 —— PRIVATE: 仅自身使用; INTERFACE: 仅传递给使用者
+target_include_directories(mylib
+  PRIVATE src
+  INTERFACE include            (*@\# 使用者自动继承@*)
+)
+
+# 链接依赖
+target_link_libraries(mylib PRIVATE fmt::fmt)
+
+# C++ 标准
+target_compile_features(mylib PUBLIC cxx_std_20)
+
+# 编译定义
+target_compile_definitions(mylib
+  PRIVATE MYLIB_VERSION="1.0"
+  PUBLIC $<BUILD_INTERFACE:MYLIB_BUILDING>
+)
+\end{lstlisting}
+
+\begin{bestpractice}[title=PRIVATE / INTERFACE / PUBLIC 的语义]
+\begin{itemize}
+  \item \textbf{PRIVATE}：仅在构建此目标时使用，不传递给依赖者。
+  \item \textbf{INTERFACE}：此目标自身不使用，但依赖者会使用。
+  \item \textbf{PUBLIC}：自身和依赖者都会使用（= PRIVATE + INTERFACE）。
+  \item 头文件库（INTERFACE library）只能用 INTERFACE 关键字。
+\end{itemize}
+\end{bestpractice}
+
+\section{C++ 标准与编译选项}
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+# 全局设置（不推荐用于大型项目）
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)  (*@\# 禁用编译器特定扩展@*)
+
+# 目标级设置（推荐）
+target_compile_features(mylib PUBLIC cxx_std_20)
+
+# 条件编译选项
+if(MSVC)
+  target_compile_options(mylib PRIVATE /W4 /permissive-)
+else()
+  target_compile_options(mylib PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+\end{lstlisting}
+
+\begin{warning}
+\Tp{CMAKE\_CXX\_STANDARD} 是下限，不是精确版本。如果一个目标要求 \Tp{cxx\_std\_20}，另一个要求 \Tp{cxx\_std\_17}，CMake 会选择较高的那个。不要依赖它来降级标准。
+\end{warning}
+
+% -------------------- Chapter 2 --------------------
+\chapter{CMake 进阶}
+
+\section{find\_package 与依赖管理}
+
+\Fn{find\_package} 是 CMake 查找第三方库的核心命令。它有两种模式：
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+# Module 模式：查找 FindXXX.cmake 模块
+find_package(Threads REQUIRED)
+
+# Config 模式：查找 XXXConfig.cmake 或 xxx-config.cmake
+find_package(fmt 10.0 REQUIRED CONFIG)
+find_package(Boost 1.80 COMPONENTS filesystem system REQUIRED)
+
+# 使用导入目标（imported target）
+target_link_libraries(myapp PRIVATE
+  Threads::Threads
+  fmt::fmt
+  Boost::filesystem
+)
+\end{lstlisting}
+
+\begin{note}
+\Fn{find\_package} 的搜索路径受 \Tp{CMAKE\_PREFIX\_PATH} 影响。安装库时指定 \Tp{-DCMAKE\_INSTALL\_PREFIX=/path}，使用者将同一路径加入 \Tp{CMAKE\_PREFIX\_PATH} 即可发现。
+\end{note}
+
+\section{FetchContent：下载时依赖}
+
+从 CMake 3.11 起，\Tp{FetchContent} 模块可以在配置阶段自动下载并集成第三方库：
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+include(FetchContent)
+
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG        v1.14.0
+  GIT_SHALLOW    TRUE
+)
+# CMake 3.24+: 跳过测试和安装的构建
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(googletest)
+
+# 现在可以使用 gtest 和 gtest_main 目标
+add_executable(tests test_main.cpp)
+target_link_libraries(tests PRIVATE gtest_main mylib)
+\end{lstlisting}
+
+\section{多目录项目结构}
+
+大型项目通常将源码分散在多个子目录中，每个子目录有自己的 \Tp{CMakeLists.txt}：
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+# 顶层 CMakeLists.txt
+cmake_minimum_required(VERSION 3.20)
+project(MyProject VERSION 2.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)  (*@\# 生成 compile\_commands.json@*)
+
+add_subdirectory(external)   (*@\# 第三方依赖@*)
+add_subdirectory(src/core)
+add_subdirectory(src/app)
+add_subdirectory(tests)
+\end{lstlisting}
+
+\begin{lstlisting}[style=cmakestyle]
+# src/core/CMakeLists.txt
+add_library(core STATIC core.cpp engine.cpp)
+target_include_directories(core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(core PRIVATE fmt::fmt)
+
+# src/app/CMakeLists.txt
+add_executable(myapp main.cpp)
+target_link_libraries(myapp PRIVATE core)
+\end{lstlisting}
+
+\section{安装与导出}
+
+为了让其他 CMake 项目可以通过 \Fn{find\_package} 找到你的库：
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+include(GNUInstallDirs)
+
+install(TARGETS mylib
+  EXPORT mylibTargets
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(EXPORT mylibTargets
+  FILE mylibTargets.cmake
+  NAMESPACE mylib::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mylib
+)
+
+# 生成 Config 文件
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  cmake/mylibConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/mylibConfig.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mylib
+)
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/mylibConfigVersion.cmake
+  COMPATIBILITY SameMajorVersion
+)
+\end{lstlisting}
+
+\section{CTest 测试框架}
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+enable_testing()
+
+add_executable(unit_tests test_core.cpp test_utils.cpp)
+target_link_libraries(unit_tests PRIVATE core gtest_main)
+
+include(GoogleTest)
+gtest_discover_tests(unit_tests)
+
+# 手动添加测试
+add_test(NAME integration_test
+  COMMAND ${CMAKE_COMMAND} -E env
+    DATA_DIR=${CMAKE_SOURCE_DIR}/test_data
+    $<TARGET_FILE:integration_test>
+)
+\end{lstlisting}
+
+\section{Generator Expressions}
+
+Generator Expressions 在生成阶段求值，可以实现条件化的编译选项：
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+target_compile_definitions(mylib PRIVATE
+  $<$<CONFIG:Debug>:DEBUG_MODE>
+  $<$<CXX_COMPILER_ID:GNU>:GNU_SPECIFIC>
+  $<$<PLATFORM_ID:Windows>:WIN32_LEAN_AND_MEAN>
+)
+
+# 仅在 Debug 配置下添加 ASan
+target_compile_options(mylib PRIVATE
+  $<$<CONFIG:Debug>:-fsanitize=address>
+)
+target_link_options(mylib PRIVATE
+  $<$<CONFIG:Debug>:-fsanitize=address>
+)
+\end{lstlisting}
+
+\section{CMakePresets.json}
+
+\Tp{CMakePresets.json} 是 CMake 3.19 引入的标准化预设文件，统一管理配置、构建和测试参数：
+
+\cfglabel
+\begin{lstlisting}[style=bashstyle]
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "default",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "jobs": 8
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}
+\end{lstlisting}
+
+\begin{bestpractice}[title=CMake 项目最佳实践]
+\begin{enumerate}
+  \item 使用目标级命令（\Fn{target\_*}），避免目录级命令（\Fn{include\_directories} 等）。
+  \item 设置 \Tp{CMAKE\_EXPORT\_COMPILE\_COMMANDS} 以生成 \Tp{compile\_commands.json}，供 clangd 等工具使用。
+  \item 使用 \Tp{CMakePresets.json} 而非手写构建脚本来标准化配置。
+  \item 第三方库优先使用 \Fn{find\_package}，不可用时使用 \Tp{FetchContent}。
+  \item 始终使用命名空间化的导入目标（如 \Tp{fmt::fmt}）。
+\end{enumerate}
+\end{bestpractice}
+
+% ####################################################################
+\part{XMake}
+% ####################################################################
+
+\chapter{XMake 基础}
+
+XMake 是一个基于 Lua 的轻量级跨平台构建工具。它使用 \Tp{xmake.lua} 作为配置文件，内置包管理器，语法比 CMake 更加简洁直观。
+
+\section{最小项目}
+
+\xmakelabel
+\begin{lstlisting}[style=xmakestyle]
+-- xmake.lua
+add_rules("mode.debug", "mode.release")
+
+target("hello")
+    set_kind("binary")
+    add_files("src/*.cpp")
+\end{lstlisting}
+
+\noindent
+仅需四行即可完成项目配置。XMake 会自动检测系统上的编译器，无需手动指定工具链。
+
+\section{构建类型}
+
+\begin{lstlisting}[style=xmakestyle]
+-- 内置的 debug/release 规则
+add_rules("mode.debug", "mode.release")
+
+-- 命令行切换
+-- xmake f -m release
+-- xmake
+\end{lstlisting}
+
+\noindent
+\Tp{mode.debug} 规则自动添加调试标志和禁用优化；\Tp{mode.release} 启用优化并关闭调试信息。
+
+\section{目标类型}
+
+\begin{lstlisting}[style=xmakestyle]
+-- 可执行文件
+target("myapp")
+    set_kind("binary")
+    add_files("src/main.cpp")
+
+-- 静态库
+target("mylib")
+    set_kind("static")
+    add_files("src/lib/*.cpp")
+
+-- 动态库
+target("myshared")
+    set_kind("shared")
+    add_files("src/shared/*.cpp")
+
+-- 头文件库（仅导出接口）
+target("myheader")
+    set_kind("headeronly")
+    add_headerfiles("include/(**.h)")
+\end{lstlisting}
+
+\section{依赖与链接}
+
+\begin{lstlisting}[style=xmakestyle]
+target("myapp")
+    set_kind("binary")
+    add_files("src/*.cpp")
+    add_deps("mylib")                     (*@\# 依赖项目内其他 target@*)
+    add_links("pthread", "m")             (*@\# 链接系统库@*)
+    add_includedirs("include")            (*@\# 头文件路径@*)
+    add_linkdirs("/usr/local/lib")        (*@\# 库搜索路径@*)
+    add_defines("USE_FEATURE")            (*@\# 宏定义@*)
+\end{lstlisting}
+
+\section{C++ 标准}
+
+\begin{lstlisting}[style=xmakestyle]
+target("myapp")
+    set_kind("binary")
+    add_files("src/*.cpp")
+    set_languages("cxx20")               (*@\# C++20 标准@*)
+
+-- 也可设置 C 标准
+target("myclib")
+    set_kind("static")
+    add_files("src/*.c")
+    set_languages("c17")                 (*@\# C17 标准@*)
+\end{lstlisting}
+
+\section{编译选项}
+
+\begin{lstlisting}[style=xmakestyle]
+target("myapp")
+    set_kind("binary")
+    add_files("src/*.cpp")
+    set_languages("cxx20")
+
+    -- 警告级别
+    set_warnings("all", "extra", "error")
+
+    -- 优化级别
+    set_optimize("fastest")              -- none/fast/faster/fastest/smallest/aggressive
+
+    -- 平台特定的编译标志
+    if is_plat("windows") then
+        add_cxflags("/W4", "/permissive-")
+    else
+        add_cxflags("-Wall", "-Wextra", "-Wpedantic")
+    end
+\end{lstlisting}
+
+% -------------------- Chapter: XMake 进阶 --------------------
+\chapter{XMake 进阶}
+
+\section{包管理}
+
+XMake 内置了远程包管理器（xrepo），可以自动下载和集成第三方库：
+
+\begin{lstlisting}[style=xmakestyle]
+-- 声明项目级依赖
+add_requires("fmt", "zlib", "gtest")
+
+target("myapp")
+    set_kind("binary")
+    add_files("src/*.cpp")
+    add_packages("fmt", "zlib")
+
+target("tests")
+    set_kind("binary")
+    add_files("tests/*.cpp")
+    add_packages("gtest", "fmt")
+
+-- 指定版本和配置
+add_requires("boost >=1.80", {configs = {filesystem = true, system = true}})
+add_requires("opencv 4.x", {configs = {cuda = true}})
+\end{lstlisting}
+
+\begin{lstlisting}[style=xmakestyle]
+-- 添加自定义包源
+add_repositories("myrepo https://github.com/user/xmake-repo.git")
+
+-- 私有包：指定 URL 和哈希
+add_requires("mylib", {
+    urls = {"https://github.com/user/mylib/archive/v1.0.tar.gz"},
+    configs = {shared = true}
+})
+\end{lstlisting}
+
+\section{交叉编译}
+
+XMake 内置了对交叉编译的支持，无需复杂的工具链文件：
+
+\begin{lstlisting}[style=xmakestyle]
+-- 命令行指定目标平台
+-- xmake f -p android --ndk=/path/to/ndk
+-- xmake f -p iphoneos -a arm64
+-- xmake f -p mingw --sdk=/path/to/mingw
+
+-- 在 xmake.lua 中配置工具链
+set_toolchains("clang")                  -- 使用 clang
+
+-- 自定义工具链
+toolchain("my_arm_gcc")
+    set_toolset("cc", "arm-linux-gnueabihf-gcc")
+    set_toolset("cxx", "arm-linux-gnueabihf-g++")
+    set_toolset("ld", "arm-linux-gnueabihf-g++")
+    add_includedirs("/usr/arm-linux-gnueabihf/include")
+    add_linkdirs("/usr/arm-linux-gnueabihf/lib")
+toolchain_end()
+\end{lstlisting}
+
+\section{自定义规则}
+
+\begin{lstlisting}[style=xmakestyle]
+-- 自定义构建规则：Protocol Buffers
+rule("protobuf")
+    set_extensions(".proto")
+    on_buildcmd_file(function (target, batchcmds, sourcefile, opt)
+        local basename = path.basename(sourcefile)
+        local outputdir = target:autogendir({root = true})
+        local ccfile = path.join(outputdir, basename .. ".pb.cc")
+        local hfile = path.join(outputdir, basename .. ".pb.h")
+
+        batchcmds:show_progress(opt.progress,
+            "compiling.proto %s", sourcefile)
+        batchcmds:vrunv("protoc", {
+            "--cpp_out=" .. outputdir, sourcefile
+        })
+        batchcmds:add_depfiles(sourcefile)
+        batchcmds:set_depmtime(os.mtime(ccfile))
+        batchcmds:set_depcache(target:dependfile(ccfile))
+    end)
+rule_end()
+
+target("myapp")
+    set_kind("binary")
+    add_rules("protobuf")
+    add_files("src/*.cpp")
+    add_files("proto/*.proto")
+\end{lstlisting}
+
+\section{测试集成}
+
+\begin{lstlisting}[style=xmakestyle]
+add_requires("gtest")
+
+target("tests")
+    set_kind("binary")
+    set_default(false)                   (*@\# 默认不构建@*)
+    add_files("tests/*.cpp")
+    add_packages("gtest")
+    add_deps("mylib")
+
+    -- 运行测试: xmake run tests
+    on_run(function (target)
+        os.exec(target:targetfile())
+    end)
+\end{lstlisting}
+
+\begin{compare}[title=CMake vs XMake]
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{特性} & \textbf{CMake} & \textbf{XMake} \\
+\midrule
+配置语言 & CMake DSL & Lua \\
+包管理 & 无内置（需 vcpkg/conan） & 内置 xrepo \\
+学习曲线 & 中高 & 较低 \\
+IDE 集成 & VS/CLion/VS Code 原生 & 需插件 \\
+构建速度 & 中等 & 较快（内置缓存） \\
+交叉编译 & 需工具链文件 & 内置支持 \\
+社区规模 & 极大 & 增长中 \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+% ####################################################################
+\part{IDE 与系统构建工具}
+% ####################################################################
+
+\chapter{Visual Studio 项目系统}
+
+Visual Studio 使用 MSBuild 作为底层构建引擎，项目文件由 \Tp{.vcxproj}（XML）和 \Tp{.sln}（解决方案）组成。虽然 CMake 可以直接生成 VS 工程，理解 MSBuild 的内部机制对于调试构建问题和定制构建流程仍然非常重要。
+
+\section{解决方案与项目文件}
+
+\Tp{.sln} 文件是一个纯文本格式，定义了解决方案中包含哪些项目以及构建配置的映射：
+
+\vslabel
+\begin{lstlisting}[style=bashstyle]
+# .sln 文件结构（简化）
+#
+# Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+#
+# Project("{GUID}") = "MyApp", "MyApp\MyApp.vcxproj", "{GUID}"
+# EndProject
+#
+# GlobalSection(SolutionConfigurationPlatforms)
+#   Debug|x64 = Debug|x64
+#   Release|x64 = Release|x64
+# EndGlobalSection
+\end{lstlisting}
+
+\section{vcxproj 结构}
+
+\Tp{.vcxproj} 是一个 MSBuild XML 文件，定义了编译设置、源文件和依赖关系：
+
+\vslabel
+\begin{lstlisting}[style=xmlstyle]
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build"
+         ToolsVersion="17.0"
+         xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- 全局属性 -->
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{12345678-1234-1234-1234-123456789ABC}</ProjectGuid>
+    <RootNamespace>MyApp</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+
+  <!-- 导入默认属性 -->
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <!-- Debug 配置 -->
+  <PropertyGroup Label="Configuration"
+                 Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+
+  <!-- Release 配置 -->
+  <PropertyGroup Label="Configuration"
+                 Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <!-- 编译选项 -->
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)
+      </PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
+      <AdditionalIncludeDirectories>include;%(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <!-- 源文件 -->
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\app.cpp" />
+    <ClInclude Include="include\app.h" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
+\end{lstlisting}
+
+\section{MSBuild 命令行}
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# 构建 Release|x64
+msbuild MyApp.vcxproj /p:Configuration=Release /p:Platform=x64
+
+# 清理并重建
+msbuild MyApp.vcxproj /t:Rebuild /p:Configuration=Debug
+
+# 并行编译
+msbuild MyApp.sln /m:8 /p:Configuration=Release /p:Platform=x64
+
+# 详细日志
+msbuild MyApp.vcxproj /v:detailed /fl /flp:logfile=build.log
+\end{lstlisting}
+
+\section{NuGet 包管理}
+
+\vslabel
+\begin{lstlisting}[style=xmlstyle]
+<!-- packages.config（传统方式） -->
+<?xml version="1.0" encoding="utf-8"?>
+<packages>
+  <package id="fmt" version="10.2.1" targetFramework="native" />
+  <package id="nlohmann.json" version="3.11.3" targetFramework="native" />
+</packages>
+\end{lstlisting}
+
+\begin{lstlisting}[style=xmlstyle]
+<!-- PackageReference（推荐方式，直接写在 vcxproj 中） -->
+<ItemGroup>
+  <PackageReference Include="fmt" Version="10.2.1" />
+  <PackageReference Include="nlohmann.json" Version="3.11.3" />
+</ItemGroup>
+\end{lstlisting}
+
+\section{属性表与目录文件}
+
+属性表（\Tp{.props}）允许在多个项目之间共享构建设置：
+
+\vslabel
+\begin{lstlisting}[style=xmlstyle]
+<!-- CommonSettings.props -->
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <LanguageStandard>stdcpp20</LanguageStandard>
+    <ConformanceMode>true</ConformanceMode>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)include;
+        %(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>$(DefineConstants);
+        %(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>
+\end{lstlisting}
+
+\begin{warning}
+\Tp{Directory.Build.props} 和 \Tp{Directory.Build.targets} 文件会自动应用于同目录及子目录下的所有项目。这在大型解决方案中可以统一管理设置，但也可能导致难以追踪的隐式依赖。
+\end{warning}
+
+% -------------------- Chapter: Xcode --------------------
+\chapter{Xcode 项目系统}
+
+{\sloppy Xcode 使用 \Tp{.xcodeproj} 包（本质是一个目录）存储项目配置。其中核心文件是 \Tp{project.pbxproj}，一种类似旧式 plist 的文本格式。\par}
+
+\section{Xcode 项目结构}
+
+一个典型的 Xcode 项目目录结构如下：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+MyApp.xcodeproj/
+  project.pbxproj              # 核心项目配置
+  project.xcworkspace/        # 工作区配置
+    contents.xcworkspacedata
+  xcshareddata/
+    xcschemes/                 # 共享 Scheme
+      MyApp.xcscheme
+  xcuserdata/
+    user.xcuserdatad/          # 用户个人设置
+\end{lstlisting}
+
+\section{project.pbxproj 格式}
+
+\Tp{pbxproj} 使用类似 NeXTSTEP plist 的语法。虽然通常由 Xcode IDE 管理，了解其结构对于手动修改和 CI 配置很有用：
+
+\xcodelabel
+\begin{lstlisting}[style=bashstyle]
+// !$*UTF8*$!
+{
+  archiveVersion = 1;
+  classes = {};
+  objectVersion = 56;
+  objects = {
+    /* Begin PBXBuildFile section */
+    A1B2C3 /* main.cpp in Sources */ = {
+      isa = PBXBuildFile;
+      fileRef = D4E5F6 /* main.cpp */;
+    };
+    /* End PBXBuildFile section */
+
+    /* Begin PBXNativeTarget section */
+    ABC123 /* MyApp */ = {
+      isa = PBXNativeTarget;
+      buildConfigurationList = DEF456;
+      buildPhases = (
+        GHI789 /* Sources */,
+        JKL012 /* Frameworks */,
+        MNO345 /* Resources */,
+      );
+      buildRules = ();
+      dependencies = ();
+      name = MyApp;
+      productName = MyApp;
+      productReference = PQR678 /* MyApp */;
+      productType = "com.apple.product-type.tool";
+    };
+    /* End PBXNativeTarget section */
+
+    /* Begin XCBuildConfiguration section */
+    CFG001 /* Debug */ = {
+      isa = XCBuildConfiguration;
+      buildSettings = {
+        CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+        CLANG_ENABLE_MODULES = YES;
+        GCC_PREPROCESSOR_DEFINITIONS = ("DEBUG=1",);
+        PRODUCT_NAME = "$(TARGET_NAME)";
+        SDKROOT = macosx;
+      };
+      name = Debug;
+    };
+    CFG002 /* Release */ = {
+      isa = XCBuildConfiguration;
+      buildSettings = {
+        CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+        GCC_OPTIMIZATION_LEVEL = s;
+        PRODUCT_NAME = "$(TARGET_NAME)";
+        SDKROOT = macosx;
+      };
+      name = Release;
+    };
+    /* End XCBuildConfiguration section */
+  };
+  rootObject = ROOT01 /* Project object */;
+}
+\end{lstlisting}
+
+\section{xcodebuild 命令行}
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# 列出项目中的所有 scheme
+xcodebuild -list -project MyApp.xcodeproj
+
+# 构建指定 scheme
+xcodebuild build \
+  -project MyApp.xcodeproj \
+  -scheme MyApp \
+  -configuration Release \
+  -derivedDataPath build/
+
+# 构建并运行测试
+xcodebuild test \
+  -project MyApp.xcodeproj \
+  -scheme MyAppTests \
+  -destination 'platform=macOS'
+
+# 清理
+xcodebuild clean -project MyApp.xcodeproj -scheme MyApp
+
+# 导出 archive
+xcodebuild archive \
+  -project MyApp.xcodeproj \
+  -scheme MyApp \
+  -archivePath build/MyApp.xcarchive
+\end{lstlisting}
+
+\section{Swift Package Manager 集成}
+
+Xcode 11+ 原生支持 Swift Package Manager（SPM），可以直接在 \Tp{.xcodeproj} 中声明 C/C++ 依赖：
+
+\xcodelabel
+\begin{lstlisting}[style=bashstyle]
+// Package.swift（C++ 库的 SPM 配置）
+// swift-tools-version:5.9
+import PackageDescription
+
+let package = Package(
+    name: "MyLib",
+    products: [
+        .library(name: "MyLib", targets: ["MyLib"]),
+    ],
+    targets: [
+        .target(
+            name: "MyLib",
+            path: "Sources",
+            publicHeadersPath: "include",
+            cxxSettings: [
+                .headerSearchPath("internal"),
+                .define("MYLIB_BUILDING"),
+                .unsafeFlags(["-std=c++20"]),
+            ]
+        ),
+        .testTarget(
+            name: "MyLibTests",
+            dependencies: ["MyLib"]
+        ),
+    ],
+    cxxLanguageStandard: .cxx20
+)
+\end{lstlisting}
+
+\section{CMake 生成 Xcode 工程}
+
+CMake 可以直接生成 Xcode 项目，这在跨平台项目中很常见：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# 生成 Xcode 工程
+cmake -B build -G Xcode -DCMAKE_CXX_STANDARD=20
+
+# 打开
+open build/MyProject.xcodeproj
+
+# 或通过命令行构建
+cmake --build build --config Release
+\end{lstlisting}
+
+\begin{compare}[title=VS 项目 vs Xcode 项目]
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{特性} & \textbf{Visual Studio} & \textbf{Xcode} \\
+\midrule
+项目文件格式 & XML (\Tp{.vcxproj}) & NeXTSTEP plist (\Tp{.pbxproj}) \\
+解决方案 & \Tp{.sln} & \Tp{.xcworkspace} \\
+构建引擎 & MSBuild & xcodebuild \\
+配置管理 & Property Sheet (\Tp{.props}) & xcconfig 文件 \\
+包管理 & NuGet / vcpkg & SPM / CocoaPods \\
+命令行工具 & \Tp{msbuild} & \Tp{xcodebuild} \\
+跨平台 & Windows / Linux (WSL) & macOS / iOS \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+% -------------------- Chapter: Makefile --------------------
+\chapter{Makefile 与 GNU Make}
+
+Make 是最古老的构建工具之一，至今仍在 Unix 世界中广泛使用。GNU Make 是其最流行的实现，几乎所有 Linux 发行版都预装了它。虽然现代项目倾向于使用 CMake 或 XMake，但许多遗留项目和底层系统组件仍在使用 Makefile。
+
+\section{基本规则}
+
+Makefile 由一系列 \textbf{规则} 组成，每条规则定义了目标（target）、依赖（prerequisites）和命令（recipe）：
+
+\makelabelcmd
+\begin{lstlisting}[style=bashstyle]
+# 目标: 依赖列表
+# \t命令（必须是 Tab 缩进）
+
+hello: main.o utils.o
+\tg++ -o hello main.o utils.o
+
+main.o: main.cpp utils.h
+\tg++ -c main.cpp
+
+utils.o: utils.cpp utils.h
+\tg++ -c utils.cpp
+
+clean:
+\trm -f *.o hello
+\end{lstlisting}
+
+\begin{warning}
+Makefile 中的命令必须使用 \textbf{Tab 字符}缩进，不能使用空格。这是 Make 最常被抱怨的设计缺陷之一。如果看到 ``missing separator'' 错误，几乎总是因为用了空格代替 Tab。
+\end{warning}
+
+\section{变量}
+
+\makelabelcmd
+\begin{lstlisting}[style=bashstyle]
+# 变量定义
+CXX      = g++
+CXXFLAGS = -std=c++20 -Wall -Wextra
+LDFLAGS  = -L/usr/local/lib
+LDLIBS   = -lfmt -lpthread
+SRCDIR   = src
+OBJDIR   = build
+
+# 递归展开（使用时求值）
+SOURCES = $(wildcard $(SRCDIR)/*.cpp)
+
+# 简单展开（定义时求值）
+OBJECTS := $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
+
+# 追加
+CXXFLAGS += -O2
+
+# 条件赋值（仅在未定义时赋值）
+CXX ?= clang++
+\end{lstlisting}
+
+\section{隐式规则与模式规则}
+
+\makelabelcmd
+\begin{lstlisting}[style=bashstyle]
+# 隐式规则：Make 内置了 .cpp -> .o 的规则
+# 等价于：
+%.o: %.cpp
+\t$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# 模式规则：编译 src/ 下的 .cpp 到 build/ 下的 .o
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
+\t$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# 目录创建（order-only prerequisite）
+$(OBJDIR):
+\tmkdir -p $(OBJDIR)
+
+# 自动变量说明：
+# $@ = 目标文件名
+# $< = 第一个依赖
+# $^ = 所有依赖（去重）
+# $? = 比目标更新的依赖
+\end{lstlisting}
+
+\section{完整的 Makefile 示例}
+
+\makelabelcmd
+\begin{lstlisting}[style=bashstyle]
+# ==================== 配置 ====================
+CXX       := g++
+CXXFLAGS  := -std=c++20 -Wall -Wextra -Wpedantic
+LDFLAGS   :=
+LDLIBS    := -lfmt -lpthread
+
+SRCDIR    := src
+BUILDDIR  := build
+TARGET    := myapp
+
+# ==================== 自动推导 ====================
+SOURCES   := $(shell find $(SRCDIR) -name '*.cpp')
+OBJECTS   := $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(SOURCES))
+DEPS      := $(OBJECTS:.o=.d)
+
+# ==================== 规则 ====================
+.PHONY: all clean debug release
+
+all: $(TARGET)
+
+$(TARGET): $(OBJECTS)
+\t$(CXX) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+$(BUILDDIR)/%.o: $(SRCDIR)/%.cpp | $(BUILDDIR)
+\t@mkdir -p $(dir $@)
+\t$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+
+$(BUILDDIR):
+\t@mkdir -p $@
+
+# 自动依赖追踪
+-include $(DEPS)
+
+clean:
+\trm -rf $(BUILDDIR) $(TARGET)
+
+debug: CXXFLAGS += -g -O0 -DDEBUG
+debug: all
+
+release: CXXFLAGS += -O2 -DNDEBUG
+release: all
+\end{lstlisting}
+
+\section{高级特性}
+
+\makelabelcmd
+\begin{lstlisting}[style=bashstyle]
+# 条件判断
+ifeq ($(OS),Windows_NT)
+  TARGET := $(TARGET).exe
+  LDLIBS += -lws2_32
+else
+  UNAME_S := $(shell uname -s)
+  ifeq ($(UNAME_S),Darwin)
+    CXXFLAGS += -stdlib=libc++
+  endif
+endif
+
+# 函数使用
+COMMA := ,
+EMPTY :=
+SPACE := $(EMPTY) $(EMPTY)
+
+# 字符串替换
+UPPER_SOURCES := $(subst .cpp,.CPP,$(SOURCES))
+
+# 循环
+LIBS := fmt zlib boost_system
+$(foreach lib,$(LIBS),$(eval $(lib)_CFLAGS := $(shell pkg-config --cflags $(lib))))
+
+# include 其他 Makefile
+-include config.mk           (*@\# - 前缀：文件不存在时不报错@*)
+\end{lstlisting}
+
+\section{Make 与 CMake 的关系}
+
+在实际项目中，Make 和 CMake 并不矛盾。CMake 可以生成 Makefile 作为其底层构建系统：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# CMake 生成 Makefile
+cmake -B build -G "Unix Makefiles"
+cmake --build build -j8
+
+# 或直接使用生成的 Makefile
+cd build && make -j8
+
+# 也可以使用 Ninja（更快）
+cmake -B build -G Ninja
+cmake --build build
+\end{lstlisting}
+
+\begin{compare}[title=Make vs CMake vs XMake]
+\begin{tabularx}{\textwidth}{lXXX}
+\toprule
+\textbf{特性} & \textbf{Make} & \textbf{CMake} & \textbf{XMake} \\
+\midrule
+跨平台 & Unix 为主 & 全平台 & 全平台 \\
+配置语法 & Makefile DSL & CMake DSL & Lua \\
+依赖管理 & 无 & 无内置 & 内置 xrepo \\
+增量编译 & 手动管理 & 自动 & 自动 \\
+并行构建 & \Tp{make -j} & \Tp{cmake --build -j} & \Tp{xmake -j} \\
+学习曲线 & 中等 & 中高 & 较低 \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+\begin{bestpractice}[title=Makefile 最佳实践]
+\begin{enumerate}
+  \item 使用 \Tp{-MMD -MP} 生成 \Tp{.d} 依赖文件，实现头文件变更自动重编译。
+  \item 使用 \Tp{.PHONY} 声明伪目标（\Tp{clean}、\Tp{all} 等），避免与同名文件冲突。
+  \item 使用 \Tp{@} 前缀隐藏命令输出，使用 \Tp{-} 前缀忽略错误。
+  \item 使用 order-only prerequisite（\Tp{| dir}）确保目录先于文件创建。
+  \item 目标特定变量（如 \Tp{debug: CXXFLAGS += -g}）可以为不同配置定制编译选项。
+\end{enumerate}
+\end{bestpractice}
+
+% ####################################################################
+\part{附录}
+% ####################################################################
+\appendix
+
+% -------------------- Appendix A: Android --------------------
+\chapter{Android 构建系统}
+
+Android 开发涉及多层次的构建系统：应用层使用 Gradle，NDK 层使用 CMake 或 ndk-build，系统层（AOSP）使用 Soong 和 Make。
+
+\section{Gradle + CMake（NDK）}
+
+这是目前 Android 原生开发的标准方案。Gradle 作为顶层构建工具，通过 externalNativeBuild 调用 CMake 编译 C/C++ 代码：
+
+\androidlabel
+\begin{lstlisting}[style=bashstyle]
+// build.gradle.kts（Kotlin DSL）
+plugins {
+    id("com.android.application") version "8.2.0"
+}
+
+android {
+    namespace = "com.example.myapp"
+    compileSdk = 34
+    ndkVersion = "26.1.10909125"
+
+    defaultConfig {
+        applicationId = "com.example.myapp"
+        minSdk = 24
+        targetSdk = 34
+
+        externalNativeBuild {
+            cmake {
+                cppFlags("-std=c++20", "-fno-rtti")
+                arguments("-DANDROID_STL=c++_shared",
+                          "-DCMAKE_BUILD_TYPE=Release")
+                abiFilters("arm64-v8a", "x86_64")
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
+}
+\end{lstlisting}
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+# src/main/cpp/CMakeLists.txt
+cmake_minimum_required(VERSION 3.22.1)
+project(nativelib)
+
+add_library(nativelib SHARED
+  native-lib.cpp
+  jni-bridge.cpp
+)
+
+# NDK 提供的变量
+target_include_directories(nativelib PRIVATE
+  ${ANDROID_NDK}/sources/android/native_app_glue
+)
+
+# 链接 Android 日志库
+find_library(log-lib log)
+target_link_libraries(nativelib
+  ${log-lib}
+  android           (*@\# NDK 提供的 android 库@*)
+)
+
+# C++20
+target_compile_features(nativelib PRIVATE cxx_std_20)
+\end{lstlisting}
+
+\section{NDK 特有变量}
+
+CMake 在 NDK 环境中会收到以下预定义变量：
+
+\begin{guideline}[title=NDK CMake 变量]
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{变量} & \textbf{说明} \\
+\midrule
+\Tp{ANDROID\_ABI} & 目标 ABI（\Tp{arm64-v8a}、\Tp{x86\_64} 等） \\
+\Tp{ANDROID\_PLATFORM} & 最低 API 级别（如 \Tp{android-24}） \\
+\Tp{ANDROID\_NDK} & NDK 根目录路径 \\
+\Tp{ANDROID\_STL} & C++ 标准库选择（\Tp{c++\_shared} 或 \Tp{c++\_static}） \\
+\Tp{CMAKE\_TOOLCHAIN\_FILE} & NDK 提供的工具链文件路径 \\
+\Tp{CMAKE\_SYSTEM\_NAME} & 值为 \Tp{Android} \\
+\bottomrule
+\end{tabularx}
+\end{guideline}
+
+\section{ndk-build}
+
+{\sloppy\Tp{ndk-build} 是 NDK 的旧式构建系统，使用 \Tp{Android.mk}（Makefile 方言）和 \Tp{Application.mk}：\par}
+
+\androidlabel
+\begin{lstlisting}[style=bashstyle]
+# Android.mk
+LOCAL_PATH := $(call my-dir)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE    := nativelib
+LOCAL_SRC_FILES := native-lib.cpp jni-bridge.cpp
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
+LOCAL_LDLIBS    := -llog -landroid
+LOCAL_CPP_FEATURES := rtti exceptions
+LOCAL_CFLAGS    := -std=c++20
+
+include $(BUILD_SHARED_LIBRARY)
+\end{lstlisting}
+
+\begin{lstlisting}[style=bashstyle]
+# Application.mk
+APP_STL     := c++_shared
+APP_ABI     := arm64-v8a x86_64
+APP_PLATFORM := android-24
+APP_CPPFLAGS := -std=c++20
+\end{lstlisting}
+
+\begin{note}
+Google 已宣布 ndk-build 进入维护模式，新项目应使用 CMake。但大量旧项目（包括 Android 系统源码中的部分模块）仍在使用 ndk-build。
+\end{note}
+
+\section{AOSP 构建系统：Soong + Make}
+
+Android 开源项目（AOSP）使用 Soong（基于 Blueprint）和传统 Make 的混合构建系统：
+
+\androidlabel
+\begin{lstlisting}[style=bashstyle]
+# Android.bp（Soong 配置，类似 JSON）
+cc_library_shared {
+    name: "libnativelib",
+    srcs: ["native-lib.cpp", "jni-bridge.cpp"],
+    shared_libs: [
+        "liblog",
+        "libandroid",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
+    cppflags: ["-std=c++20"],
+    stl: "libc++",
+    sdk_version: "current",
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=bashstyle]
+# Android.mk（传统 Make 方式，仍然存在于部分模块中）
+LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+LOCAL_MODULE := libnativelib
+LOCAL_SRC_FILES := native-lib.cpp
+LOCAL_SHARED_LIBRARIES := liblog libandroid
+include $(BUILD_SHARED_LIBRARY)
+\end{lstlisting}
+
+\begin{bestpractice}[title=Android 构建系统选择]
+\begin{itemize}
+  \item \textbf{应用开发}：Gradle + CMake（NDK），这是官方推荐的方案。
+  \item \textbf{纯 C/C++ 库}：独立 CMake 项目，通过 Gradle 集成。
+  \item \textbf{AOSP 系统开发}：优先使用 \Tp{Android.bp}（Soong），避免新增 \Tp{Android.mk}。
+  \item \textbf{跨平台库}：使用 CMake 作为统一构建系统，为 Android 添加 NDK 工具链文件。
+\end{itemize}
+\end{bestpractice}
+
+% -------------------- Appendix B: OpenEmbedded --------------------
+\chapter{OpenEmbedded 构建系统}
+
+OpenEmbedded（OE）是一个用于构建嵌入式 Linux 发行版的元构建系统。它的核心工具是 \textbf{BitBake}——一个类似 Make 的任务执行引擎，通过 \textbf{配方}（recipe）文件定义如何获取、配置、编译和安装软件包。Yocto Project 是 OE 最著名的上层发行版。
+
+\section{核心概念}
+
+\begin{guideline}[title=OE 核心术语]
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{术语} & \textbf{说明} \\
+\midrule
+\textbf{Recipe} (\Tp{.bb}) & 定义如何构建一个软件包 \\
+\textbf{Layer} & 一组相关的 recipe 集合 \\
+\textbf{BitBake} & 任务调度和执行引擎 \\
+\textbf{Machine} & 目标硬件平台 \\
+\textbf{Distro} & 目标 Linux 发行版配置 \\
+\textbf{Image} & 最终的文件系统镜像 \\
+\textbf{Sysroot} & 交叉编译的 sysroot 环境 \\
+\textbf{WORKDIR} & BitBake 的临时工作目录 \\
+\bottomrule
+\end{tabularx}
+\end{guideline}
+
+\section{Recipe 文件结构}
+
+一个典型的 BitBake recipe（\Tp{.bb} 文件）：
+
+\oelabel
+\begin{lstlisting}[style=bbstyle]
+# myapp_1.0.bb
+SUMMARY = "My C++ Application"
+DESCRIPTION = "A sample C++20 application for embedded Linux"
+HOMEPAGE = "https://github.com/user/myapp"
+LICENSE = "MIT"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=abc123..."
+
+# 源码获取
+SRC_URI = "git://github.com/user/myapp.git;protocol=https;branch=main \
+           file://0001-fix-build.patch"
+SRCREV = "a1b2c3d4e5f6..."
+S = "${WORKDIR}/git"
+
+# 依赖
+DEPENDS = "fmt zlib boost"
+RDEPENDS:${PN} = "fmt zlib"
+
+# 使用 CMake 构建
+inherit cmake
+
+# 额外的 CMake 参数
+EXTRA_OECMAKE = "-DENABLE_FEATURE=ON -DBUILD_TESTS=OFF"
+
+# 安装额外文件
+do_install:append() {
+    install -d ${D}${sysconfdir}
+    install -m 0644 ${S}/config/myapp.conf ${D}${sysconfdir}/
+}
+
+# 包拆分
+PACKAGES =+ "${PN}-config ${PN}-doc"
+FILES:${PN}-config = "${sysconfdir}/myapp.conf"
+FILES:${PN}-doc = "${docdir}"
+\end{lstlisting}
+
+\section{BitBake 任务流}
+
+BitBake 的标准任务执行流程：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# 构建流程（按顺序执行）
+do_fetch      # 下载源码
+do_unpack     # 解压到 WORKDIR
+do_patch      # 应用补丁
+do_configure  # 运行 configure（CMake: cmake）
+do_compile    # 编译（CMake: make/ninja）
+do_install    # 安装到 D（目标 sysroot）
+do_package    # 生成二进制包（.deb/.rpm/.ipk）
+do_populate_sysroot  # 填充 sysroot 供其他 recipe 使用
+\end{lstlisting}
+
+\section{继承与类}
+
+Recipe 通过 \Tp{inherit} 复用构建逻辑。OE 提供了大量内置类：
+
+\oelabel
+\begin{lstlisting}[style=bbstyle]
+# CMake 项目
+inherit cmake
+EXTRA_OECMAKE = "-DCMAKE_BUILD_TYPE=Release"
+
+# Autotools 项目
+inherit autotools
+EXTRA_OECONF = "--enable-feature --disable-tests"
+
+# Meson 项目
+inherit meson
+EXTRA_OEMESON = "-Dfeature=enabled"
+
+# Python 项目
+inherit setuptools3
+
+# 纯脚本/配置文件（不需要编译）
+inherit allarch
+
+# 自定义任务
+do_mytask() {
+    echo "Running custom task..."
+}
+addtask mytask after do_compile before do_install
+\end{lstlisting}
+
+\section{Layer 管理}
+
+\oelabel
+\begin{lstlisting}[style=bashstyle]
+# 添加自定义 layer
+bitbake-layers create-layer meta-mycustom
+bitbake-layers add-layer meta-mycustom
+
+# layer 目录结构
+meta-mycustom/
+  conf/
+    layer.conf              # Layer 配置
+  recipes-myapp/
+    myapp/
+      myapp_1.0.bb          # Recipe 文件
+      myapp/
+        0001-fix-build.patch  # 补丁文件
+        myapp.service        # systemd 服务文件
+\end{lstlisting}
+
+\cfglabel
+\begin{lstlisting}[style=bashstyle]
+# conf/layer.conf
+BBPATH .= ":${LAYERDIR}"
+BBFILE_COLLECTIONS += "meta-mycustom"
+BBFILE_PATTERN_meta-mycustom = "^${LAYERDIR}/"
+BBFILE_PRIORITY_meta-mycustom = "6"
+LAYERSERIES_COMPAT_meta-mycustom = "scarthgap"
+\end{lstlisting}
+
+\section{镜像构建}
+
+\oelabel
+\begin{lstlisting}[style=bbstyle]
+# my-image.bb - 自定义镜像
+SUMMARY = "Custom embedded Linux image"
+
+inherit core-image
+
+IMAGE_INSTALL = " \
+    packagegroup-core-boot \
+    myapp \
+    myapp-config \
+    openssh \
+    systemd \
+    kernel-modules \
+"
+
+IMAGE_FEATURES += "ssh-server-openssh debug-tweaks"
+
+# 镜像大小限制（MB）
+IMAGE_ROOTFS_EXTRA_SPACE = "512000"
+\end{lstlisting}
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# 构建镜像
+bitbake my-image
+
+# 构建 SDK（交叉编译工具链）
+bitbake my-image -c populate_sdk
+
+# DevShell（进入交叉编译环境）
+bitbake myapp -c devshell
+
+# 查看依赖图
+bitbake -g my-image && cat task-depends.dot
+\end{lstlisting}
+
+\section{Append 与 bbappend}
+
+\Tp{.bbappend} 文件允许在不修改原始 recipe 的情况下追加或覆盖设置：
+
+\oelabel
+\begin{lstlisting}[style=bbstyle]
+# myapp_1.0.bbappend（在你的 layer 中）
+# 文件名必须与原始 recipe 匹配（支持通配符）
+
+# 添加额外的源码补丁
+SRC_URI += "file://0002-custom-patch.patch"
+
+# 修改编译选项
+EXTRA_OECMAKE += "-DENABLE_EXTRA=ON"
+
+# 追加安装步骤
+do_install:append() {
+    install -d ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/myapp.service \
+        ${D}${systemd_system_unitdir}/
+}
+
+# 添加 systemd 服务
+inherit systemd
+SYSTEMD_SERVICE:${PN} = "myapp.service"
+SYSTEMD_AUTO_ENABLE = "enable"
+\end{lstlisting}
+
+\begin{compare}[title=Android 构建 vs OpenEmbedded]
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{特性} & \textbf{Android (AOSP)} & \textbf{OpenEmbedded} \\
+\midrule
+构建引擎 & Soong + Make & BitBake \\
+配置文件 & \Tp{Android.bp} / \Tp{Android.mk} & \Tp{.bb} / \Tp{.bbappend} \\
+目标平台 & Android 设备 & 嵌入式 Linux \\
+包管理 & 无（整体镜像） & \Tp{ipk} / \Tp{deb} / \Tp{rpm} \\
+交叉编译 & NDK 工具链 & OE sysroot \\
+层/模块化 & 模块 (\Tp{Android.bp}) & Layer (\Tp{meta-*}) \\
+C++ 标准库 & libc++ (NDK) & 可配置 (glibc/musl) \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+\begin{bestpractice}[title=OpenEmbedded 最佳实践]
+\begin{enumerate}
+  \item 使用 \Tp{.bbappend} 扩展已有 recipe，不要复制整个 recipe。
+  \item 将自定义 recipe 组织到独立的 layer 中，保持 layer 职责单一。
+  \item 使用 \Tp{SRCREV} 锁定 Git 提交哈希，避免 \Tp{AUTOREV}（自动获取最新版本）用于生产构建。
+  \item 善用 \Tp{PACKAGECONFIG} 实现可选功能的开关管理。
+  \item 使用 \Tp{sstate-cache} 加速重复构建，确保 CI 环境共享 sstate 目录。
+\end{enumerate}
+\end{bestpractice}
+
+% ==================== 后记 ====================
+\backmatter
+
+\chapter*{构建系统总览}
+\addcontentsline{toc}{chapter}{构建系统总览}
+
+下表从多个维度对比了本文涵盖的所有构建系统：
+
+{\small
+\begin{longtable}{>{\bfseries}l p{2.5cm} p{2.5cm} p{2.5cm} p{2.5cm}}
+\toprule
+\textbf{构建系统} & \textbf{适用场景} & \textbf{配置语言} & \textbf{跨平台} & \textbf{包管理} \\
+\midrule
+CMake & 通用 C/C++ & CMake DSL & 全平台 & 无内置 \\
+XMake & 通用 C/C++ & Lua & 全平台 & xrepo \\
+MSBuild & Windows / VS & XML & Windows 为主 & NuGet / vcpkg \\
+Xcode & macOS / iOS & pbxproj & Apple 平台 & SPM \\
+Makefile & Unix 系统 & Make DSL & Unix 为主 & 无 \\
+\midrule
+Gradle+CMake & Android NDK & Kotlin/Groovy & Android & Maven \\
+AOSP Soong & Android 系统 & Blueprint & Android & 模块系统 \\
+BitBake & 嵌入式 Linux & BitBake DSL & 嵌入式 & ipk/deb/rpm \\
+\bottomrule
+\end{longtable}
+}
+
+选择构建系统时，需要考虑项目规模、目标平台、团队熟悉度和生态系统兼容性。对于新项目，CMake 仍然是最安全的选择——几乎所有 IDE 和 CI 系统都原生支持它。如果追求更简洁的语法和内置包管理，XMake 值得一试。对于特定平台（如 Android 或嵌入式 Linux），则需要配合使用平台专属的构建系统。
+
+\end{document}

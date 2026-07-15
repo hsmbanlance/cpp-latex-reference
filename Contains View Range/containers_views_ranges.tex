@@ -1,0 +1,3020 @@
+% !TEX program = xelatex
+% C++ 容器、视图与范围完全参考
+% Containers, Views & Ranges — C++17/20/23
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+% ---- listing style ----
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,
+    ifstream,ofstream,fstream,iostream,
+    ostream,istream,stringstream,ostringstream,
+    path,filesystem},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+\lstdefinelanguage{CSharp}{
+  morekeywords={abstract,as,async,await,base,bool,break,byte,case,catch,char,checked,class,
+    const,continue,decimal,default,delegate,do,double,else,enum,event,explicit,extern,
+    false,finally,fixed,float,for,foreach,goto,if,implicit,in,int,interface,internal,is,
+    lock,long,namespace,new,null,object,operator,out,override,params,private,protected,
+    public,readonly,record,ref,return,sbyte,sealed,short,sizeof,stackalloc,static,string,
+    struct,switch,this,throw,true,try,typeof,uint,ulong,unchecked,unsafe,ushort,using,
+    virtual,void,volatile,while,yield,
+    var,dynamic,global,nint,nuint,notnull,unmanaged,with,required,file,init},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[s]{@"}{"},
+}
+\lstdefinestyle{csharpstyle}{
+  language=CSharp,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{csharpkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  emph={int,string,bool,double,float,long,byte,char,decimal,object,
+    List,Dictionary,HashSet,Queue,Stack,
+    SortedList,SortedDictionary,SortedList,
+    ReadOnlySpan,Span,Memory,ReadOnlyMemory,
+    IEnumerable,IEnumerator,ICollection,IList,IDictionary,
+    IReadOnlyCollection,IReadOnlyList,IReadOnlyDictionary,
+    Action,Func,Predicate,Comparison,
+    Array,ImmutableArray,ImmutableList,ImmutableDictionary,
+    ConcurrentDictionary,BlockingCollection,
+    Task,ValueTask,PriorityQueue},
+  emphstyle=\color{csharptype}\bfseries,
+}
+\lstset{style=cppstyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,
+  title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,
+  title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,
+  title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,
+  title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,
+  title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={Containers, Views & Ranges Reference},
+  pdftitle={C++ 容器、视图与范围完全参考},
+}
+
+\usepackage{tikz}
+
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+\newcommand{\cstd}[1]{C\#~#1}
+\newcommand{\header}[1]{\texttt{<#1>}}
+
+% 复杂度分析框
+\newtcolorbox{complexitybox}[1][]{
+  enhanced,breakable,
+  colback=yellow!3!white,colframe=yellow!60!black,
+  fonttitle=\bfseries,title=复杂度分析,#1,
+  boxed title style={colback=yellow!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ====================================================================
+\begin{document}
+
+% ============================================================
+% 封面
+% ============================================================
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C++ 容器、视图与范围\par}
+\vspace{1cm}
+{\LARGE 完全参考手册\par}
+\vspace{1.5cm}
+{\Large\itshape Containers, Views \& Ranges\par}
+\vspace{0.5cm}
+{\large \cpp{17} / \cpp{20} / \cpp{23}\par}
+\vspace{3cm}
+
+{\large
+\begin{tabular}{ll}
+\toprule
+\textbf{涵盖标准} & \cpp{17}, \cpp{20}, \cpp{23} \\
+\textbf{容器类型}   & 序列 / 关联 / 无序 / 适配器 / 字符串 \\
+\textbf{视图}      & \texttt{span}, \texttt{mdspan}, \texttt{string\_view} \\
+\textbf{范围库}    & \texttt{<ranges>} 全部工厂与适配器 \\
+\bottomrule
+\end{tabular}
+}
+
+\vfill
+{\large\bfseries 结合 C++ Core Guidelines 的使用建议\par}
+\vspace{0.5cm}
+{\normalsize 编译日期：\today\par}
+\end{titlepage}
+
+% ============================================================
+\frontmatter
+\tableofcontents
+
+% ============================================================
+\mainmatter
+
+% ############################################################
+\part{序列容器}
+% ############################################################
+
+序列容器（Sequence Containers）以线性方式存储元素，元素的逻辑顺序由插入位置决定，
+而非由元素值决定。C++ 标准库提供五种序列容器，它们在内存布局、插入/删除效率和
+随机访问能力上各有侧重。
+
+\begin{table}[htbp]
+\centering
+\caption{序列容器速查表}
+\label{tab:seq-overview}
+\begin{tabularx}{\textwidth}{l l l l X}
+\toprule
+\textbf{容器} & \textbf{内存布局} & \textbf{随机访问} & \textbf{尾部插入} & \textbf{适用场景} \\
+\midrule
+\Tp{vector}      & 连续 & $O(1)$ & 均摊$O(1)$ & 默认首选 \\
+\Tp{deque}       & 分段连续 & $O(1)$ & $O(1)$ & 两端频繁操作 \\
+\Tp{list}        & 双向链表 & --- & $O(1)$ & 中间频繁插入/删除 \\
+\Tp{forward\_list} & 单向链表 & --- & $O(1)$* & 内存敏感场景 \\
+\Tp{array}       & 连续（固定） & $O(1)$ & --- & 固定大小栈数组 \\
+\Tp{inplace\_vector} & 连续（内联） & $O(1)$ & $O(1)$** & 零堆分配动态数组 \\
+\bottomrule
+\multicolumn{5}{l}{\small * \Tp{forward\_list} 仅头部 $O(1)$，尾部需遍历} \\
+\multicolumn{5}{l}{\small ** \Tp{inplace\_vector} 容量固定为 $N$，不会重分配（C++26）}
+\end{tabularx}
+\end{table}
+
+\section{分配器（Allocator）模板参数}
+
+C++ 标准库中几乎所有动态容器都接受一个 \texttt{Allocator} 模板参数，
+用于控制容器的内存分配策略。该参数默认为 \Tp{std::allocator<T>}。
+
+\subsection{std::allocator 的默认行为}
+
+\Tp{std::allocator<T>} 是标准库提供的默认分配器，它通过 \Fn{::operator new}
+和 \Fn{::operator delete} 进行内存分配和释放：
+
+\begin{lstlisting}
+// 以下两种写法完全等价
+std::vector<int> v1;
+std::vector<int, std::allocator<int>> v2;
+
+// std::allocator 的核心接口（简化）
+template<typename T>
+struct allocator {
+    T* allocate(size_t n);     // 调用 ::operator new(n * sizeof(T))
+    void deallocate(T* p, size_t n) noexcept;  // 调用 ::operator delete(p)
+    T* allocate_at_least(size_t n);  // C++23: 可能返回比请求更多的内存
+};
+\end{lstlisting}
+
+\begin{note}
+\textbf{内存位置取决于实现}：标准不规定 \texttt{::operator new} 从何处获取内存。
+在绝大多数通用平台（Windows/Linux/macOS）上，它分配在\emph{系统堆}（自由存储区）上。
+但在嵌入式系统和裸机（bare-metal）环境中，\texttt{::operator new} 可能被
+全局重载为从预定义的内存池或栈区分配。因此，"默认分配器 = 堆分配"这一
+说法仅在通用平台上成立。
+\end{note}
+
+\subsection{哪些容器接受分配器参数}
+
+\begin{table}[htbp]
+\centering
+\caption{容器的分配器支持一览}
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{容器} & \textbf{分配器模板参数} & \textbf{说明} \\
+\midrule
+\Tp{vector<T, Alloc>}           & 是 & 控制元素存储 \\
+\Tp{deque<T, Alloc>}            & 是 & 控制分段缓冲区 + 地图数组 \\
+\Tp{list<T, Alloc>}             & 是 & 控制节点分配 \\
+\Tp{forward\_list<T, Alloc>}    & 是 & 控制节点分配 \\
+\Tp{array<T, N>}                & \textbf{否} & 固定大小，栈/内联存储 \\
+\Tp{inplace\_vector<T, N>}      & \textbf{否} & 固定容量，内联存储，\textbf{不能}指定分配器 \\
+\Tp{set/map<K, Alloc>}          & 是 & 控制树节点分配 \\
+\Tp{unordered\_set/map<K, Alloc>}& 是 & 控制桶和节点分配 \\
+\Tp{basic\_string<ChT, Tr, Alloc>}& 是 & 控制字符存储（SSO 范围内不触发） \\
+\Tp{stack/queue/priority\_queue} & 间接 & 通过底层容器的分配器 \\
+\Tp{span/mdspan/string\_view}   & \textbf{否} & 纯视图，不分配内存 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{自定义分配器}
+
+自定义分配器可以用于内存池、共享内存、对齐分配、日志记录等场景：
+
+\begin{lstlisting}
+#include <memory>
+#include <vector>
+#include <iostream>
+
+// 简单的日志分配器（包装默认分配器）
+template<typename T>
+struct LoggingAllocator {
+    using value_type = T;
+
+    LoggingAllocator() = default;
+    template<typename U>
+    constexpr LoggingAllocator(const LoggingAllocator<U>&) noexcept {}
+
+    T* allocate(std::size_t n) {
+        std::cout << "[alloc] " << n * sizeof(T) << " bytes\n";
+        return std::allocator<T>{}.allocate(n);
+    }
+
+    void deallocate(T* p, std::size_t n) noexcept {
+        std::cout << "[dealloc] " << n * sizeof(T) << " bytes\n";
+        std::allocator<T>{}.deallocate(p, n);
+    }
+};
+
+template<typename T, typename U>
+bool operator==(const LoggingAllocator<T>&,
+                const LoggingAllocator<U>&) { return true; }
+template<typename T, typename U>
+bool operator!=(const LoggingAllocator<T>&,
+                const LoggingAllocator<U>&) { return false; }
+
+int main() {
+    std::vector<int, LoggingAllocator<int>> v;
+    v.push_back(1);   // [alloc] 4 bytes (或更多)
+    v.push_back(2);
+    v.push_back(3);
+    v.push_back(4);   // 可能触发 [dealloc] + [alloc] 重分配
+}
+// 析构时: [dealloc] ...
+\end{lstlisting}
+
+\subsection{C++17 polymorphic\_allocator}
+
+\cpp{17} 引入了 \Tp{std::pmr::polymorphic\_allocator}，通过
+\Tp{std::pmr::memory\_resource} 实现运行时多态分配策略，避免模板参数传染：
+
+\begin{lstlisting}
+#include <memory_resource>
+#include <vector>
+#include <iostream>
+
+int main() {
+    // 使用 monotonic_buffer_resource: 线性分配，不释放（直到析构）
+    char buffer[1024];
+    std::pmr::monotonic_buffer_resource pool(
+        buffer, sizeof(buffer));
+
+    // pmr::vector 是 vector<T, pmr::polymorphic_allocator<T>> 的别名
+    std::pmr::vector<int> v(&pool);
+    v.push_back(1);
+    v.push_back(2);
+    v.push_back(3);
+    // 所有分配来自 buffer，零堆开销
+
+    // 其他内存资源
+    auto* default_mr = std::pmr::get_default_resource();
+    auto* new_del    = std::pmr::new_delete_resource();    // new/delete
+    auto* null_mr    = std::pmr::null_memory_resource();   // 分配即抛异常
+
+    // unsynchronized_pool_resource: 非线程安全的池分配器
+    std::pmr::unsynchronized_pool_resource fast_pool(&pool);
+    std::pmr::vector<int> v2(&fast_pool);
+}
+\end{lstlisting}
+
+\begin{guideline}
+\textbf{R.5}：在性能敏感场景中，优先考虑 \texttt{pmr::monotonic\_buffer\_resource}
+配合栈缓冲区，避免频繁的小堆分配。但注意 PMR 容器的\emph{分配器不可传播}：
+两个使用不同 \texttt{memory\_resource} 的 PMR 容器之间不能直接赋值或交换。
+\end{guideline}
+
+\begin{compare}
+C\# 没有分配器概念。所有对象都在托管堆上分配，由 GC 管理。
+\begin{lstlisting}[style=csharpstyle]
+// C#: 无法自定义 List<T> 的内存分配策略
+var list = new List<int>();  // 始终在 GC 堆上
+
+// 唯一例外: stackalloc（栈分配，但不是容器）
+Span<int> stackBuf = stackalloc int[64];
+
+// .NET 的 ArrayPool<T> 提供对象池，但不是分配器
+var pool = ArrayPool<int>.Shared;
+int[] rented = pool.Rent(1024);
+pool.Return(rented);
+\end{lstlisting}
+\end{compare}
+
+% ────────────────────────────────────────────────────────────
+\chapter{vector --- 动态数组}
+% ────────────────────────────────────────────────────────────
+
+\Tp{std::vector<T, Allocator>} 是 C++ 中最常用的容器，也是 Core Guidelines 推荐的
+默认容器选择（SF.7, SL.con.1）。它在连续内存中存储元素，提供 $O(1)$ 随机访问和
+均摊 $O(1)$ 的尾部插入。
+
+\section{接口概览}
+
+\begin{table}[htbp]
+\centering
+\caption{\Tp{vector} 主要成员函数与复杂度}
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{操作} & \textbf{复杂度} & \textbf{说明} \\
+\midrule
+\Fn{push\_back}      & 均摊 $O(1)$ & 尾部追加，可能触发重分配 \\
+\Fn{emplace\_back}   & 均摊 $O(1)$ & 原地构造，避免拷贝/移动 \\
+\Fn{insert}          & $O(n)$      & 插入点后的元素全部后移 \\
+\Fn{erase}           & $O(n)$      & 删除点后的元素全部前移 \\
+\Fn{operator[]}      & $O(1)$      & 无越界检查 \\
+\Fn{at}              & $O(1)$      & 越界抛 \texttt{out\_of\_range} \\
+\Fn{size}            & $O(1)$      & 当前元素数 \\
+\Fn{capacity}        & $O(1)$      & 已分配容量 \\
+\Fn{reserve}         & $O(n)$      & 预分配，减少重分配次数 \\
+\Fn{shrink\_to\_fit} & $O(n)$      & 请求释放多余容量 \\
+\Fn{data}            & $O(1)$      & 返回底层连续数组指针 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{基本用法}
+
+\begin{lstlisting}
+#include <vector>
+#include <iostream>
+#include <algorithm>
+
+int main() {
+    // 初始化
+    std::vector<int> v1 = {1, 2, 3, 4, 5};
+    std::vector<int> v2(10, 0);            // 10 个 0
+    std::vector<int> v3(v1.begin(), v1.end());
+
+    // 预分配：避免多次重分配
+    v1.reserve(100);
+
+    // 尾部追加
+    v1.push_back(6);
+    v1.emplace_back(7);                    // 原地构造
+
+    // 随机访问
+    std::cout << v1[0] << '\n';           // 无检查
+    std::cout << v1.at(1) << '\n';        // 有越界检查
+
+    // 遍历
+    for (const auto& elem : v1) {
+        std::cout << elem << ' ';
+    }
+
+    // 与算法配合
+    std::sort(v1.begin(), v1.end());
+    auto it = std::find(v1.begin(), v1.end(), 3);
+}
+\end{lstlisting}
+
+\section{内存管理与增长策略}
+
+vector 使用几何增长策略（通常以 1.5 或 2 倍扩容）。当 \Fn{push\_back} 导致
+\Fn{size} 超过 \Fn{capacity} 时，会触发以下步骤：
+
+\begin{enumerate}
+\item 分配一块更大的新内存
+\item 将旧元素逐个移动（或拷贝）到新内存
+\item 销毁旧元素，释放旧内存
+\end{enumerate}
+
+\begin{warning}
+\textbf{迭代器失效}：任何导致重分配的操作（\Fn{push\_back}、\Fn{insert}、\Fn{reserve}
+等）都会使\emph{所有}迭代器、指针和引用失效。即使未触发重分配，\Fn{insert} 也会使
+插入点之后的迭代器失效。
+\end{warning}
+
+\begin{lstlisting}
+std::vector<int> v = {1, 2, 3};
+v.reserve(10);   // 预分配，后续 push_back 不会重分配
+
+auto ptr = &v[0];
+v.push_back(4);  // 若 capacity 不足，ptr 悬空！
+
+// 安全做法：先 reserve 再获取指针
+v.reserve(20);
+auto safe_ptr = &v[0];  // 在达到 capacity 前安全
+\end{lstlisting}
+
+\section{erase-remove 惯用法与 C++20 简化}
+
+在 C++20 之前，删除满足条件的元素需要 erase-remove 惯用法：
+
+\begin{lstlisting}
+// C++17: erase-remove 惯用法
+std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8};
+v.erase(
+    std::remove_if(v.begin(), v.end(),
+                   [](int x) { return x % 2 == 0; }),
+    v.end()
+);
+// v = {1, 3, 5, 7}
+\end{lstlisting}
+
+\cpp{20} 引入了 \Fn{std::erase} 和 \Fn{std::erase\_if} 自由函数，大幅简化了这一操作：
+
+\begin{lstlisting}
+// C++20: 一行搞定
+std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8};
+std::erase_if(v, [](int x) { return x % 2 == 0; });
+// v = {1, 3, 5, 7}
+\end{lstlisting}
+
+\begin{guideline}
+\textbf{SF.7}：不要写 \texttt{vector<unique\_ptr<T>>} 然后手动管理大小。
+使用 \Fn{reserve} 预分配，避免不必要的重分配。\\
+\textbf{ES.11}：用 \texttt{std::array} 替代 C 风格数组；用 \texttt{std::vector} 替代
+动态分配的裸数组。
+\end{guideline}
+
+\begin{compare}
+C\# 中对应的类型为 \texttt{List<T>}：
+\begin{lstlisting}[style=csharpstyle]
+var list = new List<int> { 1, 2, 3, 4, 5 };
+list.Add(6);                      // 对应 push_back
+list.Insert(0, 0);                // 对应 insert
+list.RemoveAt(0);                 // 对应 erase
+list.Capacity = 100;              // 对应 reserve
+list.RemoveAll(x => x % 2 == 0); // 对应 erase_if
+\end{lstlisting}
+
+主要区别：C\# 的 \texttt{List<T>} 存储的是引用类型的引用（对值类型有装箱开销），
+而 C++ 的 \texttt{vector<T>} 直接存储对象（值语义），对 POD 类型有更好的缓存局部性。
+\end{compare}
+
+\section{vector<bool> 特化}
+
+\Tp{std::vector<bool>} 是标准库的特化版本，每个元素仅占 1 bit。虽然节省内存，
+但它的代理对象（proxy）行为与普通 vector 不同：
+
+\begin{warning}
+\texttt{vector<bool>} 的 \Fn{operator[]} 返回的不是 \texttt{bool\&}，而是代理对象
+\texttt{vector<bool>::reference}。这导致：
+\begin{itemize}
+\item 无法将 \texttt{\&v[0]} 传给期望 \texttt{bool*} 的函数
+\item 与泛型代码不兼容（违反容器概念要求）
+\item 线程安全语义不同于普通 vector
+\end{itemize}
+替代方案：\texttt{std::bitset}（固定大小）或 \texttt{std::deque<bool>}（需要动态大小时）。
+\end{warning}
+
+% ────────────────────────────────────────────────────────────
+\chapter{deque --- 双端队列}
+% ────────────────────────────────────────────────────────────
+
+\Tp{std::deque<T, Allocator>}（double-ended queue）在两端都提供 $O(1)$ 的插入和
+删除，同时支持 $O(1)$ 随机访问。它的内存布局为\emph{分段连续}：内部维护一个
+``地图''（map）数组，每个元素指向一块固定大小的连续缓冲区。
+
+\section{接口概览}
+
+\begin{table}[htbp]
+\centering
+\caption{\Tp{deque} 主要成员函数与复杂度}
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{操作} & \textbf{复杂度} & \textbf{说明} \\
+\midrule
+\Fn{push\_back}       & $O(1)$ & 尾部追加 \\
+\Fn{push\_front}      & $O(1)$ & 头部追加（vector 不提供） \\
+\Fn{emplace\_front}   & $O(1)$ & 头部原地构造 \\
+\Fn{emplace\_back}    & $O(1)$ & 尾部原地构造 \\
+\Fn{pop\_front}       & $O(1)$ & 头部弹出（vector 不提供） \\
+\Fn{insert}           & $O(n)$ & 中间插入 \\
+\Fn{operator[]}       & $O(1)$ & 随机访问 \\
+\Fn{data}             & ---    & \textbf{不提供}（内存不连续） \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{用法示例}
+
+\begin{lstlisting}
+#include <deque>
+#include <iostream>
+
+int main() {
+    std::deque<int> dq;
+
+    // 两端操作
+    dq.push_back(3);       // [3]
+    dq.push_front(2);      // [2, 3]
+    dq.push_front(1);      // [1, 2, 3]
+    dq.push_back(4);       // [1, 2, 3, 4]
+
+    // 随机访问
+    std::cout << dq[1] << '\n';  // 2
+
+    // 弹出两端
+    dq.pop_front();        // [2, 3, 4]
+    dq.pop_back();         // [2, 3]
+
+    // C++20 erase_if
+    std::erase_if(dq, [](int x) { return x > 2; });
+    // dq = {2}
+}
+\end{lstlisting}
+
+\begin{guideline}
+\textbf{SL.con.3}：优先使用 \texttt{vector}。只有在需要频繁在头部插入/删除时
+才考虑 \texttt{deque}。deque 不支持 \Fn{data()}，不能将底层内存传给 C 风格 API。
+\end{guideline}
+
+\begin{note}
+\textbf{迭代器稳定性}：deque 在头部或尾部插入时，\emph{迭代器失效但引用/指针保持有效}。
+这一特性使 deque 在需要稳定引用的场景中优于 vector。
+中间插入/删除则使所有迭代器、引用和指针全部失效。
+\end{note}
+
+\begin{compare}
+C\# 没有直接等价类型。可以用 \texttt{LinkedList<T>} 实现双端操作，但失去随机访问：
+\begin{lstlisting}[style=csharpstyle]
+var dq = new LinkedList<int>();
+dq.AddLast(3);     // push_back
+dq.AddFirst(1);    // push_front
+dq.RemoveFirst();  // pop_front
+dq.RemoveLast();   // pop_back
+\end{lstlisting}
+\end{compare}
+
+% ────────────────────────────────────────────────────────────
+\chapter{list --- 双向链表}
+% ────────────────────────────────────────────────────────────
+
+\Tp{std::list<T, Allocator>} 是双向链表容器，每个节点包含前驱和后继指针。
+它不支持随机访问，但在任意位置的插入和删除都是 $O(1)$（给定迭代器位置）。
+
+\section{接口概览}
+
+\begin{table}[htbp]
+\centering
+\caption{\Tp{list} 主要成员函数与复杂度}
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{操作} & \textbf{复杂度} & \textbf{说明} \\
+\midrule
+\Fn{push\_back}     & $O(1)$ & 尾部追加 \\
+\Fn{push\_front}    & $O(1)$ & 头部追加 \\
+\Fn{insert}         & $O(1)$ & 在迭代器前插入（给定位置） \\
+\Fn{erase}          & $O(1)$ & 删除迭代器所指元素 \\
+\Fn{sort}           & $O(n \log n)$ & 成员函数版本，稳定排序 \\
+\Fn{merge}          & $O(n)$ & 合并两个已排序 list \\
+\Fn{unique}         & $O(n)$ & 去除相邻重复元素 \\
+\Fn{reverse}        & $O(n)$ & 反转链表 \\
+\Fn{splice}         & $O(1)$ & 将另一 list 的元素"剪接"过来 \\
+\Fn{remove}         & $O(n)$ & 删除等于某值的所有元素 \\
+\Fn{remove\_if}     & $O(n)$ & 删除满足谓词的所有元素 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{splice --- list 的独有能力}
+
+\Fn{splice} 是 list 的标志性操作：它将另一个 list 中的元素"搬运"到当前 list 的
+指定位置，不拷贝、不移动元素本身，只修改指针。复杂度为 $O(1)$。
+
+\begin{lstlisting}
+#include <list>
+#include <iostream>
+
+int main() {
+    std::list<int> a = {1, 2, 3};
+    std::list<int> b = {10, 20, 30};
+
+    // 将 b 的所有元素移到 a 的末尾
+    a.splice(a.end(), b);
+    // a = {1, 2, 3, 10, 20, 30}, b = {}
+
+    // 将 b 中的单个元素移到 a 的开头
+    b = {100, 200, 300};
+    a.splice(a.begin(), b, b.begin());
+    // a = {100, 1, 2, 3, 10, 20, 30}, b = {200, 300}
+
+    // 将 b 的一个范围移到 a 中间
+    auto it = std::next(a.begin(), 3);  // 指向 3
+    a.splice(it, b, b.begin(), b.end());
+    // a = {100, 1, 2, 200, 300, 3, 10, 20, 30}, b = {}
+}
+\end{lstlisting}
+
+\begin{bestpractice}
+list 的 \Fn{sort} 是成员函数（而非 \texttt{std::sort}），因为
+\texttt{std::sort} 要求随机访问迭代器。list 的 \Fn{sort} 是稳定排序，
+且不需要额外内存分配（$O(n \log n)$ 时间，$O(1)$ 额外空间）。
+\end{bestpractice}
+
+\begin{note}
+\textbf{迭代器稳定性}：list 的插入和删除操作\emph{不影响}其他元素的迭代器、引用和指针。
+只有被删除元素本身的迭代器失效。这使得 list 在需要稳定引用的场景中非常有价值。
+\end{note}
+
+\begin{compare}
+C\# 的 \texttt{LinkedList<T>} 是双向链表，但功能更有限：
+\begin{lstlisting}[style=csharpstyle]
+var ll = new LinkedList<int>();
+ll.AddLast(1);
+ll.AddFirst(0);
+ll.Remove(1);  // O(n) 查找后删除！
+// C# 没有 splice、merge、unique 等操作
+\end{lstlisting}
+\end{compare}
+
+% ────────────────────────────────────────────────────────────
+\chapter{forward\_list --- 单向链表}
+% ────────────────────────────────────────────────────────────
+
+\Tp{std::forward\_list<T, Allocator>} 是单向链表，每个节点只有后继指针。
+它比 \Tp{list} 占用更少内存（少一个指针），但只支持前向遍历。
+
+\section{与 list 的区别}
+
+\begin{table}[htbp]
+\centering
+\caption{\Tp{forward\_list} vs \Tp{list}}
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
+\textbf{特性} & \textbf{list} & \textbf{forward\_list} & \textbf{说明} \\
+\midrule
+链表类型 & 双向 & 单向 & 每节点少一个指针 \\
+\texttt{push\_back} & $O(1)$ & 不支持 & 无尾指针 \\
+\texttt{push\_front} & $O(1)$ & $O(1)$ & 头部插入 \\
+\texttt{insert\_after} & --- & $O(1)$ & 在迭代器\textbf{之后}插入 \\
+\texttt{erase\_after} & --- & $O(1)$ & 删除迭代器\textbf{之后}的元素 \\
+\texttt{before\_begin} & --- & $O(1)$ & 返回头前迭代器 \\
+迭代器    & 双向 & 前向 & 不支持 \texttt{--it} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{lstlisting}
+#include <forward_list>
+#include <iostream>
+
+int main() {
+    std::forward_list<int> fl = {3, 4, 5};
+
+    fl.push_front(2);           // [2, 3, 4, 5]
+    fl.push_front(1);           // [1, 2, 3, 4, 5]
+
+    // insert_after: 在某个位置之后插入
+    auto it = fl.begin();       // 指向 1
+    fl.insert_after(it, 99);    // [1, 99, 2, 3, 4, 5]
+
+    // erase_after: 删除某个位置之后的元素
+    fl.erase_after(it);         // [1, 2, 3, 4, 5]
+
+    // before_begin: 用于在头部之前操作
+    fl.insert_after(fl.before_begin(), 0);
+    // [0, 1, 2, 3, 4, 5]
+
+    // 排序（成员函数）
+    fl.sort();                  // 稳定排序
+
+    // C++20 erase_if
+    std::erase_if(fl, [](int x) { return x > 3; });
+    // fl = {0, 1, 2, 3}
+}
+\end{lstlisting}
+
+\begin{guideline}
+\textbf{SL.con.3}：除非对每节点内存开销有严格要求，否则优先使用 \texttt{vector}
+或 \texttt{list}。\texttt{forward\_list} 的 API 不如 \texttt{list} 直观（所有操作
+都在"之后"进行），容易出错。
+\end{guideline}
+
+% ────────────────────────────────────────────────────────────
+\chapter{array --- 固定大小数组}
+% ────────────────────────────────────────────────────────────
+
+\Tp{std::array<T, N>} 是对 C 风格数组的零开销封装。大小在编译时确定，
+存储在栈上，提供完整的容器接口和 $O(1)$ 随机访问。
+
+\section{接口概览}
+
+\begin{lstlisting}
+#include <array>
+#include <iostream>
+#include <algorithm>
+
+int main() {
+    std::array<int, 5> arr = {1, 2, 3, 4, 5};
+
+    // 大小在编译时确定
+    constexpr auto n = arr.size();  // 5, constexpr
+
+    // 随机访问
+    std::cout << arr[0] << '\n';    // 无检查
+    std::cout << arr.at(1) << '\n'; // 有越界检查
+
+    // data() 返回指向底层数组的指针
+    int* p = arr.data();
+
+    // 结构化绑定 (C++17)
+    std::array<int, 3> point = {10, 20, 30};
+    auto [x, y, z] = point;
+
+    // 与算法配合
+    std::sort(arr.begin(), arr.end());
+
+    // 填充
+    arr.fill(0);  // 全部置 0
+
+    // std::to_array (C++20): 从 C 数组或初始化列表推导类型和大小
+    auto arr2 = std::to_array({1, 2, 3, 4});     // array<int, 4>
+    auto arr3 = std::to_array("hello");           // array<char, 6>
+
+    // std::to_array 从已有数组拷贝
+    int legacy[] = {10, 20, 30};
+    auto arr4 = std::to_array(legacy);            // array<int, 3>
+}
+\end{lstlisting}
+
+\begin{guideline}
+\textbf{SL.con.1}：用 \texttt{std::array} 替代 C 风格数组。array 知道自己的大小，
+支持迭代器，不会退化为指针，可以按值传递和返回。\\
+\textbf{ES.27}：使用 \texttt{std::array} 或 \texttt{std::span} 来传递固定大小的数组参数，
+而非裸指针 + 长度。
+\end{guideline}
+
+\section{constexpr array (C++17/20)}
+
+从 \cpp{17} 开始，\Tp{array} 的大部分成员函数都是 \texttt{constexpr} 的，
+可以在编译时构造和操作：
+
+\begin{lstlisting}
+// C++20: 编译时排序
+constexpr auto sorted_array = [] {
+    std::array<int, 5> a = {5, 3, 1, 4, 2};
+    std::sort(a.begin(), a.end());  // C++20 constexpr sort
+    return a;
+}();
+// sorted_array = {1, 2, 3, 4, 5}，编译时求值
+
+static_assert(sorted_array[0] == 1);
+static_assert(sorted_array[4] == 5);
+\end{lstlisting}
+
+\begin{compare}
+C\# 中对应的为原生数组 \texttt{T[]}，但它是堆分配的引用类型：
+\begin{lstlisting}[style=csharpstyle]
+int[] arr = { 1, 2, 3, 4, 5 };  // 堆分配
+int len = arr.Length;
+Array.Sort(arr);
+
+// C# 的 stackalloc 接近 std::array，但功能有限
+Span<int> stackArr = stackalloc int[5];  // 栈分配
+\end{lstlisting}
+C++ 的 \texttt{array} 是值类型，在栈上分配；C\# 的数组始终是堆分配的引用类型。
+\end{compare}
+
+% ────────────────────────────────────────────────────────────
+\chapter{inplace\_vector --- 固定容量动态数组 (C++26)}
+% ────────────────────────────────────────────────────────────
+
+\Tp{std::inplace\_vector<T, N>}（\cpp{26}，P0843）是一个\emph{固定最大容量}的
+连续容器。它在对象内部（通常是栈上）预留 $N$ 个元素的空间，当前大小可以在
+$0$ 到 $N$ 之间动态变化。可以理解为"编译时指定最大容量的 vector"。
+
+\begin{warning}
+\texttt{inplace\_vector} \textbf{不接受 Allocator 模板参数}，也\textbf{永远不会进行动态分配}。
+它的模板签名只有两个参数：\texttt{<T, N>}（元素类型和最大容量），没有第三个
+\texttt{Allocator} 参数。所有元素直接内联存储在对象自身内部。
+当容量已满时，\Fn{push\_back} 抛出 \Fn{std::bad\_alloc}（而非重分配）。
+\end{warning}
+
+\section{与 vector 和 array 的对比}
+
+\begin{table}[htbp]
+\centering
+\caption{\Tp{inplace\_vector} vs \Tp{vector} vs \Tp{array}}
+\begin{tabularx}{\textwidth}{l l l l X}
+\toprule
+\textbf{特性} & \textbf{vector} & \textbf{array} & \textbf{inplace\_vector} & \textbf{说明} \\
+\midrule
+大小       & 动态 & 固定 $N$ & 动态（$\leq N$） & 运行时可变 \\
+容量       & 动态增长 & $= N$ & 固定 $N$ & 不重分配 \\
+内存位置   & 堆 & 栈 & 栈* & * 取决于对象位置 \\
+堆分配     & 是 & 否 & 否 & 零堆开销 \\
+\Fn{push\_back} & 均摊 $O(1)$ & --- & $O(1)$ & 无重分配 \\
+\Fn{size}  & 运行时 & 编译时 & 运行时 & \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{基本用法}
+
+\begin{lstlisting}
+#include <inplace_vector>
+#include <iostream>
+
+int main() {
+    // 最多容纳 10 个 int，当前大小为 0
+    std::inplace_vector<int, 10> iv;
+
+    // push_back / emplace_back
+    iv.push_back(1);
+    iv.push_back(2);
+    iv.emplace_back(3);
+    // iv = {1, 2, 3}, size() == 3
+
+    // 与 vector 相同的接口
+    std::cout << iv.size() << '\n';      // 3
+    std::cout << iv.capacity() << '\n';   // 10（编译时常量）
+    std::cout << iv[0] << '\n';           // 1
+    std::cout << iv.at(1) << '\n';        // 2
+
+    // 遍历
+    for (int x : iv) {
+        std::cout << x << ' ';           // 1 2 3
+    }
+
+    // data() 返回连续内存指针
+    int* p = iv.data();
+
+    // 初始化列表
+    std::inplace_vector<int, 5> iv2 = {10, 20, 30};
+
+    // 指定初始大小
+    std::inplace_vector<int, 10> iv3(5, 0);  // 5 个 0
+
+    // erase / insert
+    iv.erase(iv.begin() + 1);           // {1, 3}
+    iv.insert(iv.begin(), 0);           // {0, 1, 3}
+
+    // C++20 erase_if
+    std::erase_if(iv, [](int x) { return x < 2; });
+    // iv = {3}
+}
+\end{lstlisting}
+
+\section{容量溢出行为}
+
+\begin{warning}
+\texttt{inplace\_vector} 的容量在编译时固定。超出容量的操作行为取决于具体函数：
+\begin{itemize}
+\item \Fn{push\_back} / \Fn{emplace\_back}：容量已满时调用 \Fn{std::bad\_alloc}
+  （与 vector 重分配不同，这里直接抛异常）
+\item \Fn{try\_push\_back}（\cpp{26}）：容量已满时返回 \texttt{false}，不抛异常
+\item \Fn{try\_emplace\_back}（\cpp{26}）：同上
+\end{itemize}
+\end{warning}
+
+\begin{lstlisting}
+#include <inplace_vector>
+#include <iostream>
+
+int main() {
+    std::inplace_vector<int, 3> iv;
+    iv.push_back(1);
+    iv.push_back(2);
+    iv.push_back(3);
+    // iv 已满: size() == capacity() == 3
+
+    // iv.push_back(4);  // 抛出 std::bad_alloc！
+
+    // 安全版本：try_push_back
+    bool ok = iv.try_push_back(4);
+    std::cout << std::boolalpha << ok << '\n';  // false
+
+    // 安全版本：try_emplace_back
+    ok = iv.try_emplace_back(5);
+    std::cout << ok << '\n';  // false
+}
+\end{lstlisting}
+
+\section{constexpr 支持}
+
+\Tp{inplace\_vector} 的大部分操作都是 \texttt{constexpr} 的（\cpp{26}），
+可以在编译时使用：
+
+\begin{lstlisting}
+// C++26: 编译时 inplace_vector
+constexpr auto make_data() {
+    std::inplace_vector<int, 10> iv;
+    iv.push_back(1);
+    iv.push_back(2);
+    iv.push_back(3);
+    iv.push_back(4);
+    iv.push_back(5);
+    return iv;
+}
+
+constexpr auto data = make_data();
+static_assert(data.size() == 5);
+static_assert(data[2] == 3);
+static_assert(data.capacity() == 10);
+\end{lstlisting}
+
+\section{适用场景}
+
+\begin{bestpractice}
+\texttt{inplace\_vector} 适合以下场景：
+\begin{itemize}
+\item \textbf{嵌入式/实时系统}：禁止堆分配，但需要动态大小的容器
+\item \textbf{小型缓冲区优化 (SBO)}：替代手写"栈数组 + 计数器"的模式
+\item \textbf{编译时计算}：与 \texttt{constexpr} 配合，在编译时构建数据集合
+\item \textbf{性能敏感代码}：消除堆分配开销，利用栈/缓存局部性
+\end{itemize}
+如果元素数量上界已知且较小（如 $\leq 64$），优先考虑 \texttt{inplace\_vector}
+而非 \texttt{vector}。
+\end{bestpractice}
+
+\begin{compare}
+C\# 没有直接等价类型。最接近的是 \texttt{stackalloc} + 手动计数：
+\begin{lstlisting}[style=csharpstyle]
+// C#: 手动实现固定容量栈缓冲区
+Span<int> buffer = stackalloc int[10];
+int count = 0;
+buffer[count++] = 1;
+buffer[count++] = 2;
+Span<int> used = buffer[..count];  // 当前使用的部分
+
+// 或使用 ImmutableArray（堆分配，不可变）
+var arr = ImmutableArray.Create(1, 2, 3);
+\end{lstlisting}
+\end{compare}
+
+% ############################################################
+\part{关联容器}
+% ############################################################
+
+关联容器（Associative Containers）根据键的排序自动维护元素的顺序。
+C++ 提供两种实现策略：\emph{有序}关联容器和基于哈希表的\emph{无序}关联容器。
+标准不强制要求具体实现，但有序关联容器在主流标准库中几乎都采用红黑树
+（极少数实现使用 AVL 树或其他平衡二叉搜索树）。
+
+% ────────────────────────────────────────────────────────────
+\chapter{有序关联容器：map, set, multimap, multiset}
+% ────────────────────────────────────────────────────────────
+
+有序关联容器的实现未被标准指定，但主流标准库（libstdc++、libc++、MSVC STL）
+均采用红黑树，按键的严格弱序自动排列元素。极少数实现使用 AVL 树。
+所有基本操作的复杂度均为 $O(\log n)$。
+
+\section{四种容器对比}
+
+\begin{table}[htbp]
+\centering
+\caption{有序关联容器对比}
+\begin{tabularx}{\textwidth}{l l l l X}
+\toprule
+\textbf{容器} & \textbf{键} & \textbf{值} & \textbf{重复键} & \textbf{用途} \\
+\midrule
+\Tp{set}             & K & --- & 否 & 去重集合 \\
+\Tp{multiset}        & K & --- & 是 & 允许重复的有序集合 \\
+\Tp{map}             & K & V & 否 & 键值映射（字典） \\
+\Tp{multimap}        & K & V & 是 & 一对多映射 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{map 详解}
+
+\begin{lstlisting}
+#include <map>
+#include <string>
+#include <iostream>
+
+int main() {
+    // 初始化
+    std::map<std::string, int> scores = {
+        {"Alice", 95},
+        {"Bob", 87},
+        {"Charlie", 92}
+    };
+
+    // 插入/访问
+    scores["David"] = 88;           // 若不存在则插入默认值
+    scores.insert({"Eve", 91});     // 不覆盖已有键
+    scores.insert_or_assign("Bob", 90);  // C++17: 覆盖
+
+    // try_emplace (C++17): 仅在键不存在时构造值
+    scores.try_emplace("Alice", 100);  // Alice 已存在，不修改
+
+    // 遍历（按键排序）
+    for (const auto& [name, score] : scores) {
+        std::cout << name << ": " << score << '\n';
+    }
+
+    // 查找
+    if (auto it = scores.find("Bob"); it != scores.end()) {
+        std::cout << "Bob = " << it->second << '\n';
+    }
+
+    // contains (C++20)
+    if (scores.contains("Alice")) {
+        std::cout << "Alice is in the map\n";
+    }
+
+    // 范围查询
+    auto [lo, hi] = scores.equal_range("B");
+    for (auto it = lo; it != hi; ++it) {
+        std::cout << it->first << ": " << it->second << '\n';
+    }
+
+    // 提取节点 (C++17): 零开销移动
+    auto node = scores.extract("Charlie");
+    if (node) {
+        node.key() = "Charles";     // 修改键（不重新分配）
+        scores.insert(std::move(node));
+    }
+}
+\end{lstlisting}
+
+\section{set 详解}
+
+\begin{lstlisting}
+#include <set>
+#include <iostream>
+
+int main() {
+    std::set<int> s = {5, 3, 1, 4, 2};
+
+    // 自动排序
+    for (int x : s) {
+        std::cout << x << ' ';  // 1 2 3 4 5
+    }
+
+    // C++20 contains
+    if (s.contains(3)) {
+        std::cout << "found 3\n";
+    }
+
+    // 上下界
+    auto lo = s.lower_bound(3);  // >= 3 的第一个元素
+    auto hi = s.upper_bound(3);  // > 3 的第一个元素
+
+    // C++20 erase_if
+    std::erase_if(s, [](int x) { return x > 3; });
+    // s = {1, 2, 3}
+}
+\end{lstlisting}
+
+\section{自定义比较器}
+
+\begin{lstlisting}
+#include <map>
+#include <string>
+
+// 方式 1: 函数对象
+struct CaseInsensitiveCompare {
+    bool operator()(const std::string& a,
+                    const std::string& b) const {
+        return std::lexicographical_compare(
+            a.begin(), a.end(), b.begin(), b.end(),
+            [](char x, char y) {
+                return std::tolower(x) < std::tolower(y);
+            });
+    }
+};
+
+std::map<std::string, int, CaseInsensitiveCompare> ci_map;
+
+// 方式 2: 透明比较器 (C++14)
+// 允许用 string_view 查找，避免构造 string 临时对象
+std::map<std::string, int, std::less<>> transparent_map;
+auto it = transparent_map.find(std::string_view("key"));
+\end{lstlisting}
+
+\begin{guideline}
+\textbf{SL.con.11}：优先使用 \texttt{map::at()} 而非 \texttt{operator[]} 来读取 map 中的值。
+\texttt{operator[]} 在键不存在时会静默插入默认值，这通常不是期望的行为。
+\end{guideline}
+
+\section{节点句柄与 merge (C++17)}
+
+\cpp{17} 引入了\emph{节点句柄}（Node Handle）机制，允许在关联容器之间
+零开销地移动节点（不拷贝元素，不重新分配内存）：
+
+\begin{lstlisting}
+std::map<int, std::string> src = {
+    {1, "one"}, {2, "two"}, {3, "three"}
+};
+std::map<int, std::string> dst;
+
+// 提取单个节点
+auto node = src.extract(2);
+if (node) {
+    dst.insert(std::move(node));
+    // src = {1: "one", 3: "three"}
+    // dst = {2: "two"}
+}
+
+// 合并整个容器
+dst.merge(src);
+// src = {} (所有兼容节点已移入 dst)
+// dst = {1: "one", 2: "two", 3: "three"}
+\end{lstlisting}
+
+\begin{compare}
+C\# 的 \texttt{SortedDictionary<K,V>} 和 \texttt{SortedList<K,V>} 对应有
+序映射，\texttt{SortedSet<T>} 对应有序集合：
+\begin{lstlisting}[style=csharpstyle]
+var map = new SortedDictionary<string, int> {
+    ["Alice"] = 95, ["Bob"] = 87
+};
+map["Charlie"] = 92;
+map.TryGetValue("Bob", out int score);
+
+var set = new SortedSet<int> { 5, 3, 1, 4, 2 };
+set.Add(6);
+set.Remove(3);
+\end{lstlisting}
+C\# 没有 \texttt{extract}/\texttt{merge} 等零开销节点操作，也没有透明比较器。
+\end{compare}
+
+% ────────────────────────────────────────────────────────────
+\chapter{无序关联容器：哈希表}
+% ────────────────────────────────────────────────────────────
+
+无序关联容器基于哈希表实现，平均 $O(1)$ 的查找、插入和删除，但最坏情况下
+退化为 $O(n)$。元素没有确定的遍历顺序。
+
+\section{四种容器对比}
+
+\begin{table}[htbp]
+\centering
+\caption{无序关联容器对比}
+\begin{tabularx}{\textwidth}{l l l l X}
+\toprule
+\textbf{容器} & \textbf{键} & \textbf{值} & \textbf{重复键} & \textbf{用途} \\
+\midrule
+\Tp{unordered\_set}      & K & --- & 否 & 快速去重/查找 \\
+\Tp{unordered\_multiset} & K & --- & 是 & 允许重复的快速集合 \\
+\Tp{unordered\_map}      & K & V & 否 & 快速字典 \\
+\Tp{unordered\_multimap} & K & V & 是 & 一对多快速映射 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{复杂度分析}
+
+\begin{complexitybox}
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
+\textbf{操作} & \textbf{平均} & \textbf{最坏} & \textbf{说明} \\
+\midrule
+查找   & $O(1)$ & $O(n)$ & 哈希冲突严重时退化 \\
+插入   & $O(1)$ & $O(n)$ & rehash 时 $O(n)$ \\
+删除   & $O(1)$ & $O(n)$ & 同上 \\
+遍历   & $O(n + \text{bucket\_count})$ & --- & 与桶数有关 \\
+rehash & $O(n)$ & --- & 重新分配所有桶 \\
+\bottomrule
+\end{tabularx}
+\end{complexitybox}
+
+\section{基本用法}
+
+\begin{lstlisting}
+#include <unordered_map>
+#include <unordered_set>
+#include <string>
+
+int main() {
+    // unordered_map
+    std::unordered_map<std::string, int> ages = {
+        {"Alice", 25}, {"Bob", 30}
+    };
+    ages["Charlie"] = 28;
+    ages.insert_or_assign("Alice", 26);  // C++17
+
+    // 预分配桶数（避免 rehash）
+    ages.reserve(100);
+
+    // 负载因子
+    std::cout << "load_factor = " << ages.load_factor() << '\n';
+    std::cout << "max_load_factor = " << ages.max_load_factor() << '\n';
+    std::cout << "bucket_count = " << ages.bucket_count() << '\n';
+
+    // unordered_set
+    std::unordered_set<std::string> names = {"Alice", "Bob"};
+    names.insert("Charlie");
+
+    // C++20 contains
+    if (names.contains("Alice")) {
+        // found
+    }
+
+    // C++20 erase_if
+    std::erase_if(ages, [](const auto& p) {
+        return p.second < 27;
+    });
+}
+\end{lstlisting}
+
+\section{自定义哈希函数}
+
+\begin{lstlisting}
+#include <unordered_map>
+#include <string>
+
+struct Point {
+    int x, y;
+    bool operator==(const Point& other) const = default;  // C++20
+};
+
+// 方式 1: 特化 std::hash
+template<>
+struct std::hash<Point> {
+    size_t operator()(const Point& p) const noexcept {
+        size_t h1 = std::hash<int>{}(p.x);
+        size_t h2 = std::hash<int>{}(p.y);
+        return h1 ^ (h2 * 2654435761u);
+    }
+};
+
+std::unordered_map<Point, std::string> grid;
+grid[{0, 0}] = "origin";
+grid[{1, 2}] = "target";
+
+// 方式 2: 提供哈希函数对象
+struct PointHash {
+    size_t operator()(const Point& p) const noexcept {
+        return std::hash<int>{}(p.x) ^ (std::hash<int>{}(p.y) << 1);
+    }
+};
+struct PointEq {
+    bool operator()(const Point& a, const Point& b) const noexcept {
+        return a.x == b.x && a.y == b.y;
+    }
+};
+std::unordered_map<Point, std::string, PointHash, PointEq> grid2;
+\end{lstlisting}
+
+\begin{warning}
+\textbf{哈希 DoS 攻击}：如果攻击者可以控制键值，他们可以精心构造大量
+哈希冲突，使无序容器的性能退化为 $O(n)$。在网络服务中，考虑使用
+\texttt{std::map}（$O(\log n)$，不受哈希冲突影响）或引入随机化哈希种子。
+\end{warning}
+
+\begin{compare}
+C\# 的 \texttt{Dictionary<K,V>} 和 \texttt{HashSet<T>} 对应无序关联容器：
+\begin{lstlisting}[style=csharpstyle]
+var dict = new Dictionary<string, int> {
+    ["Alice"] = 25, ["Bob"] = 30
+};
+dict["Charlie"] = 28;
+dict.TryGetValue("Alice", out int age);
+dict.ContainsKey("Bob");
+
+var set = new HashSet<string> { "Alice", "Bob" };
+set.Add("Charlie");
+set.Contains("Alice");
+\end{lstlisting}
+C\# 的哈希表是\emph{开放寻址法}，C++ 的 \texttt{unordered\_map} 通常是
+\emph{链地址法}（拉链法），但具体实现取决于编译器。
+\end{compare}
+
+% ############################################################
+\part{容器适配器}
+% ############################################################
+
+容器适配器（Container Adapters）不提供自己的存储结构，而是封装一个底层容器
+（vector、deque 或 list），限制其接口以呈现特定的抽象（栈、队列、优先队列）。
+
+% ────────────────────────────────────────────────────────────
+\chapter{stack --- 后进先出}
+% ────────────────────────────────────────────────────────────
+
+\Tp{std::stack<T, Container>} 是 LIFO（后进先出）适配器。默认底层容器为 \Tp{deque}。
+
+\begin{lstlisting}
+#include <stack>
+#include <vector>
+#include <iostream>
+
+int main() {
+    // 默认使用 deque
+    std::stack<int> s;
+
+    // 指定 vector 作为底层容器
+    std::stack<int, std::vector<int>> sv;
+
+    // 基本操作
+    s.push(1);        // 压栈
+    s.push(2);
+    s.push(3);
+    s.emplace(4);     // 原地构造
+
+    std::cout << s.top() << '\n';  // 4（栈顶）
+    std::cout << s.size() << '\n'; // 4
+
+    s.pop();           // 弹出栈顶（无返回值！）
+
+    // 注意：stack 不支持迭代器，不能直接用于范围 for 循环
+    while (!s.empty()) {
+        std::cout << s.top() << ' ';
+        s.pop();
+    }
+    // 输出: 3 2 1
+}
+\end{lstlisting}
+
+\begin{note}
+\texttt{stack::pop()} 不返回弹出的值（出于异常安全考虑：如果返回值需要拷贝构造，
+而拷贝构造抛出异常，元素就丢失了）。正确做法是先 \Fn{top()} 再 \Fn{pop()}。
+\end{note}
+
+\begin{compare}
+C\# 的 \texttt{Stack<T>} 提供了更丰富的接口：
+\begin{lstlisting}[style=csharpstyle]
+var stack = new Stack<int>();
+stack.Push(1);
+int top = stack.Peek();  // 查看栈顶
+int popped = stack.Pop(); // 弹出并返回值（不同于 C++）
+stack.TryPop(out int v);  // C# 安全弹出
+\end{lstlisting}
+\end{compare}
+
+% ────────────────────────────────────────────────────────────
+\chapter{queue --- 先进先出}
+% ────────────────────────────────────────────────────────────
+
+\Tp{std::queue<T, Container>} 是 FIFO（先进先出）适配器。默认底层容器为 \Tp{deque}。
+
+\begin{lstlisting}
+#include <queue>
+#include <list>
+#include <iostream>
+
+int main() {
+    std::queue<int> q;
+
+    q.push(1);         // 入队
+    q.push(2);
+    q.emplace(3);      // 原地构造
+
+    std::cout << q.front() << '\n';  // 1（队首）
+    std::cout << q.back() << '\n';   // 3（队尾）
+
+    q.pop();            // 弹出队首（无返回值）
+
+    // 用 list 作为底层容器
+    std::queue<int, std::list<int>> ql;
+
+    while (!q.empty()) {
+        std::cout << q.front() << ' ';
+        q.pop();
+    }
+    // 输出: 2 3
+}
+\end{lstlisting}
+
+\begin{compare}
+C\# 的 \texttt{Queue<T>}：
+\begin{lstlisting}[style=csharpstyle]
+var queue = new Queue<int>();
+queue.Enqueue(1);
+queue.Enqueue(2);
+int front = queue.Peek();     // 查看队首
+int dequeued = queue.Dequeue(); // 出队并返回
+queue.TryDequeue(out int v);  // 安全出队
+\end{lstlisting}
+\end{compare}
+
+% ────────────────────────────────────────────────────────────
+\chapter{priority\_queue --- 优先队列}
+% ────────────────────────────────────────────────────────────
+
+\Tp{std::priority\_queue<T, Container, Compare>} 是基于堆（通常是最大堆）的
+优先队列。默认底层容器为 \Tp{vector}，默认比较器为 \Tp{std::less}（最大元素优先）。
+
+\begin{lstlisting}
+#include <queue>
+#include <vector>
+#include <iostream>
+
+int main() {
+    // 默认：最大堆
+    std::priority_queue<int> max_pq;
+    max_pq.push(3);
+    max_pq.push(1);
+    max_pq.push(4);
+    max_pq.push(2);
+
+    std::cout << max_pq.top() << '\n';  // 4
+
+    while (!max_pq.empty()) {
+        std::cout << max_pq.top() << ' ';
+        max_pq.pop();
+    }
+    // 输出: 4 3 2 1
+
+    // 最小堆：使用 greater
+    std::priority_queue<int, std::vector<int>, std::greater<>> min_pq;
+    min_pq.push(3);
+    min_pq.push(1);
+    min_pq.push(4);
+
+    std::cout << min_pq.top() << '\n';  // 1
+
+    // 自定义比较器
+    struct Task {
+        std::string name;
+        int priority;
+    };
+    auto cmp = [](const Task& a, const Task& b) {
+        return a.priority < b.priority;  // 优先级高的优先
+    };
+    std::priority_queue<Task, std::vector<Task>, decltype(cmp)> task_pq(cmp);
+    task_pq.push({"low", 1});
+    task_pq.push({"high", 10});
+    task_pq.push({"mid", 5});
+
+    std::cout << task_pq.top().name << '\n';  // "high"
+}
+\end{lstlisting}
+
+\begin{complexitybox}
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{操作} & \textbf{复杂度} & \textbf{说明} \\
+\midrule
+\Fn{push}   & $O(\log n)$ & 上浮调整堆 \\
+\Fn{pop}    & $O(\log n)$ & 下沉调整堆 \\
+\Fn{top}    & $O(1)$      & 查看堆顶 \\
+\Fn{emplace}& $O(\log n)$ & 原地构造 + 上浮 \\
+\bottomrule
+\end{tabularx}
+\end{complexitybox}
+
+\begin{compare}
+C\# 的 \texttt{PriorityQueue}（.NET 6+）：
+\begin{lstlisting}[style=csharpstyle]
+// .NET 6+
+var pq = new PriorityQueue<string, int>();
+pq.Enqueue("low", 1);
+pq.Enqueue("high", 10);
+pq.Enqueue("mid", 5);
+
+string top = pq.Peek();           // "high"
+string dequeued = pq.Dequeue();   // "high"
+pq.TryDequeue(out string e, out int p);
+\end{lstlisting}
+C\# 的 \texttt{PriorityQueue} 默认是\emph{最小堆}，与 C++ 默认\emph{最大堆}相反。
+\end{compare}
+
+% ############################################################
+\part{字符串（伪容器）}
+% ############################################################
+
+C++ 的 \Tp{std::basic\_string} 是一个完整的容器，支持迭代器、\Fn{size()}、
+\Fn{operator[]} 等容器接口。但由于字符串在编程中的特殊地位，标准库对其进行了
+专门优化（如小字符串优化 SSO），因此单独讨论。
+
+% ────────────────────────────────────────────────────────────
+\chapter{basic\_string 家族}
+% ────────────────────────────────────────────────────────────
+
+\section{类型别名与字符编码}
+
+\begin{table}[htbp]
+\centering
+\caption{字符串类型别名}
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
+\textbf{类型} & \textbf{字符类型} & \textbf{字节/字符} & \textbf{编码} \\
+\midrule
+\Tp{std::string}     & \texttt{char}     & 1 & 通常是 UTF-8 或本地编码 \\
+\Tp{std::wstring}    & \texttt{wchar\_t} & 2(Windows)/4(Linux) & UTF-16(Windows)/UTF-32(Linux) \\
+\Tp{std::u8string}   & \texttt{char8\_t} & 1 & UTF-8（\cpp{20} 起严格限定） \\
+\Tp{std::u16string}  & \texttt{char16\_t}& 2 & UTF-16 \\
+\Tp{std::u32string}  & \texttt{char32\_t}& 4 & UTF-32 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{基本操作}
+
+\begin{lstlisting}
+#include <string>
+#include <iostream>
+
+int main() {
+    std::string s = "Hello, World!";
+
+    // 容器接口
+    std::cout << s.size() << '\n';     // 13
+    std::cout << s[0] << '\n';         // 'H'
+    std::cout << s.at(1) << '\n';      // 'e'
+
+    // 追加与拼接
+    s += " C++";
+    s.append(" 2024");
+    s.push_back('!');
+
+    // 子串
+    std::string sub = s.substr(7, 5);  // "World"
+
+    // 查找
+    auto pos = s.find("World");        // 7
+    auto pos2 = s.find("xyz");         // string::npos
+    auto pos3 = s.rfind('l');          // 最后一个 'l'
+
+    // 替换
+    s.replace(0, 5, "Hi");             // "Hi, World! C++ 2024!"
+
+    // 比较
+    if (s.starts_with("Hi")) { }       // C++20
+    if (s.ends_with("2024!")) { }      // C++20
+    if (s.contains("World")) { }       // C++23
+
+    // 转换
+    int num = std::stoi("42");
+    double d = std::stod("3.14");
+    std::string num_str = std::to_string(42);
+
+    // 遍历
+    for (char c : s) {
+        std::cout << c;
+    }
+}
+\end{lstlisting}
+
+\section{小字符串优化 (SSO)}
+
+\begin{note}
+\textbf{Small String Optimization (SSO)}：大多数标准库实现中，当字符串长度
+不超过某个阈值（通常 15--22 字节，取决于实现）时，字符串数据直接存储在
+\texttt{string} 对象本身内部（栈上），不进行堆分配。这使得短字符串的
+创建和拷贝非常高效。
+
+\texttt{sizeof(std::string)} 通常为 24--32 字节（包含 SSO 缓冲区、大小和容量）。
+\end{note}
+
+\section{字符串的分配器}
+
+与所有标准容器一样，\texttt{basic\_string} 接受分配器模板参数。其完整签名为：
+\begin{lstlisting}
+template<class CharT,
+         class Traits    = std::char_traits<CharT>,
+         class Allocator = std::allocator<CharT>>
+class basic_string;
+\end{lstlisting}
+
+默认的 \Tp{std::allocator<CharT>} 通过 \Fn{::operator new} 分配堆内存。
+结合 SSO 机制，短字符串（$\leq$~15--22 字节）不会触发分配器调用；只有超过
+SSO 缓冲区的长字符串才会通过分配器申请堆内存。
+
+\begin{lstlisting}
+#include <string>
+#include <memory_resource>
+
+// 使用 PMR 分配器的字符串（栈上缓冲区，零堆分配）
+char buf[256];
+std::pmr::monotonic_buffer_resource pool(buf, sizeof(buf));
+std::pmr::string s(&pool);
+s = "Hello, PMR string!";  // 若长度 < 256，无堆分配
+\end{lstlisting}
+
+\begin{note}
+容器适配器（\texttt{stack}、\texttt{queue}、\texttt{priority\_queue}）本身不接受
+分配器参数，但它们通过底层容器间接使用分配器。例如
+\texttt{std::stack<int, std::vector<int, MyAlloc>>} 会让栈的底层 vector
+使用自定义分配器。而 \texttt{array} 和 \texttt{inplace\_vector} 由于是纯栈对象，
+不接受也无法使用分配器。
+\end{note}
+
+\section{C++20 char8\_t 与 UTF-8 字符串}
+
+\cpp{20} 引入了 \texttt{char8\_t} 类型和 \texttt{u8""} 字符串字面量的严格类型：
+
+\begin{lstlisting}
+// C++17: u8"" 的类型是 const char*
+const char* s17 = u8"hello";     // OK
+
+// C++20: u8"" 的类型是 const char8_t*
+const char8_t* s20 = u8"hello";  // OK
+// const char* s20b = u8"hello";  // 编译错误！
+
+// 使用 u8string
+std::u8string u8s = u8"Hello!";
+
+// 与 UTF-8 string 互转
+std::string regular(reinterpret_cast<const char*>(u8s.data()),
+                    u8s.size());
+\end{lstlisting}
+
+\begin{warning}
+C++ 标准库\emph{不提供}编码转换函数。在 UTF-8/UTF-16/UTF-32 之间转换需要
+依赖平台 API（如 Windows 的 \texttt{MultiByteToWideChar}）
+或第三方库（如 ICU）。
+\end{warning}
+
+\section{format (C++20) 与 print (C++23)}
+
+\cpp{20} 引入了 \Fn{std::format}，\cpp{23} 引入了 \Fn{std::print} / \Fn{std::println}：
+
+\begin{lstlisting}
+#include <format>
+#include <print>
+
+int main() {
+    int x = 42;
+    double pi = 3.14159;
+
+    // C++20 format
+    std::string s1 = std::format("x = {}", x);           // "x = 42"
+    std::string s2 = std::format("pi = {:.2f}", pi);     // "pi = 3.14"
+    std::string s3 = std::format("{:#06x}", 255);        // "0x00ff"
+    std::string s4 = std::format("{:>10}", "right");     // "     right"
+
+    // C++23 print/println（直接输出到 stdout）
+    std::print("x = {}\n", x);
+    std::println("pi = {:.4f}", pi);  // 自动换行
+}
+\end{lstlisting}
+
+\begin{compare}
+C\# 的字符串是不可变（immutable）引用类型：
+\begin{lstlisting}[style=csharpstyle]
+string s = "Hello, World!";
+string sub = s.Substring(7, 5);     // "World"
+bool has = s.Contains("World");
+bool starts = s.StartsWith("Hello");
+string formatted = $"x = {42}";     // 字符串插值
+
+// StringBuilder 用于高效拼接
+var sb = new StringBuilder();
+sb.Append("Hello").Append(' ').Append("World");
+\end{lstlisting}
+C++ 的 \texttt{string} 是可变值类型，\texttt{+=} 在原对象上修改（可能重用内存）。
+\end{compare}
+
+% ############################################################
+\part{视图类型}
+% ############################################################
+
+视图（View）是轻量级的\emph{非拥有}引用，它们不管理底层数据的生命周期，
+只提供对已有数据的观察窗口。使用视图时必须确保底层数据的生命周期超过视图本身。
+
+\begin{warning}
+\textbf{悬空视图是未定义行为}：视图不持有数据所有权。如果底层数据被销毁或
+重新分配，视图将指向无效内存。这与智能指针的悬空引用类似，但更加隐蔽，
+因为编译器通常不会报错。
+\end{warning}
+
+% ────────────────────────────────────────────────────────────
+\chapter{string\_view --- 字符串视图}
+% ────────────────────────────────────────────────────────────
+
+\Tp{std::basic\_string\_view<CharT>}（\cpp{17}）是对连续字符序列的轻量只读引用。
+它只存储一个指针和长度，不拥有内存，不分配堆空间。
+
+\section{与 string 的对比}
+
+\begin{table}[htbp]
+\centering
+\caption{\Tp{string\_view} vs \Tp{string}}
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
+\textbf{特性} & \textbf{string} & \textbf{string\_view} & \textbf{说明} \\
+\midrule
+所有权   & 拥有 & 不拥有 & 视图不分配内存 \\
+大小     & 24--32 字节 & 16 字节 & 指针 + 长度 \\
+可变性   & 可变 & 只读* & 不能通过视图修改字符 \\
+空终止   & 保证 & 不保证 & 视图可能不是 C 字符串 \\
+拷贝开销 & $O(n)$ & $O(1)$ & 视图拷贝只是复制指针+长度 \\
+\bottomrule
+\multicolumn{4}{l}{\small * string\_view 的 \Fn{data()} 返回 \texttt{const char*}}
+\end{tabularx}
+\end{table}
+
+\section{用法示例}
+
+\begin{lstlisting}
+#include <string>
+#include <string_view>
+#include <iostream>
+
+// 用 string_view 替代 const string& 参数，避免拷贝
+void greet(std::string_view name) {
+    std::cout << "Hello, " << name << "!\n";
+}
+
+int main() {
+    // 从 string 构造
+    std::string s = "Hello, World!";
+    std::string_view sv = s;      // 不拷贝
+
+    // 从字符串字面量构造（零开销）
+    std::string_view sv2 = "Hello, World!";
+
+    // 容器式接口
+    std::cout << sv.size() << '\n';     // 13
+    std::cout << sv[0] << '\n';         // 'H'
+    std::cout << sv.substr(7, 5);       // "World"
+
+    // 查找
+    auto pos = sv.find("World");        // 7
+
+    // C++20 操作
+    sv.starts_with("Hello");            // true
+    sv.ends_with("!");                  // true
+    sv.contains("World");               // true (C++23)
+
+    // remove_prefix / remove_suffix: 缩窄视图
+    std::string_view csv = "  hello  ";
+    csv.remove_prefix(2);               // "hello  "
+    csv.remove_suffix(2);               // "hello"
+
+    // 传给函数：不拷贝
+    greet("Alice");                     // 从字面量构造
+    greet(s);                           // 从 string 隐式转换
+    greet(sv2);                         // 传递视图
+}
+\end{lstlisting}
+
+\begin{warning}
+\textbf{悬空 string\_view}：
+\begin{lstlisting}
+std::string_view danger() {
+    std::string temp = "hello";
+    return temp;   // 危险！temp 被销毁，返回悬空视图
+}
+
+std::string_view safe() {
+    return "hello";  // 安全：字面量有静态存储期
+}
+\end{lstlisting}
+\end{warning}
+
+\begin{warning}
+\textbf{空终止问题}：\texttt{string\_view} 不保证以 \texttt{'\textbackslash 0'} 结尾。
+如果需要通过 C API 传递（如 \texttt{printf("\%s")}），必须先转为 \texttt{string}：
+\begin{lstlisting}
+std::string_view sv = "hello";
+printf("%s\n", std::string(sv).c_str());  // 安全
+// printf("%s\n", sv.data());  // 不安全！可能越界读取
+\end{lstlisting}
+\end{warning}
+
+\begin{compare}
+C\# 的 \texttt{ReadOnlySpan<char>} 功能类似但更安全（有生命周期追踪）：
+\begin{lstlisting}[style=csharpstyle]
+ReadOnlySpan<char> sv = "Hello, World!".AsSpan(7, 5);
+// sv = "World"
+bool starts = sv.StartsWith("Wor");
+bool ends = sv.EndsWith("rld");
+
+// C# 的 stackalloc + Span 可以处理栈上的字符
+Span<char> buffer = stackalloc char[100];
+\end{lstlisting}
+\end{compare}
+
+% ────────────────────────────────────────────────────────────
+\chapter{span --- 连续序列视图}
+% ────────────────────────────────────────────────────────────
+
+\Tp{std::span<T, Extent>}（\cpp{20}）是对连续内存序列的类型安全视图。
+它是"指针 + 长度"对的标准化替代，可以指向 vector、array、C 数组等任何连续存储。
+
+\section{静态 vs 动态范围}
+
+\begin{lstlisting}
+#include <span>
+#include <vector>
+#include <array>
+#include <iostream>
+
+// 动态范围 span（默认）
+void print_all(std::span<const int> data) {
+    for (int x : data) {
+        std::cout << x << ' ';
+    }
+    std::cout << '\n';
+}
+
+// 静态范围 span（编译时确定大小）
+void print_three(std::span<const int, 3> data) {
+    std::cout << data[0] << ' ' << data[1] << ' ' << data[2] << '\n';
+}
+
+int main() {
+    std::vector<int> vec = {1, 2, 3, 4, 5};
+    std::array<int, 5> arr = {10, 20, 30, 40, 50};
+    int c_arr[] = {100, 200, 300};
+
+    // 从各种连续容器构造 span
+    print_all(vec);      // 从 vector
+    print_all(arr);      // 从 array
+    print_all(c_arr);    // 从 C 数组
+
+    // 静态范围
+    std::span<int, 3> s3(c_arr);
+    print_three(s3);
+
+    // 子视图
+    std::span<int> full(vec);
+    auto first3 = full.first(3);       // 前 3 个元素
+    auto last2 = full.last(2);         // 后 2 个元素
+    auto mid = full.subspan(1, 3);     // 从索引 1 开始的 3 个元素
+
+    // span 是可变的（如果 T 不是 const）
+    std::span<int> writable(vec);
+    writable[0] = 99;   // 修改底层 vector 的元素
+    std::cout << vec[0] << '\n';  // 99
+
+    // 获取底层数据
+    int* ptr = full.data();
+    std::size_t len = full.size();
+    std::size_t bytes = full.size_bytes();
+}
+\end{lstlisting}
+
+\section{作为函数参数}
+
+\begin{guideline}
+\textbf{SL.io.10}：使用 \texttt{span} 替代"指针 + 长度"参数对。
+\texttt{span} 将指针和长度绑定在一起，减少参数数量并提高安全性：
+\begin{lstlisting}
+// 旧风格：容易传错参数
+void process(const int* data, size_t count);
+
+// 新风格：类型安全，不能分离
+void process(std::span<const int> data);
+\end{lstlisting}
+\end{guideline}
+
+\begin{bestpractice}
+\textbf{何时使用 span vs 模板参数？}
+
+\begin{lstlisting}
+// 方式 1: span --- 类型擦除，接受任何连续容器
+void process(std::span<const int> data);
+
+// 方式 2: 模板 --- 保留容器类型信息
+template<std::ranges::contiguous_range R>
+    requires std::same_as<std::ranges::range_value_t<R>, int>
+void process(R&& data);
+
+// 方式 3: span 带静态范围 --- 编译时保证大小
+void process(std::span<const int, 3> data);
+\end{lstlisting}
+
+如果只需要连续访问且不需要知道容器类型，用 \texttt{span}。
+如果需要范围概念（如双向迭代、过滤等），用 ranges 模板参数。
+\end{bestpractice}
+
+\begin{compare}
+C\# 的 \texttt{Span<T>} 和 \texttt{ReadOnlySpan<T>} 是值类型（ref struct），
+有编译器级别的生命周期追踪：
+\begin{lstlisting}[style=csharpstyle]
+Span<int> span = stackalloc int[5];
+span[0] = 1;
+Span<int> sub = span.Slice(1, 3);
+
+// 从数组
+int[] arr = { 1, 2, 3, 4, 5 };
+Span<int> fromArr = arr.AsSpan();
+ReadOnlySpan<int> ros = arr;
+
+// C# 的 Span 是 ref struct，不能存储在堆上
+\end{lstlisting}
+C++ 的 \texttt{span} 没有生命周期追踪，可以存储在堆上，但需要自行保证有效性。
+\end{compare}
+
+% ────────────────────────────────────────────────────────────
+\chapter{mdspan --- 多维数组视图}
+% ────────────────────────────────────────────────────────────
+
+\Tp{std::mdspan}（\cpp{23}，P0009）是对连续内存的多维视图。它解决了一个长期问题：
+如何将一维连续内存解释为多维数组，同时保留编译时维度信息和灵活的内存布局。
+
+\section{核心组件}
+
+\begin{table}[htbp]
+\centering
+\caption{mdspan 核心组件}
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{组件} & \textbf{作用} \\
+\midrule
+\Tp{extents<SizeType, ...>} & 描述每个维度的大小（可混合编译时/运行时维度） \\
+\Tp{layout\_right}          & 行优先布局（C 风格，默认） \\
+\Tp{layout\_left}           & 列优先布局（Fortran/MATLAB 风格） \\
+\Tp{layout\_stride}         & 自定义步幅布局 \\
+\Tp{mdspan<T, Extents, Layout, Accessor>} & 多维视图本体 \\
+\Fn{submdspan()}            & 创建子视图（切片） \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{基本用法}
+
+\begin{lstlisting}
+#include <mdspan>
+#include <vector>
+#include <iostream>
+
+int main() {
+    // 3x4 矩阵，行优先
+    std::vector<double> data(12);
+    std::mdspan mat(data.data(), 3, 4);
+
+    // 写入
+    for (std::size_t i = 0; i < mat.extent(0); ++i) {
+        for (std::size_t j = 0; j < mat.extent(1); ++j) {
+            mat[i, j] = i * 4.0 + j;   // C++23 多维下标
+        }
+    }
+
+    // 读取
+    std::cout << mat[1, 2] << '\n';    // 6.0
+
+    // 维度信息
+    std::cout << "rows = " << mat.extent(0) << '\n';   // 3
+    std::cout << "cols = " << mat.extent(1) << '\n';   // 4
+    std::cout << "rank = " << mat.rank() << '\n';       // 2
+    std::cout << "size = " << mat.size() << '\n';       // 12
+}
+\end{lstlisting}
+
+\section{编译时维度与混合维度}
+
+\begin{lstlisting}
+#include <mdspan>
+#include <array>
+#include <vector>
+
+int main() {
+    // 全编译时维度: 3x4 矩阵
+    std::array<double, 12> data{};
+    using Ext3x4 = std::extents<std::size_t, 3, 4>;
+    std::mdspan<double, Ext3x4> mat(data.data());
+    // mat.extent(0) == 3, mat.extent(1) == 4
+
+    // 混合：行数编译时确定，列数运行时确定
+    using ExtDyn3 = std::extents<std::size_t, std::dynamic_extent, 3>;
+    std::vector<double> vdata(15);
+    std::mdspan<double, ExtDyn3> mixed(vdata.data(), 5);
+    // 5 行 x 3 列
+
+    // 全运行时维度
+    std::mdspan<double, std::dextents<std::size_t, 2>> dyn(
+        data.data(), 3, 4);
+}
+\end{lstlisting}
+
+\section{内存布局}
+
+\begin{lstlisting}
+#include <mdspan>
+#include <vector>
+#include <iostream>
+
+int main() {
+    std::vector<int> data(12);
+    for (int i = 0; i < 12; ++i) data[i] = i;
+
+    // 行优先（默认 layout_right）
+    std::mdspan<int, std::dextents<size_t, 2>> row_major(
+        data.data(), 3, 4);
+    std::cout << row_major[1, 2] << '\n';  // 6 (1*4+2)
+
+    // 列优先 (layout_left)
+    std::mdspan<int, std::dextents<size_t, 2>,
+                std::layout_left> col_major(data.data(), 3, 4);
+    std::cout << col_major[1, 2] << '\n';  // 7 (2*3+1)
+
+    // 自定义步幅 (layout_stride)
+    auto mapping = std::layout_stride::mapping<
+        std::dextents<size_t, 2>>(
+        std::dextents<size_t, 2>{3, 2},
+        std::array<size_t, 2>{1, 6}  // 行步幅=1, 列步幅=6
+    );
+    std::mdspan<int, std::dextents<size_t, 2>,
+                std::layout_stride> strided(data.data(), mapping);
+}
+\end{lstlisting}
+
+\section{submdspan --- 多维切片}
+
+\begin{lstlisting}
+#include <mdspan>
+#include <vector>
+#include <iostream>
+
+int main() {
+    std::vector<int> data(24);
+    for (int i = 0; i < 24; ++i) data[i] = i;
+
+    // 4x6 矩阵
+    std::mdspan mat(data.data(), 4, 6);
+
+    // 取第 2 行（全部列）
+    auto row2 = std::submdspan(mat, 2, std::full_extent);
+    // row2 是一维 span: [12, 13, 14, 15, 16, 17]
+    for (size_t j = 0; j < row2.size(); ++j) {
+        std::cout << row2[j] << ' ';
+    }
+
+    // 取第 3 列（全部行）
+    auto col3 = std::submdspan(mat, std::full_extent, 3);
+    // col3 是一维: [3, 9, 15, 21]
+
+    // 取子矩阵 [行1-2, 列2-4]
+    auto sub = std::submdspan(mat,
+        std::pair{1, 3},    // 行 [1, 3)
+        std::pair{2, 5}     // 列 [2, 5)
+    );
+    // sub 是 2x3 矩阵
+}
+\end{lstlisting}
+
+\begin{note}
+\texttt{mdspan} 是\emph{纯视图}：它不拥有数据，拷贝 \texttt{mdspan} 只是拷贝
+指针和 extents。确保底层数据的生命周期超过 mdspan 及其所有子视图。
+\end{note}
+
+\begin{compare}
+C\# 没有直接的多维视图类型，但可以使用 \texttt{Memory<T>} 和自定义索引：
+\begin{lstlisting}[style=csharpstyle]
+// C# 有内置多维数组（堆分配）
+int[,] matrix = new int[3, 4];
+matrix[1, 2] = 42;
+
+// 使用 MemoryMarshal 实现类似 mdspan 的功能
+Span<int> flat = stackalloc int[12];
+// 需要手动计算索引: flat[row * cols + col]
+\end{lstlisting}
+\end{compare}
+
+% ############################################################
+\part{C++20 范围库 (Ranges)}
+% ############################################################
+
+C++20 的范围库（Ranges Library）是标准库最重大的扩展之一。它引入了\emph{范围}
+（Range）作为一等概念，提供了惰性求值的视图组合器和受约束的算法，
+从根本上改变了 C++ 中数据处理管道的编写方式。
+
+\begin{table}[htbp]
+\centering
+\caption{范围库组件概览}
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{类别} & \textbf{头文件} & \textbf{说明} \\
+\midrule
+范围概念   & \header{ranges}       & \texttt{range}, \texttt{sized\_range}, \texttt{view} 等 \\
+范围工厂   & \header{ranges}       & \texttt{iota}, \texttt{single}, \texttt{empty}, \texttt{repeat} \\
+范围适配器 & \header{ranges}       & \texttt{filter}, \texttt{transform}, \texttt{take}, \texttt{drop} 等 \\
+受约束算法 & \header{algorithm}    & \texttt{ranges::sort}, \texttt{ranges::find} 等 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ────────────────────────────────────────────────────────────
+\chapter{范围概念体系}
+% ────────────────────────────────────────────────────────────
+
+\section{概念层次}
+
+范围库建立在一系列精细的\texttt{concept}之上，形成层次结构：
+
+\begin{lstlisting}
+// 最基础的范围概念：有 begin() 和 end()
+template<typename T>
+concept range = requires(T& t) {
+    ranges::begin(t);
+    ranges::end(t);
+};
+
+// 更精细的概念层次（从弱到强）：
+// range
+//  +-- output_range        --- 可写入
+//  +-- input_range         --- 可读取（至少一次）
+//  |    +-- forward_range  --- 多次遍历，迭代器可拷贝
+//  |         +-- bidirectional_range --- 双向遍历 (--it)
+//  |              +-- random_access_range --- O(1) 跳跃 (it + n)
+//  |                   +-- contiguous_range --- 连续内存 (data())
+//  +-- sized_range         --- O(1) 获取 size()
+
+// view 概念：轻量级、可拷贝、惰性求值的范围
+template<typename T>
+concept view = range<T> && movable<T> && default_initializable<T>
+    && /* 拷贝/赋值/销毁为 O(1) */;
+\end{lstlisting}
+
+\section{概念检查示例}
+
+\begin{lstlisting}
+#include <ranges>
+#include <vector>
+#include <list>
+#include <forward_list>
+
+int main() {
+    using namespace std::ranges;
+
+    // vector: 满足所有范围概念
+    static_assert(range<std::vector<int>>);
+    static_assert(sized_range<std::vector<int>>);
+    static_assert(random_access_range<std::vector<int>>);
+    static_assert(contiguous_range<std::vector<int>>);
+
+    // list: 双向但不随机访问
+    static_assert(bidirectional_range<std::list<int>>);
+    static_assert(!random_access_range<std::list<int>>);
+
+    // forward_list: 仅前向
+    static_assert(forward_range<std::forward_list<int>>);
+    static_assert(!bidirectional_range<std::forward_list<int>>);
+
+    // 视图检查
+    auto v = std::views::iota(1, 10);
+    static_assert(view<decltype(v)>);
+    static_assert(random_access_range<decltype(v)>);
+}
+\end{lstlisting}
+
+\section{borrowed\_range}
+
+\begin{note}
+\texttt{borrowed\_range} 是一个重要概念：它表示"从临时范围获取的迭代器
+仍然有效"。典型的借用范围包括 \texttt{span}、\texttt{string\_view} 和
+\texttt{iota\_view}---它们不持有数据，迭代器指向外部数据。
+
+非借用范围（如 \texttt{vector} 的临时对象）的迭代器在临时对象销毁后失效。
+\texttt{ranges::find} 等算法对非借用范围返回 \texttt{dangling} 而非迭代器，
+防止悬空引用。
+\end{note}
+
+\begin{lstlisting}
+#include <ranges>
+#include <vector>
+
+int main() {
+    // borrowed_range: 迭代器不依赖临时对象的生命周期
+    static_assert(std::ranges::borrowed_range<std::span<int>>);
+    static_assert(std::ranges::borrowed_range<std::string_view>);
+
+    // 非 borrowed_range
+    static_assert(!std::ranges::borrowed_range<std::vector<int>>);
+
+    // 安全用法
+    std::vector<int> vec = {1, 2, 3, 4, 5};
+    auto result = std::ranges::find(vec, 3);      // OK
+    // auto result2 = std::ranges::find(
+    //     std::vector{1,2,3}, 3);  // 返回 dangling
+}
+\end{lstlisting}
+
+% ────────────────────────────────────────────────────────────
+\chapter{范围工厂}
+% ────────────────────────────────────────────────────────────
+
+\section{iota --- 整数序列}
+
+\begin{lstlisting}
+#include <ranges>
+#include <iostream>
+
+int main() {
+    // 有界序列 [1, 10)
+    for (int x : std::views::iota(1, 10)) {
+        std::cout << x << ' ';
+    }
+    // 1 2 3 4 5 6 7 8 9
+
+    // 无界序列（惰性生成，需要配合 take 等限制）
+    for (int x : std::views::iota(1) | std::views::take(5)) {
+        std::cout << x << ' ';
+    }
+    // 1 2 3 4 5
+
+    // iota_view 支持随机访问
+    auto r = std::views::iota(0, 100);
+    std::cout << r[50] << '\n';  // 50
+    std::cout << r.size() << '\n'; // 100
+}
+\end{lstlisting}
+
+\section{single, empty, repeat}
+
+\begin{lstlisting}
+#include <ranges>
+#include <iostream>
+
+int main() {
+    // single: 单元素范围
+    auto s = std::views::single(42);
+    for (int x : s) std::cout << x << ' ';  // 42
+
+    // empty: 空范围
+    auto e = std::views::empty<int>;
+    std::cout << e.size() << '\n';  // 0
+
+    // repeat (C++23): 重复某值
+    for (int x : std::views::repeat(7, 5)) {
+        std::cout << x << ' ';
+    }
+    // 7 7 7 7 7
+
+    // 无界 repeat + take
+    for (int x : std::views::repeat(42) | std::views::take(3)) {
+        std::cout << x << ' ';
+    }
+    // 42 42 42
+}
+\end{lstlisting}
+
+% ────────────────────────────────────────────────────────────
+\chapter{范围适配器（视图组合器）}
+% ────────────────────────────────────────────────────────────
+
+范围适配器将一个范围变换为另一个范围，支持管道操作符 \texttt{|} 进行组合。
+所有适配器都是\emph{惰性求值}的：它们不立即执行计算，而是在迭代时按需求值。
+
+\section{filter --- 过滤}
+
+\begin{lstlisting}
+#include <ranges>
+#include <vector>
+#include <iostream>
+
+int main() {
+    std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+    // 过滤偶数
+    auto evens = v | std::views::filter([](int x) {
+        return x % 2 == 0;
+    });
+    for (int x : evens) {
+        std::cout << x << ' ';  // 2 4 6 8 10
+    }
+}
+\end{lstlisting}
+
+\section{transform --- 映射}
+
+\begin{lstlisting}
+#include <ranges>
+#include <vector>
+#include <string>
+#include <iostream>
+
+int main() {
+    std::vector<int> v = {1, 2, 3, 4, 5};
+
+    // 平方
+    auto squares = v | std::views::transform([](int x) {
+        return x * x;
+    });
+    for (int x : squares) {
+        std::cout << x << ' ';  // 1 4 9 16 25
+    }
+
+    // 转字符串
+    auto strings = v | std::views::transform([](int x) {
+        return std::to_string(x);
+    });
+    for (const auto& s : strings) {
+        std::cout << s << ' ';  // "1" "2" "3" "4" "5"
+    }
+}
+\end{lstlisting}
+
+\section{take 与 drop}
+
+\begin{lstlisting}
+#include <ranges>
+#include <vector>
+#include <iostream>
+
+int main() {
+    std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+    // take: 取前 n 个
+    auto first3 = v | std::views::take(3);
+    // {1, 2, 3}
+
+    // drop: 跳过前 n 个
+    auto skip2 = v | std::views::drop(2);
+    // {3, 4, 5, 6, 7, 8, 9, 10}
+
+    // take_while: 按条件取
+    auto small = v | std::views::take_while([](int x) {
+        return x < 5;
+    });
+    // {1, 2, 3, 4}
+
+    // drop_while: 按条件跳过
+    auto big = v | std::views::drop_while([](int x) {
+        return x < 5;
+    });
+    // {5, 6, 7, 8, 9, 10}
+}
+\end{lstlisting}
+
+\section{管道组合}
+
+范围适配器最强大的特性是\emph{管道组合}——通过 \texttt{|} 操作符链接多个变换：
+
+\begin{lstlisting}
+#include <ranges>
+#include <vector>
+#include <iostream>
+
+int main() {
+    std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                          11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
+
+    // 管道：取偶数 -> 平方 -> 取前 5 个
+    auto result = v
+        | std::views::filter([](int x) { return x % 2 == 0; })
+        | std::views::transform([](int x) { return x * x; })
+        | std::views::take(5);
+
+    for (int x : result) {
+        std::cout << x << ' ';
+    }
+    // 4 16 36 64 100
+
+    // 与无界 iota 配合
+    auto primes_approx = std::views::iota(2)
+        | std::views::filter([](int n) {
+            for (int i = 2; i * i <= n; ++i)
+                if (n % i == 0) return false;
+            return true;
+        })
+        | std::views::take(10);
+
+    for (int p : primes_approx) {
+        std::cout << p << ' ';
+    }
+    // 2 3 5 7 11 13 17 19 23 29
+}
+\end{lstlisting}
+
+\begin{warning}
+\textbf{filter 破坏随机访问}：\texttt{filter\_view} 的迭代器类别最多是
+\texttt{bidirectional}（即使底层范围是 \texttt{random\_access}），因为无法
+在 $O(1)$ 时间内跳到"第 $n$ 个满足条件的元素"。如果管道后续操作需要随机访问
+（如 \Fn{ranges::sort}），需要先将结果物化到容器中。
+\end{warning}
+
+\section{split 与 join}
+
+\begin{lstlisting}
+#include <ranges>
+#include <string>
+#include <string_view>
+#include <vector>
+#include <iostream>
+
+int main() {
+    // split: 按分隔符分割
+    std::string csv = "one,two,three,four";
+    for (auto word : csv | std::views::split(',')) {
+        std::string_view sv(word);
+        std::cout << '[' << sv << "] ";
+    }
+    // [one] [two] [three] [four]
+
+    // join: 将嵌套范围展平
+    std::vector<std::vector<int>> nested = {
+        {1, 2, 3}, {4, 5}, {6, 7, 8, 9}
+    };
+    for (int x : nested | std::views::join) {
+        std::cout << x << ' ';
+    }
+    // 1 2 3 4 5 6 7 8 9
+}
+\end{lstlisting}
+
+\section{reverse 与 elements / keys / values}
+
+\begin{lstlisting}
+#include <ranges>
+#include <vector>
+#include <map>
+#include <tuple>
+#include <iostream>
+
+int main() {
+    std::vector<int> v = {1, 2, 3, 4, 5};
+
+    // reverse
+    for (int x : v | std::views::reverse) {
+        std::cout << x << ' ';  // 5 4 3 2 1
+    }
+
+    // keys / values
+    std::map<std::string, int> ages = {
+        {"Alice", 25}, {"Bob", 30}, {"Charlie", 28}
+    };
+    for (const auto& name : ages | std::views::keys) {
+        std::cout << name << ' ';
+    }
+    // Alice Bob Charlie
+
+    for (int age : ages | std::views::values) {
+        std::cout << age << ' ';
+    }
+    // 25 30 28
+
+    // elements<N>: 对 tuple 范围提取第 N 个元素
+    std::vector<std::tuple<int, std::string, double>> records = {
+        {1, "Alice", 3.8}, {2, "Bob", 3.5}
+    };
+    for (const auto& name : records | std::views::elements<1>) {
+        std::cout << name << ' ';
+    }
+    // Alice Bob
+}
+\end{lstlisting}
+
+\section{C++23 新增适配器}
+
+\cpp{23} 引入了大量新的视图适配器：
+
+\begin{table}[htbp]
+\centering
+\caption{C++23 新增范围适配器}
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{适配器} & \textbf{说明} \\
+\midrule
+\Tp{zip\_view}           & 将多个范围"拉链"为元组范围 \\
+\Tp{zip\_transform\_view}& zip + transform 的组合 \\
+\Tp{adjacent\_view}      & 相邻元素组成的滑动窗口（N 元组） \\
+\Tp{stride\_view}        & 按步长跳跃 \\
+\Tp{chunk\_view}         & 按大小分块 \\
+\Tp{chunk\_by\_view}     & 按谓词分块 \\
+\Tp{slide\_view}         & 滑动窗口 \\
+\Tp{enumerate\_view}     & 带索引的遍历（类似 Python enumerate） \\
+\Tp{as\_const\_view}     & 将元素转为 const 引用 \\
+\Tp{as\_rvalue\_view}    & 将元素转为右值（移动语义） \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{lstlisting}
+#include <ranges>
+#include <vector>
+#include <string>
+#include <functional>
+#include <iostream>
+
+int main() {
+    std::vector<std::string> names = {"Alice", "Bob", "Charlie"};
+    std::vector<int> ages = {25, 30, 28};
+
+    // zip: 配对遍历
+    for (auto [name, age] : std::views::zip(names, ages)) {
+        std::cout << name << " is " << age << '\n';
+    }
+
+    // enumerate: 带索引遍历
+    for (auto [i, name] : names | std::views::enumerate) {
+        std::cout << i << ": " << name << '\n';
+    }
+    // 0: Alice  1: Bob  2: Charlie
+
+    // chunk: 按大小分块
+    std::vector<int> data = {1, 2, 3, 4, 5, 6, 7, 8};
+    for (auto chunk : data | std::views::chunk(3)) {
+        std::cout << "[";
+        for (int x : chunk) std::cout << x << ' ';
+        std::cout << "] ";
+    }
+    // [1 2 3 ] [4 5 6 ] [7 8 ]
+
+    // slide: 滑动窗口
+    for (auto window : data | std::views::slide(3)) {
+        for (int x : window) std::cout << x << ' ';
+        std::cout << "| ";
+    }
+    // 1 2 3 | 2 3 4 | 3 4 5 | ...
+
+    // stride: 步长跳跃
+    for (int x : data | std::views::stride(2)) {
+        std::cout << x << ' ';
+    }
+    // 1 3 5 7
+
+    // adjacent: 相邻元素对
+    for (auto [a, b] : data | std::views::adjacent<2>) {
+        std::cout << "(" << a << "," << b << ") ";
+    }
+    // (1,2) (2,3) (3,4) ...
+
+    // chunk_by: 按条件分块
+    std::vector<int> vals = {1, 1, 2, 2, 2, 3, 1, 1};
+    for (auto chunk : vals | std::views::chunk_by(std::equal_to<>{})) {
+        for (int x : chunk) std::cout << x << ' ';
+        std::cout << "| ";
+    }
+    // 1 1 | 2 2 2 | 3 | 1 1 |
+}
+\end{lstlisting}
+
+% ────────────────────────────────────────────────────────────
+\chapter{受约束的范围算法}
+% ────────────────────────────────────────────────────────────
+
+\cpp{20} 在 \Tp{std::ranges} 命名空间下提供了所有标准算法的\emph{范围版本}，
+使用 concept 约束替代 SFINAE，提供更清晰的编译错误和更安全的接口。
+
+\section{与迭代器算法的对比}
+
+\begin{lstlisting}
+#include <algorithm>
+#include <vector>
+
+int main() {
+    std::vector<int> v = {5, 3, 1, 4, 2};
+
+    // 旧风格：迭代器对
+    std::sort(v.begin(), v.end());
+    auto it = std::find(v.begin(), v.end(), 3);
+
+    // 新风格：范围版本
+    std::ranges::sort(v);
+    auto it2 = std::ranges::find(v, 3);
+
+    // 新风格更短、更安全：
+    // 1. 不需要写 .begin()/.end()
+    // 2. 不能传错 begin/end
+    // 3. concept 约束提供更好的编译错误信息
+}
+\end{lstlisting}
+
+\section{常用范围算法}
+
+\begin{lstlisting}
+#include <algorithm>
+#include <ranges>
+#include <numeric>
+#include <vector>
+#include <functional>
+#include <iostream>
+
+int main() {
+    std::vector<int> v = {5, 3, 1, 4, 2, 8, 7, 6, 9, 10};
+
+    // sort
+    std::ranges::sort(v);
+
+    // find / find_if
+    auto it = std::ranges::find(v, 7);
+    auto it2 = std::ranges::find_if(v, [](int x) { return x > 8; });
+
+    // count_if
+    auto n = std::ranges::count_if(v, [](int x) { return x % 2 == 0; });
+
+    // any_of / all_of / none_of
+    bool has_neg = std::ranges::any_of(v, [](int x) { return x < 0; });
+
+    // minmax
+    auto [lo, hi] = std::ranges::minmax(v);
+
+    // fold_left (C++23)
+    int sum = std::ranges::fold_left(v, 0, std::plus<>{});
+
+    // for_each
+    std::ranges::for_each(v, [](int x) {
+        std::cout << x << ' ';
+    });
+
+    // copy / transform
+    std::vector<int> out(v.size());
+    std::ranges::copy(v, out.begin());
+    std::ranges::transform(v, out.begin(), [](int x) { return x * 2; });
+
+    // contains (C++23)
+    bool has = std::ranges::contains(v, 7);
+
+    // starts_with / ends_with (C++23)
+    bool sw = std::ranges::starts_with(v, std::vector{1, 2, 3});
+}
+\end{lstlisting}
+
+\section{投影 (Projection)}
+
+范围算法支持\emph{投影}参数，允许在比较或操作之前先对元素进行变换：
+
+\begin{lstlisting}
+#include <algorithm>
+#include <ranges>
+#include <vector>
+#include <string>
+#include <functional>
+#include <iostream>
+
+struct Student {
+    std::string name;
+    int grade;
+};
+
+int main() {
+    std::vector<Student> students = {
+        {"Alice", 95}, {"Bob", 87}, {"Charlie", 92}
+    };
+
+    // 按 grade 排序（投影到 grade 字段）
+    std::ranges::sort(students, {}, &Student::grade);
+    // Bob(87), Charlie(92), Alice(95)
+
+    // 按 name 查找 grade = 92 的学生
+    auto it = std::ranges::find(students, 92, &Student::grade);
+    if (it != students.end()) {
+        std::cout << it->name << '\n';  // "Charlie"
+    }
+
+    // 投影 + 自定义比较器
+    std::ranges::sort(students, std::greater<>{}, &Student::grade);
+    // 按 grade 降序
+
+    // min_element with projection
+    auto lowest = std::ranges::min_element(
+        students, {}, &Student::grade);
+    std::cout << lowest->name << '\n';  // "Bob"
+}
+\end{lstlisting}
+
+\begin{bestpractice}
+\textbf{投影 vs transform}：当需要对容器原地排序/查找但基于某个字段时，
+使用投影。当需要生成新的变换后序列时，使用 \texttt{views::transform}。
+投影不会创建新数据，直接在原元素上操作。
+\end{bestpractice}
+
+% ────────────────────────────────────────────────────────────
+\chapter{视图与容器的互操作}
+% ────────────────────────────────────────────────────────────
+
+\section{物化 (Materialization)：从视图到容器}
+
+视图是惰性的，如果需要将结果保存为容器，需要\emph{物化}：
+
+\begin{lstlisting}
+#include <ranges>
+#include <vector>
+#include <list>
+#include <iostream>
+
+int main() {
+    auto pipeline = std::views::iota(1)
+        | std::views::filter([](int x) { return x % 2 == 0; })
+        | std::views::transform([](int x) { return x * x; })
+        | std::views::take(5);
+
+    // 方式 1: 迭代器构造
+    std::vector<int> v(pipeline.begin(), pipeline.end());
+
+    // 方式 2: ranges::to (C++23)
+    auto v2 = pipeline | std::ranges::to<std::vector>();
+    auto l  = pipeline | std::ranges::to<std::list>();
+
+    // 方式 3: 手工循环
+    std::vector<int> v3;
+    for (int x : pipeline) {
+        v3.push_back(x);
+    }
+
+    std::cout << "v2 = ";
+    for (int x : v2) std::cout << x << ' ';
+    // v2 = 4 16 36 64 100
+}
+\end{lstlisting}
+
+\section{from\_range 构造 (C++23)}
+
+\cpp{23} 为大多数容器增加了 \Fn{from\_range} 标签和对应的构造函数：
+
+\begin{lstlisting}
+#include <vector>
+#include <map>
+#include <set>
+#include <ranges>
+#include <string>
+
+int main() {
+    std::vector<int> src = {1, 2, 3, 4, 5};
+
+    // from_range 构造
+    std::vector<int> v(std::from_range,
+        src | std::views::reverse);
+    std::set<int> s(std::from_range, src);
+
+    // 从 pair 范围构造 map
+    auto pairs = std::views::zip(
+        std::views::iota(1, 4),
+        std::vector{"one", "two", "three"}
+    );
+    std::map<int, std::string> m(std::from_range, pairs);
+    // {1: "one", 2: "two", 3: "three"}
+
+    // insert_range: 批量插入
+    std::vector<int> target = {0};
+    target.insert_range(target.end(), src);
+    // target = {0, 1, 2, 3, 4, 5}
+}
+\end{lstlisting}
+
+\section{完整示例：数据处理管道}
+
+\begin{lstlisting}
+#include <ranges>
+#include <vector>
+#include <string>
+#include <map>
+#include <functional>
+#include <numeric>
+#include <iostream>
+
+struct Employee {
+    std::string name;
+    std::string dept;
+    double salary;
+};
+
+int main() {
+    std::vector<Employee> employees = {
+        {"Alice",   "Engineering", 95000},
+        {"Bob",     "Marketing",   72000},
+        {"Charlie", "Engineering", 88000},
+        {"David",   "Marketing",   68000},
+        {"Eve",     "Engineering", 105000},
+        {"Frank",   "HR",          65000},
+    };
+
+    // 管道：工程部门 -> 薪水 > 90000 -> 取名字和薪水
+    auto top_engineers = employees
+        | std::views::filter([](const Employee& e) {
+            return e.dept == "Engineering";
+        })
+        | std::views::filter([](const Employee& e) {
+            return e.salary > 90000;
+        })
+        | std::views::transform([](const Employee& e) {
+            return std::pair{e.name, e.salary};
+        });
+
+    // 物化并排序
+    auto result = top_engineers
+        | std::ranges::to<std::vector>();
+    std::ranges::sort(result, std::greater<>{},
+                      [](const auto& p) { return p.second; });
+
+    for (const auto& [name, salary] : result) {
+        std::cout << name << ": $" << salary << '\n';
+    }
+    // Eve: $105000
+    // Alice: $95000
+
+    // 统计各部门平均薪水
+    std::map<std::string, std::vector<double>> dept_salaries;
+    for (const auto& e : employees) {
+        dept_salaries[e.dept].push_back(e.salary);
+    }
+    for (const auto& [dept, salaries] : dept_salaries) {
+        double avg = std::ranges::fold_left(
+            salaries, 0.0, std::plus<>{}) / salaries.size();
+        std::cout << dept << " avg: $" << avg << '\n';
+    }
+}
+\end{lstlisting}
+
+% ────────────────────────────────────────────────────────────
+\chapter{自定义视图与适配器}
+% ────────────────────────────────────────────────────────────
+
+\begin{guideline}
+\textbf{R.1}：优先使用标准库提供的视图适配器。自定义视图应继承
+\texttt{view\_interface} 以获得免费的 \Fn{empty()}、\Fn{size()} 等成员函数。
+确保视图满足 \texttt{view} 概念的要求（拷贝/赋值为 $O(1)$）。
+\end{guideline}
+
+\cpp{23} 的 \texttt{stride\_view} 已经覆盖了大多数自定义需求。以下展示
+创建可管道化适配器的基本模式：
+
+\begin{lstlisting}
+#include <ranges>
+#include <vector>
+#include <iostream>
+
+// C++23 stride 已内置，此处演示管道化模式
+int main() {
+    std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+    // 使用内置 stride
+    for (int x : v | std::views::stride(3)) {
+        std::cout << x << ' ';  // 1 4 7 10
+    }
+
+    // 组合多个适配器
+    auto result = v
+        | std::views::filter([](int x) { return x > 3; })
+        | std::views::stride(2)
+        | std::views::reverse;
+
+    for (int x : result) {
+        std::cout << x << ' ';
+    }
+    // 9 7 5
+}
+\end{lstlisting}
+
+% ############################################################
+\backmatter
+
+% ────────────────────────────────────────────────────────────
+\chapter{总结：选择决策树}
+% ────────────────────────────────────────────────────────────
+
+\begin{center}
+\begin{tikzpicture}[
+    every node/.style={draw, rounded corners, minimum width=3cm,
+                       minimum height=0.8cm, align=center,
+                       font=\small},
+    level 1/.style={sibling distance=7cm, level distance=2.5cm},
+    level 2/.style={sibling distance=4cm, level distance=2cm},
+    level 3/.style={sibling distance=3cm, level distance=2cm},
+    edge from parent/.style={draw, -latex}
+]
+\node {需要存储元素？}
+    child { node {固定大小？}
+        child { node[fill=green!20] {\texttt{array<T,N>}} }
+    }
+    child { node {需要键值映射？}
+        child { node {需要有序遍历？}
+            child { node[fill=blue!20] {\texttt{map/set}} }
+        }
+        child { node {只需快速查找？}
+            child { node[fill=blue!20] {\texttt{unordered\_map}} }
+        }
+    }
+    child { node {默认选择}
+        child { node[fill=green!20] {\texttt{vector<T>}} }
+    };
+\end{tikzpicture}
+\end{center}
+
+\vspace{1cm}
+
+\begin{bestpractice}[title=容器选择黄金法则]
+\begin{enumerate}
+\item \textbf{默认用 vector}：除非有明确理由，否则总是用 \texttt{vector}。
+    连续内存带来最好的缓存局部性。
+\item \textbf{需要两端操作？用 deque}：如果频繁在头部插入/删除。
+\item \textbf{需要稳定引用？用 list 或 deque}：vector 的重分配会使所有引用失效。
+\item \textbf{需要快速查找？用 unordered\_map/unordered\_set}：平均 $O(1)$。
+\item \textbf{需要有序遍历？用 map/set}：$O(\log n)$ 但保持排序。
+\item \textbf{只需要观察？用 span/string\_view}：零拷贝视图。
+\item \textbf{处理多维数据？用 mdspan}：类型安全的多维视图。
+\item \textbf{数据处理管道？用 ranges}：惰性求值，可组合。
+\end{enumerate}
+\end{bestpractice}
+
+\end{document}

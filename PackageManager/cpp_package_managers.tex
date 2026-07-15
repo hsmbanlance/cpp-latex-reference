@@ -1,0 +1,1385 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+% ---- listing style ----
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,
+    ifstream,ofstream,fstream,iostream,
+    ostream,istream,stringstream,ostringstream,
+    path,filesystem},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+
+% ---- 文档特定语言定义 ----
+\lstdefinelanguage{CMake}{
+  morekeywords={cmake_minimum_required,project,find_package,add_executable,
+    add_library,target_link_libraries,include,FetchContent_Declare,
+    FetchContent_MakeAvailable,set,option,if,endif,else,elseif,
+    target_include_directories,set_target_properties,install,
+    add_subdirectory,configure_file,execute_process,
+    ExternalProject_Add,CPMAddPackage,cpmaddpackage},
+  morecomment=[l][\color{codecmt}\itshape]{\#},
+  sensitive=false,
+}
+\lstdefinelanguage{Conan}{
+  morekeywords={from,import,class,def,requires,generators,exports_sources,
+    build_requires,settings,options,default_options,package_info,
+    package,source,build,layout,cmake_layout,CMakeToolchain,CMakeDeps,
+    conanfile,validate,configure,generate,package_type},
+  morecomment=[l][\color{codecmt}\itshape]{\#},
+}
+\lstdefinelanguage{XMakeLua}{
+  morekeywords={add_requires,target,add_packages,set_kind,add_files,
+    set_toolchains,set_plat,set_arch,add_rules,on_load,after_build,
+    add_repositories,package,on_install,on_test,set_description,
+    add_deps,set_license,add_urls,add_versions,import,
+    target_end,package_end,function,end,if,then,else,elseif,
+    for,do,while,repeat,until,return,local,and,or,not,true,false,nil},
+  morecomment=[l][\color{codecmt}\itshape]{--},
+  morecomment=[s][\color{codecmt}\itshape]{--[[}{]]},
+  morestring=[b]",
+  morestring=[b]',
+  sensitive=true,
+}
+\lstdefinelanguage{Bash}{
+  morekeywords={if,then,else,elif,fi,for,while,do,done,case,esac,
+    function,return,in,until,select,break,continue,export,source,
+    local,declare,typeset,readonly,shift,exit,exec,eval,set,unset,
+    cd,echo,git,cmake,conan,vcpkg,xmake,svn,make,ninja},
+  morecomment=[l][\color{codecmt}\itshape]{\#},
+  morestring=[b]",
+  morestring=[b]',
+  sensitive=true,
+}
+\lstset{style=cppstyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,
+  title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,
+  title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,
+  title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,
+  title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,
+  title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={C++ Package Management Reference},
+  pdftitle={C++ 包管理方案对比},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+% ====================================================================
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\tableofcontents
+\newpage
+
+% =====================================================================
+\section{引言}
+% =====================================================================
+
+C++ 生态长期缺乏官方标准包管理器，这与其他语言（Rust/Cargo、Go/Modules、Python/pip）形成鲜明对比。
+C++ 的特殊性在于：编译产物与平台和工具链高度绑定，头文件搜索路径、ABI 兼容性、链接顺序等
+细节都会影响最终的二进制可用性。因此，C++ 的包管理不仅是"下载源码并编译"，更涉及
+二进制分发、平台适配、工具链配置等深层问题。
+
+本文对比五种主流或常用的 C++ 依赖管理方案，从技术机制和实际使用场景两个维度进行分析，
+覆盖指定平台应用程序/库、跨平台应用/库、系统定制化、嵌入式 Linux/Unix 四种典型场景。
+
+\begin{note}[ title={本文覆盖的五种方案}]
+\begin{itemize}[nosep]
+  \item \textbf{Conan} --- JFrog 维护的 C/C++ 专用包管理器，支持二进制分发与多配置管理。
+  \item \textbf{Vcpkg} --- 微软开源的 C/C++ 包管理器，以 ports 脚本 + triplet 配置为核心。
+  \item \textbf{CMake FetchContent} --- CMake 内置模块，在配置阶段自动下载并集成外部项目。
+  \item \textbf{XMake} --- 基于 Lua 的轻量级构建系统 + 内置包管理器。
+  \item \textbf{Git Submodule / SVN Externals} --- 版本控制原生机制，手动管理依赖源码。
+\end{itemize}
+\end{tcolorbox}
+
+% =====================================================================
+\section{各方案技术机制}
+% =====================================================================
+
+% ---------------------------------------------------------------------
+\subsection{Conan}
+% ---------------------------------------------------------------------
+
+Conan 是目前 C++ 生态中最成熟的专用包管理器。它采用去中心化架构：
+包的定义以 \texttt{conanfile.py}（或 \texttt{conanfile.txt}）描述，
+托管在任意 Git 仓库或 Conan Center（公共仓库）中。
+
+\subsubsection*{依赖描述}
+
+\begin{lstlisting}[language=Conan, caption={conanfile.py 示例}]
+from conan import ConanFile
+from conan.tools.cmake import CMakeToolchain, CMakeDeps, cmake_layout
+
+class MyApp(ConanFile):
+    name = "myapp"
+    version = "1.0"
+    settings = "os", "compiler", "build_type", "arch"
+    requires = "fmt/10.2.1", "spdlog/1.13.0"
+
+    def layout(self):
+        cmake_layout(self)
+
+    def generate(self):
+        deps = CMakeDeps(self)
+        deps.generate()
+        tc = CMakeToolchain(self)
+        tc.generate()
+
+    def build(self):
+        cmake = CMake(self)
+        cmake.configure()
+        cmake.build()
+\end{lstlisting}
+
+Conan 的 \texttt{settings} 定义了包的四维配置空间：操作系统、编译器、构建类型和目标架构。
+每个包的缓存键由这四个维度的组合决定，因此同一库的不同配置（如 Debug/Release、x86/x64）
+可以共存于本地缓存中。
+
+\subsubsection*{依赖解析}
+
+Conan 使用基于 SAT（布尔可满足性）的版本解析算法，支持版本范围表达式
+（如 \texttt{"boost/[>=1.70 <1.85]"}）和版本覆盖。当出现版本冲突时，解析器会报告
+完整的冲突路径，帮助开发者定位问题。
+
+\subsubsection*{二进制分发}
+
+Conan 的核心优势是二进制包分发。通过 \texttt{conan remote} 配置远程仓库，
+开发者可以上传预编译二进制包，消费者直接下载匹配自身配置的包，避免重复编译。
+这对于大型项目（如 Boost、Qt、OpenCV）的依赖管理尤其重要。
+
+% ---------------------------------------------------------------------
+\subsection{Vcpkg}
+% ---------------------------------------------------------------------
+
+Vcpkg 由微软开源并维护，采用 ports + triplet 的架构。每个库对应一个 port 目录，
+包含 \texttt{vcpkg.json}（元数据）和 \texttt{portfile.cmake}（构建脚本）。
+
+\subsubsection*{依赖描述}
+
+\begin{lstlisting}[language=CMake, caption={vcpkg.json 示例}]
+{
+  "name": "myapp",
+  "version-string": "1.0",
+  "dependencies": [
+    "fmt",
+    { "name": "opencv", "features": ["dnn"] },
+    { "name": "grpc", "platform": "!(arm & windows)" }
+  ]
+}
+\end{lstlisting}
+
+\subsubsection*{Triplet 机制}
+
+Triplet 是 Vcpkg 区分不同平台配置的核心机制。每个 triplet 文件定义
+\texttt{VCPKG\_TARGET\_ARCHITECTURE}、\texttt{VCPKG\_CRT\_LINKAGE}、
+\texttt{VCPKG\_LIBRARY\_LINKAGE} 等变量。Vcpkg 内置了 \texttt{x64-windows}、
+\texttt{x64-linux}、\texttt{arm64-osx} 等常见 triplet，也支持自定义 triplet。
+
+\begin{lstlisting}[language=CMake, caption={自定义 triplet 示例: arm-linux-custom.cmake}]
+set(VCPKG_TARGET_ARCHITECTURE arm)
+set(VCPKG_CRT_LINKAGE dynamic)
+set(VCPKG_LIBRARY_LINKAGE static)
+set(VCPKG_CMAKE_SYSTEM_NAME Linux)
+set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE
+    "/opt/arm-toolchain/arm-linux-gnueabihf.cmake")
+\end{lstlisting}
+
+\subsubsection*{Manifest 模式 vs Classic 模式}
+
+Vcpkg 支持两种工作模式：Classic 模式将包安装到全局 \texttt{vcpkg/installed/}
+目录；Manifest 模式（推荐）使用项目级 \texttt{vcpkg.json}，每个项目独立管理依赖，
+通过 CMake 的 \texttt{CMAKE\_TOOLCHAIN\_FILE} 集成到构建流程中。
+
+% ---------------------------------------------------------------------
+\subsection{CMake FetchContent}
+% ---------------------------------------------------------------------
+
+FetchContent 是 CMake 3.11 引入的内置模块，在配置阶段（\texttt{cmake} 命令执行时）
+自动从 URL 或 Git 仓库下载并解压外部项目，然后通过 \texttt{add\_subdirectory}
+将其纳入构建。
+
+\begin{lstlisting}[language=CMake, caption={FetchContent 典型用法}]
+cmake_minimum_required(VERSION 3.24)
+project(MyApp)
+
+include(FetchContent)
+
+FetchContent_Declare(
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+  GIT_TAG        10.2.1
+  GIT_SHALLOW    TRUE
+)
+
+FetchContent_Declare(
+  spdlog
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG        v1.13.0
+  GIT_SHALLOW    TRUE
+)
+
+FetchContent_MakeAvailable(fmt spdlog)
+
+add_executable(myapp main.cpp)
+target_link_libraries(myapp PRIVATE fmt::fmt spdlog::spdlog)
+\end{lstlisting}
+
+\subsubsection*{CPM.cmake 增强}
+
+CPM.cmake 是 FetchContent 的社区增强包装器，提供了版本缓存、离线模式、
+自动 \texttt{GIT\_SHALLOW} 等功能。通过 \texttt{CPMAddPackage} 替代
+\texttt{FetchContent\_Declare}，使用体验更接近传统包管理器。
+
+\begin{lstlisting}[language=CMake, caption={CPM.cmake 用法}]
+# -- 在顶层 CMakeLists.txt 中引入 CPM
+file(DOWNLOAD
+  https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.40.0/CPM.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake
+)
+include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake)
+
+CPMAddPackage("gh:fmtlib/fmt#10.2.1")
+CPMAddPackage("gh:gabime/spdlog#v1.13.0")
+CPMAddPackage("gh:nlohmann/json#v3.11.3")
+\end{lstlisting}
+
+\subsubsection*{ExternalProject 对比}
+
+FetchContent 在\textbf{配置阶段}下载和集成项目，而 ExternalProject 在\textbf{构建阶段}
+执行。FetchContent 的优势是依赖的 target 可以直接被主项目引用
+（\texttt{target\_link\_libraries}），而 ExternalProject 需要手动处理导入。
+
+% ---------------------------------------------------------------------
+\subsection{XMake}
+% ---------------------------------------------------------------------
+
+XMake 是一个基于 Lua 的构建系统，同时内置了包管理功能。
+它的包描述使用 \texttt{xmake.lua}，语法简洁且表达力强。
+
+\begin{lstlisting}[language=XMakeLua, caption={xmake.lua 包管理示例}]
+add_rules("mode.debug", "mode.release")
+add_requires("fmt 10.2.1", "spdlog >=1.13.0")
+add_requires("zlib", {configs = {shared = true}})
+
+target("myapp")
+    set_kind("binary")
+    add_files("src/*.cpp")
+    add_packages("fmt", "spdlog", "zlib")
+\end{lstlisting}
+
+\subsubsection*{包仓库与远程包}
+
+XMake 内置了 \texttt{xmake-repo}（官方仓库），也支持添加自定义仓库。
+包的描述文件使用 Lua 语法，支持 \texttt{on\_install}、\texttt{on\_test} 等钩子函数。
+
+\begin{lstlisting}[language=XMakeLua, caption={自定义包描述}]
+package("mylib")
+    add_urls("https://github.com/example/mylib/archive/v$(version).tar.gz")
+    add_versions("1.0.0", "abc123...")
+    add_deps("cmake")
+    on_install(function(package)
+        import("package.tools.cmake").install(package)
+    end)
+    on_test(function(package)
+        assert(package:check_cxxsnippets({test = [[
+            #include <mylib.h>
+            void test() { mylib::init(); }
+        ]]}, {configs = {languages = "c++17"}}))
+    end)
+package_end()
+\end{lstlisting}
+
+\subsubsection*{交叉编译支持}
+
+XMake 对交叉编译有良好支持，通过命令行参数指定目标平台和工具链：
+
+\begin{lstlisting}[language=Bash, caption={XMake 交叉编译}]
+xmake f -p linux -a arm64 --toolchain=arm-linux-gnueabihf
+xmake build
+\end{lstlisting}
+
+% ---------------------------------------------------------------------
+\subsection{Git Submodule / SVN Externals}
+% ---------------------------------------------------------------------
+
+最原始的依赖管理方式：将第三方库作为子目录纳入版本控制。
+
+\subsubsection*{Git Submodule}
+
+\begin{lstlisting}[language=Bash, caption={Git Submodule 基本操作}]
+# -- 添加子模块
+git submodule add https://github.com/fmtlib/fmt.git third_party/fmt
+
+# -- 克隆时初始化
+git clone --recurse-submodules https://github.com/example/project.git
+
+# -- 更新到指定版本
+cd third_party/fmt && git checkout 10.2.1
+cd ../.. && git add third_party/fmt && git commit -m "pin fmt 10.2.1"
+\end{lstlisting}
+
+\subsubsection*{SVN Externals}
+
+\begin{lstlisting}[language=Bash, caption={SVN Externals 配置}]
+# -- 设置 svn:externals 属性
+svn propedit svn:externals .
+# -- 编辑内容：
+# third_party/fmt -r12345 https://svn.example.com/libs/fmt/trunk
+# third_party/spdlog       https://svn.example.com/libs/spdlog/trunk
+
+# -- 更新
+svn update
+\end{lstlisting}
+
+\subsubsection*{CMake 集成方式}
+
+无论 Git 还是 SVN，子目录中的库通常通过 \texttt{add\_subdirectory} 集成：
+
+\begin{lstlisting}[language=CMake, caption={子模块集成}]
+# -- 直接引用子模块
+add_subdirectory(third_party/fmt)
+add_subdirectory(third_party/spdlog)
+
+add_executable(myapp main.cpp)
+target_link_libraries(myapp PRIVATE fmt::fmt spdlog::spdlog)
+\end{lstlisting}
+
+% =====================================================================
+\section{核心机制对比}
+% =====================================================================
+
+% ---------------------------------------------------------------------
+\subsection{依赖描述与版本管理}
+% ---------------------------------------------------------------------
+
+\begin{table}[H]
+\centering
+\caption{依赖描述格式与版本管理能力对比}
+\label{tab:dep-desc}
+\small
+\begin{tabularx}{\textwidth}{l X X X X X}
+\toprule
+\textbf{特性} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{FetchContent} & \textbf{XMake} & \textbf{Git/SVN} \\
+\midrule
+描述格式     & conanfile.py  & vcpkg.json   & CMakeLists.txt & xmake.lua  & .gitmodules / svn 属性 \\
+版本表达     & 范围 + 约束   & 基线 + 覆盖  & 精确 tag/commit & 范围 + 精确 & 精确 commit/revision \\
+Lock 文件    & conan.lock    & vcpkg.json 基线 & package-lock.cmake & xmake-repo 锁 & 天然锁定 \\
+私有仓库     & 原生支持      & 原生支持     & 手动管理 URL   & 原生支持   & 原生支持 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{note}[ title={版本锁定机制差异}]
+Conan 使用 \texttt{conan.lock} 文件精确锁定依赖图谱中每个节点的版本和配置。
+Vcpkg 使用 \texttt{vcpkg.json} 中的 \texttt{"builtin-baseline"} 字段配合
+\texttt{"overrides"} 实现类似效果。FetchContent 和 CPM.cmake 通过
+\texttt{GIT\_TAG} 精确锁定 commit hash。XMake 的包描述中
+\texttt{add\_versions} 配合哈希值实现版本+完整性校验。
+Git Submodule 天然通过 commit hash 锁定，SVN Externals 通过 \texttt{-r} 修订号锁定。
+\end{tcolorbox}
+
+% ---------------------------------------------------------------------
+\subsection{构建与集成方式}
+% ---------------------------------------------------------------------
+
+\begin{table}[H]
+\centering
+\caption{构建集成方式对比}
+\label{tab:build-integration}
+\small
+\begin{tabularx}{\textwidth}{l X X X X X}
+\toprule
+\textbf{特性} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{FetchContent} & \textbf{XMake} & \textbf{Git/SVN} \\
+\midrule
+默认构建方式  & 二进制优先     & 源码编译       & 源码编译          & 二进制/源码    & 源码编译 \\
+缓存机制     & 本地 + 远程缓存 & 二进制缓存     & \texttt{\_deps/} 目录 & 本地缓存      & 无 \\
+CMake 集成   & Generator 文件 & Toolchain 文件 & 原生内置         & 需切换构建系统 & add\_subdirectory \\
+其他构建系统  & 支持 Meson/Autotools & 有限支持 & 仅 CMake        & 自带构建系统  & 取决于子目录结构 \\
+增量编译     & 良好（缓存命中跳过）& 良好（已安装包跳过）& 一般（每次配置重新处理）& 良好 & 手动控制 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ---------------------------------------------------------------------
+\subsection{平台与工具链适配}
+% ---------------------------------------------------------------------
+
+\begin{table}[H]
+\centering
+\caption{平台适配能力对比}
+\label{tab:platform}
+\small
+\begin{tabularx}{\textwidth}{l X X X X X}
+\toprule
+\textbf{特性} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{FetchContent} & \textbf{XMake} & \textbf{Git/SVN} \\
+\midrule
+多配置共存    & 原生支持       & Triplet 切换   & 手动切换          & 配置切换       & 手动管理分支 \\
+交叉编译     & profile 机制   & 自定义 triplet & CMake 变量传递   & 命令行参数     & 手动配置 \\
+自定义工具链  & profile 完整定义 & triplet + toolchain & 手动传入 & 内置 + 自定义  & 完全手动 \\
+系统库探测    & 支持           & port 脚本处理  & 手动处理         & 包描述处理    & 完全手动 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ---------------------------------------------------------------------
+\subsection{官方编译结果保证（标准配置）}
+% ---------------------------------------------------------------------
+
+当用户使用各包管理器的默认配置（不修改 recipe/port/triplet/profile）时，
+官方仓库或基础设施对编译结果提供了不同程度的保证。
+理解这些保证的边界，对于评估各方案的可靠性至关重要。
+
+\subsubsection*{Conan Center Index (CCI)}
+
+CCI 为\textbf{有限的一组标准配置}预编译二进制包，覆盖范围如下：
+
+\begin{table}[H]
+\centering
+\caption{CCI 预编译二进制覆盖的标准配置}
+\label{tab:cci-configs}
+\small
+\begin{tabularx}{\textwidth}{l l l l}
+\toprule
+\textbf{平台} & \textbf{编译器} & \textbf{标准库/运行时} & \textbf{构建类型} \\
+\midrule
+Windows x86\_64 & Visual Studio 2019 & 动态链接 (MD) & Release \\
+Linux x86\_64   & GCC 11            & libstdc++11    & Release \\
+macOS armv8     & Apple Clang 13.0  & libc++ (target 11.0) & Release \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{warning}[ title={CCI 保证的边界}]
+CCI \textbf{仅预编译 Release 构建}。Debug 配置、非标准编译器版本、
+ARM 架构（Linux/Windows）、musl libc 等均不在预编译范围内，
+需要用户本地从源码构建（\texttt{conan install --build=missing}）。
+每个包的唯一标识 \texttt{package\_id} 是 \texttt{conaninfo.txt} 的 SHA1 校验和，
+包含 settings、options 和依赖版本。相同的 \texttt{package\_id} 保证映射到
+相同的二进制产物，但 CCI 不保证用户本地构建的产物与 CCI 预编译包一致——
+这要求完全相同的编译器版本、编译选项和构建环境。
+\end{tcolorbox}
+
+CCI 的 CI 使用 GitHub Actions + JFrog 内部自动化，
+每个 PR 提交后自动构建并测试所有支持配置的二进制包，
+通过后发布到 Artifactory 托管的 ConanCenter 仓库。
+
+\subsubsection*{Vcpkg}
+
+Vcpkg 的官方保证体现在两个层面：\textbf{tested triplets}（测试覆盖）
+和\textbf{binary caching}（二进制缓存完整性）。
+
+\textbf{Tested triplets}：微软对约 15 个 triplet 进行全量回归测试。
+每当某个 port 更新时，CI 会重新构建\textbf{所有依赖该 port 的其他 port}，
+确保更新不会破坏整个包目录。
+
+\begin{table}[H]
+\centering
+\caption{Vcpkg 官方测试的 triplets}
+\label{tab:vcpkg-triplets}
+\small
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{平台} & \textbf{Tested triplets} \\
+\midrule
+Windows & x64-windows, x86-windows, x64-windows-static,
+          x64-windows-static-md, arm64-windows, x64-windows-release \\
+UWP     & x64-uwp, arm64-uwp \\
+Linux   & x64-linux \\
+macOS   & x64-osx, arm64-osx \\
+Android & arm-neon-android, x64-android, arm64-android \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textbf{Binary caching}：缓存键由 port 定义文件和目标 triplet 的 SHA512 哈希计算。
+缓存命中时，通过 SHA512 校验二进制完整性。支持多种缓存后端：
+本地文件系统（默认）、NuGet、Azure Artifacts、AWS S3 等。
+实测重复构建提速 70--90\%。
+
+\begin{note}[ title={Vcpkg baseline 保证}]
+\texttt{vcpkg.json} 中的 \texttt{"builtin-baseline"} 字段锁定 vcpkg 仓库的
+特定 commit hash，保证版本解析的\textbf{确定性}：相同的 baseline 必然
+解析到相同的包版本组合。但 baseline 只保证\textbf{版本确定性}，
+不保证不同版本间的 API 兼容性。
+Lock 文件（\texttt{vcpkg.json} + \texttt{vcpkg-configuration.json}）
+捕获精确版本和哈希，提交到版本控制可确保团队和 CI/CD 的一致性。
+\end{tcolorbox}
+
+\subsubsection*{XMake xmake-repo}
+
+xmake-repo 通过 GitHub Actions 运行\textbf{广泛的跨平台 CI}，
+覆盖面在几个方案中最为宽广：
+
+\begin{table}[H]
+\centering
+\caption{xmake-repo CI 覆盖平台}
+\label{tab:xmake-ci}
+\small
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{平台} & \textbf{CI workflow} \\
+\midrule
+Windows  & x64, ARM64 \\
+Linux    & Ubuntu x64, Ubuntu ARM64, Ubuntu Clang \\
+macOS    & ARM64, x86\_64 \\
+Android  & ARM, x64（含 Windows 宿主交叉编译） \\
+其他     & FreeBSD, WebAssembly, MinGW/MSYS2, iOS（手动触发） \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+自 xmake v2.5.5 起，PR 合入官方仓库后，GitHub Actions 会预编译二进制包
+并存储到 GitHub Releases。用户安装时自动尝试下载预编译包，
+未命中则回退到本地源码编译。但 xmake-repo \textbf{没有正式的
+二进制缓存完整性保证文档}，依赖版本 + 平台匹配机制。
+
+\subsubsection*{CPM.cmake 与 FetchContent}
+
+CMake FetchContent 本身\textbf{不提供任何编译结果保证}。
+它只是一个源码下载和构建集成的工具，构建正确性完全取决于
+上游项目的 CMake 支持质量。用户可以通过 \texttt{URL\_HASH} 参数
+手动启用 SHA256/SHA512 校验，但这是可选配置而非默认行为。
+
+CPM.cmake 在此基础上增加了以下完整性机制：
+
+\begin{itemize}[nosep]
+  \item \textbf{Git commit hash 锁定}：推荐使用不可变的 commit hash
+        而非 tag/branch，确保每次拉取的代码完全相同。
+  \item \textbf{归档哈希校验}：通过 URL 附加 \texttt{\#MD5=...}
+        校验下载的归档文件完整性。
+  \item \textbf{缓存键}：本地缓存目录名默认为
+        \texttt{CPMAddPackage()} 参数的哈希值，
+        相同调用参数必然命中相同缓存。
+\end{itemize}
+
+\subsubsection*{Git Submodule / SVN Externals}
+
+版本控制方案\textbf{不提供编译层面的保证}。
+commit hash 锁定保证源码版本的确定性，但编译是否正确、
+是否能在目标平台上构建，完全取决于用户自行验证。
+这也是该方案最透明但最需要手动维护的原因。
+
+\subsubsection*{保证等级汇总}
+
+\begin{table}[H]
+\centering
+\caption{各方案官方编译保证等级汇总}
+\label{tab:guarantee-summary}
+\small
+\begin{tabularx}{\textwidth}{l X X X}
+\toprule
+\textbf{方案} & \textbf{预编译二进制} & \textbf{CI 回归测试} & \textbf{完整性校验} \\
+\midrule
+CCI       & Release, 3 种标准配置 & 每个 PR 全配置构建    & SHA1 package\_id \\
+Vcpkg     & 用户构建 + 二进制缓存  & 全目录回归（15 triplets） & SHA512 缓存键 \\
+xmake-repo & 云端预编译（GitHub Releases） & 10+ 平台 CI & 版本 + 平台匹配（无正式文档） \\
+CPM.cmake & 无                    & 无                  & MD5/commit hash \\
+FetchContent & 无                  & 无                  & URL\_HASH（可选） \\
+Git/SVN   & 无                    & 无                  & commit/revision 锁定 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{note}[ title={关键区分}]
+``有预编译二进制''和``有编译保证''是两个不同的概念。
+Conan Center 提供预编译二进制，但仅覆盖 3 种标准 Release 配置；
+Vcpkg 不集中提供预编译二进制，但对 15 个 triplet 进行全目录回归测试，
+保证了更新一个 port 不会破坏其他任何 port 的编译。
+两者各有侧重：Conan 侧重\textbf{开箱即用的构建速度}，
+Vcpkg 侧重\textbf{包目录整体的编译一致性}。
+\end{tcolorbox}
+
+% =====================================================================
+\section{场景一：指定平台应用程序/库}
+% =====================================================================
+
+此场景指仅在单一平台（如 Windows x64 + MSVC、Linux x64 + GCC）上开发和部署的应用或库。
+平台固定意味着无需处理跨平台适配，重点关注开发效率和构建速度。
+
+% ---------------------------------------------------------------------
+\subsection{各方案在此场景下的表现}
+% ---------------------------------------------------------------------
+
+\textbf{Conan} 在此场景下可以充分发挥二进制缓存优势。
+配置一个 Conan profile 指向当前平台的工具链，首次构建后所有依赖都从缓存获取，
+后续构建几乎是瞬时的。对于企业项目，搭建私有 Conan 仓库（如 Artifactory）
+可以让团队成员共享预编译二进制包。
+
+\begin{lstlisting}[language=Bash, caption={Conan 单平台使用流程}]
+# -- 创建默认 profile（自动检测当前平台）
+conan profile detect
+
+# -- 安装依赖（二进制优先，未命中则从源码构建）
+conan install . --build=missing
+
+# -- 构建项目
+conan build .
+\end{lstlisting}
+
+\textbf{Vcpkg} 在单平台场景下同样表现良好，尤其是 Windows + MSVC 环境
+（Vcpkg 最初就是为这个场景设计的）。Manifest 模式下，每个项目有独立的依赖声明，
+不会污染全局环境。Vcpkg 的二进制缓存（\texttt{VCPKG\_BINARY\_CACHING}）
+可以避免重复编译。
+
+\textbf{CMake FetchContent} 是单平台场景下最轻量的选择。
+无需安装额外工具，只需 CMake 本身即可管理依赖。
+缺点是首次配置时需要下载和编译所有依赖，且没有跨项目的缓存共享。
+CPM.cmake 通过本地缓存部分解决了这个问题。
+
+\textbf{XMake} 在单平台场景下提供了类似 Cargo 的开箱即用体验。
+\texttt{xmake} 一条命令同时完成依赖安装和项目构建，对新手友好。
+但团队需要统一使用 XMake 作为构建系统，无法与 CMake 项目混用。
+
+\textbf{Git Submodule} 在此场景下是最简单可靠的方案。
+所有依赖随项目版本控制，无需额外工具。缺点是大型库的 clone 时间较长，
+且依赖更新需要手动操作。
+
+\begin{warning}[ title={指定平台场景下的常见陷阱}]
+即使只面向单一平台，也要注意 ABI 兼容性。例如 Conan 的
+\texttt{settings.compiler.libcxx} 在 Linux 上区分 \texttt{libstdc++} 和
+\texttt{libstdc++11}，混用会导致链接错误。建议在 profile 中显式指定所有 settings。
+\end{tcolorbox}
+
+% ---------------------------------------------------------------------
+\subsection{指定平台场景推荐}
+% ---------------------------------------------------------------------
+
+\begin{table}[H]
+\centering
+\caption{指定平台场景推荐矩阵}
+\label{tab:scenario1}
+\small
+\begin{tabularx}{\textwidth}{l X l}
+\toprule
+\textbf{方案} & \textbf{适用情况} & \textbf{推荐度} \\
+\midrule
+Conan      & 依赖多、需要二进制缓存、团队协作 & $\star\star\star\star\star$ \\
+Vcpkg      & Windows/MSVC 为主、依赖丰富   & $\star\star\star\star$ \\
+FetchContent & 依赖少（3--5 个）、快速原型  & $\star\star\star\star$ \\
+XMake      & 新项目、接受非 CMake 构建系统 & $\star\star\star$ \\
+Git Sub    & 依赖极少、对构建确定性要求高   & $\star\star\star$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% =====================================================================
+\section{场景二：跨平台应用/库}
+% =====================================================================
+
+跨平台是 C++ 包管理的核心挑战。同一个项目需要在 Windows/Linux/macOS 上编译，
+可能需要处理不同编译器（MSVC/GCC/Clang）、不同 C 标准库（glibc/musl/MSVCRT）、
+不同图形后端（Win32/X11/Cocoa）等差异。
+
+% ---------------------------------------------------------------------
+\subsection{各方案的跨平台策略}
+% ---------------------------------------------------------------------
+
+\textbf{Conan} 通过多 profile 机制管理跨平台配置。每个 profile 独立定义
+操作系统、编译器、架构等 settings，同一个依赖的不同配置在本地缓存中互不干扰。
+对于需要跨平台分发的库，可以上传多个配置的二进制包到远程仓库。
+
+\begin{lstlisting}[language=Bash, caption={Conan 多 profile 构建}]
+# -- Linux GCC Release
+conan create . -pr:b linux-gcc-release -pr:h linux-gcc-release
+
+# -- Windows MSVC Debug
+conan create . -pr:b win-msvc-debug -pr:h win-msvc-debug
+
+# -- macOS Apple Clang Release (ARM64)
+conan create . -pr:b macos-arm64-release -pr:h macos-arm64-release
+\end{lstlisting}
+
+Conan 的 \texttt{conandata.yml} 允许为同一版本的不同平台定义不同的源码 URL 和补丁：
+
+\begin{lstlisting}[language=Python, caption={conandata.yml 多平台源码}]
+sources:
+  "1.0.0":
+    url:
+      "Windows": "https://example.com/lib-1.0.0-win.zip"
+      "Linux":   "https://example.com/lib-1.0.0-linux.tar.gz"
+    sha256:
+      "Windows": "abc123..."
+      "Linux":   "def456..."
+patches:
+  "1.0.0":
+    - patch_file: "patches/msvc-fix.patch"
+      patch_type: "portability"
+      base_path: "source_subfolder"
+\end{lstlisting}
+
+\textbf{Vcpkg} 的 triplet 机制天然为跨平台设计。同一个 \texttt{vcpkg.json}
+可以通过不同 triplet 安装不同平台的包。Vcpkg 的 ports 脚本通常已经处理了
+主流平台的差异（如条件编译选项、平台特定依赖）。
+
+\begin{lstlisting}[language=Bash, caption={Vcpkg 跨平台安装}]
+# -- 三个平台分别安装
+vcpkg install fmt:x64-windows fmt:x64-linux fmt:arm64-osx
+
+# -- CMake 集成时指定 triplet
+cmake -B build-win -S . \
+  -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake \
+  -DVCPKG_TARGET_TRIPLET=x64-windows
+\end{lstlisting}
+
+\textbf{CMake FetchContent} 在跨平台场景下的表现取决于各个依赖库本身的跨平台支持。
+FetchContent 本身不做平台适配，但如果目标库有完善的 CMake 支持，
+通常能在各平台上正确编译。挑战在于：某些库需要在不同平台上拉取不同的子依赖，
+FetchContent 无法自动处理这种条件逻辑。
+
+\textbf{XMake} 对跨平台有较好的抽象，通过 \texttt{set\_plat} 和 \texttt{set\_arch}
+在 \texttt{xmake.lua} 中声明目标平台，XMake 会自动处理平台相关的编译选项。
+但 XMake 的包仓库覆盖率不如 Conan 和 Vcpkg。
+
+\textbf{Git Submodule} 在跨平台场景下需要开发者手动处理所有平台差异。
+如果子模块本身支持多平台（如通过 CMake 条件编译），这种方式可行但维护成本高。
+
+\begin{note}[ title={跨平台 CI/CD 建议}]
+对于跨平台项目，建议在 CI 中为每个目标平台维护独立的构建矩阵。
+Conan 和 Vcpkg 都可以与 GitHub Actions / GitLab CI 良好集成，
+利用二进制缓存可以显著缩短 CI 构建时间。
+\end{tcolorbox}
+
+% ---------------------------------------------------------------------
+\subsection{跨平台场景推荐}
+% ---------------------------------------------------------------------
+
+\begin{table}[H]
+\centering
+\caption{跨平台场景推荐矩阵}
+\label{tab:scenario2}
+\small
+\begin{tabularx}{\textwidth}{l X l}
+\toprule
+\textbf{方案} & \textbf{适用情况} & \textbf{推荐度} \\
+\midrule
+Conan      & 需要二进制分发、多配置共存、大型项目 & $\star\star\star\star\star$ \\
+Vcpkg      & 主流平台支持、依赖种类多          & $\star\star\star\star\star$ \\
+FetchContent & 依赖自身跨平台良好、中小型项目    & $\star\star\star$ \\
+XMake      & 接受 XMake 生态、中小型项目       & $\star\star\star$ \\
+Git Sub    & 依赖极少、跨平台差异手动可控       & $\star\star$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% =====================================================================
+\section{场景三：系统定制化}
+% =====================================================================
+
+系统定制化场景通常出现在以下情况：企业或组织需要对第三方库进行深度修改
+（如安全补丁、性能优化、功能裁剪），或者需要维护内部私有库与外部库的统一管理。
+这要求包管理器能够灵活地覆盖和替换依赖。
+
+% ---------------------------------------------------------------------
+\subsection{各方案的定制能力}
+% ---------------------------------------------------------------------
+
+\textbf{Conan} 提供了多层定制机制：
+
+\begin{itemize}[nosep]
+  \item \textbf{conanfile.py 中的 patch 机制}：通过 \texttt{patches} 在
+        \texttt{conandata.yml} 中定义补丁，在 \texttt{source()} 阶段自动应用。
+  \item \textbf{conan override}：在消费端通过 \texttt{replace\_requires} 强制
+        替换某个传递依赖的版本。
+  \item \textbf{本地编辑}：\texttt{conan editable} 允许将本地目录注册为某个包的来源，
+        修改立即生效，无需重新打包。
+  \item \textbf{私有仓库}：搭建内部 Artifactory 或 \texttt{conan\_server}，
+        托管定制版本的包。
+\end{itemize}
+
+\begin{lstlisting}[language=Conan, caption={Conan 依赖覆盖}]
+class MyApp(ConanFile):
+    requires = "mylib/2.0"
+
+    def configure(self):
+        # -- 强制将 mylib 的依赖 zlib 升级到 1.3.1
+        self.requires("zlib/1.3.1", override=True)
+        # -- 或者替换传递依赖
+        self.replace_requires("zlib/[>=1.2 <1.3]", "zlib/1.3.1")
+\end{lstlisting}
+
+\textbf{Vcpkg} 的定制能力体现在 port 覆写（overlay ports）机制：
+将自定义的 port 目录放在指定路径，Vcpkg 会优先使用 overlay 中的版本，
+覆盖内置 ports。
+
+\begin{lstlisting}[language=Bash, caption={Vcpkg overlay ports}]
+# -- 目录结构
+# my-overlay-ports/
+#   openssl/
+#     vcpkg.json
+#     portfile.cmake    # -- 自定义构建脚本
+#   mylib/
+#     vcpkg.json
+#     portfile.cmake    # -- 内部私有库
+
+# -- 使用 overlay 构建
+vcpkg install --overlay-ports=./my-overlay-ports
+\end{lstlisting}
+
+\textbf{CMake FetchContent} 的定制非常直接：将源码 clone 到本地，
+修改后通过 \texttt{FetchContent\_Declare} 指向本地路径或修改后的 Git URL。
+由于依赖以源码形式集成到项目中，任何修改都可以直接反映在构建中。
+
+\begin{lstlisting}[language=CMake, caption={FetchContent 指向本地修改}]
+# -- 使用本地修改后的版本
+FetchContent_Declare(
+  mylib
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/mylib-patched
+)
+FetchContent_MakeAvailable(mylib)
+\end{lstlisting}
+
+\textbf{XMake} 支持 \texttt{add\_repositories} 添加自定义包仓库，
+也支持在 \texttt{xmake.lua} 中直接内联包定义（类似 overlay）。
+对于深度定制的场景，可以直接修改 \texttt{xmake-repo} 中的包描述。
+
+\textbf{Git Submodule} 天然支持定制：fork 目标仓库，修改后作为 submodule 引用。
+这是最透明的方式，所有修改都在版本控制中清晰可追溯。
+缺点是需要自行维护 fork 与上游的同步（rebase/merge）。
+
+\begin{table}[H]
+\centering
+\caption{系统定制化能力对比}
+\label{tab:scenario3}
+\small
+\begin{tabularx}{\textwidth}{l X X}
+\toprule
+\textbf{方案} & \textbf{定制机制} & \textbf{维护成本} \\
+\midrule
+Conan      & patch/override/editable/私有仓库 & 中等（需维护 recipe 和仓库） \\
+Vcpkg      & overlay ports + 自定义 triplet   & 低-中（port 脚本独立维护） \\
+FetchContent & 本地源码修改 + fork URL        & 低（直接修改，无额外抽象层） \\
+XMake      & 自定义仓库 + 内联包定义          & 低（Lua 脚本简洁） \\
+Git/SVN    & fork + submodule/external        & 取决于 fork 同步频率 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ---------------------------------------------------------------------
+\subsection{系统定制场景推荐}
+% ---------------------------------------------------------------------
+
+\begin{table}[H]
+\centering
+\caption{系统定制化场景推荐矩阵}
+\label{tab:scenario3-rec}
+\small
+\begin{tabularx}{\textwidth}{l X l}
+\toprule
+\textbf{方案} & \textbf{适用情况} & \textbf{推荐度} \\
+\midrule
+Conan      & 大规模定制、需要二进制分发、多团队协作 & $\star\star\star\star$ \\
+Vcpkg      & 中等规模定制、overlay 足够         & $\star\star\star\star$ \\
+FetchContent & 少量库需要修改、快速迭代           & $\star\star\star\star\star$ \\
+XMake      & XMake 项目、少量定制              & $\star\star\star$ \\
+Git Sub    & 深度定制、需要完整版本历史          & $\star\star\star\star$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% =====================================================================
+\section{场景四：嵌入式 Linux/Unix}
+% =====================================================================
+
+嵌入式场景的核心约束包括：交叉编译工具链（如 ARM/AArch64 GCC、RISC-V GCC）、
+有限的系统资源（存储空间、内存）、定制化的 C 库（musl、uClibc、newlib）、
+以及 Buildroot/Yocto 等嵌入式构建框架的集成需求。
+
+% ---------------------------------------------------------------------
+\subsection{交叉编译工具链适配}
+% ---------------------------------------------------------------------
+
+\textbf{Conan} 通过 profile 文件定义完整的交叉编译环境：
+
+\begin{lstlisting}[language=Bash, caption={Conan 交叉编译 profile}]
+# -- arm-linux-profile
+[settings]
+os=Linux
+arch=armv7hf
+compiler=gcc
+compiler.version=12
+compiler.libcxx=libstdc++11
+build_type=Release
+
+[conf]
+tools.build:compiler_executables={"c": "arm-linux-gnueabihf-gcc",
+                                  "cxx": "arm-linux-gnueabihf-g++"}
+tools.build:sysroot=/opt/arm-sysroot
+tools.build:cflags=["-mfloat-abi=hard", "-mfpu=neon"]
+
+[buildenv]
+PATH+=(path)/opt/arm-toolchain/bin
+\end{lstlisting}
+
+\begin{lstlisting}[language=Bash, caption={使用交叉编译 profile 构建}]
+conan install . -pr:b default -pr:h arm-linux-profile --build=missing
+conan build . -pr:h arm-linux-profile
+\end{lstlisting}
+
+Conan 区分 \texttt{-pr:b}（构建平台，即宿主机）和 \texttt{-pr:h}（宿主平台，即目标机），
+确保交叉编译的工具（如代码生成器）在宿主机上运行，而库在目标机上编译。
+
+\textbf{Vcpkg} 通过自定义 triplet 指定交叉编译工具链：
+
+\begin{lstlisting}[language=CMake, caption={Vcpkg 嵌入式 triplet}]
+# -- arm-linux-musl.cmake
+set(VCPKG_TARGET_ARCHITECTURE arm)
+set(VCPKG_CRT_LINKAGE dynamic)
+set(VCPKG_LIBRARY_LINKAGE static)
+set(VCPKG_CMAKE_SYSTEM_NAME Linux)
+set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE
+    "/opt/arm-toolchain/arm-linux-musleabihf.cmake")
+
+# -- 静态链接所有库，适合嵌入式部署
+set(VCPKG_BUILD_TYPE release)
+\end{lstlisting}
+
+\textbf{CMake FetchContent} 天然兼容交叉编译，因为 FetchContent 只是将依赖
+纳入 CMake 构建树，交叉编译的配置通过 CMake 变量传递到所有子项目。
+但前提是依赖库的 CMakeLists.txt 正确处理了交叉编译场景。
+
+\begin{lstlisting}[language=Bash, caption={FetchContent + 交叉编译 toolchain}]
+cmake -B build-arm \
+  -DCMAKE_TOOLCHAIN_FILE=/opt/arm-toolchain/arm-linux-gnueabihf.cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -S .
+cmake --build build-arm
+\end{lstlisting}
+
+\textbf{XMake} 的交叉编译支持相对简洁：
+
+\begin{lstlisting}[language=Bash, caption={XMake 嵌入式交叉编译}]
+# -- 配置目标平台和工具链
+xmake f -p linux -a armv7 \
+  --toolchain=arm-linux-gnueabihf \
+  --sdk=/opt/arm-toolchain
+
+# -- 构建
+xmake build
+\end{lstlisting}
+
+% ---------------------------------------------------------------------
+\subsection{嵌入式构建框架集成}
+% ---------------------------------------------------------------------
+
+嵌入式 Linux 通常使用 Buildroot 或 Yocto/OpenEmbedded 作为系统级构建框架。
+这些框架有自己的包管理机制（Buildroot 的 \texttt{.mk} 文件、Yocto 的 BitBake recipe）。
+
+\begin{table}[H]
+\centering
+\caption{嵌入式构建框架集成对比}
+\label{tab:embedded-framework}
+\small
+\begin{tabularx}{\textwidth}{l X}
+\toprule
+\textbf{方案} & \textbf{与 Buildroot/Yocto 的集成方式} \\
+\midrule
+Conan      & 通过 \texttt{conan-center-index} 的 recipe 可转换为 Yocto recipe；
+             Buildroot 需要手动编写 \texttt{.mk} 调用 Conan \\
+Vcpkg      & 与 Buildroot/Yocto 无直接集成，但 Vcpkg 的 port 结构可作为参考 \\
+FetchContent & 将依赖编译集成到项目的 CMake 构建中，Buildroot/Yocto 通过
+               \texttt{cmake-package} 基础设施调用 \\
+XMake      & 无直接集成，需要手动桥接 \\
+Git/SVN    & 最简单：依赖源码随项目分发，Buildroot/Yocto 直接编译 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{warning}[ title={嵌入式场景下的 ABI 注意事项}]
+嵌入式 Linux 常用的 C 库变体（glibc、musl、uClibc）之间 ABI 不兼容。
+Conan 的 \texttt{settings} 和 Vcpkg 的 triplet 需要正确反映目标系统的 C 库选择。
+使用 musl 时，建议在 Conan profile 的 \texttt{[conf]} 中显式设置
+\texttt{tools.build:cflags} 和 \texttt{tools.build:sharedlinkflags}。
+\end{tcolorbox}
+
+% ---------------------------------------------------------------------
+\subsection{编译系统本身：使用原生构建基础设施}
+% ---------------------------------------------------------------------
+
+前述讨论均假设开发者是在目标系统\textbf{之上}构建应用程序或库。
+但有一类场景根本不同：开发者的工作本身就是构建系统——
+定制 Linux 发行版（如 Buildroot/Yocto 产物）、Android 系统层（AOSP）、
+FreeBSD/OpenBSD 基础系统等。在这些场景中，你编译的不是"运行在系统上的软件"，
+而是\textbf{系统本身的组成部分}。
+
+\begin{warning}[ title={核心原则：绝对不建议修改原生构建基础设施}]
+当你的构建目标是系统本身时，\textbf{必须}使用系统原生的包管理和构建机制，
+绝对不建议引入 Conan、Vcpkg、FetchContent 等外部包管理器来替代或修改
+系统原有的构建流程。原因如下：
+
+\begin{itemize}[nosep]
+  \item 系统级构建框架（Buildroot 的 \texttt{.mk} + \texttt{Config.in}、
+        Yocto 的 BitBake recipe、AOSP 的 \texttt{Android.bp/Android.mk}）
+        经过精心设计，处理了包之间的编译顺序、依赖图谱、sysroot 隔离、
+        staging 安装、交叉编译工具链传递等全局约束。
+  \item 外部包管理器无法感知这些全局约束。强行引入会导致：
+        构建顺序冲突、sysroot 污染、ABI 不一致、
+        以及系统映像中库的重复或版本混乱。
+  \item 系统级构建的产物是整个文件系统映像（rootfs），
+        每个包的编译选项（如 \texttt{--prefix}、\texttt{--sysroot}、
+        优化级别、安全加固选项）都必须全局统一。
+        外部包管理器引入的独立编译配置会破坏这种一致性。
+\end{itemize}
+\end{tcolorbox}
+
+\subsubsection*{各系统级构建框架的原生机制}
+
+\textbf{Buildroot} 使用纯 Makefile 基础设施。每个包对应一个目录，
+包含 \texttt{Config.in}（Kconfig 菜单项）和 \texttt{<pkg>.mk}
+（下载、编译、安装规则）。Buildroot 会自动解析包间依赖、
+管理 staging 目录、处理交叉编译 sysroot。
+
+\begin{lstlisting}[language=CMake, caption={Buildroot 包定义示例: package/mylib/mylib.mk}]
+################################################################################
+#
+# mylib
+#
+################################################################################
+
+MYLIB_VERSION = 1.0.0
+MYLIB_SITE = https://github.com/example/mylib/archive/v$(MYLIB_VERSION)
+MYLIB_LICENSE = MIT
+MYLIB_INSTALL_STAGING = YES
+MYLIB_DEPENDENCIES = zlib
+
+$(eval $(cmake-package))
+\end{lstlisting}
+
+\textbf{Yocto/OpenEmbedded} 使用 BitBake recipe（\texttt{.bb} 文件）。
+每个 recipe 定义了源码获取、编译、打包的完整流程，
+通过 \texttt{DEPENDS} 和 \texttt{RDEPENDS} 区分编译期与运行时依赖。
+
+\begin{lstlisting}[language=Bash, caption={Yocto recipe 示例: mylib\_1.0.0.bb}]
+SUMMARY = "My library"
+LICENSE = "MIT"
+LIC_FILES_CHKSUM = "file://LICENSE;md5=abc123..."
+
+SRC_URI = "https://github.com/example/mylib/archive/v${PV}.tar.gz"
+SRC_URI[sha256sum] = "def456..."
+
+DEPENDS = "zlib"
+
+inherit cmake
+
+# -- staging 安装，供其他包编译时链接
+SYSROOT_DIRS += "${libdir} ${includedir}"
+\end{lstlisting}
+
+\textbf{Android (AOSP)} 使用 \texttt{Android.bp}（Soong 构建系统）
+或 \texttt{Android.mk}（传统 Make）。AOSP 的构建系统统一管理
+所有系统组件的编译，包括平台库、HAL、系统服务等。
+
+\begin{lstlisting}[language=Bash, caption={Android.bp 模块示例}]
+cc_library {
+    name: "libmylib",
+    srcs: ["src/*.cpp"],
+    shared_libs: ["libz"],
+    export_include_dirs: ["include"],
+    cflags: ["-Wall", "-Werror"],
+    // -- 安装到系统分区的特定目录
+    install_in_system: true,
+}
+\end{lstlisting}
+
+\subsubsection*{正确的做法}
+
+\begin{enumerate}[nosep]
+  \item \textbf{直接使用原生机制定义包}：将你的库或应用编写为 Buildroot \texttt{.mk}、
+        Yocto \texttt{.bb}、或 AOSP \texttt{Android.bp}，
+        完全融入系统构建框架的依赖管理和编译流程。
+
+  \item \textbf{源码管理使用版本控制}：库的源码通过 Git/SVN 管理，
+        系统构建框架通过 URL + 版本哈希拉取源码编译。
+        这与本文第五种方案（Git Submodule / SVN Externals）的理念一致，
+        但集成层在系统构建框架而非 CMake/XMake。
+
+  \item \textbf{应用层与系统层严格分离}：如果你的项目既有系统层组件
+        又有应用层组件，应用层\textbf{在系统编译完成后}运行在目标系统上，
+        此时可以使用 Conan/Vcpkg 等管理应用层的依赖。
+        但系统层的组件必须走原生构建流程。
+\end{enumerate}
+
+\begin{note}[ title={判断标准}]
+问自己一个问题：你的构建产物是\textbf{运行在目标系统上的程序}，
+还是\textbf{目标系统本身}？如果是后者，就必须使用原生构建基础设施，
+没有任何例外。试图用 Conan/Vcpkg 构建系统组件，
+就像在操作系统的内核编译中引入 npm——
+技术上或许可行，工程上绝对是灾难。
+\end{tcolorbox}
+
+% ---------------------------------------------------------------------
+\subsection{嵌入式场景推荐}
+% ---------------------------------------------------------------------
+
+\begin{table}[H]
+\centering
+\caption{嵌入式 Linux/Unix 场景推荐矩阵}
+\label{tab:scenario4}
+\small
+\begin{tabularx}{\textwidth}{l X l}
+\toprule
+\textbf{方案} & \textbf{适用情况} & \textbf{推荐度} \\
+\midrule
+Conan      & 需要二进制缓存、多工具链管理       & $\star\star\star\star$ \\
+Vcpkg      & 静态链接、自定义 triplet 足够       & $\star\star\star\star$ \\
+FetchContent & 依赖少、与 Buildroot/Yocto 集成  & $\star\star\star\star\star$ \\
+XMake      & 纯 XMake 项目、不需要 OS 框架      & $\star\star\star$ \\
+Git Sub    & 极致控制、与 Buildroot/Yocto 原生集成 & $\star\star\star\star$ \\
+\midrule
+\multicolumn{3}{l}{\textit{编译系统本身（定制发行版 / Android / BSD）：必须使用原生构建框架，禁止外部包管理器}} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% =====================================================================
+\section{综合对比与选型决策}
+% =====================================================================
+
+% ---------------------------------------------------------------------
+\subsection{综合评分}
+% ---------------------------------------------------------------------
+
+\begin{table}[H]
+\centering
+\caption{五种方案在四个场景下的综合评分（满分 5 分）}
+\label{tab:overall}
+\small
+\begin{tabularx}{\textwidth}{l c c c c c}
+\toprule
+\textbf{场景} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{FetchContent} & \textbf{XMake} & \textbf{Git/SVN} \\
+\midrule
+指定平台     & 5 & 4 & 4 & 3 & 3 \\
+跨平台       & 5 & 5 & 3 & 3 & 2 \\
+系统定制     & 4 & 4 & 5 & 3 & 4 \\
+嵌入式       & 4 & 4 & 5 & 3 & 4 \\
+\midrule
+\textbf{总分} & \textbf{18} & \textbf{17} & \textbf{17} & \textbf{12} & \textbf{13} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{note}[ title={评分说明}]
+评分基于三个维度加权：机制完备性（权重 40\%）、生态成熟度（权重 30\%）、
+学习成本与易用性（权重 30\%）。FetchContent 在系统定制和嵌入式场景得分较高，
+是因为其"无额外抽象层"的特性在这些场景下反而是优势。
+Conan 和 Vcpkg 的综合分最高，反映了它们作为专用包管理器在功能完备性上的领先。
+\end{tcolorbox}
+
+% ---------------------------------------------------------------------
+\subsection{选型决策树}
+% ---------------------------------------------------------------------
+
+以下为实际项目选型的决策建议：
+
+\begin{enumerate}[nosep]
+  \item \textbf{项目已有 CMake 构建系统，且依赖数量 > 10}：
+        优先选择 Conan 或 Vcpkg。Conan 适合需要二进制分发的团队；
+        Vcpkg 适合微软生态或以 Windows 为主的项目。
+
+  \item \textbf{项目依赖少（3--5 个），追求零额外工具}：
+        使用 CMake FetchContent（或 CPM.cmake）。
+        简单、无外部依赖、与 CMake 原生集成。
+
+  \item \textbf{需要对多个依赖进行深度修改}：
+        FetchContent 指向本地 fork，或 Git Submodule 管理。
+        修改透明，版本控制清晰。
+
+  \item \textbf{嵌入式项目，使用 Buildroot/Yocto}：
+        FetchContent + Git Submodule 组合，让依赖随项目分发，
+        通过 CMake 集成到 Buildroot/Yocto 构建流程。
+
+  \item \textbf{编译系统本身（定制 Linux 发行版、Android 系统层、BSD 基础系统）}：
+        \textbf{绝对不要}使用 Conan、Vcpkg、FetchContent 等外部包管理器。
+        必须使用系统原生的构建基础设施（Buildroot \texttt{.mk}、
+        Yocto BitBake recipe、AOSP \texttt{Android.bp}），
+        所有组件的编译选项和依赖关系由系统构建框架统一管理。
+
+  \item \textbf{新项目，愿意采用新构建系统}：
+        XMake 提供了构建 + 包管理一体化的最简体验，适合个人项目和小型团队。
+
+  \item \textbf{大型企业项目，多团队共享依赖}：
+        Conan + 私有 Artifactory 仓库，通过二进制缓存最大化构建效率。
+\end{enumerate}
+
+% ---------------------------------------------------------------------
+\subsection{混合使用策略}
+% ---------------------------------------------------------------------
+
+在实际工程中，混合使用多种方案是常见且合理的做法：
+
+\begin{itemize}[nosep]
+  \item \textbf{Conan/Vcpkg + FetchContent}：用 Conan 或 Vcpkg 管理
+        大型第三方库（Boost、Qt、OpenCV），用 FetchContent 引入
+        轻量级 header-only 库（如 \texttt{tl::optional}、\texttt{magic\_enum}）。
+  \item \textbf{Vcpkg + Git Submodule}：Vcpkg 管理标准库，
+        Git Submodule 管理需要深度定制的内部库。
+  \item \textbf{FetchContent + Git Submodule}：FetchContent 管理
+        版本稳定的外部依赖，Git Submodule 管理频繁修改的内部依赖。
+\end{itemize}
+
+\begin{note}[ title={混合使用的关键原则}]
+避免同一个库同时被两种机制管理（如 Conan 安装了 fmt，FetchContent 又拉取了一份），
+这会导致链接时的符号冲突或 ABI 不一致。建议在 CMakeLists.txt 中统一使用
+\texttt{find\_package} 或 \texttt{FetchContent} 二选一策略，
+并在项目文档中明确记录依赖来源。
+\end{tcolorbox}
+
+% =====================================================================
+\section{附录：各方案版本与参考资源}
+% =====================================================================
+
+\begin{table}[H]
+\centering
+\caption{各方案版本信息与参考资源}
+\label{tab:resources}
+\small
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{方案} & \textbf{参考版本} & \textbf{官方资源} \\
+\midrule
+Conan      & 2.x       & \url{https://conan.io} / \url{https://conan.io/center} \\
+Vcpkg      & 2025.x    & \url{https://vcpkg.io} / \url{https://github.com/microsoft/vcpkg} \\
+FetchContent & CMake 3.24+ & \url{https://cmake.org/cmake/help/latest/module/FetchContent.html} \\
+CPM.cmake  & 0.40.x    & \url{https://github.com/cpm-cmake/CPM.cmake} \\
+XMake      & 2.9.x     & \url{https://xmake.io} / \url{https://github.com/xmake-io/xmake} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\end{document}

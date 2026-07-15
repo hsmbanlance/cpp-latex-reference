@@ -1,0 +1,1532 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+% ---- listing style ----
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,
+    ifstream,ofstream,fstream,iostream,
+    ostream,istream,stringstream,ostringstream,
+    path,filesystem},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+
+% ---- 文档特定语言定义 ----
+\lstdefinelanguage{Cpp23}{%
+  language=[GNU]C++,
+  morekeywords={concept,requires,co_await,co_yield,co_return,consteval,constinit,this},
+  morekeywords=[2]{std},
+}
+\lstset{style=cppstyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,
+  title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,
+  title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,
+  title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,
+  title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,
+  title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={CRTP & PImpl Reference},
+  pdftitle={C++ CRTP 与 PImpl 惯用法},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+% ====================================================================
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════════
+\part{CRTP — 奇异递归模板模式}
+% ══════════════════════════════════════════════════════════════
+
+\section{概述}
+
+CRTP（Curiously Recurring Template Pattern，奇异递归模板模式）是一种将派生类自身作为模板参数传递给基类的技术。它在\textbf{编译期}实现静态多态，避免了虚函数表的运行时开销，广泛应用于以下场景：
+
+\begin{itemize}[leftmargin=2em]
+  \item 静态多态（Static Polymorphism）：编译期接口分发
+  \item 混入（Mixin）：为派生类注入通用功能
+  \item 策略注入：通过基类模板参数组合行为
+  \item 替代虚函数：在性能敏感代码中消除 vtable 开销
+\end{itemize}
+
+\section{传统 CRTP：无显式 \texttt{this}}
+
+\subsection{核心机制}
+
+传统 CRTP 的关键在于基类通过 \texttt{static\_cast} 将 \texttt{this} 指针转换为派生类指针，从而在编译期调用派生类的成员函数：
+
+\begin{lstlisting}[caption={传统 CRTP 基本结构}]
+template <typename Derived>
+class Base {
+public:
+    // 通过 static_cast 向下转型
+    void interface() {
+        // 调用派生类的实现
+        static_cast<Derived*>(this)->implementation();
+    }
+
+    // const 版本
+    void interface() const {
+        static_cast<const Derived*>(this)->implementation();
+    }
+};
+
+class Concrete : public Base<Concrete> {
+public:
+    void implementation() {
+        // 具体实现
+    }
+};
+\end{lstlisting}
+
+\subsection{完整案例：可计数混入}
+
+以下是一个实用的对象计数器混入，每次构造和析构都会自动更新计数：
+
+\begin{lstlisting}[caption={CRTP 计数器混入}]
+template <typename T>
+class Countable {
+    static int count_;
+public:
+    Countable()  { ++count_; }
+    ~Countable() { --count_; }
+
+    // 只读接口
+    static int getCount() { return count_; }
+
+    // 禁止拷贝（防止计数混乱）
+    Countable(const Countable&)            = delete;
+    Countable& operator=(const Countable&) = delete;
+};
+
+// 每个类型拥有独立的静态计数
+template <typename T>
+int Countable<T>::count_ = 0;
+
+// ---- 使用 ----
+class Widget : public Countable<Widget> {
+    std::string name_;
+public:
+    explicit Widget(std::string n) : name_(std::move(n)) {}
+};
+
+class Gadget : public Countable<Gadget> {};
+
+int main() {
+    Widget w1("A"), w2("B"), w3("C");
+    Gadget g1, g2;
+
+    std::cout << "Widgets: " << Widget::getCount()  // 3
+              << ", Gadgets: " << Gadget::getCount() // 2
+              << '\n';
+    // w3 析构后：
+    // Widgets: 2
+}
+\end{lstlisting}
+
+\subsection{完整案例：可克隆接口}
+
+利用 CRTP 实现深拷贝接口，替代虚函数 \texttt{clone()}：
+
+\begin{lstlisting}[caption={CRTP 可克隆混入}]
+template <typename Derived>
+class Cloneable {
+public:
+    // 返回基类指针的多态克隆
+    std::unique_ptr<Cloneable> clone() const {
+        auto p = static_cast<const Derived*>(this);
+        return std::make_unique<Derived>(*p);
+    }
+
+    // 返回具体类型的克隆（更方便）
+    std::unique_ptr<Derived> cloneExact() const {
+        auto p = static_cast<const Derived*>(this);
+        return std::make_unique<Derived>(*p);
+    }
+
+    virtual ~Cloneable() = default;
+};
+
+class Shape : public Cloneable<Shape> {
+    double area_;
+public:
+    explicit Shape(double a) : area_(a) {}
+    double area() const { return area_; }
+};
+
+class Circle : public Cloneable<Circle> {
+    double radius_;
+public:
+    explicit Circle(double r) : radius_(r) {}
+    double area() const { return 3.14159 * radius_ * radius_; }
+};
+\end{lstlisting}
+
+\subsection{完整案例：二元运算符自动生成}
+
+CRTP 的经典用法——从一个运算符自动推导其余运算符：
+
+\begin{lstlisting}[caption={CRTP 运算符混入}]
+template <typename Derived>
+class Comparable {
+public:
+    // 只需派生类实现 operator<
+    friend bool operator>(const Derived& a, const Derived& b) {
+        return b < a;
+    }
+    friend bool operator<=(const Derived& a, const Derived& b) {
+        return !(b < a);
+    }
+    friend bool operator>=(const Derived& a, const Derived& b) {
+        return !(a < b);
+    }
+    friend bool operator==(const Derived& a, const Derived& b) {
+        return !(a < b) && !(b < a);
+    }
+    friend bool operator!=(const Derived& a, const Derived& b) {
+        return !(a == b);
+    }
+};
+
+struct Date : Comparable<Date> {
+    int year, month, day;
+
+    friend bool operator<(const Date& a, const Date& b) {
+        if (a.year  != b.year)  return a.year  < b.year;
+        if (a.month != b.month) return a.month < b.month;
+        return a.day < b.day;
+    }
+};
+
+// 使用：只需实现 <，自动获得 >, <=, >=, ==, !=
+\end{lstlisting}
+
+\subsection{传统 CRTP 的局限}
+
+\begin{itemize}[leftmargin=2em]
+  \item \textbf{\texttt{static\_cast} 不安全}：若派生类未正确继承 \texttt{Base<Derived>}，转换将产生未定义行为
+  \item \textbf{代码可读性差}：\texttt{static\_cast<Derived*>(this)} 遍布基类代码
+  \item \textbf{无法在 CRTP 基类中使用 \texttt{virtual}}：静态多态与动态多态混用时需要额外设计
+  \item \textbf{调试困难}：深层模板实例化的错误信息难以阅读
+\end{itemize}
+
+% --------------------------------------------------------------------------------------------
+\section{C++23 显式对象参数（Deducing \texttt{this}）}
+% --------------------------------------------------------------------------------------------
+
+\subsection{概述}
+
+C++23 引入了\textbf{显式对象参数}（Explicit Object Parameter），也称为 ``Deducing this''。它允许在成员函数参数列表中显式声明 \texttt{this} 对象，从而通过模板推导自动获得正确的类型，完全消除 \texttt{static\_cast}：
+
+\begin{lstlisting}[caption={C++23 显式对象参数语法}]
+struct Widget {
+    // "self" 是显式对象参数
+    // 编译器自动推导其类型为 Widget（或 Widget&、const Widget& 等）
+    void method(this Widget& self, int x) {
+        self.data_ = x;       // 等价于 this->data_ = x
+    }
+
+    void method(this const Widget& self) {
+        std::cout << self.data_;
+    }
+
+private:
+    int data_ = 0;
+};
+\end{lstlisting}
+
+\subsection{CRTP 的 C++23 重写}
+
+使用显式对象参数，CRTP 基类不再需要模板参数，也不再需要 \texttt{static\_cast}：
+
+\begin{lstlisting}[caption={C++23 无模板 CRTP}]
+class Base {
+public:
+    // self 自动推导为实际派生类类型
+    void interface(this auto& self) {
+        self.implementation();    // 直接调用，无需转型
+    }
+
+    void interface(this const auto& self) {
+        self.implementation();
+    }
+
+    // 返回值也可以自动推导
+    auto getValue(this const auto& self) {
+        return self.compute();
+    }
+};
+
+class Concrete : public Base {
+public:
+    void implementation() {
+        std::cout << "Concrete::implementation\n";
+    }
+    int compute() const { return 42; }
+};
+
+class Another : public Base {
+public:
+    void implementation() {
+        std::cout << "Another::implementation\n";
+    }
+    int compute() const { return 99; }
+};
+
+int main() {
+    Concrete c;
+    c.interface();     // 输出: Concrete::implementation
+    std::cout << c.getValue() << '\n';  // 42
+
+    Another a;
+    a.interface();     // 输出: Another::implementation
+    std::cout << a.getValue() << '\n';  // 99
+}
+\end{lstlisting}
+
+\subsection{案例重写：计数器混入（C++23 版）}
+
+\begin{lstlisting}[caption={C++23 计数器混入——无模板}]
+class Countable {
+    int count_ = 0;
+public:
+    void onConstruct(this Countable& self) { ++self.count_; }
+    void onDestruct(this Countable& self)  { --self.count_; }
+    int  getCount(this const Countable& self) { return self.count_; }
+};
+
+// 使用：组合而非继承
+class Widget {
+    Countable counter_;
+    std::string name_;
+public:
+    Widget(std::string n) : name_(std::move(n)) {
+        counter_.onConstruct();
+    }
+    ~Widget() {
+        counter_.onDestruct();
+    }
+    int getCount() const { return counter_.getCount(); }
+};
+\end{lstlisting}
+
+\subsection{案例重写：运算符混入（C++23 版）}
+
+\begin{lstlisting}[caption={C++23 运算符混入}]
+class Comparable {
+public:
+    // 从 operator< 自动推导其余比较运算符
+    friend bool operator>(this const auto& a, const auto& b) {
+        return b < a;
+    }
+    friend bool operator<=(this const auto& a, const auto& b) {
+        return !(b < a);
+    }
+    friend bool operator>=(this const auto& a, const auto& b) {
+        return !(a < b);
+    }
+    friend bool operator==(this const auto& a, const auto& b) {
+        return !(a < b) && !(b < a);
+    }
+    friend bool operator!=(this const auto& a, const auto& b) {
+        return !(a == b);
+    }
+};
+
+struct Version : Comparable {
+    int major, minor, patch;
+
+    friend bool operator<(const Version& a, const Version& b) {
+        if (a.major != b.major) return a.major < b.major;
+        if (a.minor != b.minor) return a.minor < b.minor;
+        return a.patch < b.patch;
+    }
+};
+\end{lstlisting}
+
+\subsection{显式对象参数的额外优势}
+
+\subsubsection{消除 cv-ref 重载样板}
+
+传统写法需要为每种 cv-ref 限定符编写重载，显式对象参数可以用一个模板函数统一处理：
+
+\begin{lstlisting}[caption={消除 cv-ref 重载}]
+// ---- 传统写法：4 个重载 ----
+struct Old {
+    void process() &;
+    void process() const&;
+    void process() &&;
+    void process() const&&;
+};
+
+// ---- C++23：1 个函数 ----
+struct New {
+    void process(this auto&& self) {
+        // self 的类型完美保留了 cv-ref 限定
+        // 可以配合 if constexpr 做分发
+        if constexpr (std::is_const_v<std::remove_reference_t<decltype(self)>>) {
+            // const 路径
+        } else {
+            // 非 const 路径
+        }
+    }
+};
+\end{lstlisting}
+
+\subsubsection{安全递归 Lambda}
+
+\begin{lstlisting}[caption={C++23 递归 Lambda}]
+// 传统递归 Lambda 需要 std::function 或 Y 组合子
+// C++23 可以直接在 lambda 中使用显式 this 参数
+
+auto fib = [](this auto self, int n) -> int {
+    if (n <= 1) return n;
+    return self(n - 1) + self(n - 2);  // self 即 lambda 自身
+};
+
+std::cout << fib(10) << '\n';  // 55
+\end{lstlisting}
+
+\subsection{传统 CRTP 与 C++23 方式对比}
+
+\begin{table}[h]
+\centering
+\caption{传统 CRTP vs C++23 Deducing this}
+\label{tab:crtp-compare}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{特性} & \textbf{传统 CRTP} & \textbf{C++23 显式对象参数} \\
+\midrule
+基类是否需要模板  & 是 (\texttt{Base<Derived>})  & 否 \\
+向下转型          & \texttt{static\_cast}        & 不需要 \\
+类型安全          & 弱（错误继承 = UB）         & 强（编译器推导） \\
+编译错误可读性    & 差（深层模板错误）          & 好 \\
+cv-ref 重载       & 每个需单独写               & 一个 \texttt{auto\&\&} 统一 \\
+标准版本          & C++98 起可用               & C++23 起可用 \\
+递归 Lambda       & 需 \texttt{std::function}   & 原生支持 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\newpage
+
+% ══════════════════════════════════════════════════════════════
+\part{PImpl — 指向实现的指针}
+% ══════════════════════════════════════════════════════════════
+
+\section{概述}
+
+PImpl（Pointer to Implementation，指向实现的指针）是一种将类的公共接口与其内部实现解耦的惯用法。其核心思想是在公共类中仅保留一个指向私有实现类的指针，从而：
+
+\begin{itemize}[leftmargin=2em]
+  \item \textbf{编译防火墙}：头文件中不包含实现细节的依赖，减少编译时间
+  \item \textbf{ABI 稳定性}：实现类的变更不影响公共类的二进制布局
+  \item \textbf{头文件洁净}：用户头文件不暴露内部类型和前向声明
+\end{itemize}
+
+\section{裸指针版本}
+
+\subsection{头文件（\texttt{widget.h}）}
+
+裸指针版本需要手动管理内存，并严格遵守三五法则：
+
+\begin{lstlisting}[caption={PImpl 裸指针版——头文件}]
+// widget.h
+#pragma once
+#include <string>
+
+class Widget {
+public:
+    // 构造函数和析构函数必须在 .cpp 中定义
+    // 因为 Impl 在头文件中是不完整类型
+    Widget(int id, std::string name);
+    ~Widget();
+
+    // 拷贝构造 / 赋值
+    Widget(const Widget& other);
+    Widget& operator=(const Widget& other);
+
+    // 移动构造 / 赋值
+    Widget(Widget&& other) noexcept;
+    Widget& operator=(Widget&& other) noexcept;
+
+    // 公共接口
+    void doSomething();
+    int  getId() const;
+    const std::string& getName() const;
+
+private:
+    struct Impl;    // 前向声明，不完整类型
+    Impl* pImpl_;   // 裸指针指向实现
+};
+\end{lstlisting}
+
+\subsection{实现文件（\texttt{widget.cpp}）}
+
+\begin{lstlisting}[caption={PImpl 裸指针版——实现文件}]
+// widget.cpp
+#include "widget.h"
+#include <vector>
+#include <iostream>
+
+// ---- 完整定义（仅在 .cpp 中可见）----
+struct Widget::Impl {
+    int id_;
+    std::string name_;
+    std::vector<double> data_;
+
+    Impl(int id, std::string name)
+        : id_(id), name_(std::move(name)), data_(1000, 0.0) {}
+
+    void doWork() {
+        std::cout << "Widget[" << id_ << "] working...\n";
+    }
+};
+
+// ---- 构造 / 析构 ----
+Widget::Widget(int id, std::string name)
+    : pImpl_(new Impl(id, std::move(name))) {}
+
+Widget::~Widget() {
+    delete pImpl_;
+}
+
+// ---- 拷贝 ----
+Widget::Widget(const Widget& other)
+    : pImpl_(new Impl(*other.pImpl_)) {}
+
+Widget& Widget::operator=(const Widget& other) {
+    if (this != &other) {
+        // 先创建新对象，再删除旧对象（异常安全）
+        Impl* temp = new Impl(*other.pImpl_);
+        delete pImpl_;
+        pImpl_ = temp;
+    }
+    return *this;
+}
+
+// ---- 移动 ----
+Widget::Widget(Widget&& other) noexcept
+    : pImpl_(other.pImpl_) {
+    other.pImpl_ = nullptr;
+}
+
+Widget& Widget::operator=(Widget&& other) noexcept {
+    if (this != &other) {
+        delete pImpl_;
+        pImpl_ = other.pImpl_;
+        other.pImpl_ = nullptr;
+    }
+    return *this;
+}
+
+// ---- 公共接口转发 ----
+void Widget::doSomething() {
+    pImpl_->doWork();
+}
+
+int Widget::getId() const {
+    return pImpl_->id_;
+}
+
+const std::string& Widget::getName() const {
+    return pImpl_->name_;
+}
+\end{lstlisting}
+
+\subsection{裸指针版本的注意事项}
+
+\begin{itemize}[leftmargin=2em]
+  \item 必须实现析构函数、拷贝构造/赋值、移动构造/赋值（规则五）
+  \item 拷贝赋值中应采用 ``先构造后删除'' 策略以保证异常安全
+  \item 移动后源对象的 \texttt{pImpl\_} 置为 \texttt{nullptr}，防止双重释放
+  \item 所有使用 \texttt{Impl} 成员的函数定义必须放在 \texttt{.cpp} 文件中
+\end{itemize}
+
+% --------------------------------------------------------------------------------------------
+\section{\texttt{unique\_ptr} 版本}
+% --------------------------------------------------------------------------------------------
+
+\subsection{头文件（\texttt{widget.h}）}
+
+使用 \texttt{std::unique\_ptr} 自动管理生命周期，大幅减少手动内存管理代码：
+
+\begin{lstlisting}[caption={PImpl unique\_ptr 版——头文件}]
+// widget.h
+#pragma once
+#include <memory>
+#include <string>
+
+class Widget {
+public:
+    Widget(int id, std::string name);
+
+    // 关键：即使使用 unique_ptr，析构函数仍必须在 .cpp 中定义
+    // 因为 unique_ptr 的析构需要看到 Impl 的完整定义
+    ~Widget();
+
+    // 拷贝（unique_ptr 不可拷贝，需手动实现）
+    Widget(const Widget& other);
+    Widget& operator=(const Widget& other);
+
+    // 移动（unique_ptr 可移动，但需要完整类型才能移动）
+    Widget(Widget&& other) noexcept;
+    Widget& operator=(Widget&& other) noexcept;
+
+    // 公共接口
+    void doSomething();
+    int  getId() const;
+    const std::string& getName() const;
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> pImpl_;
+};
+\end{lstlisting}
+
+\subsection{实现文件（\texttt{widget.cpp}）}
+
+\begin{lstlisting}[caption={PImpl unique\_ptr 版——实现文件}]
+// widget.cpp
+#include "widget.h"
+#include <vector>
+#include <iostream>
+
+// ---- 完整定义 ----
+struct Widget::Impl {
+    int id_;
+    std::string name_;
+    std::vector<double> data_;
+
+    Impl(int id, std::string name)
+        : id_(id), name_(std::move(name)), data_(1000, 0.0) {}
+
+    void doWork() {
+        std::cout << "Widget[" << id_ << "] working...\n";
+    }
+};
+
+// ---- 构造 / 析构 ----
+Widget::Widget(int id, std::string name)
+    : pImpl_(std::make_unique<Impl>(id, std::move(name))) {}
+
+Widget::~Widget() = default;   // 在此处 Impl 是完整类型
+
+// ---- 拷贝 ----
+Widget::Widget(const Widget& other)
+    : pImpl_(std::make_unique<Impl>(*other.pImpl_)) {}
+
+Widget& Widget::operator=(const Widget& other) {
+    if (this != &other) {
+        // unique_ptr 赋值：直接 reset 即可（异常安全）
+        pImpl_ = std::make_unique<Impl>(*other.pImpl_);
+    }
+    return *this;
+}
+
+// ---- 移动 ----
+Widget::Widget(Widget&& other) noexcept = default;
+Widget& Widget::operator=(Widget&& other) noexcept = default;
+
+// ---- 公共接口转发 ----
+void Widget::doSomething() {
+    pImpl_->doWork();
+}
+
+int Widget::getId() const {
+    return pImpl_->id_;
+}
+
+const std::string& Widget::getName() const {
+    return pImpl_->name_;
+}
+\end{lstlisting}
+
+\subsection{\texttt{unique\_ptr} 版本的关键要点}
+
+\subsubsection{为什么析构必须在 \texttt{.cpp} 中定义？}
+
+即使使用了 \texttt{= default}，析构函数也必须在 \texttt{.cpp} 文件中显式声明为默认。原因是 \texttt{unique\_ptr<Impl>} 在析构时需要调用 \texttt{delete}，这要求 \texttt{Impl} 是完整类型。若析构在头文件中隐式生成，编译器在实例化析构时 \texttt{Impl} 仍为不完整类型，将导致编译错误：
+
+\begin{lstlisting}[caption={常见错误：不完整类型的析构}]
+// 错误！若 ~Widget() 在头文件中隐式生成
+// unique_ptr<Impl> 的析构函数会在头文件中被实例化
+// 此时 Impl 是不完整类型，编译报错：
+//   "deletion of pointer to incomplete type"
+
+class Widget {
+    struct Impl;
+    std::unique_ptr<Impl> pImpl_;
+    // ~Widget() 隐式生成 -- 编译错误！
+};
+\end{lstlisting}
+
+\subsubsection{移动操作为何也需要在 \texttt{.cpp} 中？}
+
+\texttt{unique\_ptr} 的移动构造/赋值同样需要销毁目标对象的原有内容（调用 \texttt{delete}），因此也需要 \texttt{Impl} 是完整类型。将移动操作声明为 \texttt{= default} 并定义在 \texttt{.cpp} 中是正确的做法。
+
+\newpage
+
+% --------------------------------------------------------------------------------------------
+\section{裸指针与 \texttt{unique\_ptr} 版本对比}
+% --------------------------------------------------------------------------------------------
+
+\begin{table}[h]
+\centering
+\caption{PImpl 裸指针 vs unique\_ptr}
+\label{tab:pimpl-compare}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{特性} & \textbf{裸指针} & \textbf{\texttt{unique\_ptr}} \\
+\midrule
+内存管理        & 手动 \texttt{new/delete}      & 自动 RAII \\
+析构函数        & 必须手动 \texttt{delete}      & \texttt{= default}（在 .cpp 中） \\
+拷贝赋值异常安全 & 需 ``先构造后删除'' 技巧      & 直接 \texttt{make\_unique} \\
+移动操作        & 手动置 \texttt{nullptr}       & \texttt{= default}（在 .cpp 中） \\
+代码量          & 较多                          & 较少 \\
+泄漏风险        & 高（异常路径可能泄漏）        & 无 \\
+性能            & 无差异（编译器优化后相同）    & 无差异 \\
+推荐度          & 遗留代码维护                  & 现代 C++ 首选 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{进阶技巧}
+
+\subsection{使用 \texttt{make\_unique} 的工厂方法}
+
+将 PImpl 的构造封装为工厂函数，进一步隔离实现：
+
+\begin{lstlisting}[caption={工厂方法封装 PImpl}]
+// widget.h
+class Widget {
+public:
+    static Widget create(int id, std::string name);
+    // ...
+};
+
+// widget.cpp
+Widget Widget::create(int id, std::string name) {
+    return Widget(id, std::move(name));
+}
+\end{lstlisting}
+
+\subsection{与 CRTP 结合：静态多态 PImpl}
+
+将 CRTP 与 PImpl 结合，可以在编译期选择不同的实现策略：
+
+\begin{lstlisting}[caption={CRTP + PImpl 结合}]
+template <typename Impl>
+class Handle {
+    std::unique_ptr<Impl> pImpl_;
+public:
+    template <typename... Args>
+    explicit Handle(Args&&... args)
+        : pImpl_(std::make_unique<Impl>(std::forward<Args>(args)...)) {}
+
+    // 通过 CRTP 风格转发
+    auto perform() { return static_cast<Impl*>(pImpl_.get())->perform(); }
+};
+
+struct FastImpl {
+    int perform() { /* 快速实现 */ return 1; }
+};
+
+struct SafeImpl {
+    int perform() { /* 安全实现 */ return 2; }
+};
+
+// 编译期选择实现
+using FastWidget = Handle<FastImpl>;
+using SafeWidget = Handle<SafeImpl>;
+\end{lstlisting}
+
+\subsection{PImpl 与 \texttt{shared\_ptr}}
+
+当需要共享所有权语义时，可以使用 \texttt{shared\_ptr}，此时拷贝操作可以自动工作：
+
+\begin{lstlisting}[caption={PImpl shared\_ptr 版（浅拷贝）}]
+class SharedWidget {
+    struct Impl;
+    std::shared_ptr<Impl> pImpl_;
+public:
+    SharedWidget(int id);
+    ~SharedWidget();   // 仍需在 .cpp 中定义
+
+    // shared_ptr 的拷贝是浅拷贝（共享同一个 Impl）
+    // 若需要深拷贝，仍须手动实现
+    SharedWidget(const SharedWidget&)            = default;
+    SharedWidget& operator=(const SharedWidget&) = default;
+    SharedWidget(SharedWidget&&)                 = default;
+    SharedWidget& operator=(SharedWidget&&)      = default;
+};
+\end{lstlisting}
+
+\section{工程实战案例：PImpl 隔离重型头文件}
+
+PImpl 最直接的工程价值在于将 ``污染性'' 头文件从公共接口中移除。以下展示三个典型的真实场景。
+
+\subsection{案例一：隔离 WinSock 头文件}
+
+Windows 网络编程中，\texttt{winsock2.h} 和 \texttt{windows.h} 会引入大量宏定义和类型，与用户代码产生冲突，且显著拖慢编译速度。
+
+\subsubsection*{问题：不使用 PImpl}
+
+\begin{lstlisting}[caption={网络类——头文件直接包含 WinSock（反面示例）}]
+// tcp_client.h -- 反面示例
+#pragma once
+#include <winsock2.h>       // 引入 ~30,000 行宏和类型
+#include <ws2tcpip.h>
+#include <string>
+
+class TcpClient {
+    SOCKET sock_;            // 暴露了 Windows 平台类型
+    sockaddr_in addr_;       // 暴露了 WinSock 结构体
+    bool connected_;
+public:
+    TcpClient();
+    ~TcpClient();
+    bool connect(const std::string& host, int port);
+    int  send(const char* data, int len);
+    int  recv(char* buf, int len);
+    void close();
+};
+\end{lstlisting}
+
+任何包含 \texttt{tcp\_client.h} 的翻译单元都会被迫编译 WinSock 的全部声明。更严重的是，\texttt{winsock2.h} 中的 \texttt{min}/\texttt{max} 宏、\texttt{ERROR} 宏等会与标准库或用户代码冲突。
+
+\subsubsection*{解决方案：PImpl 隔离}
+
+\begin{lstlisting}[caption={网络类——PImpl 隔离 WinSock（头文件）}]
+// tcp_client.h -- 干净的公共接口
+#pragma once
+#include <memory>
+#include <string>
+#include <span>
+
+class TcpClient {
+public:
+    TcpClient();
+    ~TcpClient();
+
+    // 禁止拷贝（socket 不可复制）
+    TcpClient(const TcpClient&)            = delete;
+    TcpClient& operator=(const TcpClient&) = delete;
+
+    // 允许移动
+    TcpClient(TcpClient&& other) noexcept;
+    TcpClient& operator=(TcpClient&& other) noexcept;
+
+    bool connect(const std::string& host, int port);
+    int  send(std::span<const char> data);
+    int  recv(std::span<char> buf);
+    bool isConnected() const;
+    void close();
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> pImpl_;
+};
+\end{lstlisting}
+
+\begin{lstlisting}[caption={网络类——PImpl 隔离 WinSock（实现文件）}]
+// tcp_client.cpp -- WinSock 仅在此处可见
+#include "tcp_client.h"
+
+#include <winsock2.h>     // 仅 .cpp 包含
+#include <ws2tcpip.h>     // 仅 .cpp 包含
+#pragma comment(lib, "ws2_32.lib")
+
+struct TcpClient::Impl {
+    SOCKET sock = INVALID_SOCKET;
+    bool connected = false;
+
+    // WinSock 初始化为进程级别操作，此处省略 RAII 封装
+    ~Impl() {
+        if (sock != INVALID_SOCKET)
+            closesocket(sock);
+    }
+};
+
+TcpClient::TcpClient()
+    : pImpl_(std::make_unique<Impl>()) {}
+
+TcpClient::~TcpClient() = default;
+TcpClient::TcpClient(TcpClient&&) noexcept = default;
+TcpClient& TcpClient::operator=(TcpClient&&) noexcept = default;
+
+bool TcpClient::connect(const std::string& host, int port) {
+    addrinfo hints{}, *result = nullptr;
+    hints.ai_family   = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    auto portStr = std::to_string(port);
+    if (getaddrinfo(host.c_str(), portStr.c_str(),
+                    &hints, &result) != 0)
+        return false;
+
+    pImpl_->sock = socket(result->ai_family,
+                          result->ai_socktype,
+                          result->ai_protocol);
+    if (pImpl_->sock == INVALID_SOCKET) {
+        freeaddrinfo(result);
+        return false;
+    }
+
+    if (::connect(pImpl_->sock, result->ai_addr,
+                  (int)result->ai_addrlen) == SOCKET_ERROR) {
+        closesocket(pImpl_->sock);
+        pImpl_->sock = INVALID_SOCKET;
+        freeaddrinfo(result);
+        return false;
+    }
+
+    freeaddrinfo(result);
+    pImpl_->connected = true;
+    return true;
+}
+
+int TcpClient::send(std::span<const char> data) {
+    return ::send(pImpl_->sock, data.data(),
+                  (int)data.size(), 0);
+}
+
+int TcpClient::recv(std::span<char> buf) {
+    return ::recv(pImpl_->sock, buf.data(),
+                  (int)buf.size(), 0);
+}
+
+bool TcpClient::isConnected() const {
+    return pImpl_->connected;
+}
+
+void TcpClient::close() {
+    if (pImpl_->sock != INVALID_SOCKET) {
+        closesocket(pImpl_->sock);
+        pImpl_->sock = INVALID_SOCKET;
+        pImpl_->connected = false;
+    }
+}
+\end{lstlisting}
+
+\textbf{编译收益}：用户代码中 \texttt{\#include "tcp\_client.h"} 不再触发 WinSock 头文件的编译。在大型项目中，这可以将单个翻译单元的预处理+编译时间减少数秒，跨数百个文件累积效果显著。同时消除了宏污染问题。
+
+\subsection{案例二：隔离重型模板库（几何内核 / Boost）}
+
+Boost.Geometry、CGAL、Eigen 等库的头文件包含大量模板元编程代码，实例化代价极高。一个看似简单的 \texttt{\#include <boost/geometry.hpp>} 可能引入数万行模板代码。
+
+\begin{lstlisting}[caption={几何处理器——PImpl 隔离 Boost.Geometry}]
+// geometry_processor.h -- 用户接口零依赖
+#pragma once
+#include <memory>
+#include <string>
+#include <vector>
+
+struct Point2D { double x, y; };   // 自定义轻量类型
+
+class GeometryProcessor {
+public:
+    GeometryProcessor();
+    ~GeometryProcessor();
+
+    GeometryProcessor(GeometryProcessor&&) noexcept;
+    GeometryProcessor& operator=(GeometryProcessor&&) noexcept;
+
+    // 使用自定义轻量类型，不暴露 Boost 类型
+    double polygonArea(const std::vector<Point2D>& ring) const;
+    bool   contains(const std::vector<Point2D>& polygon,
+                    Point2D point) const;
+    std::vector<Point2D> convexHull(
+        const std::vector<Point2D>& points) const;
+    double distance(Point2D a, Point2D b) const;
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> pImpl_;
+};
+\end{lstlisting}
+
+\begin{lstlisting}[caption={几何处理器——实现文件隔离 Boost}]
+// geometry_processor.cpp
+#include "geometry_processor.h"
+
+// 重型头文件仅在 .cpp 中可见
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/algorithms/area.hpp>
+#include <boost/geometry/algorithms/within.hpp>
+#include <boost/geometry/algorithms/convex_hull.hpp>
+
+namespace bg = boost::geometry;
+using BPoint   = bg::model::d2::point_xy<double>;
+using BPolygon = bg::model::polygon<BPoint>;
+
+struct GeometryProcessor::Impl {
+    // 可缓存预处理的几何对象、空间索引等
+    // 此处省略具体缓存逻辑
+
+    static BPolygon toBoost(const std::vector<Point2D>& ring) {
+        BPolygon poly;
+        for (auto& p : ring)
+            bg::append(poly.outer(), BPoint(p.x, p.y));
+        bg::correct(poly);
+        return poly;
+    }
+};
+
+GeometryProcessor::GeometryProcessor()
+    : pImpl_(std::make_unique<Impl>()) {}
+GeometryProcessor::~GeometryProcessor() = default;
+GeometryProcessor::GeometryProcessor(GeometryProcessor&&) noexcept = default;
+GeometryProcessor& GeometryProcessor::operator=(
+    GeometryProcessor&&) noexcept = default;
+
+double GeometryProcessor::polygonArea(
+        const std::vector<Point2D>& ring) const {
+    return bg::area(pImpl_->toBoost(ring));
+}
+
+bool GeometryProcessor::contains(
+        const std::vector<Point2D>& polygon,
+        Point2D point) const {
+    return bg::within(BPoint(point.x, point.y),
+                      pImpl_->toBoost(polygon));
+}
+
+std::vector<Point2D> GeometryProcessor::convexHull(
+        const std::vector<Point2D>& points) const {
+    // 构建多点集 -> 计算凸包 -> 转换回自定义类型
+    bg::model::multi_point<BPoint> mpts;
+    for (auto& p : points)
+        bg::append(mpts, BPoint(p.x, p.y));
+
+    BPolygon hull;
+    bg::convex_hull(mpts, hull);
+
+    std::vector<Point2D> result;
+    for (auto& bp : hull.outer())
+        result.push_back({bg::get<0>(bp), bg::get<1>(bp)});
+    return result;
+}
+
+double GeometryProcessor::distance(Point2D a, Point2D b) const {
+    return bg::distance(BPoint(a.x, a.y), BPoint(b.x, b.y));
+}
+\end{lstlisting}
+
+\textbf{编译收益}：Boost.Geometry 的模板实例化仅发生在 \texttt{geometry\_processor.cpp} 一个翻译单元中。所有使用 \texttt{GeometryProcessor} 的用户代码完全不需要编译 Boost 头文件。在 CI 构建中，这类隔离可以将增量编译时间从分钟级降低到秒级。
+
+\subsection{案例三：隔离 JSON 序列化头文件}
+
+\texttt{nlohmann/json} 是 header-only 库，单个头文件超过 25,000 行，大量模板实例化使得包含它的翻译单元编译时间急剧膨胀。
+
+\begin{lstlisting}[caption={配置管理器——PImpl 隔离 JSON 库}]
+// config_manager.h -- 不暴露 nlohmann/json
+#pragma once
+#include <memory>
+#include <string>
+#include <filesystem>
+#include <optional>
+#include <vector>
+
+class ConfigManager {
+public:
+    explicit ConfigManager(const std::filesystem::path& filePath);
+    ~ConfigManager();
+
+    ConfigManager(ConfigManager&&) noexcept;
+    ConfigManager& operator=(ConfigManager&&) noexcept;
+
+    // 类型安全的访问接口——不暴露 json 类型
+    std::optional<std::string> getString(
+        const std::string& key) const;
+    std::optional<int> getInt(const std::string& key) const;
+    std::optional<double> getDouble(
+        const std::string& key) const;
+    std::optional<bool> getBool(const std::string& key) const;
+
+    void set(const std::string& key, const std::string& value);
+    void set(const std::string& key, int value);
+    void set(const std::string& key, double value);
+    void set(const std::string& key, bool value);
+
+    bool save() const;
+    bool reload();
+    std::vector<std::string> keys() const;
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> pImpl_;
+};
+\end{lstlisting}
+
+\begin{lstlisting}[caption={配置管理器——实现文件隔离 JSON 库}]
+// config_manager.cpp
+#include "config_manager.h"
+
+// 25,000+ 行的 header-only 库，仅此处可见
+#include <nlohmann/json.hpp>
+#include <fstream>
+
+using json = nlohmann::json;
+
+struct ConfigManager::Impl {
+    std::filesystem::path filePath;
+    json data;
+
+    explicit Impl(const std::filesystem::path& path)
+        : filePath(path) {
+        std::ifstream ifs(path);
+        if (ifs.is_open())
+            data = json::parse(ifs, nullptr, false);
+    }
+};
+
+ConfigManager::ConfigManager(
+        const std::filesystem::path& filePath)
+    : pImpl_(std::make_unique<Impl>(filePath)) {}
+
+ConfigManager::~ConfigManager() = default;
+ConfigManager::ConfigManager(ConfigManager&&) noexcept = default;
+ConfigManager& ConfigManager::operator=(
+    ConfigManager&&) noexcept = default;
+
+std::optional<std::string> ConfigManager::getString(
+        const std::string& key) const {
+    if (auto it = pImpl_->data.find(key);
+        it != pImpl_->data.end() && it->is_string())
+        return it->get<std::string>();
+    return std::nullopt;
+}
+
+std::optional<int> ConfigManager::getInt(
+        const std::string& key) const {
+    if (auto it = pImpl_->data.find(key);
+        it != pImpl_->data.end() && it->is_number_integer())
+        return it->get<int>();
+    return std::nullopt;
+}
+
+std::optional<double> ConfigManager::getDouble(
+        const std::string& key) const {
+    if (auto it = pImpl_->data.find(key);
+        it != pImpl_->data.end() && it->is_number())
+        return it->get<double>();
+    return std::nullopt;
+}
+
+std::optional<bool> ConfigManager::getBool(
+        const std::string& key) const {
+    if (auto it = pImpl_->data.find(key);
+        it != pImpl_->data.end() && it->is_boolean())
+        return it->get<bool>();
+    return std::nullopt;
+}
+
+void ConfigManager::set(const std::string& key,
+                        const std::string& value) {
+    pImpl_->data[key] = value;
+}
+
+void ConfigManager::set(const std::string& key, int value) {
+    pImpl_->data[key] = value;
+}
+
+void ConfigManager::set(const std::string& key, double value) {
+    pImpl_->data[key] = value;
+}
+
+void ConfigManager::set(const std::string& key, bool value) {
+    pImpl_->data[key] = value;
+}
+
+bool ConfigManager::save() const {
+    std::ofstream ofs(pImpl_->filePath);
+    if (!ofs.is_open()) return false;
+    ofs << pImpl_->data.dump(4);
+    return ofs.good();
+}
+
+bool ConfigManager::reload() {
+    std::ifstream ifs(pImpl_->filePath);
+    if (!ifs.is_open()) return false;
+    pImpl_->data = json::parse(ifs, nullptr, false);
+    return !pImpl_->data.is_discarded();
+}
+
+std::vector<std::string> ConfigManager::keys() const {
+    std::vector<std::string> result;
+    for (auto& [k, v] : pImpl_->data.items())
+        result.push_back(k);
+    return result;
+}
+\end{lstlisting}
+
+\textbf{编译收益}：\texttt{nlohmann/json} 的 25,000+ 行模板代码仅在一个翻译单元中编译。项目中可能有数十个模块需要使用配置管理器，但都不需要包含 JSON 头文件。在实测中，移除一个 \texttt{nlohmann/json} 包含可以使单个翻译单元的编译时间减少 2--5 秒。
+
+\subsection{隔离效果量化参考}
+
+\begin{table}[ht]
+\centering
+\caption{PImpl 隔离重型头文件的典型编译收益}
+\label{tab:isolation-benefit}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{被隔离的头文件} & \textbf{头文件规模} & \textbf{单次包含开销} & \textbf{典型影响范围} \\
+\midrule
+\texttt{winsock2.h + windows.h}   & $\sim$30,000 行 & 0.5--2 秒  & 网络相关全部模块 \\
+\texttt{boost/geometry.hpp}       & $\sim$50,000 行 & 3--8 秒   & 几何计算全部模块 \\
+\texttt{Eigen/Dense}              & $\sim$10,000 行 & 1--3 秒   & 数值计算全部模块 \\
+\texttt{nlohmann/json.hpp}        & $\sim$25,000 行 & 2--5 秒   & 序列化全部模块 \\
+\texttt{CGAL/Exact\_predicates.h} & $\sim$80,000 行 & 5--15 秒  & 计算几何全部模块 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{注意}：表 \ref{tab:isolation-benefit} 中的数值为典型参考值，实际开销取决于编译器、优化级别和硬件配置。关键原则是：\textbf{如果一个头文件被 N 个翻译单元包含，PImpl 隔离的收益 = (单次包含开销) $\times$ (N $-$ 1)}。在大型项目中 N 往往在 50--500 之间，累积收益非常可观。
+
+\section{总结与选择建议}
+
+\subsection{CRTP 选型决策}
+
+选择 CRTP 还是虚函数，核心在于\textbf{性能需求}和\textbf{运行时多态需求}的权衡：
+
+\begin{lstlisting}[caption={决策参考：CRTP vs 虚函数 vs Deducing this}]
+// ==========================================
+// 场景 1：需要运行时多态（容器存放不同类型）
+// -> 使用虚函数
+// ==========================================
+class Shape {
+public:
+    virtual double area() const = 0;
+    virtual ~Shape() = default;
+};
+// std::vector<std::unique_ptr<Shape>> shapes;  // OK
+
+// ==========================================
+// 场景 2：编译期已知类型，追求零开销
+// -> 使用传统 CRTP (C++11 起可用)
+// ==========================================
+template <typename Derived>
+class ShapeCRTP {
+public:
+    double area() const {
+        return static_cast<const Derived*>(this)->areaImpl();
+    }
+};
+// std::vector<Circle> circles;  // 同质容器，无 vtable 开销
+
+// ==========================================
+// 场景 3：C++23 项目，追求简洁与安全
+// -> 使用 Deducing this
+// ==========================================
+class ShapeBase {
+public:
+    double area(this const auto& self) {
+        return self.areaImpl();  // 无需 static_cast
+    }
+};
+\end{lstlisting}
+
+\begin{table}[ht]
+\centering
+\caption{CRTP 技术选型对照}
+\label{tab:crtp-decision}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{需求} & \textbf{虚函数} & \textbf{传统 CRTP} & \textbf{C++23 Deducing this} \\
+\midrule
+运行时多态         & 支持     & 不支持   & 不支持   \\
+零运行时开销       & 否       & 是       & 是       \\
+异质容器           & 支持     & 不支持   & 不支持   \\
+最低 C++ 标准      & C++98    & C++98    & C++23    \\
+代码简洁度         & 高       & 中       & 高       \\
+类型安全           & 高       & 中       & 高       \\
+编译错误可读性     & 好       & 差       & 好       \\
+混入组合           & 不便     & 方便     & 方便     \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{PImpl 选型决策}
+
+PImpl 的智能指针选择取决于\textbf{所有权语义}和\textbf{C++ 标准版本}：
+
+\begin{lstlisting}[caption={决策参考：PImpl 指针类型选择}]
+// ==========================================
+// 场景 1：独占所有权（最常见）
+// -> std::unique_ptr
+// ==========================================
+class Widget {
+    struct Impl;
+    std::unique_ptr<Impl> pImpl_;
+public:
+    Widget();
+    ~Widget();
+    Widget(const Widget&);             // 深拷贝
+    Widget& operator=(const Widget&);
+    Widget(Widget&&) noexcept;         // 移动
+    Widget& operator=(Widget&&) noexcept;
+};
+
+// ==========================================
+// 场景 2：共享所有权（多个 Widget 共享同一个 Impl）
+// -> std::shared_ptr
+// ==========================================
+class SharedWidget {
+    struct Impl;
+    std::shared_ptr<Impl> pImpl_;
+    // 拷贝 = 浅拷贝（共享 Impl）
+    // 深拷贝需手动实现
+};
+
+// ==========================================
+// 场景 3：遗留 C++03 代码，无法使用智能指针
+// -> 裸指针 + 手动管理
+// ==========================================
+class LegacyWidget {
+    struct Impl;
+    Impl* pImpl_;   // 必须实现规则五
+};
+\end{lstlisting}
+
+\subsection{何时不应使用这些模式}
+
+CRTP 和 PImpl 并非银弹，以下场景应避免使用：
+
+\begin{table}[ht]
+\centering
+\caption{反模式：何时不使用 CRTP / PImpl}
+\label{tab:anti-pattern}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{场景} & \textbf{不推荐} & \textbf{原因与替代} \\
+\midrule
+需要运行时多态分发       & CRTP      & CRTP 是编译期技术，无法放入异质容器；用虚函数 \\
+简单类（1--2 个成员）    & PImpl     & 过度设计，增加不必要的间接层；直接暴露成员即可 \\
+对调试体验要求极高       & 传统 CRTP & 模板错误栈深，调试困难；考虑 C++23 或虚函数 \\
+头文件依赖本就很少       & PImpl     & 编译防火墙收益低，反而增加 .cpp 代码量 \\
+需要值语义 + 深拷贝      & shared\_ptr PImpl & shared\_ptr 默认浅拷贝，需额外手动实现 \\
+嵌入式/禁用动态分配      & PImpl     & PImpl 需要堆分配；考虑预分配或栈上实现 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{性能与编译时间考量}
+
+\subsubsection{运行时性能}
+
+\begin{itemize}[leftmargin=2em]
+  \item \textbf{CRTP vs 虚函数}：CRTP 的函数调用在编译期内联，无 vtable 查找开销。在紧密循环中差异可达 10--30\%；在普通业务代码中差异可忽略。
+  \item \textbf{PImpl 开销}：每次接口调用都经过指针间接寻址（一次额外的解引用）。编译器通常无法跨编译单元内联，因此热路径上的函数应考虑直接在头文件中实现。
+  \item \textbf{内存开销}：PImpl 引入一次额外的堆分配（\texttt{sizeof(unique\_ptr)} + 堆上的 \texttt{Impl} 对象）。对于频繁创建销毁的小对象，可考虑对象池。
+\end{itemize}
+
+\subsubsection{编译时间}
+
+\begin{itemize}[leftmargin=2em]
+  \item \textbf{PImpl 的核心价值}：将实现细节的 \texttt{\#include} 从头文件移到 .cpp 文件，可显著减少用户代码的编译时间。在大型项目中，这可以将增量编译时间减少 50\% 以上。
+  \item \textbf{CRTP 的编译开销}：模板实例化会增加编译时间，但通常比虚函数的链接开销更可控。C++23 Deducing this 的编译开销与传统 CRTP 相当。
+\end{itemize}
+
+\subsection{综合决策表}
+
+\begin{table}[ht]
+\centering
+\caption{完整技术选型指南}
+\label{tab:full-decision}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{场景} & \textbf{推荐技术} & \textbf{C++ 标准} & \textbf{关键理由} \\
+\midrule
+高性能静态多态         & 传统 CRTP           & $\geq$11  & 零成本抽象，广泛支持 \\
+现代项目的静态多态     & Deducing this       & $\geq$23  & 更简洁、更安全 \\
+编译防火墙             & PImpl + unique\_ptr & $\geq$11  & 标准做法，RAII 自动管理 \\
+ABI 稳定的动态库接口   & PImpl + unique\_ptr & $\geq$11  & 实现变更不影响二进制布局 \\
+共享资源/观察者模式    & PImpl + shared\_ptr & $\geq$11  & 浅拷贝语义，自动引用计数 \\
+遗留 C++03 代码维护    & PImpl + 裸指针      & 任意      & 最小改动，无需智能指针 \\
+运行时多态（异质容器） & 虚函数              & 任意      & CRTP/PImpl 均不适用 \\
+混入多个行为           & CRTP 链式继承       & $\geq$11  & 可组合，避免菱形继承 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{最佳实践清单}
+
+\begin{table}[ht]
+\centering
+\caption{最佳实践速查}
+\label{tab:best-practice}
+\begin{tabular}{@{}p{0.15\textwidth}p{0.8\textwidth}@{}}
+\toprule
+\textbf{模式} & \textbf{要点} \\
+\midrule
+传统 CRTP
+& 将基类析构设为 \texttt{protected}，防止通过基类指针删除派生对象；
+  提供 \texttt{derived()} 辅助函数封装 \texttt{static\_cast}；
+  使用 \texttt{friend} 声明限制派生类的继承关系 \\
+\addlinespace
+C++23 this
+& 优先用 \texttt{this auto\&\&} 统一处理 cv-ref 重载；
+  在递归 Lambda 中使用显式 this 替代 \texttt{std::function}；
+  配合 \texttt{if constexpr} 做编译期分发 \\
+\addlinespace
+PImpl unique\_ptr
+& 析构、移动操作必须在 .cpp 中定义（\texttt{= default}）；
+  拷贝操作需手动深拷贝；
+  头文件中不包含实现细节的任何 \texttt{\#include} \\
+\addlinespace
+PImpl shared\_ptr
+& 明确语义：默认拷贝是浅拷贝；
+  如需深拷贝，手动实现拷贝构造/赋值；
+  注意循环引用问题，必要时使用 \texttt{weak\_ptr} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{0.8cm}
+\noindent\fbox{\parbox{0.95\textwidth}{\small
+\textbf{一句话总结}：需要编译期多态选 CRTP（C++23 优先 Deducing this），需要编译防火墙选 PImpl + unique\_ptr，需要运行时多态选虚函数。三者可组合使用，但应避免过度设计。}}
+
+\vspace{0.5cm}
+\noindent\textcolor{gray}{\small 本文档中的代码示例仅供学习参考，实际使用时请根据项目需求和 C++ 标准版本选择合适的实现方式。}
+
+\end{document}

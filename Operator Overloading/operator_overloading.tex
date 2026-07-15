@@ -1,0 +1,1156 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+\definecolor{pythonkeyword}{HTML}{0000C0}
+\definecolor{pythonbuiltin}{HTML}{2B91AF}
+\definecolor{pythonheadbg}{HTML}{2E7D32}
+\definecolor{csharpheadbg}{HTML}{68217A}
+\definecolor{javakeyword}{HTML}{9B2915}
+\definecolor{javatype}{HTML}{3F7F5F}
+\definecolor{javaheadbg}{HTML}{ED8B00}
+\definecolor{mathheadbg}{HTML}{4A148C}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+% ---- C++ style ----
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,ostream,istream,cout,cin},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+
+% ---- C\# style ----
+\lstdefinelanguage{CSharp}{
+  morekeywords={abstract,as,base,bool,break,byte,case,catch,char,checked,class,
+    const,continue,decimal,default,delegate,do,double,else,enum,event,explicit,
+    extern,false,finally,fixed,float,for,foreach,goto,if,implicit,in,int,interface,
+    internal,is,lock,long,namespace,new,null,object,operator,out,override,params,
+    partial,private,protected,public,readonly,ref,return,sbyte,sealed,short,sizeof,
+    stackalloc,static,string,struct,switch,this,throw,true,try,typeof,uint,ulong,
+    unchecked,unsafe,ushort,using,virtual,void,volatile,while,
+    var,async,await,yield,dynamic,where,select,from,get,set,init,value,record,with},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+}
+
+\lstdefinestyle{csharpstyle}{
+  language=CSharp,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{csharpkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  emph={int,string,bool,double,float,long,byte,char,decimal,object,
+    List,Dictionary,Task,Span,Memory,Nullable,
+    IEnumerable,IComparable,IEquatable},
+  emphstyle=\color{csharptype}\bfseries,
+  escapeinside={(*@}{@*)},
+}
+
+% ---- Python style ----
+\lstdefinelanguage{Py}{
+  morekeywords={def,class,return,self,if,elif,else,for,while,import,from,
+    as,with,try,except,finally,raise,pass,break,continue,yield,lambda,
+    in,not,and,or,is,None,True,False,global,nonlocal,del,assert},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[s]{"""}{"""},
+  morestring=[s]{'''}{'''},
+}
+
+\lstdefinestyle{pythonstyle}{
+  language=Py,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{pythonkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  emph={__add__,__sub__,__mul__,__truediv__,__floordiv__,__mod__,__pow__,
+    __neg__,__pos__,__abs__,__eq__,__ne__,__lt__,__le__,__gt__,__ge__,
+    __and__,__or__,__xor__,__invert__,__lshift__,__rshift__,
+    __iadd__,__isub__,__imul__,__itruediv__,
+    __len__,__getitem__,__setitem__,__contains__,__iter__,
+    __str__,__repr__,__bool__,__int__,__float__,
+    __radd__,__rsub__,__rmul__,__rtruediv__},
+  emphstyle=\color{pythonbuiltin}\bfseries,
+  escapeinside={(*@}{@*)},
+}
+
+% ---- Java style ----
+\lstdefinelanguage{Java21}{
+  morekeywords={abstract,assert,boolean,break,byte,case,catch,char,class,
+    const,continue,default,do,double,else,enum,extends,final,finally,
+    float,for,goto,if,implements,import,instanceof,int,interface,long,
+    native,new,package,private,protected,public,return,short,static,
+    strictfp,super,switch,synchronized,this,throw,throws,transient,try,
+    void,volatile,while,var,record,sealed,permits,yield},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+}
+
+\lstdefinestyle{javastyle}{
+  language=Java21,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{javakeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  emph={String,Integer,Double,Long,Boolean,Object,List,Map,Set,
+    Optional,Stream,Comparable,Iterable},
+  emphstyle=\color{javatype}\bfseries,
+}
+
+\lstset{style=cppstyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={C++ Operator Overloading Reference},
+  pdftitle={C++ 运算符重载：原理、实践与跨语言对比},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+\newcommand{\csharp}{C\#}
+\newcommand{\Op}[1]{\texttt{operator#1}}
+
+% 语言标签
+\newcommand{\cpplabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=algheadbg,colframe=algheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily C++}\end{tcolorbox}%
+}
+\newcommand{\csharplabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=csharpheadbg,colframe=csharpheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily C\#}\end{tcolorbox}%
+}
+\newcommand{\pythonlabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=pythonheadbg,colframe=pythonheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily Python}\end{tcolorbox}%
+}
+\newcommand{\javalabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=javaheadbg,colframe=javaheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily Java}\end{tcolorbox}%
+}
+\newcommand{\mathlabel}{%
+  \noindent\begin{tcolorbox}[sharp corners,colback=mathheadbg,colframe=mathheadbg,
+    left=6pt,right=6pt,top=2pt,bottom=2pt,boxrule=0pt]
+  \textcolor{white}{\small\bfseries\sffamily Math}\end{tcolorbox}%
+}
+
+% ====================================================================
+\begin{document}
+
+% ==================== 封面 ====================
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C++ 运算符重载\par}
+\vspace{1cm}
+{\LARGE 原理、实践与跨语言对比\par}
+\vspace{0.5cm}
+{\large 从代数结构到工程实践的全面参考\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+% ══════════════════════════════════════════════════════════════
+\part{数学基础}
+% ══════════════════════════════════════════════════════════════
+
+\chapter{运算符的数学起源}
+
+% ----------------------------------------------------------------------
+\section{代数结构：群、环与域}
+% ----------------------------------------------------------------------
+
+\mathlabel
+
+在讨论编程语言中的运算符重载之前，有必要回顾运算符在数学中的严格定义。现代代数将``运算''抽象为满足特定公理的映射，这为理解编程语言中运算符应该具备什么性质提供了理论基础。
+
+\subsection{群（Group）}
+
+一个\textbf{群}是一个集合 $G$ 配上一个二元运算 $\cdot : G \times G \to G$，满足以下四条公理：
+
+\begin{enumerate}
+  \item \textbf{封闭性}：$\forall\, a, b \in G,\; a \cdot b \in G$；
+  \item \textbf{结合律}：$\forall\, a, b, c \in G,\; (a \cdot b) \cdot c = a \cdot (b \cdot c)$；
+  \item \textbf{单位元}：$\exists\, e \in G,\; \forall\, a \in G,\; e \cdot a = a \cdot e = a$；
+  \item \textbf{逆元}：$\forall\, a \in G,\; \exists\, a^{-1} \in G,\; a \cdot a^{-1} = a^{-1} \cdot a = e$。
+\end{enumerate}
+
+典型的例子包括：$(\mathbb{Z}, +)$（整数在加法下构成群，单位元为 0，$a$ 的逆元为 $-a$）、$(\mathbb{Q}^{\times}, \times)$（非零有理数在乘法下构成群，单位元为 1）、$(S_n, \circ)$（$n$ 元置换在复合运算下构成群）。
+
+如果运算还满足交换律（$a \cdot b = b \cdot a$），则称为\textbf{阿贝尔群}（Abelian Group）或交换群。$(\mathbb{Z}, +)$ 和 $(\mathbb{R}, +)$ 都是阿贝尔群。
+
+\subsection{环（Ring）}
+
+一个\textbf{环}是集合 $R$ 配上两个运算 $+$（加法）和 $\cdot$（乘法），满足：$(R, +)$ 是阿贝尔群；$(R, \cdot)$ 是半群（封闭性 + 结合律）；乘法对加法满足分配律。整数集 $\mathbb{Z}$ 是最典型的环。
+
+\subsection{域（Field）}
+
+一个\textbf{域}是环 $(F, +, \cdot)$ 的进一步特化：$(F \setminus \{0\}, \cdot)$ 也构成阿贝尔群。换言之，域中的每个非零元素都有乘法逆元。有理数 $\mathbb{Q}$、实数 $\mathbb{R}$、复数 $\mathbb{C}$ 都是域。有限域 $\mathbb{F}_p$（$p$ 为素数）在密码学中有广泛应用。
+
+\begin{note}[title=域与编程的关系]
+当我们为自定义类型定义运算符时，实际上是在尝试使该类型成为一个代数结构。例如，\Tp{Complex}（复数类）配上 $+$、$-$、$\times$、$\div$ 构成一个域；\Tp{Matrix} 配上 $+$、$-$、$\times$ 构成一个环（矩阵乘法不可交换，且并非所有矩阵都有逆）。理解底层的代数结构可以帮助我们判断哪些运算符的重载是有意义的，哪些会导致语义混乱。
+\end{note}
+
+% ----------------------------------------------------------------------
+\section{运算符的代数性质}
+% ----------------------------------------------------------------------
+
+\mathlabel
+
+数学中的运算符通常具有以下性质，这些性质直接映射到编程中运算符重载时应遵循的语义约定：
+
+\begin{longtable}{llp{7cm}}
+\toprule
+\textbf{性质} & \textbf{数学表达} & \textbf{编程中的映射} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{性质} & \textbf{数学表达} & \textbf{编程中的映射} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+交换律 & $a + b = b + a$ & \Op{+} 应满足交换律；$a + b$ 与 $b + a$ 结果相同 \\
+结合律 & $(a + b) + c = a + (b + c)$ & \Op{+} 的结合律；影响表达式求值顺序 \\
+分配律 & $a \cdot (b + c) = a \cdot b + a \cdot c$ & \Op{*} 对 \Op{+} 的分配律 \\
+单位元 & $a + 0 = a,\; a \cdot 1 = a$ & 默认构造的对象应作为加法/乘法单位元 \\
+逆元 & $a + (-a) = 0$ & \Op{-}（一元取负）与 \Op{+} 的互逆 \\
+偏序 & $a \le b \iff b - a \ge 0$ & \Op{<=} 应与 \Op{-} 的符号一致 \\
+\end{longtable}
+
+\begin{warning}[title=浮点数不是域]
+浮点数（IEEE 754 \Tp{float} / \Tp{double}）和定点数都是实数 $\mathbb{R}$ 的有限精度近似表示。在绝大多数工程和科学计算场景中，可以将它们视为实数来处理，直接应用基于实数域性质的数学结论——矩阵运算、线性方程组求解、数值积分等莫不如此。
+
+然而，浮点数并非严格意义上的域，需要注意以下边界条件：
+
+\begin{itemize}
+  \item \textbf{不可直接比等}：\texttt{a == b} 对浮点数几乎无意义，应使用 \texttt{abs(a - b) < epsilon} 或 \texttt{abs(a - b) < epsilon * max(abs(a), abs(b))}（相对误差）。
+  \item \textbf{溢出与下溢}：超出表示范围时产生 \texttt{Inf} 或 \texttt{0}（逐渐下溢），破坏封闭性。
+  \item \textbf{NaN 传播}：\texttt{NaN} 与任何值（包括自身）比较都不相等，$\texttt{NaN} \ne \texttt{NaN}$。
+  \item \textbf{结合律失效}：$(a + b) + c \ne a + (b + c)$，大数加小数时精度丢失。
+  \item \textbf{正负零}：$+0.0$ 和 $-0.0$ 在 \texttt{==} 下相等，但 \texttt{1.0 / +0.0} 与 \texttt{1.0 / -0.0} 分别得到 $+\infty$ 和 $-\infty$。
+\end{itemize}
+
+尽管如此，这些边界条件在数值分析中有成熟的处理方案（Kahan 求和、条件数估计、区间算术等），绝大多数场景下``将浮点数当实数用''的工程直觉是正确的。
+\end{warning}
+
+% ══════════════════════════════════════════════════════════════
+\part{C++ 运算符重载}
+% ══════════════════════════════════════════════════════════════
+
+\chapter{可重载运算符全景}
+
+% ----------------------------------------------------------------------
+\section{C++ 可重载的运算符}
+% ----------------------------------------------------------------------
+
+\cpplabel
+
+\cpp{} 允许重载绝大多数运算符。下表列出所有可重载的运算符，按功能分组：
+
+\begin{longtable}{lll}
+\toprule
+\textbf{分类} & \textbf{运算符} & \textbf{推荐形式} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{分类} & \textbf{运算符} & \textbf{推荐形式} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+算术 & \texttt{+ - * / \%} & 非成员 \texttt{friend} \\
+复合赋值 & \texttt{+= -= *= /= \%=} & 成员函数 \\
+自增/自减 & \texttt{++ -{}-} & 成员函数 \\
+一元 & \texttt{+ - \textasciitilde{} !} & 成员函数 \\
+比较 & \texttt{== != < > <= >= <=>} & 非成员或 \cpp{20} 默认 \\
+位运算 & \texttt{\& | \^{} << >>} & 非成员 \texttt{friend} \\
+位复合赋值 & \texttt{\&= |= \^{}= <<= >>=} & 成员函数 \\
+下标 & \texttt{[]} & 成员函数 \\
+函数调用 & \texttt{()} & 成员函数 \\
+解引用/箭头 & \texttt{* ->} & 成员函数 \\
+流插入/提取 & \texttt{<< >>} & 非成员 \texttt{friend} \\
+类型转换 & \texttt{operator T()} & 成员函数 \\
+\end{longtable}
+
+\begin{note}[title=二元运算符应为非成员]
+遵循 Core Guidelines 规则 C.60：将二元运算符定义为非成员（\texttt{friend}）函数，保证两侧操作数都能进行隐式类型转换。成员函数的左侧操作数不参与隐式转换。
+\end{note}
+
+% ----------------------------------------------------------------------
+\section{不可重载的运算符}
+% ----------------------------------------------------------------------
+
+\cpplabel
+
+以下运算符在 \cpp{} 中\textbf{不可重载}：
+
+\begin{itemize}
+  \item \texttt{::}（作用域解析）——涉及编译期名字查找，不是运行期运算
+  \item \texttt{.}（成员访问）——如果可重载，将无法区分成员访问与自定义行为
+  \item \texttt{.*}（成员指针访问）——同上
+  \item \texttt{?:}（三元条件运算符）——\cpp{} 标准不允许，因为三元表达式的分支语义与短路求值无法用普通函数模拟
+  \item \texttt{sizeof} / \texttt{alignof} / \texttt{typeid}——编译期运算符，不是运行期函数调用
+\end{itemize}
+
+% ----------------------------------------------------------------------
+\section{不应重载的运算符：\texttt{||}、\texttt{\&\&}、\texttt{,}}
+% ----------------------------------------------------------------------
+
+\cpplabel
+
+\begin{warning}[title=规则 C.65 延伸：不重载 \texttt{||}、\texttt{\&\&}、\texttt{,}]
+对于用户自定义类型，\textbf{不应重载}逻辑或 \texttt{||}、逻辑与 \texttt{\&\&} 和逗号运算符 \texttt{,}。原因是这三个运算符在内置版本中具有特殊的求值语义，重载后会丧失这些语义，导致代码行为违反直觉。
+\end{warning}
+
+\subsection{短路求值的丧失}
+
+内置的 \texttt{||} 和 \texttt{\&\&} 具有\textbf{短路求值}（short-circuit evaluation）语义：
+
+\begin{itemize}
+  \item \texttt{a || b}：先求值 $a$，若 $a$ 为 \texttt{true} 则\textbf{不求值} $b$，直接返回 \texttt{true}
+  \item \texttt{a \&\& b}：先求值 $a$，若 $a$ 为 \texttt{false} 则\textbf{不求值} $b$，直接返回 \texttt{false}
+\end{itemize}
+
+一旦重载为 \texttt{operator||} 或 \texttt{operator\&\&}，它们就变成了普通的函数调用。函数调用要求\textbf{所有实参在调用前都已求值}，因此 $b$ \textbf{总是}会被求值，短路语义被破坏：
+
+\begin{lstlisting}[language=C++]
+class Bool {
+    bool val_;
+public:
+    Bool(bool v) : val_(v) {}
+
+    // 重载 || 后，右侧总是被求值！
+    friend Bool operator||(const Bool& a, const Bool& b) {
+        return Bool(a.val_ || b.val_);
+    }
+};
+
+bool expensive_check();  // 开销很大的检查
+
+Bool a(true);
+Bool b = a || Bool(expensive_check());
+// (*@\textcolor{red}{危险：即使 a 为 true，expensive\_check() 仍然被执行！}@*)
+\end{lstlisting}
+
+\subsection{逗号运算符的求值顺序保证丧失}
+
+内置逗号运算符保证\textbf{从左到右}求值，且左侧的副作用在右侧求值前完成。重载后变为普通函数调用，参数的求值顺序在 \cpp{17} 之前是\textbf{未指定的}。
+
+\subsection{\cpp{20} 及以上的重要变化}
+
+\begin{note}[title=C++20 求值顺序规则]
+从 \cpp{20} 起（P0145R3），\textbf{函数调用表达式中实参之间的求值顺序}虽然仍是\textbf{未指定的}（unspecified），但用户定义的 \texttt{operator||}、\texttt{operator\&\&} 和 \texttt{operator,} 的参数求值顺序已经由标准\textbf{明确规定}为从左到右（sequenced-before），与内置版本一致。
+
+换言之，\cpp{20} 解决了重载版本中``参数求值顺序不确定''的问题，但\textbf{短路求值仍然无法恢复}——函数调用的语义决定了所有实参都必须在函数体执行前完成求值。
+
+因此，即使在 \cpp{20} 及以上，仍然\textbf{不建议重载这三个运算符}。
+\end{note}
+
+\begin{lstlisting}[language=C++]
+// C++20: 求值顺序已定义，但短路仍然丢失
+struct Flag { bool v; };
+
+Flag operator||(Flag a, Flag b) {
+    return {a.v || b.v};  // a 和 b 都已求值后才进入函数体
+}
+
+Flag x{true};
+Flag y = x || Flag(may_throw());
+// C++17 及之前: may_throw() 是否执行未指定
+// C++20 起:     may_throw() 一定执行（因为 x 先求值，然后 y 再求值）
+//              但无论如何 may_throw() 都会被调用——短路丧失
+\end{lstlisting}
+
+\begin{bestpractice}[title=替代方案]
+如果需要自定义类型的逻辑运算，使用命名函数代替运算符重载：
+
+\begin{lstlisting}[language=C++]
+struct Bool {
+    bool val_;
+
+    // 命名函数，语义清晰
+    bool and_also(const Bool& other) const {
+        return val_ && other.val_;  // 内置 && 保留短路
+    }
+
+    bool or_else(const Bool& other) const {
+        return val_ || other.val_;  // 内置 || 保留短路
+    }
+};
+
+Bool a{true};
+bool result = a.or_else(Bool(expensive_check()));
+// (*@\textcolor{green!60!black}{安全：or\_else 的参数仅在 val\_ 为 false 时才构造}@*)
+\end{lstlisting}
+\end{bestpractice}
+
+% ----------------------------------------------------------------------
+\section{\cpp{20} 三路比较运算符}
+% ----------------------------------------------------------------------
+
+\cpplabel
+
+\cpp{20} 引入了三路比较运算符 \texttt{<=>}（spaceship operator），它返回一个强序类型（\Tp{std::strong\_ordering}、\Tp{std::weak\_ordering} 或 \Tp{std::partial\_ordering}），并可以自动生成全部六个比较运算符：
+
+\begin{lstlisting}[language=C++]
+#include <compare>
+
+struct Point {
+    double x, y;
+
+    // 编译器自动生成 ==, !=, <, >, <=, >=
+    auto operator<=>(const Point&) const = default;
+};
+
+Point a{1.0, 2.0}, b{1.0, 3.0};
+bool eq = (a == b);  // true, 由 <=> 自动推导
+bool lt = (a < b);   // true, 字典序比较
+\end{lstlisting}
+
+对于需要自定义比较语义的类型（如忽略大小写的字符串比较），可以手动实现 \Op{<=>}：
+
+\begin{lstlisting}[language=C++]
+#include <compare>
+#include <string>
+#include <algorithm>
+
+struct CaseInsensitiveString {
+    std::string data;
+
+    std::weak_ordering operator<=>(const CaseInsensitiveString& o) const {
+        auto to_lower = [](char c) {
+            return std::tolower(static_cast<unsigned char>(c));
+        };
+        auto a = data, b = o.data;
+        std::transform(a.begin(), a.end(), a.begin(), to_lower);
+        std::transform(b.begin(), b.end(), b.begin(), to_lower);
+        return a <=> b;
+    }
+
+    bool operator==(const CaseInsensitiveString& o) const {
+        return (*this <=> o) == 0;
+    }
+};
+\end{lstlisting}
+
+% ----------------------------------------------------------------------
+\section{解引用与箭头运算符：\texttt{*} 与 \texttt{->}}
+% ----------------------------------------------------------------------
+
+\cpplabel
+
+\Op{*}（解引用）和 \Op{->}（成员箭头）是 \cpp{} 中最具表现力的运算符重载之一。它们使得自定义类型可以\textbf{伪装成指针}，在不改变使用语法的前提下提供更安全或更丰富的语义。
+
+\subsection{智能指针}
+
+\cpp{} 标准库的智能指针 \seqsplit{unique\_ptr}、\seqsplit{shared\_ptr}、\seqsplit{weak\_ptr} 全部依赖 \Op{*} 和 \Op{->} 的重载来实现透明的指针语义：
+
+\begin{lstlisting}[language=C++]
+#include <memory>
+
+struct Widget {
+    int id;
+    void process() { /* ... */ }
+};
+
+auto p = std::make_unique<Widget>(Widget{42});
+
+// 解引用：像原始指针一样访问对象
+int x = (*p).id;    // 调用 operator*()
+int y = p->id;      // 调用 operator->()，等价于 (*p).id
+
+p->process();       // 直接调用成员函数
+\end{lstlisting}
+
+智能指针的核心价值在于：使用者无需关心底层是裸指针、\seqsplit{unique\_ptr} 还是 \seqsplit{shared\_ptr}——所有类型都通过统一的 \Op{*} 和 \Op{->} 接口暴露对象。这是运算符重载实现``透明代理''模式的典型例子。
+
+\subsection{迭代器}
+
+STL 迭代器同样依赖 \Op{*} 和 \Op{->} 来模拟指针语法：
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+
+std::vector<int> v = {1, 2, 3, 4, 5};
+
+for (auto it = v.begin(); it != v.end(); ++it) {
+    int val = *it;        // operator*(): 获取当前元素
+    // 如果元素是类类型，还可以用 ->
+    // it->method();      // operator->(): 访问成员
+}
+\end{lstlisting}
+
+这使得迭代器可以无缝替换裸指针，算法代码不需要为容器类型和原始数组写两套逻辑。
+
+\subsection{其他代理模式}
+
+除了智能指针和迭代器，\Op{*} 和 \Op{->} 的重载还广泛用于：
+
+\begin{itemize}
+  \item \textbf{线程局部存储代理}：\Tp{thread\_local} 包装器通过 \Op{*} 提供对当前线程数据的访问
+  \item \textbf{延迟计算/惰性求值}：\Op{*} 触发实际计算，返回缓存的结果
+  \item \textbf{引用计数句柄}：自定义的智能引用，在解引用时自动管理生命周期
+  \item \textbf{数据库游标}：\Op{->} 自动处理行的加载和字段访问
+\end{itemize}
+
+\begin{lstlisting}[language=C++]
+// 惰性求值示例
+template<typename T>
+class Lazy {
+    std::function<T()> factory_;
+    std::optional<T> cache_;
+public:
+    Lazy(std::function<T()> f) : factory_(std::move(f)) {}
+
+    T& operator*() {
+        if (!cache_) cache_ = factory_();
+        return *cache_;
+    }
+
+    T* operator->() { return &(**this); }
+};
+
+// 使用：expensive_computation() 仅在首次解引用时执行
+Lazy<Matrix> m([]{ return expensive_computation(); });
+// ... 其他代码 ...
+double det = m->determinant();  // 此处触发计算
+\end{lstlisting}
+
+\subsection{为什么 C\# 和 Java 不提供 \Op{*} 和 \Op{->}}
+
+\begin{compare}[title=C\#/Java 的指针模型]
+\csharp{} 和 Java 从根本上消除了裸指针的概念，因此也不需要 \Op{*} 和 \Op{->} 的重载：
+
+\begin{itemize}
+  \item \textbf{引用语义}：在 \csharp{}/Java 中，类类型的变量本质上是\textbf{托管引用}（managed reference），而非指针。\texttt{obj.Method()} 自动解引用，不需要 \Op{->}。
+  \item \textbf{无显式解引用}：没有 \texttt{*p} 语法，因为引用本身就已经是``自动解引用的指针''。
+  \item \textbf{GC 管理生命周期}：不需要智能指针来管理内存，引用计数由垃圾回收器替代。
+  \item \textbf{\csharp{} 的 \texttt{unsafe} 上下文}：\csharp{} 允许在 \texttt{unsafe} 块中使用真正的指针和 \texttt{->}，但这些是不可重载的语言内置运算符。
+\end{itemize}
+
+这意味着 \csharp{}/Java 中无法实现 \cpp{} 风格的透明代理模式。例如，无法让自定义类型在语法上伪装成指针——所有对象访问都是 \texttt{obj.Member}，不能通过重载改变这一行为。
+\end{compare}
+
+\csharplabel
+
+\begin{lstlisting}[language=CSharp]
+// C#: 没有 operator* 和 operator->
+// 类类型的变量自动是引用，不需要解引用
+public class Widget
+{
+    public int Id { get; set; }
+    public void Process() { /* ... */ }
+}
+
+Widget w = new Widget { Id = 42 };
+int x = w.Id;        // 直接访问，自动解引用
+w.Process();         // 直接调用
+
+// 如果要实现类似智能指针的行为，只能用显式属性：
+public class SmartRef<T> where T : class
+{
+    private T? _target;
+    public T Value => _target ?? throw new NullReferenceException();
+}
+
+var sr = new SmartRef<Widget>();
+int y = sr.Value.Id;  // 必须通过 .Value 访问，无法用 *sr 或 sr->Id
+\end{lstlisting}
+
+\begin{note}[title=设计哲学的差异]
+\csharp{}/Java 的决策是出于安全性考量：禁止指针算术和显式解引用可以消除大量内存错误（野指针、悬挂引用、双重释放）。代价是失去了 \Op{*} 和 \Op{->} 重载带来的表达力和透明代理能力。\cpp{} 选择将控制权交给程序员，用 RAII + 智能指针 + 运算符重载的组合来在获得表达力的同时保证安全。
+\end{note}
+
+% ----------------------------------------------------------------------
+\section{实战案例：复数类}
+% ----------------------------------------------------------------------
+
+\cpplabel
+
+复数 $\mathbb{C}$ 是一个域，支持完整的四则运算。以下是一个完整的 \Tp{Complex} 实现：
+
+\begin{lstlisting}[language=C++]
+#include <cmath>
+#include <iostream>
+
+class Complex {
+    double re_, im_;
+public:
+    constexpr Complex(double re = 0, double im = 0)
+        : re_(re), im_(im) {}
+
+    constexpr double real() const { return re_; }
+    constexpr double imag() const { return im_; }
+
+    // 复合赋值 —— 成员函数
+    Complex& operator+=(const Complex& o) {
+        re_ += o.re_; im_ += o.im_; return *this;
+    }
+    Complex& operator-=(const Complex& o) {
+        re_ -= o.re_; im_ -= o.im_; return *this;
+    }
+    Complex& operator*=(const Complex& o) {
+        double r = re_ * o.re_ - im_ * o.im_;
+        double i = re_ * o.im_ + im_ * o.re_;
+        re_ = r; im_ = i; return *this;
+    }
+    Complex& operator/=(const Complex& o) {
+        double d = o.re_ * o.re_ + o.im_ * o.im_;
+        double r = (re_ * o.re_ + im_ * o.im_) / d;
+        double i = (im_ * o.re_ - re_ * o.im_) / d;
+        re_ = r; im_ = i; return *this;
+    }
+
+    // 一元取负
+    constexpr Complex operator-() const {
+        return {-re_, -im_};
+    }
+
+    // 比较 —— 仅比较相等性（复数无自然全序）
+    constexpr bool operator==(const Complex& o) const {
+        return re_ == o.re_ && im_ == o.im_;
+    }
+
+    // 模长
+    double abs() const { return std::hypot(re_, im_); }
+
+    // 二元算术 —— 非成员 friend，基于复合赋值实现
+    friend Complex operator+(Complex a, const Complex& b) { return a += b; }
+    friend Complex operator-(Complex a, const Complex& b) { return a -= b; }
+    friend Complex operator*(Complex a, const Complex& b) { return a *= b; }
+    friend Complex operator/(Complex a, const Complex& b) { return a /= b; }
+
+    // 流输出
+    friend std::ostream& operator<<(std::ostream& os, const Complex& c) {
+        os << c.re_;
+        if (c.im_ >= 0) os << '+';
+        os << c.im_ << 'i';
+        return os;
+    }
+};
+\end{lstlisting}
+
+\begin{guideline}[title=复合赋值与二元运算符的标准模式]
+先实现 \Op{+=}（成员函数），再基于它实现 \Op{+}（非成员 \texttt{friend}）。这保证了代码一致性，同时让两侧的操作数都能隐式转换。
+\end{guideline}
+
+% ══════════════════════════════════════════════════════════════
+\part{跨语言对比}
+% ══════════════════════════════════════════════════════════════
+
+\chapter{C\# 的运算符重载}
+
+% ----------------------------------------------------------------------
+\section{C\# 可重载的运算符}
+% ----------------------------------------------------------------------
+
+\csharplabel
+
+\csharp{} 的运算符重载能力\textbf{明显少于} \cpp{}。设计哲学是：只允许重载那些``数学意义明确''的运算符，禁止重载可能引起语义混淆的运算符。
+
+\begin{longtable}{ll}
+\toprule
+\textbf{类别} & \textbf{可重载的运算符} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{类别} & \textbf{可重载的运算符} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+算术 & \texttt{+ - * / \%} \\
+一元 & \texttt{+ - ! \textasciitilde{} ++ -{}-} \\
+比较 & \texttt{== != < > <= >=} \\
+位运算 & \texttt{\& | \^{} << >>} \\
+布尔 & \texttt{true false}（用于短路逻辑） \\
+类型转换 & \texttt{implicit / explicit operator T()} \\
+\end{longtable}
+
+\begin{compare}[title=C\# 不能重载但 C++ 可以的运算符]
+\csharp{} 不允许重载以下运算符：
+
+\begin{itemize}
+  \item \texttt{[]}（下标）——用索引器（\texttt{this[int]}）代替
+  \item \texttt{()}（函数调用）——无替代，需使用命名方法
+  \item \texttt{+= -= *=} 等复合赋值——自动由对应的二元运算符推导
+  \item \texttt{|| \&\&}——通过重载 \Op{true} / \Op{false} + \Op{|} / \Op{\&} 间接实现短路
+  \item \texttt{,}（逗号）——完全禁止
+\end{itemize}
+
+这种限制减少了误用的可能性，但也意味着 \csharp{} 中某些场景（如自定义矩阵类型）无法像 \cpp{} 那样优雅地使用 \texttt{()} 运算符实现函数式调用。
+\end{compare}
+
+\csharplabel
+
+\begin{lstlisting}[language=CSharp]
+public struct Complex : IEquatable<Complex>
+{
+    public double Real { get; }
+    public double Imag { get; }
+
+    public Complex(double re, double im) { Real = re; Imag = im; }
+
+    // 算术运算符
+    public static Complex operator +(Complex a, Complex b)
+        => new(a.Real + b.Real, a.Imag + b.Imag);
+    public static Complex operator *(Complex a, Complex b)
+        => new(a.Real * b.Real - a.Imag * b.Imag,
+               a.Real * b.Imag + a.Imag * b.Real);
+    public static Complex operator -(Complex a)
+        => new(-a.Real, -a.Imag);
+
+    // 比较运算符 —— 必须成对重载
+    public static bool operator ==(Complex a, Complex b)
+        => a.Real == b.Real && a.Imag == b.Imag;
+    public static bool operator !=(Complex a, Complex b)
+        => !(a == b);
+
+    // 隐式转换: double -> Complex
+    public static implicit operator Complex(double d)
+        => new(d, 0);
+
+    public bool Equals(Complex other) => this == other;
+    public override bool Equals(object? obj) => obj is Complex c && this == c;
+    public override int GetHashCode() => HashCode.Combine(Real, Imag);
+}
+
+// 使用
+Complex a = new(1, 2);
+Complex b = 3.0;  // 隐式转换 double -> Complex
+Complex c = a + b;
+\end{lstlisting}
+
+\begin{note}[title=C\# 的短路保护机制]
+\csharp{} 不允许直接重载 \texttt{||} 和 \texttt{\&\&}。但通过同时重载 \texttt{operator true}、\texttt{operator false} 和 \texttt{operator |}（或 \Op{\&}），可以让自定义类型在 \texttt{||} 和 \texttt{\&\&} 表达式中保留短路语义。这是 \csharp{} 设计上比 \cpp{} 更安全的地方。
+\end{note}
+
+% ----------------------------------------------------------------------
+\chapter{Python 的运算符重载}
+% ----------------------------------------------------------------------
+
+\section{Python 的魔法函数（dunder methods）}
+% ----------------------------------------------------------------------
+
+\pythonlabel
+
+Python 的运算符重载通过\textbf{魔法函数}（magic methods / dunder methods，即双下划线包围的特殊方法名）实现。Python 的设计哲学与 \cpp{} 和 \csharp{} 都不同：\textbf{几乎所有运算符都可以重载}，且重载方式极其统一——只需实现对应的 \texttt{\_\_xxx\_\_} 方法。
+
+\begin{longtable}{ll}
+\toprule
+\textbf{运算符} & \textbf{魔法函数} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{运算符} & \textbf{魔法函数} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+\texttt{+} & \texttt{\_\_add\_\_}, \texttt{\_\_radd\_\_}, \texttt{\_\_iadd\_\_} \\
+\texttt{-} & \texttt{\_\_sub\_\_}, \texttt{\_\_rsub\_\_}, \texttt{\_\_isub\_\_} \\
+\texttt{*} & \texttt{\_\_mul\_\_}, \texttt{\_\_rmul\_\_}, \texttt{\_\_imul\_\_} \\
+\texttt{/} & \texttt{\_\_truediv\_\_}, \texttt{\_\_rtruediv\_\_} \\
+\texttt{//} & \texttt{\_\_floordiv\_\_} \\
+\texttt{\%} & \texttt{\_\_mod\_\_} \\
+\texttt{**} & \texttt{\_\_pow\_\_} \\
+\texttt{== !=} & \texttt{\_\_eq\_\_}, \texttt{\_\_ne\_\_} \\
+\texttt{< > <= >=} & \texttt{\_\_lt\_\_}, \texttt{\_\_gt\_\_}, \texttt{\_\_le\_\_}, \texttt{\_\_ge\_\_} \\
+\texttt{[]} & \texttt{\_\_getitem\_\_}, \texttt{\_\_setitem\_\_} \\
+\texttt{()} & \texttt{\_\_call\_\_} \\
+\texttt{in} & \texttt{\_\_contains\_\_} \\
+\texttt{-}（一元） & \texttt{\_\_neg\_\_} \\
+\texttt{abs()} & \texttt{\_\_abs\_\_} \\
+\texttt{len()} & \texttt{\_\_len\_\_} \\
+\texttt{bool()} & \texttt{\_\_bool\_\_} \\
+\end{longtable}
+
+Python 的 \texttt{\_\_radd\_\_} 等"反向"方法对应 \cpp{} 中非成员运算符解决的隐式转换问题：当左侧对象不支持该运算时，Python 自动尝试右侧对象的 \texttt{\_\_radd\_\_}。
+
+\pythonlabel
+
+\begin{lstlisting}[language=Py]
+class Complex:
+    """复数类，支持完整域运算。"""
+
+    __slots__ = ('re', 'im')
+
+    def __init__(self, re: float = 0, im: float = 0):
+        self.re = re
+        self.im = im
+
+    # 算术运算
+    def __add__(self, other):
+        if isinstance(other, (int, float)):
+            other = Complex(other)
+        return Complex(self.re + other.re, self.im + other.im)
+
+    def __radd__(self, other):  # 处理 int/float + Complex
+        return self.__add__(other)
+
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+            other = Complex(other)
+        return Complex(
+            self.re * other.re - self.im * other.im,
+            self.re * other.im + self.im * other.re
+        )
+
+    def __neg__(self):
+        return Complex(-self.re, -self.im)
+
+    def __eq__(self, other):
+        if isinstance(other, (int, float)):
+            other = Complex(other)
+        return self.re == other.re and self.im == other.im
+
+    def __abs__(self):
+        return (self.re**2 + self.im**2) ** 0.5
+
+    def __repr__(self):
+        return f"Complex({self.re}, {self.im})"
+
+# 使用
+a = Complex(1, 2)
+b = Complex(3, 4)
+c = a + b       # __add__
+d = 5.0 + a      # __radd__
+e = a * b        # __mul__
+f = -a           # __neg__
+g = abs(a)       # __abs__
+\end{lstlisting}
+
+\begin{note}[title=Python 的 ``鸭子类型'' 优势]
+Python 不需要显式声明运算符的返回类型或参数类型。只要实现了 \texttt{\_\_add\_\_} 方法，对象就可以用 \texttt{+} 相加——无论另一个操作数是 \Tp{Complex}、\Tp{int} 还是 \Tp{float}。这种``鸭子类型''设计使得运算符重载在 Python 中更加灵活，但也更容易产生运行时错误。
+\end{note}
+
+% ----------------------------------------------------------------------
+\chapter{不支持运算符重载的语言}
+% ----------------------------------------------------------------------
+
+% ----------------------------------------------------------------------
+\section{Java：刻意禁止}
+% ----------------------------------------------------------------------
+
+\javalabel
+
+Java 从设计之初就\textbf{完全禁止}运算符重载（唯一的例外是 \Tp{String} 的 \texttt{+} 拼接，这是编译器硬编码的特例）。James Gosling 认为运算符重载容易导致``聪明但难以理解''的代码，且 Java 的目标是成为一门简单、直接的语言。
+
+这一决定的代价是：自定义数学类型（向量、矩阵、复数、大数等）必须使用冗长的方法调用：
+
+\begin{lstlisting}[language=Java21]
+// Java: 没有运算符重载，代码冗长
+public record BigDecimal2(String value) {
+    public BigDecimal2 add(BigDecimal2 other) { /* ... */ return other; }
+    public BigDecimal2 multiply(BigDecimal2 other) { /* ... */ return other; }
+    public boolean isEqualTo(BigDecimal2 other) { /* ... */ return true; }
+}
+
+BigDecimal2 a = new BigDecimal2("1.5");
+BigDecimal2 b = new BigDecimal2("2.3");
+
+// 对比 C++: auto c = a + b * a;
+// Java 必须写成:
+BigDecimal2 c = a.add(b.multiply(a));
+\end{lstlisting}
+
+\begin{compare}[title=Java vs C++：运算符重载对代码可读性的影响]
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{场景} & \textbf{C++ / Python} & \textbf{Java} \\
+\midrule
+向量加法 & \texttt{c = a + b} & \texttt{c = a.add(b)} \\
+矩阵乘法 & \texttt{C = A * B} & \texttt{C = A.multiply(B)} \\
+复数比较 & \texttt{if (a == b)} & \texttt{if (a.equals(b))} \\
+大数运算 & \texttt{c = a + b * c} & \seqsplit{\texttt{c = a.add(b.multiply(c))}} \\
+字符串格式化 & \texttt{s = "x=" + x} & \texttt{s = "x=" + x}（唯一例外） \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+\javalabel
+
+Java 社区对此长期有争议。\texttt{java.math.BigDecimal} 的算术方法调用是最常被引用的例子：当表达式涉及多个大数运算时，方法链的嵌套使得代码可读性急剧下降。Kotlin（运行在 JVM 上的语言）通过支持有限的运算符重载（\texttt{plus}、\texttt{minus}、\texttt{times} 等命名约定）解决了这一问题。
+
+\section{其他不支持运算符重载的语言}
+
+\begin{itemize}
+  \item \textbf{Go}：不支持运算符重载。内置类型有完整运算符，自定义类型只能用方法。设计哲学与 Java 类似——保持语言简单。
+  \item \textbf{TypeScript/JavaScript}：不支持运算符重载。\texttt{+} 对对象调用 \seqsplit{valueOf()} / \seqsplit{toString()}，语义混乱且不直观。
+  \item \textbf{Rust}：通过 trait（\texttt{Add}、\texttt{Sub}、\texttt{Mul} 等）实现运算符重载，机制类似 Python 的魔法函数但具有编译期类型检查。
+\end{itemize}
+
+% ══════════════════════════════════════════════════════════════
+\part{总结}
+% ══════════════════════════════════════════════════════════════
+
+\chapter{运算符重载的工程价值}
+
+% ----------------------------------------------------------------------
+\section{运算符重载减少编码量}
+% ----------------------------------------------------------------------
+
+在科学计算、线性代数、金融建模等领域，自定义类型（向量、矩阵、复数、大数、区间等）的运算极为频繁。运算符重载的核心价值在于\textbf{让领域代码接近数学表达式}：
+
+\begin{lstlisting}[language=C++]
+// 没有运算符重载的矩阵运算
+Matrix C = A.multiply(B).add(D).scale(2.0);
+
+// 有运算符重载的矩阵运算
+Matrix C = A * B + D * 2.0;
+\end{lstlisting}
+
+当表达式变得更复杂时，差距呈指数增长。考虑有限元分析中的刚度矩阵组装：
+
+\begin{lstlisting}[language=C++]
+// 方法调用形式（Java 风格）
+K = K.add(
+    B.transpose()
+     .multiply(D)
+     .multiply(B)
+     .scale(det_j * weight)
+);
+
+// 运算符形式（C++ 风格）
+K += B.transpose() * D * B * (det_j * weight);
+\end{lstlisting}
+
+运算符重载不仅减少了字符数量，更重要的是保留了\textbf{领域专家的数学直觉}——数学家和工程师看到 $B^T D B$ 就能立刻理解这是应变-位移矩阵与材料矩阵的乘积，而方法链形式需要额外的认知解码。
+
+\begin{bestpractice}[title=何时使用运算符重载]
+\begin{itemize}
+  \item \textbf{适合}：类型对应明确的代数结构（群、环、域），如复数、矩阵、多项式、大数、向量、张量
+  \item \textbf{适合}：运算符的语义与数学直觉一致（$+$ 是加法，$*$ 是乘法，$==$ 是相等）
+  \item \textbf{不适合}：运算符的含义需要``解释''才能理解（如用 \Op{+} 表示字符串连接之外的语义）
+  \item \textbf{不适合}：\texttt{||}、\texttt{\&\&}、\texttt{,}（破坏短路求值，见前文）
+  \item \textbf{不适合}：\Op{=} 用于非赋值语义（如用 \Op{=} 构建 DSL，这是少数例外的合法用法，如 Eigen 的逗号初始化）
+\end{itemize}
+\end{bestpractice}
+
+% ----------------------------------------------------------------------
+\section{跨语言运算符重载能力对比}
+% ----------------------------------------------------------------------
+
+\begin{longtable}{lcccc}
+\toprule
+\textbf{特性} & \textbf{C++} & \textbf{C\#} & \textbf{Python} & \textbf{Java} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{特性} & \textbf{C++} & \textbf{C\#} & \textbf{Python} & \textbf{Java} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+算术运算符 & 全部 & 全部 & 全部 & 无 \\
+比较运算符 & 全部 & 全部 & 全部 & 无 \\
+下标 \texttt{[]} & \Op{[]} & 索引器 & \Fn{\_\_getitem\_\_} & 无 \\
+函数调用 \texttt{()} & \Op{()} & 无 & \Fn{\_\_call\_\_} & 无 \\
+复合赋值 & 独立重载 & 自动推导 & \Fn{\_\_iadd\_\_} 等 & 无 \\
+\texttt{|| \&\&} & 可重载（不推荐） & 间接支持 & \Fn{\_\_or\_\_} 等 & 无 \\
+\texttt{,} & 可重载（不推荐） & 禁止 & \Fn{\_\_comma\_\_} 无 & 无 \\
+类型转换 & \texttt{operator T()} & \texttt{implicit/explicit} & \Fn{\_\_int\_\_} 等 & 无 \\
+\bottomrule
+\end{longtable}
+
+% ----------------------------------------------------------------------
+\section{核心建议}
+% ----------------------------------------------------------------------
+
+\begin{keypoint}
+\begin{enumerate}
+  \item \textbf{遵循代数结构}：运算符重载应有数学基础。复数构成域，重载四则运算合理；\Tp{Student} 不构成代数结构，重载 \Op{+} 无意义。
+  \item \textbf{最小惊讶原则}：\Op{+} 应该做加法，\Op{==} 应该做相等判断。如果用户需要查文档才能理解 \texttt{a + b} 做了什么，就不应该重载。
+  \item \textbf{不重载 \texttt{||}、\texttt{\&\&}、\texttt{,}}：即使 \cpp{20} 已修复求值顺序问题，短路语义仍然丧失。
+  \item \textbf{二元运算符用非成员}：确保两侧都能隐式转换（Core Guidelines C.60）。
+  \item \textbf{\cpp{20} 优先使用 \texttt{<=>}}：减少比较运算符的样板代码。
+  \item \textbf{浮点数慎用 \texttt{==}}：浮点数是实数的有限精度近似，直接使用 \texttt{==} 几乎总是错误的。
+\end{enumerate}
+\end{keypoint}
+
+\end{document}

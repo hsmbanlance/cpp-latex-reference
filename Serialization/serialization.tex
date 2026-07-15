@@ -1,0 +1,1822 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ── 页面与字体 ──
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ── 数学与符号 ──
+\usepackage{amsmath,amssymb}
+
+% ── 颜色 ──
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{posixheadbg}{HTML}{2E5090}
+\definecolor{winheadbg}{HTML}{5B3A8C}
+\definecolor{asioheadbg}{HTML}{C62828}
+\definecolor{protoheadbg}{HTML}{0D47A1}
+\definecolor{fbsheadbg}{HTML}{00695C}
+\definecolor{csharpheadbg}{HTML}{68217A}
+\definecolor{jsonheadbg}{HTML}{F57F17}
+\definecolor{pfrheadbg}{HTML}{BF360C}
+\definecolor{reflheadbg}{HTML}{4A148C}
+\definecolor{warnheadbg}{HTML}{B71C1C}
+
+% ── 代码高亮 ──
+\usepackage{listings}
+
+% C++ 风格（默认）
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  xleftmargin=1em,
+  xrightmargin=1em,
+  breaklines=true,
+  tabsize=4,
+  showstringspaces=false,
+  numbers=left,
+  numbersep=8pt,
+  aboveskip=1em,
+  belowskip=1em,
+  columns=flexible,
+  keepspaces=true,
+  escapeinside={(*@}{@*)},
+  morekeywords={concept,requires,co_await,co_yield,co_return,
+                consteval,constinit,decltype,noexcept,override,
+                final,nullptr,static_assert,constexpr,
+                serialize,deserialize,
+                template,typename},
+  deletekeywords={int,char,bool,float,double,void,long,short,
+                  unsigned,signed,auto,struct,class,enum,union,
+                  public,private,protected,static,const,volatile,
+                  extern,inline,namespace,using,typedef},
+  emph={int,char,bool,float,double,void,long,short,unsigned,signed,
+        size_t,uint8_t,uint16_t,uint32_t,uint64_t,int8_t,int16_t,
+        int32_t,int64_t,ptrdiff_t,
+        string,string_view,vector,map,set,unordered_map,
+        unique_ptr,shared_ptr,optional,variant,any,
+        span,array,tuple,pair,
+        ostream,istream,stringstream,ostringstream,istringstream,
+        ifstream,ofstream,fstream,
+        json,byte,
+        text\_archive,binary\_archive,xml\_archive,
+        portable\_binary\_archive},
+  emphstyle=\color{teal!80!black},
+}
+
+% C\# 风格
+\lstdefinestyle{csharpstyle}{
+  language=[Sharp]C,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{csharpheadbg}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  xleftmargin=1em,
+  xrightmargin=1em,
+  breaklines=true,
+  tabsize=4,
+  showstringspaces=false,
+  numbers=left,
+  numbersep=8pt,
+  aboveskip=1em,
+  belowskip=1em,
+  columns=flexible,
+  keepspaces=true,
+  escapeinside={(*@}{@*)},
+  morekeywords={async,await,var,record,init,get,set,
+                required,abstract,override,virtual,sealed,
+                readonly,ref,out,in,params,where,
+                nameof,typeof,using,namespace,
+                Serialize,Deserialize,SerializeObject,
+                DeserializeObject,JsonSerializer,
+                JsonSerializerOptions,JsonIgnore,
+                JsonPropertyName,JsonPropertyOrder},
+  deletekeywords={int,char,bool,float,double,void,long,short,
+                  static,class,public,private,protected,
+                  const,extern,struct,enum,new,this,return,
+                  if,else,for,while,do,switch,case,break,
+                  continue,throw,try,catch,finally},
+  emph={int,char,bool,float,double,void,long,short,string,byte,
+        object,decimal,uint,ulong,ushort,sbyte,
+        List,Dictionary,HashSet,Array,
+        Task,ValueTask,IEnumerable,IEnumerator,
+        IDisposable,IAsyncDisposable,
+        Stream,MemoryStream,FileStream,
+        BinaryFormatter,ISerializable,SerializationInfo,
+        StreamingContext,DataContractSerializer,
+        DataContract,DataMember,
+        JsonSerializer,JsonSerializerOptions,
+        Utf8JsonWriter,JsonDocument,JsonElement,
+        SerializationContext,ProtoContract,ProtoMember},
+  emphstyle=\color{teal!80!black},
+}
+
+% Protobuf IDL 风格
+\lstdefinestyle{protostyle}{
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{protoheadbg}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  xleftmargin=1em,
+  xrightmargin=1em,
+  breaklines=true,
+  tabsize=4,
+  showstringspaces=false,
+  numbers=left,
+  numbersep=8pt,
+  aboveskip=1em,
+  belowskip=1em,
+  columns=flexible,
+  keepspaces=true,
+  morekeywords={syntax,message,service,rpc,returns,
+                repeated,optional,required,oneof,map,
+                reserved,extensions,extend,enum,
+                package,option,import,
+                string,int32,int64,uint32,uint64,
+                float,double,bool,bytes,sint32,sint64,
+                fixed32,fixed64,sfixed32,sfixed64},
+}
+
+% FlatBuffers IDL 风格
+\lstdefinestyle{fbsstyle}{
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{fbsheadbg}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  xleftmargin=1em,
+  xrightmargin=1em,
+  breaklines=true,
+  tabsize=4,
+  showstringspaces=false,
+  numbers=left,
+  numbersep=8pt,
+  aboveskip=1em,
+  belowskip=1em,
+  columns=flexible,
+  keepspaces=true,
+  morekeywords={table,struct,enum,union,namespace,
+                include,attribute,root_type,file_identifier,
+                file_extension,rpc_service,
+                string,bool,byte,ubyte,short,ushort,
+                int,uint,float,long,ulong,double},
+}
+
+\lstset{style=cppstyle}
+
+% ── 表格 ──
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{float}
+
+% ── 长文本拆分 ──
+\usepackage{seqsplit}
+
+% ── 彩色框 ──
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced, breakable,
+  colback=blue!5!white, colframe=blue!75!black,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm, boxrule=0.8mm,
+  title={序列化要点}, #1
+}
+
+\newtcolorbox{compare}[1][]{
+  enhanced, breakable,
+  colback=green!3!white, colframe=green!50!black,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm, boxrule=0.8mm,
+  title={方案对比}, #1
+}
+
+\newtcolorbox{warning}[1][]{
+  enhanced, breakable,
+  colback=red!5!white, colframe=red!75!black,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm, boxrule=0.8mm,
+  title={常见陷阱}, #1
+}
+
+\newtcolorbox{note}[1][]{
+  enhanced, breakable,
+  colback=orange!5!white, colframe=orange!80!black,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm, boxrule=0.8mm,
+  title={注意}, #1
+}
+
+\newtcolorbox{bestpractice}[1][]{
+  enhanced, breakable,
+  colback=purple!5!white, colframe=purple!60!black,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm, boxrule=0.8mm,
+  title={最佳实践}, #1
+}
+
+% ── 标题格式 ──
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+% ── 页眉页脚 ──
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+% ── 列表 ──
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ── 超链接 ──
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  pdfauthor={C++ Serialization Comparison},
+  pdftitle={C++ 序列化方案对比参考手册},
+}
+
+% ── 自定义宏 ──
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+% ── 语言标签 ──
+\newcommand{\cpplabel}{%
+  \noindent\begin{tcolorbox}[colback=algheadbg,coltext=white,
+    sharp corners,boxrule=0pt,width=3.0em,height=1.4em,
+    halign=center,valign=center,nobeforeafter,left=0pt,right=0pt,
+    top=0pt,bottom=0pt]\small\bfseries C++\end{tcolorbox}}
+
+\newcommand{\csharplabel}{%
+  \noindent\begin{tcolorbox}[colback=csharpheadbg,coltext=white,
+    sharp corners,boxrule=0pt,width=3.2em,height=1.4em,
+    halign=center,valign=center,nobeforeafter,left=0pt,right=0pt,
+    top=0pt,bottom=0pt]\small\bfseries C\#\end{tcolorbox}}
+
+\newcommand{\protolabel}{%
+  \noindent\begin{tcolorbox}[colback=protoheadbg,coltext=white,
+    sharp corners,boxrule=0pt,width=5em,height=1.4em,
+    halign=center,valign=center,nobeforeafter,left=0pt,right=0pt,
+    top=0pt,bottom=0pt]\small\bfseries Protobuf\end{tcolorbox}}
+
+\newcommand{\flatbuflabel}{%
+  \noindent\begin{tcolorbox}[colback=fbsheadbg,coltext=white,
+    sharp corners,boxrule=0pt,width=5.9em,height=1.4em,
+    halign=center,valign=center,nobeforeafter,left=0pt,right=0pt,
+    top=0pt,bottom=0pt]\small\bfseries FlatBuffers\end{tcolorbox}}
+
+\newcommand{\jsonlabel}{%
+  \noindent\begin{tcolorbox}[colback=jsonheadbg,coltext=white,
+    sharp corners,boxrule=0pt,width=3.2em,height=1.4em,
+    halign=center,valign=center,nobeforeafter,left=0pt,right=0pt,
+    top=0pt,bottom=0pt]\small\bfseries JSON\end{tcolorbox}}
+
+\newcommand{\pfrlabel}{%
+  \noindent\begin{tcolorbox}[colback=pfrheadbg,coltext=white,
+    sharp corners,boxrule=0pt,width=5.6em,height=1.4em,
+    halign=center,valign=center,nobeforeafter,left=0pt,right=0pt,
+    top=0pt,bottom=0pt]\small\bfseries Boost.PFR\end{tcolorbox}}
+
+\newcommand{\refllabel}{%
+  \noindent\begin{tcolorbox}[colback=reflheadbg,coltext=white,
+    sharp corners,boxrule=0pt,width=4em,height=1.4em,
+    halign=center,valign=center,nobeforeafter,left=0pt,right=0pt,
+    top=0pt,bottom=0pt]\small\bfseries C++26\end{tcolorbox}}
+
+\begin{document}
+
+% ── 封面 ──
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\Huge\bfseries\color{algheadbg} C++ 序列化方案对比参考手册\par}
+\vspace{1cm}
+{\LARGE\color{blue!70!black} Boost.Serialization \textbullet{} Cereal \textbullet{} nlohmann/json \textbullet{} Protobuf \textbullet{} FlatBuffers\par}
+\vspace{0.3cm}
+{\LARGE\color{blue!70!black} C\# 序列化 \textbullet{} C++26 反射\par}
+\vfill
+{\large\color{gray} \today\par}
+\end{titlepage}
+
+\frontmatter
+
+% ── 前言 ──
+\chapter*{前言}
+\addcontentsline{toc}{chapter}{前言}
+
+序列化（Serialization）是将对象状态转换为可存储或可传输格式的过程。它是分布式系统、持久化存储、网络通信和游戏存档等场景的核心基础设施。
+
+在 C\# 等托管语言中，序列化是语言基础设施的一部分：运行时保留完整的类型元数据，开发者只需标记几个 Attribute 即可获得自动序列化能力。然而 C++ 遵循 ``you don't pay for what you don't use'' 的哲学，标准语言层面长期缺乏反射和序列化支持，迫使社区发展出十余种不同技术路线的方案。
+
+本手册系统对比 C++ 生态中的主流序列化方案，涵盖传统库（Boost.Serialization、Cereal）、现代 JSON 方案（nlohmann/json）、Schema 驱动方案（Protocol Buffers、FlatBuffers）、以及基于反射的新一代方案（Boost.PFR、雅兰亭 iguana、C++26 静态反射）。同时与 C\# 的序列化体系进行横向对比，最后总结 C++26 反射前 C++ 序列化面临的核心困境。
+
+% ── 目录 ──
+\makeatletter
+\IfFileExists{\jobname-manual.toc}{%
+  \chapter*{目录}
+  \@input{\jobname-manual.toc}%
+}{%
+  \tableofcontents
+}
+\makeatother
+
+\mainmatter
+
+% ═══════════════════════════════════════════════════════════
+\part{C++ 序列化方案}
+% ═══════════════════════════════════════════════════════════
+
+% ═══════════════════════════════════════════════
+\chapter{C++ 序列化概述}\label{ch:overview}
+% ═══════════════════════════════════════════════
+
+C++ 序列化方案可以按照多个维度分类。按数据格式，可分为\textbf{文本序列化}（JSON、XML）和\textbf{二进制序列化}（自定义二进制、Protobuf、FlatBuffers）。按驱动方式，可分为\textbf{代码驱动}（库直接操作 C++ 类型）和 \textbf{Schema 驱动}（先定义 IDL，再生成代码）。按是否需要手动注册，可分为\textbf{手动注册}（每个类手写序列化函数）和\textbf{自动反射}（库自动遍历成员）。
+
+在 C++26 静态反射到来之前，没有任何一种方案能够同时满足 ``零手动注册、零运行时开销、支持任意类型'' 三个目标。开发者不得不在以下维度中做出取舍：
+
+\begin{itemize}
+  \item \textbf{易用性}：是否需要为每个类手写序列化代码？
+  \item \textbf{性能}：序列化/反序列化的 CPU 和内存开销如何？
+  \item \textbf{跨语言}：数据格式是否可被其他语言读取？
+  \item \textbf{版本兼容}：数据结构增删字段后，旧数据是否仍可读取？
+  \item \textbf{类型支持}：是否支持多态、容器、自定义类型？
+\end{itemize}
+
+\begin{guideline}[title={C++ 序列化方案选型速查}]
+\begin{itemize}[nosep]
+  \item \textbf{项目内部闭环 + 高性能} $\to$ Boost.Serialization、Cereal（二进制）
+  \item \textbf{Web API + 可读性} $\to$ nlohmann/json
+  \item \textbf{跨语言 RPC} $\to$ Protocol Buffers（gRPC）
+  \item \textbf{零拷贝读取} $\to$ FlatBuffers（游戏、移动端）
+  \item \textbf{聚合体零样板} $\to$ Boost.PFR、雅兰亭 iguana
+  \item \textbf{面向未来} $\to$ C++26 静态反射（标准语言特性）
+\end{itemize}
+\end{guideline}
+
+% ═══════════════════════════════════════════════
+\chapter{Boost.Serialization}\label{ch:boost}
+% ═══════════════════════════════════════════════
+
+Boost.Serialization 是 C++ 生态中历史最悠久、功能最完备的序列化库。它由 Robert Ramey 开发，自 Boost 1.32（2004 年）起发布，支持文本、XML 和二进制三种归档（archive）格式。
+
+\section{基础用法}\label{sec:boost-basic}
+
+\cpplabel
+\begin{lstlisting}[caption={Boost.Serialization: 侵入式序列化}]
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/string.hpp>
+#include <boost/serialization/vector.hpp>
+#include <sstream>
+#include <string>
+#include <vector>
+
+struct Player {
+    std::string name;
+    int         hp;
+    double      speed;
+    std::vector<std::string> inventory;
+
+    // intrusive: serialize() as friend
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        ar & name;
+        ar & hp;
+        ar & speed;
+        ar & inventory;
+    }
+};
+
+int main() {
+    Player p{"Alice", 100, 3.5, {"sword", "shield"}};
+
+    // Serialize to text
+    std::ostringstream os;
+    boost::archive::text_oarchive oa(os);
+    oa << p;
+
+    // Deserialize from text
+    Player p2;
+    std::istringstream is(os.str());
+    boost::archive::text_iarchive ia(is);
+    ia >> p2;
+    // p2.name == "Alice", p2.hp == 100, ...
+}
+\end{lstlisting}
+
+Boost.Serialization 的核心设计是 \Tp{Archive} 模板参数：同一个 \Fn{serialize} 函数通过不同的 Archive 类型实现序列化（\Tp{text\_oarchive}）和反序列化（\Tp{text\_iarchive}），同时支持 \Tp{binary\_oarchive} 和 \Tp{xml\_oarchive}。
+
+\section{非侵入式序列化}\label{sec:boost-nonintrusive}
+
+对于无法修改类定义的场景（如第三方库类型），Boost.Serialization 支持在类外部定义自由函数：
+
+\cpplabel
+\begin{lstlisting}[caption={Boost.Serialization: 非侵入式序列化}]
+#include <boost/serialization/access.hpp>
+
+struct Point { double x, y, z; };  // no serialize() member
+
+// non-intrusive free function
+namespace boost { namespace serialization {
+    template <typename Archive>
+    void serialize(Archive& ar, Point& p,
+                   const unsigned int /*version*/) {
+        ar & p.x & p.y & p.z;
+    }
+}} // namespace boost::serialization
+\end{lstlisting}
+
+非侵入式序列化的前提是字段必须是 public 的。如果需要序列化私有字段，则须提供 getter/setter，并配合 \seqsplit{\texttt{boost::serialization::make\_nvp}} 使用。
+
+\section{版本控制与多态}\label{sec:boost-version}
+
+Boost.Serialization 内置版本控制机制。通过在 Archive 中记录版本号，可以在 \Fn{serialize} 函数中根据 \Tp{version} 参数做兼容处理：
+
+\cpplabel
+\begin{lstlisting}[caption={Boost.Serialization: 版本控制}]
+#include <boost/serialization/version.hpp>
+
+struct Config {
+    std::string host;
+    int         port;
+    bool        ssl;     // added in version 2
+
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        ar & host;
+        ar & port;
+        if (version >= 2) {
+            ar & ssl;
+        } else {
+            ssl = false;  // default for old data
+        }
+    }
+};
+
+// Register version number
+BOOST_CLASS_VERSION(Config, 2)
+\end{lstlisting}
+
+对于多态类型，需要使用 \seqsplit{\texttt{BOOST\_SERIALIZATION\_ASSUME\_ABSTRACT}} 和 \seqsplit{\texttt{BOOST\_CLASS\_EXPORT}} 注册类型：
+
+\cpplabel
+\begin{lstlisting}[caption={Boost.Serialization: 多态类型序列化}]
+#include <boost/serialization/export.hpp>
+#include <memory>
+
+struct Shape {
+    virtual ~Shape() = default;
+    virtual double area() const = 0;
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned int) {}
+};
+BOOST_SERIALIZATION_ASSUME_ABSTRACT(Shape)
+
+struct Circle : Shape {
+    double radius = 0;
+    double area() const override { return 3.14159 * radius * radius; }
+    template <typename Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & boost::serialization::base_object<Shape>(*this);
+        ar & radius;
+    }
+};
+BOOST_CLASS_EXPORT(Circle)
+
+// Usage: serialize via base pointer
+std::unique_ptr<Shape> s = std::make_unique<Circle>();
+// ar << s;  -- correctly serializes as Circle
+\end{lstlisting}
+
+\begin{warning}[title={Boost.Serialization 常见陷阱}]
+\begin{itemize}[nosep]
+  \item \textbf{编译开销大}：大量模板实例化导致编译时间显著增加，大型项目中可能需要单独编译序列化模块
+  \item \textbf{二进制格式不可移植}：\Tp{binary\_archive} 依赖平台的字节序和对齐，不适合跨平台传输
+  \item \textbf{版本兼容有限}：仅支持追加字段 + 版本号，不支持字段删除或类型变更
+  \item \textbf{必须注册多态类型}：忘记 \Fn{BOOST\_CLASS\_EXPORT} 会导致运行时异常
+\end{itemize}
+\end{warning}
+
+% ═══════════════════════════════════════════════
+\chapter{Cereal}\label{ch:cereal}
+% ═══════════════════════════════════════════════
+
+Cereal 是一个轻量级的 header-only C++11 序列化库，目标是成为 Boost.Serialization 的现代替代。它由 Randolph Voorhies 开发，API 更简洁，编译速度更快。
+
+\section{基础用法}\label{sec:cereal-basic}
+
+\cpplabel
+\begin{lstlisting}[caption={Cereal: 侵入式序列化}]
+#include <cereal/archives/binary.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+#include <sstream>
+
+struct Player {
+    std::string name;
+    int         hp;
+    double      speed;
+    std::vector<std::string> inventory;
+
+    template <typename Archive>
+    void serialize(Archive& ar) {
+        ar(name, hp, speed, inventory);
+        // or: ar & name & hp & speed & inventory;
+    }
+};
+
+int main() {
+    Player p{"Alice", 100, 3.5, {"sword", "shield"}};
+
+    // Binary
+    std::ostringstream os(std::ios::binary);
+    {
+        cereal::BinaryOutputArchive oa(os);
+        oa(p);
+    }
+
+    Player p2;
+    std::istringstream is(os.str(), std::ios::binary);
+    {
+        cereal::BinaryInputArchive ia(is);
+        ia(p2);
+    }
+}
+\end{lstlisting}
+
+Cereal 与 Boost.Serialization 的关键区别在于：\Fn{serialize} 函数不需要 \Tp{version} 参数（版本控制由开发者自行实现）；使用逗号分隔的 \texttt{ar(a, b, c)} 语法代替 \texttt{ar \& a \& b \& c}（两者均可用）。
+
+\section{命名序列化与版本控制}\label{sec:cereal-nvp}
+
+Cereal 通过 \Fn{cereal::make\_nvp} 为序列化数据添加名称标签，这在 JSON 和 XML 格式中尤为重要：
+
+\cpplabel
+\begin{lstlisting}[caption={Cereal: 命名序列化 (JSON 输出)}]
+template <typename Archive>
+void serialize(Archive& ar, Player& p) {
+    ar(cereal::make_nvp("name", p.name),
+       cereal::make_nvp("hp", p.hp),
+       cereal::make_nvp("speed", p.speed));
+}
+
+// JSON output:
+// { "name": "Alice", "hp": 100, "speed": 3.5 }
+\end{lstlisting}
+
+Cereal 的版本控制需要开发者自行管理——通常通过在 \Fn{serialize} 中增加版本标记实现，不如 Boost.Serialization 的版本号机制完善。
+
+\section{多态序列化}\label{sec:cereal-poly}
+
+Cereal 支持通过 \seqsplit{\texttt{CEREAL\_REGISTER\_TYPE}} 宏注册多态类型。序列化时须使用 \Tp{std::shared\_ptr} 或 \Tp{std::unique\_ptr}：
+
+\cpplabel
+\begin{lstlisting}[caption={Cereal: 多态类型序列化}]
+#include <cereal/types/polymorphic.hpp>
+#include <cereal/types/memory.hpp>
+
+struct Shape {
+    virtual ~Shape() = default;
+    virtual double area() const = 0;
+};
+
+struct Circle : Shape {
+    double radius = 0;
+    double area() const override { return 3.14159 * radius * radius; }
+    template <typename Archive>
+    void serialize(Archive& ar) { ar(radius); }
+};
+
+CEREAL_REGISTER_TYPE(Circle)
+
+// Usage via base pointer:
+std::shared_ptr<Shape> s = std::make_shared<Circle>();
+// oa(s);  -- correctly serializes as Circle
+\end{lstlisting}
+
+\begin{compare}[title={Boost.Serialization vs Cereal}]
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{特性} & \textbf{Boost.Serialization} & \textbf{Cereal} \\
+\midrule
+分发方式 & Boost 库 & header-only \\
+C++ 标准 & C++03 & C++11 \\
+编译速度 & 较慢（模板实例多） & 较快 \\
+版本控制 & 内置 \Fn{BOOST\_CLASS\_VERSION} & 需自行实现 \\
+多态支持 & \Fn{BOOST\_CLASS\_EXPORT} & \Fn{CEREAL\_REGISTER\_TYPE} \\
+二进制移植性 & 平台相关 & 平台相关 \\
+JSON 输出 & 无（需 xml\_archive） & 内置 \Tp{JSONOutputArchive} \\
+社区活跃度 & 维护模式 & 活跃 \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+% ═══════════════════════════════════════════════
+\chapter{nlohmann/json}\label{ch:nlohmann}
+% ═══════════════════════════════════════════════
+
+nlohmann/json 是 C++ 生态中使用最广泛的 JSON 库，由 Niels Lohmann 开发。它提供了直观的 JSON API，并支持自定义类型与 \Tp{nlohmann::json} 互转。
+
+\section{JSON 基础操作}\label{sec:json-basic}
+
+\jsonlabel
+\begin{lstlisting}[caption={nlohmann/json: 基础 JSON 操作}]
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
+int main() {
+    // Construct JSON
+    json j = {
+        {"name", "Alice"},
+        {"hp", 100},
+        {"speed", 3.5},
+        {"inventory", {"sword", "shield"}}
+    };
+
+    // Access
+    std::string name = j["name"];       // "Alice"
+    int hp = j.value("hp", 0);          // 100
+
+    // Iterate
+    for (auto& [key, val] : j.items()) {
+        // key = "name", val = "Alice", etc.
+    }
+
+    // Serialize to string
+    std::string s = j.dump();           // compact
+    std::string pretty = j.dump(2);     // indented
+
+    // Parse from string
+    json j2 = json::parse(R"({"name":"Bob","hp":50})");
+}
+\end{lstlisting}
+
+\section{自定义类型序列化}\label{sec:json-adl}
+
+nlohmann/json 使用 ADL（Argument Dependent Lookup）机制，通过在同一命名空间中定义 \Fn{to\_json} 和 \Fn{from\_json} 自由函数来实现自定义类型的序列化：
+
+\cpplabel
+\begin{lstlisting}[caption={nlohmann/json: 自定义类型序列化}]
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
+struct Player {
+    std::string name;
+    int         hp;
+    double      speed;
+};
+
+// ADL: must be in same namespace as Player
+void to_json(json& j, const Player& p) {
+    j = json{
+        {"name",  p.name},
+        {"hp",    p.hp},
+        {"speed", p.speed}
+    };
+}
+
+void from_json(const json& j, Player& p) {
+    j.at("name").get_to(p.name);
+    j.at("hp").get_to(p.hp);
+    j.at("speed").get_to(p.speed);
+}
+
+// Usage:
+Player p{"Alice", 100, 3.5};
+json j = p;            // calls to_json
+Player p2 = j.get<Player>();  // calls from_json
+\end{lstlisting}
+
+\begin{warning}[title={nlohmann/json 序列化痛点}]
+\begin{itemize}[nosep]
+  \item \textbf{每个类型都需要手写 to\_json / from\_json}：字段多时产生大量样板代码
+  \item \textbf{字段名硬编码为字符串}：拼写错误不会在编译期报错，只会在运行时抛异常
+  \item \textbf{不支持二进制格式}：仅支持 JSON（文本），大对象序列化性能差
+  \item \textbf{没有版本控制}：字段增删需要开发者自行处理 \Fn{contains} 和默认值
+  \item \textbf{嵌套类型需逐个注册}：\Tp{vector<Player>} 可自动推导，但复杂嵌套仍需手写
+\end{itemize}
+\end{warning}
+
+% ═══════════════════════════════════════════════
+\chapter{Protocol Buffers}\label{ch:protobuf}
+% ═══════════════════════════════════════════════
+
+Protocol Buffers（Protobuf）是 Google 开发的跨语言序列化框架，采用 \textbf{Schema 优先}的设计：先编写 \texttt{.proto} 文件定义数据结构，再由 \texttt{protoc} 编译器为各目标语言生成访问代码。
+
+\section{Schema 定义}\label{sec:proto-schema}
+
+\protolabel
+\begin{lstlisting}[style=protostyle,caption={Protocol Buffers: .proto Schema 定义}]
+syntax = "proto3";
+package game;
+
+message Player {
+    string name = 1;
+    int32 hp = 2;
+    double speed = 3;
+    repeated string inventory = 4;
+}
+
+message GameSession {
+    Player host = 1;
+    repeated Player players = 2;
+    int64 session_id = 3;
+}
+\end{lstlisting}
+
+Protobuf 的核心设计理念是\textbf{字段编号}（field number）：每个字段有一个唯一编号，序列化时使用编号（而非字段名）作为标识符。这使得字段的添加和删除天然支持向前/向后兼容——旧代码可以安全忽略新字段，新代码可以为缺失的旧字段提供默认值。
+
+\section{C++ 代码使用}\label{sec:proto-cpp}
+
+\cpplabel
+\begin{lstlisting}[caption={Protocol Buffers: C++ 使用生成的代码}]
+#include "player.pb.h"  // generated by protoc
+
+int main() {
+    game::Player p;
+    p.set_name("Alice");
+    p.set_hp(100);
+    p.set_speed(3.5);
+    p.add_inventory("sword");
+    p.add_inventory("shield");
+
+    // Serialize to binary
+    std::string buf;
+    p.SerializeToString(&buf);
+
+    // Deserialize
+    game::Player p2;
+    p2.ParseFromString(buf);
+    // p2.name() == "Alice", p2.hp() == 100
+
+    // Serialize to JSON (via util)
+    std::string json;
+    google::protobuf::util::MessageToJsonString(p, &json);
+}
+\end{lstlisting}
+
+\section{C\# 代码使用}\label{sec:proto-csharp}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle,caption={Protocol Buffers: C\# 使用 Google.Protobuf}]
+// Generated by protoc (Google.Protobuf NuGet)
+var p = new Player {
+    Name = "Alice",
+    Hp = 100,
+    Speed = 3.5
+};
+p.Inventory.Add("sword");
+p.Inventory.Add("shield");
+
+// Serialize to byte array
+byte[] buf = p.ToByteArray();
+
+// Deserialize
+var p2 = Player.Parser.ParseFrom(buf);
+Console.WriteLine(p2.Name);  // "Alice"
+\end{lstlisting}
+
+\begin{guideline}[title={Protobuf 核心优势}]
+\begin{itemize}[nosep]
+  \item \textbf{跨语言}：原生支持 C++、C\#、Java、Go、Python 等 10+ 语言
+  \item \textbf{版本兼容}：字段编号机制天然支持向前/向后兼容
+  \item \textbf{紧凑二进制}：序列化体积远小于 JSON/XML
+  \item \textbf{gRPC 生态}：与 gRPC 深度整合，适合微服务 RPC
+  \item \textbf{Schema 即文档}：\texttt{.proto} 文件本身就是接口文档
+\end{itemize}
+\end{guideline}
+
+\begin{note}[title={Protobuf 的代价}]
+\begin{itemize}[nosep]
+  \item 需要引入 \texttt{protoc} 编译步骤，增加构建复杂度
+  \item C++ 中不能直接操作普通 struct，必须使用生成的 accessor 类
+  \item 字段类型受限于 Protobuf 类型系统（无 \Tp{std::variant}、无自定义容器）
+  \item 不适合纯 C++ 内部的高性能场景（accessor 有额外开销）
+\end{itemize}
+\end{note}
+
+% ═══════════════════════════════════════════════
+\chapter{FlatBuffers}\label{ch:flatbuffers}
+% ═══════════════════════════════════════════════
+
+FlatBuffers 是 Google 开发的另一个跨语言序列化库，由 Wouter van Oortmerssen 设计。与 Protobuf 不同，FlatBuffers 的核心特性是\textbf{零拷贝}（zero-copy）：序列化后的二进制数据可以直接访问，无需反序列化。
+
+\section{Schema 定义}\label{sec:fbs-schema}
+
+\flatbuflabel
+\begin{lstlisting}[style=fbsstyle,caption={FlatBuffers: .fbs Schema 定义}]
+namespace game;
+
+table Player {
+    name: string;
+    hp: int;
+    speed: double;
+    inventory: [string];
+}
+
+root_type Player;
+\end{lstlisting}
+
+\section{零拷贝读取}\label{sec:fbs-zerocopy}
+
+\cpplabel
+\begin{lstlisting}[caption={FlatBuffers: 零拷贝读取}]
+#include "player_generated.h"  // generated by flatc
+
+int main() {
+    // Build a FlatBuffer
+    flatbuffers::FlatBufferBuilder builder;
+    auto name = builder.CreateString("Alice");
+    auto inv = builder.CreateVector(
+        std::vector<flatbuffers::Offset<flatbuffers::String>>{
+            builder.CreateString("sword"),
+            builder.CreateString("shield")
+        });
+    auto p = CreatePlayer(builder, name, 100, 3.5, inv);
+    builder.Finish(p);
+
+    // Get raw buffer (can be written to file / sent over network)
+    const uint8_t* buf = builder.GetBufferPointer();
+    int size = builder.GetSize();
+
+    // Zero-copy read: no deserialization needed!
+    auto rp = GetPlayer(buf);
+    std::cout << rp->name()->c_str();  // "Alice"
+    std::cout << rp->hp();             // 100
+}
+\end{lstlisting}
+
+\begin{compare}[title={Protobuf vs FlatBuffers}]
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{特性} & \textbf{Protocol Buffers} & \textbf{FlatBuffers} \\
+\midrule
+读取模式 & 需反序列化 & 零拷贝直接访问 \\
+序列化体积 & 紧凑（varint 编码） & 稍大（固定偏移） \\
+构建复杂度 & 简单（setter API） & 较复杂（Builder API） \\
+版本兼容 & 字段编号 & 字段可选 + 默认值 \\
+可变性 & 可变（可修改字段） & 不可变（写入后只读） \\
+典型场景 & RPC / 微服务 & 游戏资源 / 移动端 \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+% ═══════════════════════════════════════════════
+\chapter{基于反射的序列化}\label{ch:reflect-serial}
+% ═══════════════════════════════════════════════
+
+基于反射的序列化方案利用编译期反射能力自动遍历结构体成员，无需为每个类手写序列化函数。在 C++26 静态反射到来之前，这类方案主要依赖聚合体反射和第三方库。
+
+\section{Boost.PFR 反射序列化}\label{sec:pfr-serial}
+
+\pfrlabel
+\begin{lstlisting}[caption={Boost.PFR: 泛型序列化（聚合体自动遍历）}]
+#include <boost/pfr.hpp>
+#include <iostream>
+#include <sstream>
+#include <string>
+
+struct Player {
+    std::string name;
+    int         hp;
+    double      speed;
+};
+
+// Generic serializer: works for ANY aggregate
+template <typename T>
+std::string to_csv(const T& obj) {
+    std::ostringstream os;
+    bool first = true;
+    boost::pfr::for_each_field(obj, [&](const auto& field) {
+        if (!first) os << ',';
+        first = false;
+        os << field;
+    });
+    return os.str();
+}
+
+// Generic deserializer (simplified)
+template <typename T>
+T from_csv(std::istringstream& is) {
+    T obj{};
+    boost::pfr::for_each_field(obj, [&](auto& field) {
+        char comma;
+        is >> field;
+        is.get(comma);  // consume ','
+    });
+    return obj;
+}
+
+int main() {
+    Player p{"Alice", 100, 3.5};
+    std::cout << to_csv(p);  // Alice,100,3.5
+}
+\end{lstlisting}
+
+Boost.PFR 的序列化能力受限于\textbf{仅支持聚合体}——没有用户声明构造函数、没有私有成员、没有虚函数的结构体。对于非聚合体类，仍需手动注册。
+
+\section{雅兰亭 iguana}\label{sec:ylt-serial}
+
+雅兰亭的 iguana 组件提供了基于聚合体反射的 JSON/Protobuf/XML 序列化，集成度很高：
+
+\cpplabel
+\begin{lstlisting}[caption={雅兰亭 iguana: 零样板 JSON 序列化}]
+#include <ylt/iguana/json_writer.hpp>
+#include <ylt/iguana/json_reader.hpp>
+
+struct Player {
+    std::string name;
+    int         hp;
+    double      speed;
+};
+// One macro to enable reflection (optional for aggregates)
+// YLT_REFL(Player, name, hp, speed);
+
+int main() {
+    Player p{"Alice", 100, 3.5};
+
+    // Serialize
+    std::string json;
+    iguana::to_json(p, json);
+    // {"name":"Alice","hp":100,"speed":3.5}
+
+    // Deserialize
+    Player p2{};
+    iguana::from_json(p2, json);
+
+    // Also supports: struct_pack (binary), XML, MsgPack
+    auto buf = struct_pack::serialize(p);
+    auto res = struct_pack::deserialize<Player>(buf);
+}
+\end{lstlisting}
+
+\section{RTTR 运行时反射序列化}\label{sec:rttr-serial}
+
+RTTR（Run Time Type Reflection）提供了运行时反射能力，可以按名称查找属性并遍历所有字段。虽然性能不及编译期方案，但支持任意类型（包括多态和非聚合体）：
+
+\cpplabel
+\begin{lstlisting}[caption={RTTR: 运行时反射驱动的泛型序列化}]
+#include <rttr/registration.h>
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
+struct Player {
+    std::string name;
+    int         hp;
+    RTTR_ENABLE()
+};
+
+RTTR_REGISTRATION {
+    rttr::registration::class_<Player>("Player")
+        .property("name", &Player::name)
+        .property("hp",   &Player::hp);
+}
+
+// Generic JSON serializer using RTTR
+json to_json_rttr(const rttr::instance& obj) {
+    json j;
+    auto type = obj.get_type();
+    for (auto& prop : type.get_properties()) {
+        auto val = prop.get_value(obj);
+        j[prop.get_name().to_string()] =
+            val.to_string();
+    }
+    return j;
+}
+\end{lstlisting}
+
+\begin{compare}[title={反射序列化方案对比}]
+\begin{tabularx}{\textwidth}{l p{3.2cm} p{3.2cm} p{3.2cm}}
+\toprule
+\textbf{特性} & \textbf{Boost.PFR} & \textbf{雅兰亭 iguana} & \textbf{RTTR} \\
+\midrule
+反射时机 & 编译期 & 编译期 & 运行时 \\
+类型限制 & 聚合体 & 聚合体 / 宏注册 & 任意（需注册） \\
+JSON 支持 & 需自建 & 内置 & 需自建 \\
+二进制支持 & 需自建 & struct\_pack & 需自建 \\
+性能 & 极快（内联） & 极快（内联） & 中等（查表） \\
+C++ 标准 & $\ge$14 & $\ge$20 & $\ge$11 \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+% ═══════════════════════════════════════════════
+\chapter{C++26 反射与序列化}\label{ch:cpp26}
+% ═══════════════════════════════════════════════
+
+C++26 将通过 P2996 提案引入标准静态反射，这将彻底改变 C++ 序列化的格局。标准反射允许在编译期遍历任意类型的成员（包括名称和类型），并通过代码注入（splice）生成序列化代码——无需宏、无需外部工具、无需手写注册代码。
+
+\section{泛型 JSON 序列化器}\label{sec:cpp26-json}
+
+\refllabel
+\begin{lstlisting}[caption={C++26 反射: 一个泛型函数序列化任意类型}]
+#include <meta>
+#include <string>
+#include <sstream>
+#include <type_traits>
+
+template <typename T>
+std::string to_json(const T& obj) {
+    std::ostringstream os;
+    os << '{';
+    bool first = true;
+    template for (constexpr auto m :
+                  std::meta::nonstatic_data_members_of(^T)) {
+        if (!first) os << ", ";
+        first = false;
+        os << '"' << std::meta::name_of(m) << '"' << ':';
+        using FieldType = std::remove_cvref_t<
+            decltype(obj.[:m:])>;
+        if constexpr (std::is_same_v<FieldType, std::string>) {
+            os << '"' << obj.[:m:] << '"';
+        } else {
+            os << obj.[:m:];
+        }
+    }
+    os << '}';
+    return os.str();
+}
+
+struct Player {
+    std::string name;
+    int         hp;
+    double      speed;
+};
+
+// to_json(Player{"Alice", 100, 3.5})
+// => {"name":"Alice","hp":100,"speed":3.5}
+\end{lstlisting}
+
+这个泛型函数的关键之处在于：它对\textbf{任何}结构体都有效，无需为每个类型手写 \Fn{to\_json}。编译器在实例化时自动展开 \texttt{template for} 循环，生成的代码与手写版本等价——真正实现了 ``零开销的泛型序列化''。
+
+\section{泛型二进制序列化}\label{sec:cpp26-binary}
+
+同样的模式可以应用于二进制序列化：
+
+\refllabel
+\begin{lstlisting}[caption={C++26 反射: 泛型二进制序列化}]
+#include <meta>
+#include <vector>
+#include <cstring>
+
+template <typename T>
+std::vector<std::byte> serialize_binary(const T& obj) {
+    std::vector<std::byte> buf;
+    template for (constexpr auto m :
+                  std::meta::nonstatic_data_members_of(^T)) {
+        const auto& field = obj.[:m:];
+        using FT = std::remove_cvref_t<decltype(field)>;
+        if constexpr (std::is_trivially_copyable_v<FT>) {
+            auto* p = reinterpret_cast<const std::byte*>(&field);
+            buf.insert(buf.end(), p, p + sizeof(FT));
+        } else if constexpr (std::is_same_v<FT, std::string>) {
+            uint32_t len = static_cast<uint32_t>(field.size());
+            auto* lp = reinterpret_cast<const std::byte*>(&len);
+            buf.insert(buf.end(), lp, lp + sizeof(len));
+            auto* sp = reinterpret_cast<const std::byte*>(
+                field.data());
+            buf.insert(buf.end(), sp, sp + len);
+        }
+    }
+    return buf;
+}
+\end{lstlisting}
+
+\section{枚举反射}\label{sec:cpp26-enum}
+
+C++26 反射还可以自动生成枚举的字符串转换——这在 C++26 之前是一个长期痛点：
+
+\refllabel
+\begin{lstlisting}[caption={C++26 反射: 枚举 to\_string / from\_string}]
+#include <meta>
+#include <string>
+#include <stdexcept>
+
+enum class Color { Red, Green, Blue };
+
+template <typename E>
+    requires std::is_enum_v<E>
+std::string enum_to_string(E val) {
+    template for (constexpr auto e :
+                  std::meta::enumerators_of(^E)) {
+        if (val == [:e:])
+            return std::string(std::meta::name_of(e));
+    }
+    return "unknown";
+}
+
+template <typename E>
+    requires std::is_enum_v<E>
+E enum_from_string(std::string_view name) {
+    template for (constexpr auto e :
+                  std::meta::enumerators_of(^E)) {
+        if (name == std::meta::name_of(e))
+            return [:e:];
+    }
+    throw std::runtime_error("unknown enum value");
+}
+
+// enum_to_string(Color::Green)  =>  "Green"
+// enum_from_string<Color>("Blue")  =>  Color::Blue
+\end{lstlisting}
+
+\begin{bestpractice}[title={C++26 反射的序列化意义}]
+\begin{itemize}[nosep]
+  \item \textbf{消除样板代码}：不再需要为每个类型手写 \Fn{serialize} / \Fn{to\_json}
+  \item \textbf{编译期零开销}：生成的代码与手写版本等价，编译器可完全内联
+  \item \textbf{类型安全}：字段名和类型在编译期确定，不存在拼写错误
+  \item \textbf{标准统一}：不再依赖 Boost、Cereal、nlohmann 等第三方库的序列化 API
+  \item \textbf{泛型组合}：嵌套类型可以递归调用泛型序列化器
+\end{itemize}
+\end{bestpractice}
+
+\begin{note}[title={C++26 反射当前状态}]
+截至 2026 年 7 月，尚无编译器完整实现 C++26 反射。\texttt{template for} 和 \texttt{[: :]} splice 语法需要编译器深度支持。Clang 和 GCC 正在积极开发中。上述代码展示了标准提案的 API 设计，实际使用时可能需要根据编译器实现做微调。
+\end{note}
+
+% ═══════════════════════════════════════════════════════════
+\part{C\# 序列化方案}
+% ═══════════════════════════════════════════════════════════
+
+% ═══════════════════════════════════════════════
+\chapter{C\# 序列化概述}\label{ch:csharp-overview}
+% ═══════════════════════════════════════════════
+
+与 C++ 不同，C\# 运行在 CLR（Common Language Runtime）之上，每个类型在运行时都保留完整的元数据（字段名、类型、Attribute 等）。这意味着 C\# 天然具备运行时反射能力，序列化可以直接利用类型元数据自动完成——无需编译期技巧或手动注册。
+
+C\# 的序列化方案经历了三代演进：早期基于 \Tp{BinaryFormatter} 的运行时序列化、中期基于 \seqsplit{\texttt{DataContractSerializer}} 的契约式序列化，以及现代基于 \Tp{System.Text.Json} 的高性能 JSON。
+
+% ═══════════════════════════════════════════════
+\chapter{BinaryFormatter 与 ISerializable}\label{ch:binary-fmt}
+% ═══════════════════════════════════════════════
+
+\Tp{BinaryFormatter} 是 .NET 最早的序列化机制。标记 \texttt{[Serializable]} 的类型可自动序列化为二进制流，无需手写代码：
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle,caption={C\#: BinaryFormatter 自动序列化}]
+using System;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+
+[Serializable]
+class Player {
+    public string Name { get; set; }
+    public int Hp { get; set; }
+    public double Speed { get; set; }
+
+    [NonSerialized]
+    private string _tempData;  // skip this field
+}
+
+class Demo {
+    static byte[] Serialize(Player p) {
+        using var ms = new MemoryStream();
+        var fmt = new BinaryFormatter();
+        fmt.Serialize(ms, p);
+        return ms.ToArray();
+    }
+
+    static Player Deserialize(byte[] data) {
+        using var ms = new MemoryStream(data);
+        var fmt = new BinaryFormatter();
+        return (Player)fmt.Deserialize(ms);
+    }
+}
+\end{lstlisting}
+
+\begin{warning}[title={BinaryFormatter 已被废弃}]
+\begin{itemize}[nosep]
+  \item \Tp{BinaryFormatter} 在 .NET 5+ 中已被标记为\textbf{过时}（obsolete），在 .NET 7+ 中默认\textbf{禁用}
+  \item 存在严重的\textbf{安全漏洞}：反序列化时可能触发任意代码执行（gadget chain 攻击）
+  \item 微软官方推荐使用 \Tp{System.Text.Json} 或其他安全替代方案
+  \item \Tp{ISerializable} 接口虽然仍可用，但已不推荐用于新项目
+\end{itemize}
+\end{warning}
+
+% ═══════════════════════════════════════════════
+\chapter{DataContractSerializer}\label{ch:datacontract}
+% ═══════════════════════════════════════════════
+
+\Tp{DataContractSerializer} 是 WCF（Windows Communication Foundation）引入的契约式序列化方案。开发者通过 \texttt{[DataContract]} 和 \texttt{[DataMember]} Attribute 显式标记需要序列化的成员：
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle,caption={C\#: DataContract 序列化}]
+using System;
+using System.IO;
+using System.Runtime.Serialization;
+
+[DataContract]
+class Player {
+    [DataMember(Order = 1)]
+    public string Name { get; set; }
+
+    [DataMember(Order = 2)]
+    public int Hp { get; set; }
+
+    [DataMember(Order = 3)]
+    public double Speed { get; set; }
+
+    // Not serialized (no [DataMember])
+    public string TempData { get; set; }
+}
+
+class Demo {
+    static string Serialize(Player p) {
+        var ser = new DataContractSerializer(typeof(Player));
+        using var ms = new MemoryStream();
+        ser.WriteObject(ms, p);
+        return System.Text.Encoding.UTF8.GetString(
+            ms.ToArray());
+    }
+}
+// XML output:
+// <Player><Name>Alice</Name><Hp>100</Hp><Speed>3.5</Speed></Player>
+\end{lstlisting}
+
+\Tp{DataContractSerializer} 支持 XML 和 JSON 两种输出格式，并且通过 \Tp{Order} 属性提供了一定程度的版本兼容性。
+
+% ═══════════════════════════════════════════════
+\chapter{System.Text.Json}\label{ch:stj}
+% ═══════════════════════════════════════════════
+
+\Tp{System.Text.Json} 是 .NET Core 3.0（2019 年）引入的现代高性能 JSON 库，也是当前 C\# 推荐的序列化方案。它结合了源生成器（Source Generator）在编译期生成序列化代码，避免了运行时的反射开销。
+
+\section{基础用法}\label{sec:stj-basic}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle,caption={C\#: System.Text.Json 基础}]
+using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+class Player {
+    [JsonPropertyName("name")]
+    public string Name { get; set; }
+
+    [JsonPropertyName("hp")]
+    public int Hp { get; set; }
+
+    [JsonPropertyName("speed")]
+    public double Speed { get; set; }
+
+    [JsonIgnore]
+    public string TempData { get; set; }
+}
+
+class Demo {
+    static void Main() {
+        var p = new Player {
+            Name = "Alice", Hp = 100, Speed = 3.5
+        };
+
+        // Serialize
+        string json = JsonSerializer.Serialize(p);
+        // {"name":"Alice","hp":100,"speed":3.5}
+
+        // Deserialize
+        var p2 = JsonSerializer.Deserialize<Player>(json);
+
+        // With options
+        var opts = new JsonSerializerOptions {
+            WriteIndented = true,
+            PropertyNamingPolicy =
+                JsonNamingPolicy.CamelCase
+        };
+        string pretty = JsonSerializer.Serialize(p, opts);
+    }
+}
+\end{lstlisting}
+
+\section{源生成器（Source Generator）}\label{sec:stj-sourcegen}
+
+\Tp{System.Text.Json} 的源生成器在编译期生成序列化代码，消除运行时反射开销，并支持 Native AOT（Ahead-of-Time）编译：
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle,caption={C\#: System.Text.Json 源生成器}]
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+// Source generator context
+[JsonSourceGenerationOptions(
+    PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
+[JsonSerializable(typeof(Player))]
+[JsonSerializable(typeof(List<Player>))]
+internal partial class AppJsonContext
+    : JsonSerializerContext { }
+
+class Demo {
+    static void Main() {
+        var p = new Player {
+            Name = "Alice", Hp = 100, Speed = 3.5
+        };
+
+        // Use generated serializer (no runtime reflection!)
+        string json = JsonSerializer.Serialize(
+            p, AppJsonContext.Default.Player);
+
+        var p2 = JsonSerializer.Deserialize(
+            json, AppJsonContext.Default.Player);
+    }
+}
+\end{lstlisting}
+
+源生成器的效果类似于 C++ 的编译期反射——在编译时生成所有序列化代码，运行时不依赖反射。这使得它在性能上接近手写代码，同时保持零样板的开发体验。
+
+% ═══════════════════════════════════════════════
+\chapter{C\# Protobuf-net}\label{ch:protobuf-net}
+% ═══════════════════════════════════════════════
+
+Protobuf-net 是 Marc Gravell 开发的 C\# Protobuf 实现。它允许直接在 C\# 类上用 Attribute 标记字段编号，无需编写 \texttt{.proto} 文件。这与 Google 官方的 \Tp{Google.Protobuf} 方案不同：
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle,caption={C\#: Protobuf-net 直接标记式序列化}]
+using ProtoBuf;
+using System.IO;
+
+[ProtoContract]
+class Player {
+    [ProtoMember(1)]
+    public string Name { get; set; }
+
+    [ProtoMember(2)]
+    public int Hp { get; set; }
+
+    [ProtoMember(3)]
+    public double Speed { get; set; }
+
+    [ProtoMember(4)]
+    public List<string> Inventory { get; set; }
+}
+
+class Demo {
+    static byte[] Serialize(Player p) {
+        using var ms = new MemoryStream();
+        Serializer.Serialize(ms, p);
+        return ms.ToArray();
+    }
+
+    static Player Deserialize(byte[] data) {
+        using var ms = new MemoryStream(data);
+        return Serializer.Deserialize<Player>(ms);
+    }
+}
+\end{lstlisting}
+
+Protobuf-net 的 \texttt{[ProtoMember(N)]} 直接对应 Protobuf 的字段编号，因此生成的二进制格式与标准 Protobuf 兼容——可以与 C++、Java、Go 等语言的 Protobuf 实现互操作。
+
+\begin{guideline}[title={C\# 序列化方案选型}]
+\begin{itemize}[nosep]
+  \item \textbf{新项目首选}：\Tp{System.Text.Json}（JSON）+ 源生成器
+  \item \textbf{高性能二进制}：Protobuf-net（无需 \texttt{.proto}，直接标记）
+  \item \textbf{跨语言 RPC}：Google.Protobuf（官方 \texttt{.proto} 生成）
+  \item \textbf{遗留系统}：DataContractSerializer（WCF 兼容）
+  \item \textbf{不要使用}：BinaryFormatter（安全漏洞，已废弃）
+\end{itemize}
+\end{guideline}
+
+% ═══════════════════════════════════════════════════════════
+\part{C++ vs C\# 对比与 C++26 前的困境}
+% ═══════════════════════════════════════════════════════════
+
+% ═══════════════════════════════════════════════
+\chapter{C++ vs C\# 序列化综合对比}\label{ch:cross-compare}
+% ═══════════════════════════════════════════════
+
+\section{开发体验对比}\label{sec:dx-compare}
+
+C\# 开发者在序列化场景中的体验显著优于 C++。以一个简单的 ``将 Player 对象转为 JSON'' 为例：
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle,caption={C\#: 一行代码完成序列化}]
+// C#: one line, zero boilerplate
+string json = JsonSerializer.Serialize(player);
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[caption={C++ (nlohmann/json): 需要手写 to\_json / from\_json}]
+// C++: must write to_json/from_json for EVERY type
+void to_json(json& j, const Player& p) {
+    j = {{"name", p.name}, {"hp", p.hp}, {"speed", p.speed}};
+}
+void from_json(const json& j, Player& p) {
+    j.at("name").get_to(p.name);
+    j.at("hp").get_to(p.hp);
+    j.at("speed").get_to(p.speed);
+}
+json j = player;  // only AFTER writing the above
+\end{lstlisting}
+
+这种差异的根本原因是 C\# 运行时保留了完整的类型元数据，而 C++ 在编译后会擦除所有类型名称和结构信息。
+
+\section{技术维度对比}\label{sec:tech-compare}
+
+\begin{table}[H]
+\centering
+\caption{C++ vs C\# 序列化技术维度对比}
+\label{tab:tech-compare}
+\small
+\begin{tabularx}{\textwidth}{
+  >{\raggedright\arraybackslash}p{2.8cm}
+  >{\raggedright\arraybackslash}p{4.5cm}
+  >{\raggedright\arraybackslash}p{4.5cm}
+}
+\toprule
+\textbf{维度} & \textbf{C++} & \textbf{C\#} \\
+\midrule
+类型元数据 & 编译后擦除（无内建反射） & CLR 保留完整元数据 \\
+\addlinespace
+序列化注册 & 手写 serialize/to\_json 函数 & Attribute 标记或自动 \\
+\addlinespace
+按名访问字段 & 不可能（除非自建注册表） & 原生支持（\Tp{PropertyInfo}） \\
+\addlinespace
+运行时按名查找 & 不支持 & 原生支持 \seqsplit{\texttt{GetProperty("x")}} \\
+\addlinespace
+多态序列化 & 手动注册类型 & 自动（通过 Type 信息） \\
+\addlinespace
+二进制格式 & 平台相关 & \Tp{BinaryFormatter}（已废弃） \\
+\addlinespace
+JSON 支持 & 第三方库 & 标准库（\Tp{System.Text.Json}） \\
+\addlinespace
+版本兼容 & 库各自实现 & Attribute Order / 字段可选 \\
+\addlinespace
+AOT 支持 & 天然 AOT & 需源生成器（.NET 6+） \\
+\addlinespace
+编译期零开销 & 是（模板内联） & 需源生成器 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{序列化生态对比}\label{sec:eco-compare}
+
+\begin{table}[H]
+\centering
+\caption{C++ vs C\# 序列化生态}
+\label{tab:eco-compare}
+\small
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{能力} & \textbf{C++ 方案} & \textbf{C\# 方案} \\
+\midrule
+JSON & nlohmann/json, RapidJSON & System.Text.Json, Newtonsoft \\
+二进制 & Boost.Serialization, Cereal & Protobuf-net, MessagePack \\
+跨语言 & Protobuf, FlatBuffers & Protobuf, gRPC \\
+反射序列化 & Boost.PFR, iguana & 内建反射 + Source Gen \\
+Schema 驱动 & Protobuf, FlatBuffers & Protobuf, FlatSharp \\
+消息队列 & Cap'n Proto & 无主流方案 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ═══════════════════════════════════════════════
+\chapter{C++26 反射前的序列化困境}\label{ch:dilemma}
+% ═══════════════════════════════════════════════
+
+C++26 静态反射的到来将终结 C++ 序列化的 ``百花齐放'' 时代。在此之前的漫长岁月中，C++ 序列化面临以下核心困境。
+
+\section{困境一：无法自动遍历成员}\label{sec:no-traverse}
+
+C++ 编译器在编译后不保留结构体的字段名称和数量信息。这意味着不存在一个通用的 ``遍历所有字段'' 的函数——每个类型都必须手写序列化逻辑。
+
+\cpplabel
+\begin{lstlisting}[caption={C++26 前: 每个类型都需要手写序列化}]
+struct Player { std::string name; int hp; double speed; };
+struct Config { std::string host; int port; bool ssl; };
+struct Order  { int id; double total; std::string item; };
+
+// Must write serialize() for EACH type!
+void serialize(const Player& p, Archive& ar) {
+    ar << p.name << p.hp << p.speed;
+}
+void serialize(const Config& c, Archive& ar) {
+    ar << c.host << c.port << c.ssl;
+}
+void serialize(const Order& o, Archive& ar) {
+    ar << o.id << o.total << o.item;
+}
+\end{lstlisting}
+
+\begin{compare}[title={C++26 反射如何解决}]
+C++26 的 \texttt{template for} + \Fn{std::meta::nonstatic\_data\_members\_of} 允许编译器在实例化时自动展开字段遍历循环，一个泛型函数即可处理所有类型。
+\end{compare}
+
+\section{困境二：元信息与类定义不同步}\label{sec:out-of-sync}
+
+当类的字段发生增删时，序列化代码必须同步修改。然而编译器无法检测这种不同步——漏掉一个字段不会导致编译错误，只会在运行时产生数据丢失：
+
+\cpplabel
+\begin{lstlisting}[caption={C++26 前: 序列化代码与类定义容易不同步}]
+struct Player {
+    std::string name;
+    int         hp;
+    double      speed;
+    int         level;     // NEW field added!
+};
+
+// BUG: forgot to add 'level' to serialize()
+// This compiles fine but causes data loss!
+template <typename Archive>
+void serialize(Archive& ar, Player& p, unsigned int) {
+    ar & p.name;
+    ar & p.hp;
+    ar & p.speed;
+    // ar & p.level;  <-- MISSING, no compiler warning
+}
+\end{lstlisting}
+
+\begin{warning}[title={不同步的代价}]
+这种 bug 在大型项目中极为常见。字段添加时开发者可能修改了 \texttt{.h} 文件，但忘记更新序列化函数、网络协议、数据库映射等多处代码。C++26 反射通过自动遍历所有成员，从根本上消除了这类不同步问题。
+\end{warning}
+
+\section{困境三：枚举缺乏反射}\label{sec:no-enum}
+
+C++ 的 \texttt{enum} 在编译后被转换为整数，枚举值的名称信息完全丢失。这导致枚举的序列化/反序列化需要手写大量的 \texttt{switch-case} 或映射表：
+
+\cpplabel
+\begin{lstlisting}[caption={C++26 前: 枚举序列化需要手写映射}]
+enum class Color { Red, Green, Blue };
+
+// Must write to_string / from_string manually
+std::string to_string(Color c) {
+    switch (c) {
+        case Color::Red:   return "Red";
+        case Color::Green: return "Green";
+        case Color::Blue:  return "Blue";
+    }
+    return "unknown";
+}
+
+Color from_string(std::string_view s) {
+    if (s == "Red")   return Color::Red;
+    if (s == "Green") return Color::Green;
+    if (s == "Blue")  return Color::Blue;
+    throw std::runtime_error("unknown Color");
+}
+\end{lstlisting}
+
+每增加一个枚举值，就需要在两个函数中各添加一个 case。这种重复劳动在拥有数百个枚举值的游戏引擎和嵌入式系统中尤为痛苦。C++26 的 \seqsplit{\texttt{std::meta::enumerators\_of}} 可以在编译期自动遍历所有枚举值，彻底消除这一问题。
+
+\section{困境四：多态类型的序列化注册}\label{sec:poly-register}
+
+序列化通过基类指针指向的派生类对象时，需要在某处注册类型映射关系。不同的库有不同的注册机制（\seqsplit{\texttt{BOOST\_CLASS\_EXPORT}}、\seqsplit{\texttt{CEREAL\_REGISTER\_TYPE}} 等），但都需要开发者手动维护：
+
+\cpplabel
+\begin{lstlisting}[caption={C++26 前: 多态序列化需要手动注册}]
+struct Shape { virtual ~Shape() = default; };
+struct Circle : Shape { double radius; };
+struct Square : Shape { double side; };
+struct Triangle : Shape { double a, b, c; };
+
+// Must register EACH derived class manually!
+BOOST_CLASS_EXPORT(Circle)
+BOOST_CLASS_EXPORT(Square)
+BOOST_CLASS_EXPORT(Triangle)
+// ... and every new shape class
+
+// Forgetting to register = runtime crash when
+// serializing through Shape*
+\end{lstlisting}
+
+\section{困境五：二进制格式的跨平台问题}\label{sec:endian}
+
+C++ 的二进制序列化面临字节序（endianness）和对齐（alignment）问题。同一个结构体在 x86（小端）和 ARM（可能是大端）上的二进制表示不同：
+
+\cpplabel
+\begin{lstlisting}[caption={C++26 前: 二进制序列化的字节序陷阱}]
+struct Header {
+    uint32_t magic;
+    uint16_t version;
+    uint16_t flags;
+};
+
+// WRONG: raw memory dump, platform-dependent!
+void save(const Header& h, std::ostream& os) {
+    os.write(reinterpret_cast<const char*>(&h),
+             sizeof(h));
+}
+
+// On little-endian:  magic = [78 56 34 12]
+// On big-endian:     magic = [12 34 56 78]
+// Data from one platform CANNOT be read on another!
+\end{lstlisting}
+
+正确的做法是逐字段序列化并显式处理字节序，或者使用 Protobuf / FlatBuffers 等已处理跨平台问题的方案。
+
+\section{困境六：版本兼容的手动管理}\label{sec:version-manual}
+
+C++ 序列化库的版本兼容机制通常需要开发者手动维护版本号，并在序列化函数中编写条件分支。这与 Protobuf 的字段编号机制（天然支持版本兼容）形成鲜明对比：
+
+\cpplabel
+\begin{lstlisting}[caption={C++26 前: 版本兼容需要手动维护}]
+struct Player {
+    std::string name;
+    int         hp;
+    double      speed;
+    int         level;    // added in v2
+    std::string guild;    // added in v3
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned int ver) {
+        ar & name;
+        ar & hp;
+        ar & speed;
+        if (ver >= 2) ar & level;
+        else level = 1;        // default
+        if (ver >= 3) ar & guild;
+        else guild = "";       // default
+    }
+};
+BOOST_CLASS_VERSION(Player, 3)
+\end{lstlisting}
+
+\section{C++20 下的现状：已可行但代价不小}\label{sec:cpp20-status}
+
+在 C++26 反射到来之前，C++20 已经具备了一定的泛型序列化能力。通过聚合体反射库和枚举反射库的组合，开发者\textbf{今天}就可以实现 ``一个泛型函数处理所有类型'' 的效果——但需要接受一系列实际工程中的代价。
+
+\subsection{聚合体泛型序列化：已经可用}\label{sec:cpp20-aggregate}
+
+对于聚合体类型，雅兰亭 iguana 和 Boost.PFR 在 C++20 下即可实现通用的 JSON/XML/二进制序列化，无需为每个类手写序列化函数：
+
+\cpplabel
+\begin{lstlisting}[caption={C++20: 雅兰亭 iguana 泛型 JSON 序列化（已可用）}]
+#include <ylt/iguana/json_writer.hpp>
+#include <ylt/iguana/json_reader.hpp>
+#include <string>
+
+// Any aggregate works -- zero boilerplate
+struct Player { std::string name; int hp; double speed; };
+struct Config { std::string host; int port; bool ssl; };
+struct Order  { int id; double total; std::string item; };
+
+void demo() {
+    Player p{"Alice", 100, 3.5};
+    Config c{"127.0.0.1", 8080, true};
+
+    std::string j1, j2;
+    iguana::to_json(p, j1);  // {"name":"Alice",...}
+    iguana::to_json(c, j2);  // {"host":"127.0.0.1",...}
+
+    Player p2{};
+    iguana::from_json(p2, j1);  // generic deserialize
+}
+\end{lstlisting}
+
+Boost.PFR 虽然不直接提供 JSON 序列化，但可以通过自定义模板实现类似的泛型能力——代价是需要自行编写较为复杂的模板代码来遍历成员并处理不同类型。
+
+\subsection{枚举反射：magic-enum 的可行与局限}\label{sec:cpp20-enum}
+
+对于枚举的字符串转换，\texttt{magic-enum} 库利用编译器内置的函数签名反射能力，在编译期自动获取枚举值名称。其底层依赖 GCC/Clang 的 \seqsplit{\texttt{\_\_PRETTY\_FUNCTION\_\_}} 宏以及 MSVC 的 \seqsplit{\texttt{\_\_FUNCSIG\_\_}} 宏：
+
+\cpplabel
+\begin{lstlisting}[caption={C++20: magic-enum 枚举反射}]
+#include <magic_enum/magic_enum.hpp>
+
+enum class Color { Red, Green, Blue };
+
+void demo() {
+    Color c = Color::Green;
+
+    // to string -- no manual switch-case!
+    auto name = magic_enum::enum_name(c);
+    // name == "Green"
+
+    // from string
+    auto parsed = magic_enum::enum_cast<Color>("Blue");
+    if (parsed.has_value()) {
+        // parsed.value() == Color::Blue
+    }
+
+    // iterate all enumerators
+    for (auto [val, name] : magic_enum::enum_entries<Color>()) {
+        // val = Color::Red, name = "Red", etc.
+    }
+}
+\end{lstlisting}
+
+magic-enum 的主要限制包括：仅支持 MSVC、GCC、Clang（含 Apple Clang）三大编译器；仅对 ``简单的'' 枚举定义有效——带自定义宏、非连续值或特殊作用域的枚举可能无法正确反射；枚举值范围默认限制在 $[-128, 127]$，超出范围的值需要通过 \Fn{MAGIC\_ENUM\_RANGE\_MIN} / \Fn{MAGIC\_ENUM\_RANGE\_MAX} 手动指定。
+
+\subsection{隐藏的代价：模板实例化与二进制膨胀}\label{sec:cpp20-bloat}
+
+编译期泛型序列化虽然 ``零运行时开销''，但其代价转移到了编译期和二进制大小。每个被序列化的类型都会实例化一套完整的模板函数——包括遍历成员、类型判断、字符串拼接等。当一个项目有数十甚至数百个可序列化类型时，模板实例化的数量会急速膨胀：
+
+\begin{warning}[title={模板实例化导致的二进制膨胀}]
+\begin{itemize}[nosep]
+  \item 每个可序列化类型实例化 \Fn{to\_json} 和 \Fn{from\_json} 的完整模板代码
+  \item 嵌套类型（如 \Tp{vector<Player>}）会产生递归实例化
+  \item magic-enum 为每个枚举类型生成完整的名称查找表
+  \item 在大型项目中（100+ 可序列化类型），二进制大小可能膨胀数十 MB
+  \item 编译时间也会显著增加：每次修改结构体都需要重新编译所有引用了泛型序列化器的翻译单元
+\end{itemize}
+\end{warning}
+
+\begin{compare}[title={C++20 现状 vs C++26 反射}]
+\begin{tabularx}{\textwidth}{lXX}
+\toprule
+\textbf{维度} & \textbf{C++20（当前可用）} & \textbf{C++26 反射} \\
+\midrule
+聚合体序列化 & iguana / Boost.PFR & \texttt{template for} 标准语法 \\
+枚举反射 & magic-enum（三编译器） & \Fn{enumerators\_of}（标准） \\
+非聚合体 & 不支持（需手写） & 标准反射支持 \\
+编译器依赖 & 依赖编译器内部技巧 & 标准特性，全编译器支持 \\
+二进制大小 & 模板膨胀严重 & 编译器可优化代码生成 \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+总结来说，C++20 下的泛型序列化已经\textbf{技术上可行}，但工程上仍有显著代价：编译器依赖、二进制膨胀、非聚合体仍需手写。这些代价正是 C++26 静态反射要解决的核心问题。
+
+\section{困境总结}\label{sec:dilemma-summary}
+
+\begin{table}[H]
+\centering
+\caption{C++26 反射前的序列化六大困境}
+\label{tab:dilemma-summary}
+\small
+\begin{tabularx}{\textwidth}{
+  >{\raggedright\arraybackslash}p{3cm}
+  >{\raggedright\arraybackslash}p{4.5cm}
+  >{\raggedright\arraybackslash}p{4cm}
+}
+\toprule
+\textbf{困境} & \textbf{表现} & \textbf{C++26 如何解决} \\
+\midrule
+无法遍历成员 & 每个类手写 serialize & \texttt{template for} 自动展开 \\
+元信息不同步 & 漏字段无编译警告 & 自动包含所有成员 \\
+枚举无反射 & 手写 switch-case & \Fn{enumerators\_of} 自动遍历 \\
+多态需注册 & 手动 EXPORT 每个类型 & 可生成注册代码 \\
+字节序问题 & 平台二进制不兼容 & 不影响（仍需处理） \\
+版本手动管理 & 条件分支 + 版本号 & 可生成版本兼容代码 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+这些困境的共同根源是同一个：\textbf{C++ 在编译后丢失了类型的结构信息}。C++26 静态反射通过在编译期保留并暴露这些信息，使得 ``编译器代替开发者完成序列化样板代码'' 成为可能。
+
+% ═══════════════════════════════════════════════
+\chapter{总结}\label{ch:conclusion}
+% ═══════════════════════════════════════════════
+
+C++ 序列化方案的发展史，本质上是社区在 ``零开销原则'' 与 ``开发效率'' 之间不断寻找平衡的过程。
+
+Boost.Serialization 和 Cereal 代表了传统库的成熟路线：功能完备、久经考验，但需要为每个类手写序列化函数。nlohmann/json 提供了最直观的 JSON 操作体验，但同样面临 ``每个类型都需要 \Fn{to\_json} / \Fn{from\_json}'' 的样板代码问题。
+
+Protocol Buffers 和 FlatBuffers 走了一条不同的路：通过 Schema 文件定义数据契约，由代码生成器为目标语言生成访问代码。这种方式在跨语言、跨服务的场景中不可替代，但也引入了额外的工具链依赖，且不能直接操作 C++ 原生类型。
+
+基于反射的序列化方案（Boost.PFR、雅兰亭 iguana）代表了编译期自动化的极致：利用聚合体反射和模板元编程，一个泛型函数即可处理所有符合条件的类型。但它们的类型限制（仅支持聚合体）和非标准化的技巧，限制了其通用性。
+
+C\# 的序列化体系展示了 ``语言内建反射 + 标准库'' 可以带来多么简洁的开发体验——从 \texttt{[Serializable]} 到 \Tp{System.Text.Json} 的源生成器，C\# 开发者几乎不需要手写序列化代码。这正是 C++ 社区长期追求但未能实现的目标。
+
+C++26 静态反射将改变这一切。它使得泛型序列化、枚举反射、多态注册等长期困扰 C++ 开发者的问题可以用几十行标准代码解决。虽然截至 2026 年尚无编译器完整实现，但它代表了 C++ 序列化的未来方向。在那之前，理解各种序列化方案的取舍，选择最适合项目需求的方案，是编写高质量 C++ 代码的重要一环。
+
+\end{document}

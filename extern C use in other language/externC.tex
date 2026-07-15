@@ -1,0 +1,2082 @@
+% !TEX program = xelatex
+% C/C++ 函数导出与跨语言调用
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ===== 页面 =====
+\usepackage[margin=2.5cm]{geometry}
+
+% ===== 字体 =====
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ===== 颜色 =====
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+% -- 代码基础 --
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{linenumgray}{HTML}{999999}
+% -- C / C++ --
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{cppheadbg}{HTML}{2E4057}
+\definecolor{cheadbg}{HTML}{34495E}
+% -- Java --
+\definecolor{javakeyword}{HTML}{A020F0}
+\definecolor{javatype}{HTML}{005A9C}
+\definecolor{javaheadbg}{HTML}{1565C0}
+% -- C\# --
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+\definecolor{csharpheadbg}{HTML}{68217A}
+% -- Rust --
+\definecolor{rustkeyword}{HTML}{CE4257}
+\definecolor{rusttype}{HTML}{B7410E}
+\definecolor{rustmacro}{HTML}{2E8B2E}
+\definecolor{rustheadbg}{HTML}{B7410E}
+% -- Python --
+\definecolor{pythonkeyword}{HTML}{0000CD}
+\definecolor{pythonbuiltin}{HTML}{008080}
+\definecolor{pythonheadbg}{HTML}{306998}
+% -- JavaScript --
+\definecolor{jskeyword}{HTML}{0077AA}
+\definecolor{jsbuiltin}{HTML}{C77D10}
+\definecolor{jsheadbg}{HTML}{F7DF1E}
+% -- Shell --
+\definecolor{bashkw}{HTML}{1A1AFF}
+% -- 章节标题 --
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ===== 代码高亮 =====
+\usepackage{listings}
+
+% ---- C ----
+\lstdefinestyle{cstyle}{%
+  language=C,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={%
+    size_t,ptrdiff_t,int8_t,int16_t,int32_t,int64_t,
+    uint8_t,uint16_t,uint32_t,uint64_t,uintptr_t,intptr_t,
+    NULL,void,printf,puts,fprintf,sprintf,snprintf,
+    malloc,calloc,realloc,free,memcpy,memset,strlen,strcpy,strncpy,strcmp,
+    assert,fopen,fclose,fread,fwrite
+  },
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- C++ ----
+\lstdefinestyle{cppstyle}{%
+  language=C++,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    override,final,noexcept,constexpr,consteval,constinit,
+    decltype,auto,concept,requires,co_await,co_yield,co_return,
+    nullptr,sizeof...,static_assert,thread_local,alignas,alignof,
+    namespace,using,template,typename,virtual,explicit,friend,
+    mutable,volatile,register,extern,inline,constexpr,
+    std,string,vector,map,unordered_map,set,unordered_set,
+    unique_ptr,shared_ptr,weak_ptr,optional,variant,any,
+    tuple,pair,array,span,
+    cin,cout,cerr,endl,
+    move,forward,swap,make_unique,make_shared,
+    begin,end,size,empty,push_back,emplace_back,
+    find,sort,copy,transform,for_each,accumulate
+  },
+  deletekeywords={int,char,float,double,bool,void,long,short,unsigned,signed},
+  emph={%
+    int,char,float,double,bool,void,long,short,unsigned,signed,
+    int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,
+    size_t,ptrdiff_t,intptr_t,uintptr_t,wchar_t,char8_t,char16_t,char32_t
+  },
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Java ----
+\lstdefinestyle{javastyle}{%
+  language=Java,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{javakeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    record,sealed,permits,var,yield,
+    native,strictfp,transient,volatile,synchronized
+  },
+  emph={%
+    int,long,short,byte,float,double,boolean,char,void,
+    String,Object,Integer,Long,Double,Float,Boolean,
+    System,Class,Thread,Exception,RuntimeException,
+    Override,FunctionalInterface,Deprecated,SuppressWarnings,
+    List,Map,Set,ArrayList,HashMap,Optional,Stream
+  },
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- C\# ----
+\lstdefinelanguage{CSharp}{%
+  morekeywords={%
+    abstract,as,base,bool,break,byte,case,catch,char,checked,class,const,
+    continue,decimal,default,delegate,do,double,else,enum,event,explicit,
+    extern,false,finally,fixed,float,for,foreach,goto,if,implicit,in,
+    int,interface,internal,is,lock,long,namespace,new,null,object,operator,
+    out,override,params,private,protected,public,readonly,ref,return,sbyte,
+    sealed,short,sizeof,stackalloc,static,string,struct,switch,this,throw,
+    true,try,typeof,uint,ulong,unchecked,unsafe,ushort,using,var,void,
+    volatile,while,async,await,record,required,file,init,nint,nuint
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]'
+}[keywords,comments,strings]
+
+\lstdefinestyle{csharpstyle}{%
+  language=CSharp,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{csharpkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={%
+    int,long,short,byte,float,double,decimal,bool,char,string,void,
+    object,dynamic,var,nint,nuint,
+    String,Int32,Int64,IntPtr,UIntPtr,
+    DllImport,StructLayout,MarshalAs,UnmanagedType,
+    CallingConvention,CharSet,LayoutKind,Sequential,
+    StringBuilder,Console,Math,Convert,
+    List,Dictionary,HashSet,Task,Span,Memory,
+    HandleRef,SafeHandle,RuntimeEnvironment
+  },
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Rust ----
+\lstdefinestyle{ruststyle}{%
+  language=Rust,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{rustkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    fn,let,mut,ref,struct,enum,impl,trait,type,mod,use,
+    pub,crate,super,self,Self,const,static,unsafe,extern,
+    move,async,await,dyn,where,loop,match,if,else,for,while,
+    break,continue,return,as,in,box
+  },
+  emph={%
+    i8,i16,i32,i64,i128,isize,
+    u8,u16,u32,u64,u128,usize,
+    f32,f64,bool,char,str,String,
+    Vec,Box,Option,Result,Some,None,Ok,Err,
+    Rc,Arc,Cell,RefCell,Mutex,
+    HashMap,HashSet,BTreeMap,BTreeSet,
+    CString,CStr,OsString,OsStr,
+    c_int,c_uint,c_float,c_double,c_char,c_void
+  },
+  emphstyle=\color{rusttype},
+  moredelim=*[macro][\color{rustmacro}]{println!},
+  moredelim=*[macro][\color{rustmacro}]{print!},
+  moredelim=*[macro][\color{rustmacro}]{format!},
+  moredelim=*[macro][\color{rustmacro}]{vec!},
+  moredelim=*[macro][\color{rustmacro}]{assert!},
+  moredelim=*[macro][\color{rustmacro}]{assert_eq!},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Python ----
+\lstdefinestyle{pythonstyle}{%
+  language=Python,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{pythonkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    async,await,match,case,yield,from,as,with,lambda,
+    global,nonlocal,del,assert,pass,break,continue,
+    raise,import,class,def,return,if,elif,else,for,while,try,except,finally
+  },
+  emph={%
+    int,float,str,bool,bytes,list,dict,tuple,set,None,True,False,
+    self,cls,type,object,range,len,print,input,open,super,
+    c_int,c_double,c_char_p,c_void_p,c_float,c_long,c_bool,
+    CDLL,Structure,POINTER,pointer,byref,cast,sizeof,
+    CFUNCTYPE,WINFUNCTYPE,
+    ffi,lib,def_extern,dlopen
+  },
+  emphstyle=\color{pythonbuiltin},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- JavaScript ----
+\lstdefinestyle{jsstyle}{%
+  language=JavaScript,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{jskeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    const,let,var,function,return,if,else,for,while,do,
+    switch,case,break,continue,try,catch,finally,throw,new,
+    class,extends,constructor,super,this,typeof,instanceof,
+    import,export,from,default,async,await,yield,
+    of,in,delete,void,with,debugger
+  },
+  emph={%
+    console,process,module,exports,require,Buffer,
+    Object,Array,String,Number,Boolean,Promise,Map,Set,
+    Error,TypeError,RangeError,
+    undefined,null,true,false,NaN,Infinity,
+    parseInt,parseFloat,JSON,Math,Date,RegExp,
+    napi_value,napi_env,napi_status,napi_ok,
+    napi_define_properties,napi_create_function
+  },
+  emphstyle=\color{jsbuiltin},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Shell ----
+\lstdefinestyle{bashstyle}{%
+  language=bash,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{bashkw}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={gcc,g++,cl,clang,clang++,cmake,make,node,npm,pip,cargo,rustc,dotnet,javac,java,mvn},
+  escapeinside={(*@}{@*)}
+}
+
+\lstset{style=cppstyle}
+
+% ===== tcolorbox =====
+\usepackage[most]{tcolorbox}
+
+\tcbset{
+  guideline/.style={%
+    enhanced,breakable,
+    colback=blue!5!white,colframe=blue!50!black,colbacktitle=blue!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=blue!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  compare/.style={%
+    enhanced,breakable,
+    colback=green!5!white,colframe=green!40!black,colbacktitle=green!40!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=green!40!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  warning/.style={%
+    enhanced,breakable,
+    colback=red!5!white,colframe=red!50!black,colbacktitle=red!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=red!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  note/.style={%
+    enhanced,breakable,
+    colback=yellow!5!white,colframe=orange!50!black,colbacktitle=orange!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=orange!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  bestpractice/.style={%
+    enhanced,breakable,
+    colback=purple!5!white,colframe=purple!50!black,colbacktitle=purple!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=purple!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  }
+}
+
+% ===== 语言标签 =====
+\newcommand{\clabel}{%
+  \begin{tcolorbox}[enhanced,colback=cheadbg,colframe=cheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries C}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\cpplabel}{%
+  \begin{tcolorbox}[enhanced,colback=cppheadbg,colframe=cppheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries C++}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\javalabel}{%
+  \begin{tcolorbox}[enhanced,colback=javaheadbg,colframe=javaheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Java}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\csharplabel}{%
+  \begin{tcolorbox}[enhanced,colback=csharpheadbg,colframe=csharpheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries C\#}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\rustlabel}{%
+  \begin{tcolorbox}[enhanced,colback=rustheadbg,colframe=rustheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Rust}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\pythonlabel}{%
+  \begin{tcolorbox}[enhanced,colback=pythonheadbg,colframe=pythonheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Python}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\jslabel}{%
+  \begin{tcolorbox}[enhanced,colback=jsheadbg,colframe=jsheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{black}{\small\bfseries JavaScript}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\bashlabel}{%
+  \begin{tcolorbox}[enhanced,colback=black!80,colframe=black!80,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Shell}
+  \end{tcolorbox}\vspace{-4pt}}
+
+% ===== 自定义命令 =====
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+% ===== 标题与章节格式 =====
+\titleformat{\chapter}[display]{\huge\bfseries\color{algheadbg}}{\chaptertitlename\ \thechapter}{10pt}{\huge}
+\titleformat{\section}{\Large\bfseries\color{blue!70!black}}{\thesection}{8pt}{}
+\titleformat{\subsection}{\large\bfseries\color{blue!60!black}}{\thesubsection}{6pt}{}
+
+% ===== 页眉页脚 =====
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ===== 超链接 =====
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,linkcolor=blue!70!black,urlcolor=blue!60!black,
+  pdftitle={C/C++ Function Export and Cross-Language Interop},
+  pdfauthor={FFI Reference}
+}
+
+% ===== 其他 =====
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{amssymb}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{tikz}
+
+% ===================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\Huge\bfseries\color{algheadbg} C/C++ 函数导出与跨语言调用\par}
+\vspace{1cm}
+{\LARGE\color{blue!70!black} ABI \textbullet{} extern "C" \textbullet{} FFI \textbullet{} 绑定工具\par}
+\vfill
+{\large\color{gray} \today\par}
+\end{titlepage}
+
+\chapter*{前\quad 言}
+\addcontentsline{toc}{chapter}{前言}
+
+C 和 \cpp{} 编写的函数库广泛存在于操作系统底层、科学计算、嵌入式等领域。当 Java、C\#、Rust、Python、JavaScript 等语言需要调用这些原生代码时，开发者必须理解 ABI（应用二进制接口）、名称修饰、调用约定等底层机制，并选择合适的外函数接口（FFI）方案。
+
+本文档从"为什么其他语言不能直接调用 \cpp{}"出发，系统讲解 \texttt{extern "C"} 导出技术，并逐一演示 Java（JNI/JNA）、C\#（P/Invoke/C++/CLI）、Rust（FFI/bindgen/cxx）、Python（ctypes/CFFI/pybind11）和 Node.js（N-API/ffi-napi）的 FFI 实践。最后总结跨语言接口设计原则与内存管理策略，附录提供调用约定对照表和动态加载共享库的系统 API 参考。
+
+\section*{文档约定}
+
+\begin{itemize}[nosep]
+  \item 每种语言均提供完整可运行的代码示例和编译命令。
+  \item \textcolor{green!50!black}{\textbf{对比框}}~总结不同方案的关键差异。
+  \item \textcolor{red!75!black}{\textbf{陷阱框}}~提示常见错误与平台兼容性问题。
+  \item \textcolor{orange!50!black}{\textbf{注意框}}~补充重要技术细节。
+  \item \textcolor{purple!50!black}{\textbf{最佳实践框}}~给出接口设计建议。
+\end{itemize}
+
+% --- TOC：重定向 \@starttoc 读取 build.ps1 生成的 -manual.toc ---
+% LaTeX 2025-11-01 kernel bug: \@starttoc 的 \chardef 在 \begingroup 内是局部的 → .toc 永远为空
+\makeatletter
+\renewcommand*{\@starttoc}[1]{%
+  \IfFileExists{\jobname-manual.toc}{%
+    \@input{\jobname-manual.toc}%
+  }{}%
+}
+\makeatother
+
+\tableofcontents
+
+\mainmatter
+
+% ===================================================================
+\chapter{为什么其他语言不能直接调用 C++}
+% ===================================================================
+
+C 和 \cpp{} 编写的函数虽然在源代码层面高度相似，但编译后的二进制表示却截然不同。
+本章从 ABI（Application Binary Interface，应用二进制接口）的角度，解释为什么其他语言无法直接调用 \cpp{} 函数，以及 C ABI 为何成为跨语言调用的通用标准。
+
+\section{ABI——二进制层面的契约}
+
+ABI 是编译器与运行时之间关于函数调用方式的约定，规定了以下细节：
+
+\begin{itemize}[nosep]
+\item 函数参数的传递方式（寄存器还是栈，顺序如何）
+\item 返回值的传递方式
+\item 栈帧的管理（谁负责清理参数）
+\item 函数名的编码方式（符号表中的名称格式）
+\item 数据类型的内存布局（结构体对齐、虚函数表位置）
+\item 异常传播机制
+\end{itemize}
+
+C ABI 相对简单且高度稳定——几乎所有操作系统都定义了平台的 C ABI，且数十年来基本不变。
+\cpp{} ABI 则复杂得多：不同编译器（GCC、Clang、Apple Clang、MSVC）的 \cpp{} ABI 互不兼容，甚至同一编译器的不同版本之间也可能存在差异。
+
+\begin{tcolorbox}[guideline={C ABI 的通用性}]
+C ABI 是操作系统级别的二进制标准。无论是 Windows 的 \texttt{stdcall}/\texttt{cdecl}，还是 Linux x86-64 的 System~V ABI，C 函数调用的二进制格式都有明确且稳定的规范。这使得任何能生成符合 C ABI 机器码的语言，都可以互相调用对方的函数。
+\end{tcolorbox}
+
+\section{C++ 名称修饰（Name Mangling）}
+
+\cpp{} 支持函数重载——多个同名函数可以拥有不同的参数列表。为了在链接时区分这些函数，编译器会将函数签名编码到符号名中，这个过程称为\textbf{名称修饰}（Name Mangling）。
+
+\subsection{名称修饰示例}
+
+考虑以下 \cpp{} 函数：
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+int add(int a, int b) { return a + b; }
+double add(double a, double b) { return a + b; }
+
+namespace math {
+    int multiply(int a, int b) { return a * b; }
+}
+
+class Calculator {
+public:
+    int compute(int a, int b);
+};
+\end{lstlisting}
+
+不同编译器生成的修饰名称如下：
+
+\begin{center}
+\begin{tabular}{lp{4cm}p{5cm}}
+\toprule
+\textbf{函数} & \textbf{GCC/Clang (Itanium)} & \textbf{MSVC} \\
+\midrule
+\Fn{add(int,int)}     & \texttt{\seqsplit{\_Z3addii}}  & \texttt{\seqsplit{?add@@YAHHH@Z}} \\[2pt]
+\Fn{add(double,double)} & \texttt{\seqsplit{\_Z3adddd}} & \texttt{\seqsplit{?add@@YANNN@Z}} \\[2pt]
+\Fn{math::multiply}   & \texttt{\seqsplit{\_ZN4math8multiplyEii}} & \texttt{\seqsplit{?multiply@math@@YAHHH@Z}} \\[2pt]
+\Fn{Calculator::compute} & \texttt{\seqsplit{\_ZN10Calculator7computeEii}} & \texttt{\seqsplit{?compute@Calculator@@QEAAHHH@Z}} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+这些名称对其他语言来说完全不可预测——没有标准化的编码规则，不同编译器使用不同的修饰方案。
+
+\begin{tcolorbox}[warning={名称修饰不稳定}]
+C++ 标准\textbf{未定义}名称修饰规则。GCC、Clang 和 Apple Clang 使用 Itanium C++ ABI，MSVC 使用自己的方案。即使在同一平台上，更换编译器版本也可能导致修饰名称变化。因此，\textbf{绝不能}通过硬编码修饰名称来实现跨语言调用。
+\end{tcolorbox}
+
+\section{调用约定（Calling Convention）}
+
+调用约定规定了函数参数如何传递、栈如何清理。常见的调用约定有：
+
+\begin{longtable}{lp{3cm}p{4cm}p{3cm}}
+\toprule
+\textbf{约定} & \textbf{参数传递} & \textbf{栈清理} & \textbf{典型用途} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{约定} & \textbf{参数传递} & \textbf{栈清理} & \textbf{典型用途} \\
+\midrule
+\endhead
+\texttt{cdecl}     & 右到左入栈 & \textbf{调用者}清理 & C 默认（x86） \\
+\texttt{stdcall}   & 右到左入栈 & \textbf{被调用者}清理 & Win32 API \\
+\texttt{fastcall}  & 前两个参数入寄存器 & 被调用者清理 & MSVC 优化 \\
+\texttt{thiscall}  & \texttt{this} 入 ECX & 被调用者清理 & MSVC 成员函数 \\
+System V AMD64 & 前 6 个整型参数入寄存器 & --- & Linux/macOS x86-64 \\
+AAPCS & 前 4 个参数入 r0--r3 & --- & ARM (32-bit) \\
+\bottomrule
+\end{longtable}
+
+\cpp{} 成员函数还涉及额外的复杂性：
+\begin{itemize}[nosep]
+\item 隐式 \texttt{this} 指针的传递方式（MSVC 用 \texttt{thiscall}，GCC 按普通参数处理）
+\item 虚函数通过 vtable 间接调用，vtable 布局因编译器而异
+\item 多重继承下 \texttt{this} 指针可能需要调整（thunk）
+\item 异常传播机制（SJLJ、DWARF、SEH）不跨编译器
+\end{itemize}
+
+\begin{tcolorbox}[note={x86-64 下的简化}]
+在 x86-64 和 ARM64 平台上，调用约定的差异大幅减少。Windows x64 和 System~V AMD64 各有统一的调用约定，\texttt{cdecl}/\texttt{stdcall}/\texttt{fastcall} 的区别主要存在于 32 位 x86 平台。但名称修饰问题在所有架构上依然存在。
+\end{tcolorbox}
+
+\section{C++ 对象模型的复杂性}
+
+即使不考虑名称修饰，\cpp{} 对象本身的内存布局也缺乏跨编译器的标准：
+
+\begin{itemize}[nosep]
+\item \textbf{虚函数表}：vtable 的布局、RTTI 信息的位置因编译器而异
+\item \textbf{多重继承}：需要 thunk 和调整 \texttt{this} 指针，实现方式不统一
+\item \textbf{异常处理}：GCC 使用 DWARF/SJLJ，MSVC 使用 SEH，互不兼容
+\item \textbf{STL 容器}：\texttt{std::string}、\texttt{std::vector} 的内部布局因标准库实现而异
+\item \textbf{模板}：模板实例化生成的代码无法通过简单的符号导出
+\end{itemize}
+
+这些复杂性意味着，即使两个 \cpp{} 编译器生成的 DLL 在同一平台上，通常也无法直接互调对方的成员函数或传递 STL 对象。
+
+\section{extern "C"——跨语言调用的标准方案}
+
+\texttt{extern "C"} 指示编译器：对该函数禁用 \cpp{} 名称修饰，使用 C 的链接方式。这解决了两个核心问题：
+
+\begin{enumerate}[nosep]
+\item \textbf{名称修饰}：函数符号保持原始名称，可被任何语言预测和查找
+\item \textbf{调用约定}：使用平台标准的 C 调用约定，所有语言的 FFI 都支持
+\end{enumerate}
+
+\begin{tcolorbox}[compare={C 与 C++ 链接方式对比}]
+\begin{longtable}{lcc}
+\toprule
+\textbf{特性} & \textbf{C 链接} & \textbf{C++ 链接} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{特性} & \textbf{C 链接} & \textbf{C++ 链接} \\
+\midrule
+\endhead
+函数重载          & 不支持              & 支持 \\
+符号名            & 原始名称            & 修饰名称 \\
+调用约定          & 平台标准 C ABI      & 编译器特定 \\
+跨编译器兼容      & \checkmark          & \texttimes \\
+跨语言调用        & \checkmark          & \texttimes \\
+\bottomrule
+\end{longtable}
+\end{tcolorbox}
+
+因此，从 Java、C\#、Rust、Python、JavaScript 等语言调用 C/\cpp{} 代码时，\textbf{必须}将导出函数声明为 \texttt{extern "C"}，或者使用各语言提供的专用绑定工具（如 pybind11、C++/CLI 等）来处理 \cpp{} 特有的复杂性。
+
+
+% ===================================================================
+\chapter{extern "C"——跨语言导出的通用之门}
+% ===================================================================
+
+本章详细介绍如何使用 \texttt{extern "C"} 编写可被任意语言调用的动态链接库。
+
+\section{基本语法}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// 单个函数
+extern "C" int add(int a, int b) {
+    return a + b;
+}
+
+// 批量声明
+extern "C" {
+    int add(int a, int b);
+    int subtract(int a, int b);
+    double multiply(double a, double b);
+}
+\end{lstlisting}
+
+在纯 C 编译环境中，\texttt{extern "C"} 不存在。为了让头文件同时被 C 和 \cpp{} 代码包含，通常使用条件编译：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// mathlib.h — C/C++ 兼容头文件
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int add(int a, int b);
+int subtract(int a, int b);
+double multiply(double a, double b);
+
+#ifdef __cplusplus
+}
+#endif
+\end{lstlisting}
+
+\section{导出宏——跨平台 DLL 声明}
+
+在 Windows 上，DLL 需要导出标记来声明对外可见的函数；Linux/macOS 则使用可见性属性或默认导出全部符号。下面定义统一的导出宏来屏蔽平台差异：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// export.h
+#pragma once
+
+#ifdef _WIN32
+    #ifdef MYLIB_EXPORTS
+        #define MYLIB_API __declspec(dllexport)
+    #else
+        #define MYLIB_API __declspec(dllimport)
+    #endif
+#else
+    #define MYLIB_API __attribute__((visibility("default")))
+#endif
+\end{lstlisting}
+
+使用导出宏声明函数：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// mathlib.h
+#include "export.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+MYLIB_API int add(int a, int b);
+MYLIB_API int subtract(int a, int b);
+MYLIB_API double multiply(double a, double b);
+MYLIB_API const char* get_version(void);
+
+#ifdef __cplusplus
+}
+#endif
+\end{lstlisting}
+
+\section{编译动态链接库}
+
+\subsection{Windows（MSVC）}
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+cl /LD /DMYLIB_EXPORTS mathlib.cpp /Fe:mathlib.dll
+\end{lstlisting}
+
+\subsection{Windows（MinGW/GCC）}
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+gcc -shared -o mathlib.dll mathlib.c -DMYLIB_EXPORTS
+\end{lstlisting}
+
+\subsection{Linux}
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+gcc -shared -fPIC -o libmathlib.so mathlib.c -DMYLIB_EXPORTS
+\end{lstlisting}
+
+\subsection{macOS（Apple Clang）}
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+clang -dynamiclib -fPIC -o libmathlib.dylib mathlib.c -DMYLIB_EXPORTS
+\end{lstlisting}
+
+\begin{tcolorbox}[note={动态库文件命名}]
+Windows 使用 \texttt{.dll}，Linux 使用 \texttt{.so}，macOS 使用 \texttt{.dylib}。文件名约定：Windows 上通常不加 \texttt{lib} 前缀，Linux/macOS 上通常加 \texttt{lib} 前缀。
+\end{tcolorbox}
+
+\section{验证导出符号}
+
+编译完成后，可以验证 DLL/SO 是否正确导出了目标函数：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# Windows — 查看 DLL 导出表
+dumpbin /exports mathlib.dll
+
+# Linux — 查看 SO 符号表
+nm -D libmathlib.so | grep ' T '
+
+# macOS
+nm -gU libmathlib.dylib
+\end{lstlisting}
+
+\section{用 C 接口包装 C++ 类}
+
+\texttt{extern "C"} 只能导出平坦函数（free function），不能直接导出 \cpp{} 类、成员函数或模板。要在其他语言中使用 \cpp{} 类，需要用不透明指针（opaque pointer）模式编写 C 包装层：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// image_processor.cpp
+#include <memory>
+#include <string>
+
+class ImageProcessor {
+public:
+    void load(const std::string& path) { /* ... */ }
+    void apply_filter(const std::string& name) { /* ... */ }
+    bool save(const std::string& path) { /* ... */ }
+    int width() const { return width_; }
+    int height() const { return height_; }
+private:
+    int width_ = 0, height_ = 0;
+};
+
+// === C 包装层 ===
+extern "C" {
+
+MYLIB_API void* imgproc_create() {
+    return new ImageProcessor();
+}
+
+MYLIB_API void imgproc_destroy(void* self) {
+    delete static_cast<ImageProcessor*>(self);
+}
+
+MYLIB_API void imgproc_load(void* self, const char* path) {
+    static_cast<ImageProcessor*>(self)->load(path);
+}
+
+MYLIB_API void imgproc_apply_filter(void* self, const char* name) {
+    static_cast<ImageProcessor*>(self)->apply_filter(name);
+}
+
+MYLIB_API int imgproc_save(void* self, const char* path) {
+    return static_cast<ImageProcessor*>(self)->save(path) ? 1 : 0;
+}
+
+MYLIB_API int imgproc_width(void* self) {
+    return static_cast<ImageProcessor*>(self)->width();
+}
+
+MYLIB_API int imgproc_height(void* self) {
+    return static_cast<ImageProcessor*>(self)->height();
+}
+
+} // extern "C"
+\end{lstlisting}
+
+这种模式的关键设计：
+\begin{itemize}[nosep]
+\item 使用 \texttt{void*} 作为不透明句柄（opaque handle），隐藏 C++ 对象的具体类型
+\item 必须提供配对的创建/销毁函数，由调用方管理生命周期
+\item 所有字符串参数使用 \texttt{const char*}，避免传递 \texttt{std::string}
+\item 返回值使用简单类型（\texttt{int}、\texttt{double}、\texttt{const char*}）
+\end{itemize}
+
+\begin{tcolorbox}[warning={extern "C" 的限制}]
+\texttt{extern "C"} 不支持函数重载——如果在一个 \texttt{extern "C"} 块中声明两个同名函数，编译器会报错。每个导出函数必须有唯一的名称。此外，\texttt{extern "C"} 不能导出模板函数、类成员函数或运算符重载。
+\end{tcolorbox}
+
+\section{C++ 绑定工具概览}
+
+对于需要导出 \cpp{} 类、模板或复杂类型的场景，可以使用专用的绑定工具，而非手写 C 包装层：
+
+\begin{longtable}{lp{3cm}p{5.5cm}}
+\toprule
+\textbf{工具} & \textbf{目标语言} & \textbf{特点} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{工具} & \textbf{目标语言} & \textbf{特点} \\
+\midrule
+\endhead
+SWIG          & 多语言          & 解析头文件自动生成绑定代码 \\
+pybind11      & Python          & 现代 \cpp{} 接口，支持 STL 类型自动转换 \\
+C++/CLI       & C\#/.NET        & 在同一编译单元中混合 \cpp{} 和 CLI 代码 \\
+cxx           & Rust            & 安全的 \cpp{}/Rust 互操作，编译期检查 \\
+N-API         & Node.js         & ABI 稳定的 Node.js 原生扩展接口 \\
+\bottomrule
+\end{longtable}
+
+这些工具各有优势，后续章节在介绍各语言 FFI 时会分别说明。
+
+
+% ===================================================================
+\chapter{Java 调用 C/C++}
+% ===================================================================
+
+Java 提供两种机制调用本地代码：JNI（Java Native Interface）是官方标准，功能完整但较为繁琐；JNA（Java Native Access）基于反射自动映射，使用简便但性能略低。
+
+\section{JNI——Java Native Interface}
+
+JNI 是 Java 平台的标准本地方法接口，需要在 Java 端声明 \texttt{native} 方法，在 C/\cpp{} 端实现对应的 JNI 函数。
+
+\subsection{Java 端声明}
+\javalabel
+\begin{lstlisting}[style=javastyle]
+package com.example;
+
+public class MathLib {
+    static {
+        System.loadLibrary("mathlib");  (*@\textcolor{cppcomment}{// 加载 libmathlib.so 或 mathlib.dll}@*)
+    }
+
+    public static native int add(int a, int b);
+    public static native int subtract(int a, int b);
+    public static native double multiply(double a, double b);
+    public static native String getVersion();
+}
+\end{lstlisting}
+
+\subsection{生成 JNI 头文件}
+
+使用 \texttt{javac} 编译 Java 源文件时，加上 \texttt{-h} 选项自动生成 JNI 头文件：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+javac -h . MathLib.java
+# 生成 com_example_MathLib.h
+\end{lstlisting}
+
+生成的头文件包含按 JNI 命名规则修饰的函数声明：
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+/* com_example_MathLib.h (自动生成) */
+JNIEXPORT jint JNICALL Java_com_example_MathLib_add
+  (JNIEnv *, jclass, jint, jint);
+
+JNIEXPORT jdouble JNICALL Java_com_example_MathLib_multiply
+  (JNIEnv *, jclass, jdouble, jdouble);
+
+JNIEXPORT jstring JNICALL Java_com_example_MathLib_getVersion
+  (JNIEnv *, jclass);
+\end{lstlisting}
+
+JNI 函数名的格式为 \texttt{Java\_\{包名\}\_\{类名\}\_\{方法名\}}，包名中的 \texttt{.} 替换为 \texttt{\_}。
+
+\subsection{C/C++ 端实现}
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include "com_example_MathLib.h"
+
+JNIEXPORT jint JNICALL Java_com_example_MathLib_add(
+    JNIEnv *env, jclass cls, jint a, jint b) {
+    return a + b;
+}
+
+JNIEXPORT jdouble JNICALL Java_com_example_MathLib_multiply(
+    JNIEnv *env, jclass cls, jdouble a, jdouble b) {
+    return a * b;
+}
+
+JNIEXPORT jstring JNICALL Java_com_example_MathLib_getVersion(
+    JNIEnv *env, jclass cls) {
+    return (*env)->NewStringUTF(env, "1.0.0");
+    // C++: return env->NewStringUTF("1.0.0");
+}
+\end{lstlisting}
+
+\begin{tcolorbox}[note={JNIEnv 与类型映射}]
+\Fn{JNIEnv} 是 JNI 的核心接口指针，提供创建 Java 对象、调用 Java 方法、类型转换等功能。JNI 定义了一套与 Java 类型对应的 C 类型：\Tp{jint} 对应 \Tp{int}，\Tp{jdouble} 对应 \Tp{double}，\Tp{jstring} 对应 \Tp{String}，\Tp{jbyteArray} 对应 \Tp{byte[]} 等。
+\end{tcolorbox}
+
+\subsection{编译与运行}
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# Windows (MSVC) — 编译 JNI DLL
+cl /LD /I"%JAVA_HOME%\include" /I"%JAVA_HOME%\include\win32" \
+   jni_mathlib.cpp /Fe:mathlib.dll
+
+# Linux (GCC)
+gcc -shared -fPIC \
+    -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux" \
+    jni_mathlib.c -o libmathlib.so
+
+# 运行 Java 程序
+java -Djava.library.path=. com.example.MathLib
+\end{lstlisting}
+
+\section{JNA——Java Native Access}
+
+JNA 不需要编写 JNI C 代码，直接通过反射将 Java 接口映射到 DLL 中的 C 函数：
+
+\javalabel
+\begin{lstlisting}[style=javastyle]
+import com.sun.jna.Library;
+import com.sun.jna.Native;
+
+public class MathLibJNA {
+    public interface MathLib extends Library {
+        MathLib INSTANCE = Native.load("mathlib", MathLib.class);
+
+        int add(int a, int b);
+        int subtract(int a, int b);
+        double multiply(double a, double b);
+        String getVersion();
+    }
+
+    public static void main(String[] args) {
+        System.out.println("3 + 4 = " + MathLib.INSTANCE.add(3, 4));
+        System.out.println("version: " + MathLib.INSTANCE.getVersion());
+    }
+}
+\end{lstlisting}
+
+JNA 自动完成以下工作：
+\begin{itemize}[nosep]
+\item 加载动态链接库（\texttt{Native.load}）
+\item 查找函数符号（按方法名直接查找，无需 JNI 修饰名）
+\item 参数类型自动转换（\Tp{int} $\to$ \Tp{jint}，\Tp{String} $\to$ \Tp{const char*}）
+\item 调用约定处理（默认 \texttt{cdecl}，可指定 \texttt{stdcall}）
+\end{itemize}
+
+\begin{tcolorbox}[compare={JNI 与 JNA 对比}]
+\begin{longtable}{lp{5cm}p{5cm}}
+\toprule
+\textbf{特性} & \textbf{JNI} & \textbf{JNA} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{特性} & \textbf{JNI} & \textbf{JNA} \\
+\midrule
+\endhead
+需要 C 代码        & 需要编写 JNI 桩代码        & 不需要 \\
+性能               & 直接调用，性能最优          & 反射 + 动态绑定，略有开销 \\
+类型映射           & 手动处理 JNIEnv           & 自动映射 \\
+回调支持           & 完整支持                    & 通过 \Tp{Callback} 接口 \\
+错误处理           & 手动检查异常                & 自动抛出 \Tp{LastErrorException} \\
+适用场景           & 性能敏感、复杂交互          & 快速原型、简单调用 \\
+\bottomrule
+\end{longtable}
+\end{tcolorbox}
+
+
+% ===================================================================
+\chapter{C\# 调用 C/C++}
+% ===================================================================
+
+C\# 通过 P/Invoke（Platform Invocation Services）调用非托管 DLL 中的函数，这是 .NET 平台最成熟的跨语言调用机制。对于需要操作 \cpp{} 对象的复杂场景，C++/CLI 提供了更紧密的集成方案。
+
+\section{P/Invoke 基础}
+
+P/Invoke 通过 \Tp{DllImport} 特性声明外部函数，运行时自动完成 DLL 加载、符号查找和参数封送（marshaling）：
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+using System;
+using System.Runtime.InteropServices;
+
+class MathLib {
+    [DllImport("mathlib", CallingConvention = CallingConvention.Cdecl)]
+    public static extern int add(int a, int b);
+
+    [DllImport("mathlib", CallingConvention = CallingConvention.Cdecl)]
+    public static extern int subtract(int a, int b);
+
+    [DllImport("mathlib", CallingConvention = CallingConvention.Cdecl)]
+    public static extern double multiply(double a, double b);
+
+    [DllImport("mathlib", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.LPStr)]
+    public static extern string get_version();
+
+    static void Main() {
+        Console.WriteLine($"3 + 4 = {add(3, 4)}");
+        Console.WriteLine($"version: {get_version()}");
+    }
+}
+\end{lstlisting}
+
+\begin{tcolorbox}[warning={调用约定必须匹配}]
+\Tp{CallingConvention} 必须与 C 库编译时使用的调用约定一致。如果 C 库使用 \texttt{cdecl}（GCC 默认），C\# 端必须指定 \texttt{CallingConvention.Cdecl}；如果使用 \texttt{stdcall}（Windows API 默认），则指定 \texttt{CallingConvention.StdCall}。不匹配会导致栈不平衡，程序崩溃。
+\end{tcolorbox}
+
+\section{字符串封送}
+
+C 函数的字符串参数通常是 \texttt{const char*}，C\# 需要指定封送方式：
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+[DllImport("mylib", CharSet = CharSet.Ansi)]
+public static extern void process_string(
+    [MarshalAs(UnmanagedType.LPStr)] string input);
+
+// 返回字符串 — 调用方不能释放内存
+[DllImport("mylib")]
+[return: MarshalAs(UnmanagedType.LPStr)]
+public static extern string get_name();
+
+// 通过 StringBuilder 接收可变长字符串
+[DllImport("mylib")]
+public static extern void get_message(
+    StringBuilder buffer, int bufferSize);
+\end{lstlisting}
+
+\section{结构体封送}
+
+传递结构体需要确保 C\# 端的内存布局与 C 端一致：
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+/* C 端 */
+typedef struct {
+    double x;
+    double y;
+    double z;
+} Point3D;
+
+MYLIB_API double point_distance(Point3D* p);
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+[StructLayout(LayoutKind.Sequential)]
+public struct Point3D {
+    public double X;
+    public double Y;
+    public double Z;
+}
+
+[DllImport("mylib")]
+public static extern double point_distance(ref Point3D p);
+
+// 使用
+var p = new Point3D { X = 1.0, Y = 2.0, Z = 3.0 };
+double dist = point_distance(ref p);
+\end{lstlisting}
+
+\Tp{LayoutKind.Sequential} 确保字段按照声明顺序排列，与 C 结构体布局一致。对于包含指针或嵌套结构体的复杂结构，可能需要使用 \Tp{LayoutKind.Explicit} 手动指定偏移量。
+
+\section{不透明指针模式}
+
+调用用 \texttt{void*} 句柄包装的 \cpp{} 对象时，C\# 端使用 \Tp{IntPtr} 表示：
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+class ImageProcessor : IDisposable {
+    [DllImport("mylib")] static extern IntPtr imgproc_create();
+    [DllImport("mylib")] static extern void imgproc_destroy(IntPtr self);
+    [DllImport("mylib", CharSet = CharSet.Ansi)]
+    static extern void imgproc_load(IntPtr self, string path);
+    [DllImport("mylib")] static extern int imgproc_width(IntPtr self);
+
+    private IntPtr _handle;
+
+    public ImageProcessor() {
+        _handle = imgproc_create();
+        if (_handle == IntPtr.Zero)
+            throw new Exception("Failed to create ImageProcessor");
+    }
+
+    public void Load(string path) => imgproc_load(_handle, path);
+    public int Width => imgproc_width(_handle);
+
+    public void Dispose() {
+        if (_handle != IntPtr.Zero) {
+            imgproc_destroy(_handle);
+            _handle = IntPtr.Zero;
+        }
+    }
+}
+\end{lstlisting}
+
+\section{C++/CLI}
+
+C++/CLI 是微软提供的混合编程语言，可以在同一个编译单元中同时使用 \cpp{} 和 .NET 托管代码。它充当 \cpp{} 库和 C\# 之间的桥梁：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// wrapper.cpp — 编译为 .NET 程序集 (/clr)
+#include "image_processor.h"   (*@\textcolor{cppcomment}{// 纯 C++ 头文件}@*)
+
+using namespace System;
+using namespace System::Runtime::InteropServices;
+
+public ref class ManagedImageProcessor {
+private:
+    ImageProcessor* _native;
+
+public:
+    ManagedImageProcessor() { _native = new ImageProcessor(); }
+    ~ManagedImageProcessor() { this->!ManagedImageProcessor(); }
+    !ManagedImageProcessor() { delete _native; }
+
+    void Load(String^ path) {
+        std::string nativePath =
+            (char*)Marshal::StringToHGlobalAnsi(path).ToPointer();
+        _native->load(nativePath);
+    }
+
+    int Width() { return _native->width(); }
+};
+\end{lstlisting}
+
+C\# 端直接引用编译后的 .NET 程序集，像使用普通 C\# 类一样调用：
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+using ManagedLib;
+
+var proc = new ManagedImageProcessor();
+proc.Load("photo.jpg");
+Console.WriteLine($"Width: {proc.Width()}");
+\end{lstlisting}
+
+\begin{tcolorbox}[compare={P/Invoke 与 C++/CLI 对比}]
+P/Invoke 适合调用平坦的 C 函数，配置简单但结构体封送繁琐。C++/CLI 适合封装复杂的 \cpp{} 类库，可以自然处理构造函数、析构函数、异常转换和字符串编码，但仅限 MSVC 工具链（Windows），且引入了额外的托管/非托管转换开销。
+\end{tcolorbox}
+
+
+% ===================================================================
+\chapter{Rust 调用 C/C++}
+% ===================================================================
+
+Rust 提供了内置的 FFI（Foreign Function Interface）支持，可以在 \texttt{unsafe} 块中直接调用 C 函数。Rust 的 FFI 设计强调安全性——所有跨语言调用必须显式标记为 \texttt{unsafe}，提醒开发者承担内存安全的责任。
+
+\section{调用 C 函数}
+
+\subsection{直接链接}
+\rustlabel
+\begin{lstlisting}[style=ruststyle]
+// 声明外部 C 函数
+extern "C" {
+    fn add(a: i32, b: i32) -> i32;
+    fn multiply(a: f64, b: f64) -> f64;
+    fn get_version() -> *const std::os::raw::c_char;
+}
+
+fn main() {
+    unsafe {
+        let sum = add(3, 4);
+        println!("3 + 4 = {}", sum);
+
+        let version = std::ffi::CStr::from_ptr(get_version());
+        println!("version: {}", version.to_str().unwrap());
+    }
+}
+\end{lstlisting}
+
+编译时链接动态库：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# 使用链接参数
+rustc main.rs -L . -l mathlib
+
+# 或在 Cargo.toml 中配置 build.rs
+\end{lstlisting}
+
+\subsection{使用 \texttt{libc} 和 \texttt{cc} crate}
+
+更规范的做法是通过 \texttt{build.rs} 编译 C 代码并自动链接：
+
+\rustlabel
+\begin{lstlisting}[style=ruststyle]
+// build.rs
+fn main() {
+    cc::Build::new()
+        .file("src/mathlib.c")
+        .define("MYLIB_EXPORTS", None)
+        .compile("mathlib");
+    println!("cargo:rerun-if-changed=src/mathlib.c");
+}
+\end{lstlisting}
+
+\section{Rust 类型与 C 类型的映射}
+
+\begin{longtable}{lcc}
+\toprule
+\textbf{C 类型} & \textbf{Rust 类型} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{C 类型} & \textbf{Rust 类型} & \textbf{说明} \\
+\midrule
+\endhead
+\texttt{int}           & \texttt{i32} / \texttt{c\_int}     & 通常 32 位 \\
+\texttt{unsigned int}  & \texttt{u32} / \texttt{c\_uint}    & \\
+\texttt{long}          & \texttt{c\_long}                   & 平台相关 \\
+\texttt{float}         & \texttt{f32} / \texttt{c\_float}   & IEEE 754 \\
+\texttt{double}        & \texttt{f64} / \texttt{c\_double}  & IEEE 754 \\
+\texttt{bool}          & \texttt{bool} / \texttt{c\_bool}   & C99 \texttt{\_Bool} \\
+\texttt{char*}         & \texttt{*mut c\_char}              & 可变字符串 \\
+\texttt{const char*}   & \texttt{*const c\_char}            & 只读字符串 \\
+\texttt{void*}         & \texttt{*mut c\_void}              & 不透明指针 \\
+\texttt{size\_t}       & \texttt{usize}                     & \\
+\texttt{void}          & \texttt{()}                        & 单元类型 \\
+\bottomrule
+\end{longtable}
+
+\begin{tcolorbox}[note={使用 std::os::raw}]
+Rust 标准库提供了 \Tp{std::os::raw} 模块，包含 \Tp{c\_int}、\Tp{c\_char}、\Tp{c\_void} 等类型别名。使用这些别名而非硬编码 \Tp{i32} 等，可以确保在不同平台上的正确性——例如 \texttt{c\_long} 在 Linux x86-64 上是 64 位，在 Windows x64 上是 32 位。
+\end{tcolorbox}
+
+\section{将 Rust 函数导出给 C 调用}
+
+Rust 函数也可以导出为 C ABI，供其他语言调用：
+
+\rustlabel
+\begin{lstlisting}[style=ruststyle]
+// lib.rs
+use std::ffi::CStr;
+use std::os::raw::{c_char, c_int};
+
+#[no_mangle]
+pub extern "C" fn rust_add(a: c_int, b: c_int) -> c_int {
+    a + b
+}
+
+#[no_mangle]
+pub extern "C" fn rust_greet(name: *const c_char) -> *mut c_char {
+    let name = unsafe { CStr::from_ptr(name) }
+        .to_str().unwrap_or("world");
+    let greeting = format!("Hello, {}!", name);
+    // 将 Rust String 转换为 C 字符串（调用方负责释放）
+    std::ffi::CString::new(greeting)
+        .unwrap()
+        .into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn rust_free_string(s: *mut c_char) {
+    if !s.is_null() {
+        unsafe { let _ = std::ffi::CString::from_raw(s); }
+    }
+}
+\end{lstlisting}
+
+编译为 C 兼容的动态库：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# Cargo.toml 中设置:
+# [lib]
+# crate-type = ["cdylib"]
+
+cargo build --release
+# 生成 target/release/libmylib.so (Linux)
+# 或     target/release/mylib.dll   (Windows)
+\end{lstlisting}
+
+\section{安全性考虑}
+
+\begin{tcolorbox}[warning={unsafe 的责任}]
+Rust FFI 调用必须放在 \texttt{unsafe} 块中，因为编译器无法保证以下安全：
+\begin{itemize}[nosep]
+\item C 指针可能为空、已释放或指向无效内存
+\item C 函数可能修改全局状态，违反 Rust 的别名规则
+\item C 字符串可能不是合法的 UTF-8
+\item C 函数的错误处理不使用 \Tp{Result}，可能直接终止进程
+\end{itemize}
+最佳实践是将 \texttt{unsafe} 调用封装在安全的 Rust 函数中，在边界处完成所有检查。
+\end{tcolorbox}
+
+\section{bindgen 与 cxx}
+
+手动编写 FFI 声明容易出错，Rust 社区提供了两个重要工具：
+
+\textbf{bindgen}：自动解析 C/\cpp{} 头文件，生成 Rust FFI 绑定代码。
+\begin{itemize}[nosep]
+\item 自动处理结构体布局、枚举映射、函数签名
+\item 支持 \texttt{bindgen} CLI 或 \texttt{build.rs} 集成
+\end{itemize}
+
+\textbf{cxx}：提供安全的 \cpp{}/Rust 互操作层。
+\begin{itemize}[nosep]
+\item 在 Rust 端声明共享类型和函数接口
+\item 自动生成 \cpp{} 头文件和 Rust FFI 桥接代码
+\item 编译期检查类型安全，避免运行时错误
+\item 支持 \Tp{CxxString}、\Tp{CxxVector} 等安全包装类型
+\end{itemize}
+
+
+% ===================================================================
+\chapter{Python 调用 C/C++}
+% ===================================================================
+
+Python 提供了丰富的 C/\cpp{} 互操作方案，从底层的 ctypes 到高级的 pybind11，覆盖了不同复杂度和性能需求。
+
+\section{ctypes}
+
+\texttt{ctypes} 是 Python 标准库的一部分，无需编译任何扩展模块，直接加载 DLL/SO 并调用其中的 C 函数：
+
+\pythonlabel
+\begin{lstlisting}[style=pythonstyle]
+import ctypes
+import os
+
+# 加载动态库
+lib = ctypes.CDLL("./libmathlib.so")  # Windows: ctypes.WinDLL("mathlib.dll")
+
+# 声明参数和返回类型
+lib.add.argtypes = [ctypes.c_int, ctypes.c_int]
+lib.add.restype = ctypes.c_int
+
+lib.multiply.argtypes = [ctypes.c_double, ctypes.c_double]
+lib.multiply.restype = ctypes.c_double
+
+lib.get_version.restype = ctypes.c_char_p
+
+# 调用
+result = lib.add(3, 4)
+print(f"3 + 4 = {result}")              # 7
+
+version = lib.get_version()
+print(f"version: {version.decode()}")   # 1.0.0
+\end{lstlisting}
+
+\begin{tcolorbox}[warning={必须声明 argtypes 和 restype}]
+ctypes 默认假设所有参数和返回值都是 \Tp{c\_int}。如果不显式声明，传递 \Tp{double} 或接收 \Tp{const char*} 时会产生错误结果甚至崩溃。这是 ctypes 最常见的陷阱。
+\end{tcolorbox}
+
+\subsection{结构体与回调}
+
+\pythonlabel
+\begin{lstlisting}[style=pythonstyle]
+# 映射 C 结构体
+class Point3D(ctypes.Structure):
+    _fields_ = [
+        ("x", ctypes.c_double),
+        ("y", ctypes.c_double),
+        ("z", ctypes.c_double),
+    ]
+
+lib.point_distance.argtypes = [ctypes.POINTER(Point3D)]
+lib.point_distance.restype = ctypes.c_double
+
+p = Point3D(1.0, 2.0, 3.0)
+dist = lib.point_distance(ctypes.byref(p))
+print(f"distance: {dist:.4f}")
+
+# 回调函数
+CALLBACK = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.c_int)
+
+@CALLBACK
+def on_result(code, value):
+    print(f"callback: code={code}, value={value}")
+
+lib.set_callback(on_result)
+\end{lstlisting}
+
+\section{CFFI}
+
+CFFI（C Foreign Function Interface）提供了比 ctypes 更高级的接口，支持 API 模式（预先解析 C 声明）和 ABI 模式（运行时加载，类似 ctypes）：
+
+\pythonlabel
+\begin{lstlisting}[style=pythonstyle]
+from cffi import FFI
+
+ffi = FFI()
+
+# API 模式 — 声明 C 接口
+ffi.cdef("""
+    int add(int a, int b);
+    int subtract(int a, int b);
+    double multiply(double a, double b);
+    const char* get_version(void);
+""")
+
+lib = ffi.dlopen("./libmathlib.so")
+
+result = lib.add(3, 4)
+print(f"3 + 4 = {result}")
+
+version = ffi.string(lib.get_version())
+print(f"version: {version.decode()}")
+\end{lstlisting}
+
+CFFI 的优势在于 \texttt{cdef} 声明直接使用 C 语法，比 ctypes 的类型映射更直观。此外，CFFI 在 PyPy 上有特殊优化，性能接近原生调用。
+
+\section{pybind11}
+
+pybind11 是 \cpp{} 专用的绑定库，可以直接将 \cpp{} 类、函数和枚举暴露为 Python 模块，无需编写 C 包装层：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+namespace py = pybind11;
+
+class ImageProcessor {
+public:
+    void load(const std::string& path) { /* ... */ }
+    void apply_filter(const std::string& name) { /* ... */ }
+    int width() const { return width_; }
+    int height() const { return height_; }
+private:
+    int width_ = 0, height_ = 0;
+};
+
+PYBIND11_MODULE(myimage, m) {
+    m.doc() = "Image processing module";
+
+    py::class_<ImageProcessor>(m, "ImageProcessor")
+        .def(py::init<>())
+        .def("load", &ImageProcessor::load)
+        .def("apply_filter", &ImageProcessor::apply_filter)
+        .def_property_readonly("width", &ImageProcessor::width)
+        .def_property_readonly("height", &ImageProcessor::height);
+}
+\end{lstlisting}
+
+Python 端使用方式与原生 Python 类完全一致：
+
+\pythonlabel
+\begin{lstlisting}[style=pythonstyle]
+import myimage
+
+proc = myimage.ImageProcessor()
+proc.load("photo.jpg")
+proc.apply_filter("gaussian_blur")
+print(f"size: {proc.width} x {proc.height}")
+\end{lstlisting}
+
+pybind11 自动处理 \texttt{std::string} $\leftrightarrow$ \Tp{str}、\texttt{std::vector} $\leftrightarrow$ \Tp{list} 等类型转换，以及 Python 和 \cpp{} 之间的异常转换。
+
+\begin{tcolorbox}[compare={ctypes vs CFFI vs pybind11}]
+\begin{longtable}{lp{3.2cm}p{3.2cm}p{3.2cm}}
+\toprule
+\textbf{特性} & \textbf{ctypes} & \textbf{CFFI} & \textbf{pybind11} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{特性} & \textbf{ctypes} & \textbf{CFFI} & \textbf{pybind11} \\
+\midrule
+\endhead
+安装            & 标准库自带      & pip install    & 头文件 + CMake \\
+调用方式        & 运行时加载      & API/ABI 双模式 & 编译扩展模块   \\
+\cpp{} 类支持   & 仅 C 包装层     & 仅 C 包装层    & 原生支持       \\
+类型转换        & 手动映射        & C 风格声明     & 自动转换       \\
+性能            & 中等            & PyPy 上最快    & CPython 上最优 \\
+适用场景        & 简单 C 调用     & 中等复杂度     & 复杂 \cpp{} 库 \\
+\bottomrule
+\end{longtable}
+\end{tcolorbox}
+
+
+% ===================================================================
+\chapter{Node.js 调用 C/C++}
+% ===================================================================
+
+Node.js 通过 N-API（原 n-api）提供 ABI 稳定的原生扩展接口，也可以使用 FFI 库在运行时动态调用 C 函数。
+
+\section{N-API}
+
+N-API 是 Node.js 官方推荐的 C/\cpp{} 扩展开发接口，其最大优势是 ABI 稳定性——用 N-API 编译的扩展可以在不同版本的 Node.js 上运行，无需重新编译。
+
+\jslabel
+\begin{lstlisting}[style=jsstyle]
+// addon.c — N-API 原生扩展
+#include <node_api.h>
+#include <stdlib.h>
+
+// 包装 add 函数
+napi_value Add(napi_env env, napi_callback_info info) {
+    size_t argc = 2;
+    napi_value args[2];
+    napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+
+    int32_t a, b;
+    napi_get_value_int32(env, args[0], &a);
+    napi_get_value_int32(env, args[1], &b);
+
+    napi_value result;
+    napi_create_int32(env, a + b, &result);
+    return result;
+}
+
+// 注册模块
+napi_value Init(napi_env env, napi_value exports) {
+    napi_property_descriptor desc = {
+        "add", NULL, Add, NULL, NULL, NULL, napi_default, NULL
+    };
+    napi_define_properties(env, exports, 1, &desc);
+    return exports;
+}
+
+NAPI_MODULE(NODE_GYP_MODULE_NAME, Init)
+\end{lstlisting}
+
+JavaScript 端使用：
+
+\jslabel
+\begin{lstlisting}[style=jsstyle]
+const addon = require('./build/Release/addon.node');
+console.log(`3 + 4 = ${addon.add(3, 4)}`);  // 7
+\end{lstlisting}
+
+\subsection{node-addon-api（C++ 封装）}
+
+N-API 是纯 C 接口，代码较为冗长。\texttt{node-addon-api} 提供了面向对象的 \cpp{} 封装：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <napi.h>
+
+Napi::Value Add(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    int a = info[0].As<Napi::Number>().Int32Value();
+    int b = info[1].As<Napi::Number>().Int32Value();
+    return Napi::Number::New(env, a + b);
+}
+
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
+    exports.Set("add", Napi::Function::New(env, Add));
+    return exports;
+}
+
+NODE_API_MODULE(addon, Init)
+\end{lstlisting}
+
+\section{FFI 调用现有 DLL}
+
+如果不想编写 \cpp{} 扩展代码，可以使用 \texttt{ffi-napi} 在 JavaScript 中直接调用现有的 C DLL：
+
+\jslabel
+\begin{lstlisting}[style=jsstyle]
+const ffi = require('ffi-napi');
+const ref = require('ref-napi');
+
+const mathlib = ffi.Library('./libmathlib', {
+    'add':        ['int',    ['int', 'int']],
+    'subtract':   ['int',    ['int', 'int']],
+    'multiply':   ['double', ['double', 'double']],
+    'get_version':['string', []]
+});
+
+console.log(`3 + 4 = ${mathlib.add(3, 4)}`);
+console.log(`version: ${mathlib.get_version()}`);
+\end{lstlisting}
+
+\Tp{ffi.Library} 的声明格式为 \texttt{\seqsplit{\{ 'fn': [retType, [argTypes]] \}}}，支持常见的 C 类型到 JavaScript 类型的映射。
+
+\begin{tcolorbox}[compare={N-API 与 FFI 对比}]
+N-API 需要编写 \cpp{} 扩展代码并使用 \texttt{node-gyp} 编译，适合需要高性能或复杂交互的场景。\texttt{ffi-napi} 无需编译，直接在 JavaScript 中声明并调用 C 函数，适合快速集成现有的 C 库。但 FFI 的每次调用都有额外的类型转换开销，不适合高频调用。
+\end{tcolorbox}
+
+
+% ===================================================================
+\chapter{跨语言调用实战指南}
+% ===================================================================
+
+\section{设计可导出的 C 接口}
+
+良好的 C 接口设计是跨语言调用的基础。以下原则可以确保接口对各类 FFI 工具友好：
+
+\begin{tcolorbox}[bestpractice={接口设计原则}]
+\begin{enumerate}[nosep]
+\item \textbf{纯 C 导出}：所有公开函数使用 \texttt{extern "C"}，返回简单类型
+\item \textbf{不透明句柄}：用 \texttt{void*} 或 \texttt{typedef struct xxx\_t xxx\_t} 隐藏内部实现
+\item \textbf{配对生命周期}：每个 \Fn{xxx\_create} 都有对应的 \Fn{xxx\_destroy}
+\item \textbf{错误码模式}：用返回值或输出参数传递错误信息，不依赖异常
+\item \textbf{无全局状态}：所有状态封装在句柄中，支持多线程并发
+\item \textbf{最小接口}：只导出必要的函数，内部实现可以随意重构
+\end{enumerate}
+\end{tcolorbox}
+
+\section{所有权与内存管理}
+
+跨语言调用中，内存的所有权转移是最容易出错的部分：
+
+\begin{longtable}{lp{9cm}}
+\toprule
+\textbf{模式} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{模式} & \textbf{说明} \\
+\midrule
+\endhead
+库分配库释放 & 库内部分配内存，由库提供的释放函数负责释放。调用方不得 \texttt{free} \\
+调用者分配   & 调用方分配缓冲区并传入，库只负责填充数据 \\
+所有权转移   & 库返回新分配的指针，调用方负责调用对应的释放函数 \\
+借用引用     & 库返回指向内部数据的指针，生命周期由库管理，调用方不得释放 \\
+\bottomrule
+\end{longtable}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+extern "C" {
+
+// 模式 1: 库分配库释放
+MYLIB_API void* parser_create();
+MYLIB_API void  parser_destroy(void* p);
+
+// 模式 2: 调用者分配缓冲区
+MYLIB_API int parser_format(void* p, char* buf, int buf_size);
+
+// 模式 3: 所有权转移 — 调用方必须调用 free_string
+MYLIB_API const char* parser_to_string(void* p);
+MYLIB_API void free_string(const char* s);
+
+// 模式 4: 借用引用 — 调用方不得释放
+MYLIB_API const char* parser_name(void* p);
+
+}
+\end{lstlisting}
+
+\begin{tcolorbox}[warning={跨 DLL 边界释放内存}]
+在 Windows 上，不同的 DLL 可能使用不同的 C 运行时（CRT），各自维护独立的堆。在一个 DLL 中 \texttt{malloc} 的内存，\textbf{不能}在另一个 DLL 中 \texttt{free}。解决方案：始终由分配方提供释放函数。
+\end{tcolorbox}
+
+\section{常见数据类型映射}
+
+\begin{longtable}{lp{2cm}p{2cm}p{2cm}p{2cm}p{2cm}}
+\toprule
+\textbf{C 类型} & \textbf{Java} & \textbf{C\#} & \textbf{Rust} & \textbf{Python} & \textbf{Node.js} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{C 类型} & \textbf{Java} & \textbf{C\#} & \textbf{Rust} & \textbf{Python} & \textbf{Node.js} \\
+\midrule
+\endhead
+\texttt{int}          & int      & int     & i32     & c\_int   & int32      \\
+\texttt{double}       & double   & double  & f64     & c\_double& number     \\
+\texttt{bool/\_Bool}  & boolean  & bool    & bool    & c\_bool  & boolean    \\
+\texttt{const char*}  & String   & string  & \&str   & bytes    & string     \\
+\texttt{void*}        & long     & IntPtr  & *mut () & c\_void\_p & Buffer   \\
+\texttt{int[]}        & int[]    & int[]   & \&[i32] & POINTER  & Int32Array \\
+\texttt{size\_t}      & long     & nuint   & usize   & c\_size\_t & number  \\
+\bottomrule
+\end{longtable}
+
+\section{错误处理策略}
+
+C 函数不使用异常，跨语言调用需要统一的错误处理策略：
+
+\subsection{错误码模式}
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+typedef enum {
+    MYLIB_OK          = 0,
+    MYLIB_ERR_NULL    = 1,
+    MYLIB_ERR_INVALID = 2,
+    MYLIB_ERR_OVERFLOW= 3,
+    MYLIB_ERR_IO      = 4
+} mylib_error;
+
+MYLIB_API mylib_error parser_parse(void* p, const char* input);
+MYLIB_API const char* mylib_error_string(mylib_error err);
+\end{lstlisting}
+
+\subsection{各语言的错误处理封装}
+
+\javalabel
+\begin{lstlisting}[style=javastyle]
+// Java — 将错误码转换为异常
+public static void parse(long handle, String input) {
+    int err = nativeParse(handle, input);
+    if (err != 0) {
+        throw new RuntimeException(
+            "Parse failed: " + nativeErrorString(err));
+    }
+}
+\end{lstlisting}
+
+\pythonlabel
+\begin{lstlisting}[style=pythonstyle]
+# Python — 将错误码转换为异常
+def parse(handle, input_text):
+    err = lib.parser_parse(handle, input_text.encode())
+    if err != 0:
+        msg = lib.mylib_error_string(err).decode()
+        raise RuntimeError(f"Parse failed: {msg}")
+\end{lstlisting}
+
+\rustlabel
+\begin{lstlisting}[style=ruststyle]
+// Rust — 将错误码转换为 Result
+fn parse(handle: *mut c_void, input: &str) -> Result<(), String> {
+    let c_input = CString::new(input).unwrap();
+    let err = unsafe { parser_parse(handle, c_input.as_ptr()) };
+    if err == 0 {
+        Ok(())
+    } else {
+        let msg = unsafe { CStr::from_ptr(mylib_error_string(err)) }
+            .to_string_lossy().into_owned();
+        Err(msg)
+    }
+}
+\end{lstlisting}
+
+
+% ===================================================================
+\appendix
+% ===================================================================
+\chapter{调用约定与 ABI 对照表}
+% ===================================================================
+
+\section*{x86（32 位）调用约定}
+
+\begin{longtable}{lp{3cm}p{3cm}p{3.5cm}}
+\toprule
+\textbf{约定} & \textbf{参数传递} & \textbf{栈清理} & \textbf{备注} \\
+\midrule
+\texttt{cdecl}     & 右到左入栈     & 调用者          & C 默认，支持可变参数 \\
+\texttt{stdcall}   & 右到左入栈     & 被调用者        & Win32 API 标准 \\
+\texttt{fastcall}  & ECX, EDX + 栈 & 被调用者        & MSVC / GCC 实现不同 \\
+\texttt{thiscall}  & ECX = this + 栈 & 被调用者       & MSVC 成员函数 \\
+\texttt{vectorcall} & XMM0--5 + 栈 & 被调用者        & SIMD 优化 \\
+\bottomrule
+\end{longtable}
+
+\section*{x86-64 调用约定}
+
+\begin{longtable}{lp{4cm}p{5cm}}
+\toprule
+\textbf{平台} & \textbf{整型参数寄存器} & \textbf{浮点参数寄存器} \\
+\midrule
+Windows x64   & RCX, RDX, R8, R9       & XMM0--XMM3 \\
+System V AMD64 & RDI, RSI, RDX, RCX, R8, R9 & XMM0--XMM7 \\
+\bottomrule
+\end{longtable}
+
+在 x86-64 平台上，\texttt{cdecl}/\texttt{stdcall}/\texttt{fastcall} 的区别消失，统一为平台标准调用约定。GCC、Clang 和 Apple Clang 的 \texttt{\_\_attribute\_\_((cdecl))} 等在 64 位平台上被忽略。
+
+\section*{各语言 FFI 默认调用约定}
+
+\begin{longtable}{lcc}
+\toprule
+\textbf{语言/工具} & \textbf{默认调用约定} & \textbf{可配置} \\
+\midrule
+Java JNI        & 平台标准              & 否 \\
+Java JNA        & \texttt{cdecl}        & 是（\Tp{StdCallLibrary}） \\
+C\# P/Invoke    & \texttt{stdcall}      & 是（\Tp{CallingConvention}） \\
+Rust FFI        & \texttt{"C"}（平台标准）& 是（\texttt{extern "stdcall"}） \\
+Python ctypes   & \texttt{cdecl}        & 是（\Tp{WinDLL} = stdcall） \\
+Node.js ffi-napi & \texttt{cdecl}       & 有限 \\
+\bottomrule
+\end{longtable}
+
+\begin{tcolorbox}[warning={C\# P/Invoke 的默认调用约定}]
+C\# 的 \Tp{DllImport} 默认使用 \texttt{stdcall}（因为 Win32 API 的惯例），而 GCC 编译的 C 库默认使用 \texttt{cdecl}。如果忘记显式指定 \texttt{CallingConvention.Cdecl}，在 32 位 Windows 上会导致栈不平衡错误。64 位平台上调用约定统一，此问题不存在。
+\end{tcolorbox}
+
+
+% ===================================================================
+\chapter{C/C++ 动态加载共享库}
+% ===================================================================
+
+除了编译期链接（linker 静态绑定），C/\cpp{} 还支持在运行时动态加载共享库（DLL/SO/DYLIB），按需查找和调用其中的函数。这种方式使程序可以在不重新编译的前提下加载插件、切换实现或延迟加载大型库。
+
+\section{Windows：LoadLibrary / GetProcAddress}
+
+Windows 提供三个核心 API 管理动态库的生命周期：
+
+\begin{longtable}{lp{8cm}}
+\toprule
+\textbf{函数} & \textbf{作用} \\
+\midrule
+\Fn{LoadLibrary}    & 加载 DLL 到进程地址空间，返回模块句柄 \\
+\Fn{GetProcAddress} & 按名称查找导出函数，返回函数指针 \\
+\Fn{FreeLibrary}    & 减少引用计数，计数归零时卸载 DLL \\
+\bottomrule
+\end{longtable}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <windows.h>
+#include <iostream>
+
+// 定义函数指针类型
+typedef int (*AddFunc)(int, int);
+typedef double (*MultiplyFunc)(double, double);
+
+int main() {
+    // 加载 DLL
+    HMODULE hLib = LoadLibraryA("mathlib.dll");
+    if (!hLib) {
+        std::cerr << "LoadLibrary failed: " << GetLastError() << "\n";
+        return 1;
+    }
+
+    // 查找函数
+    auto add = (AddFunc)GetProcAddress(hLib, "add");
+    auto mul = (MultiplyFunc)GetProcAddress(hLib, "multiply");
+    if (!add || !mul) {
+        std::cerr << "GetProcAddress failed: " << GetLastError() << "\n";
+        FreeLibrary(hLib);
+        return 1;
+    }
+
+    // 调用
+    std::cout << "3 + 4 = " << add(3, 4) << "\n";
+    std::cout << "2.5 * 4.0 = " << mul(2.5, 4.0) << "\n";
+
+    FreeLibrary(hLib);
+    return 0;
+}
+\end{lstlisting}
+
+\begin{tcolorbox}[note={LoadLibrary 搜索顺序}]
+\Fn{LoadLibrary} 按以下顺序搜索 DLL：应用程序目录 $\to$ 系统目录（\texttt{System32}）$\to$ Windows 目录 $\to$ 当前目录 $\to$ \texttt{PATH} 环境变量。出于安全考虑，推荐使用 \Fn{LoadLibraryEx} 配合 \texttt{LOAD\_LIBRARY\_SEARCH\_DLL\_LOAD\_DIR} 标志限制搜索范围，避免 DLL 劫持。
+\end{tcolorbox}
+
+\subsection{LoadLibraryEx 与搜索路径控制}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// 仅从 DLL 所在目录加载，防止 DLL 劫持
+HMODULE hLib = LoadLibraryExA(
+    "plugins\\mathlib.dll",
+    NULL,
+    LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR
+);
+
+// 从自定义目录加载
+// 需先调用 SetDllDirectory 或 AddDllDirectory
+AddDllDirectory(L"C:\\MyApp\\libs");
+HMODULE hLib = LoadLibraryExA(
+    "mathlib.dll", NULL,
+    LOAD_LIBRARY_SEARCH_USER_DIRS
+);
+\end{lstlisting}
+
+\section{Linux/macOS：dlopen / dlsym}
+
+POSIX 系统使用 \texttt{dlfcn.h} 提供的三个函数：
+
+\begin{longtable}{lp{8cm}}
+\toprule
+\textbf{函数} & \textbf{作用} \\
+\midrule
+\Fn{dlopen}  & 打开共享库（\texttt{.so}/\texttt{.dylib}），返回句柄 \\
+\Fn{dlsym}   & 按名称查找符号，返回函数或变量指针 \\
+\Fn{dlclose} & 减少引用计数，计数归零时卸载 \\
+\Fn{dlerror} & 返回最近一次错误的描述字符串 \\
+\bottomrule
+\end{longtable}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <dlfcn.h>
+#include <iostream>
+
+typedef int (*AddFunc)(int, int);
+
+int main() {
+    // 加载共享库
+    void* handle = dlopen("./libmathlib.so", RTLD_LAZY);
+    if (!handle) {
+        std::cerr << "dlopen: " << dlerror() << "\n";
+        return 1;
+    }
+
+    // 清除旧错误，查找符号
+    dlerror();
+    auto add = (AddFunc)dlsym(handle, "add");
+    const char* err = dlerror();
+    if (err) {
+        std::cerr << "dlsym: " << err << "\n";
+        dlclose(handle);
+        return 1;
+    }
+
+    std::cout << "3 + 4 = " << add(3, 4) << "\n";
+
+    dlclose(handle);
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{dlopen 标志说明}
+
+\begin{longtable}{lp{7cm}}
+\toprule
+\textbf{标志} & \textbf{含义} \\
+\midrule
+\texttt{RTLD\_LAZY}   & 延迟绑定——函数首次调用时才解析符号，启动更快 \\
+\texttt{RTLD\_NOW}    & 立即绑定——加载时解析所有符号，启动慢但运行时不会因缺少符号崩溃 \\
+\texttt{RTLD\_GLOBAL} & 该库的符号对后续加载的库可见（可用于插件共享依赖） \\
+\texttt{RTLD\_LOCAL}  & 该库的符号仅对自身可见（默认行为） \\
+\bottomrule
+\end{longtable}
+
+标志可以按位组合使用，例如 \texttt{RTLD\_NOW | RTLD\_GLOBAL}。
+
+\begin{tcolorbox}[note={编译时需链接 dl 库}]
+在 Linux 上编译使用 \Fn{dlopen} 的程序时，需要链接 \texttt{libdl}：
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+g++ -o loader loader.cpp -ldl
+\end{lstlisting}
+macOS 上 \texttt{dlopen} 已包含在系统库中，无需额外链接。
+\end{tcolorbox}
+
+\section{跨平台封装}
+
+在实际项目中，通常将平台 API 封装为统一的接口：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// dynlib.h — 跨平台动态库加载
+#pragma once
+
+#ifdef _WIN32
+    #include <windows.h>
+    typedef HMODULE dynlib_handle_t;
+#else
+    #include <dlfcn.h>
+    typedef void*   dynlib_handle_t;
+#endif
+
+inline dynlib_handle_t dynlib_open(const char* path) {
+#ifdef _WIN32
+    return LoadLibraryA(path);
+#else
+    return dlopen(path, RTLD_LAZY);
+#endif
+}
+
+inline void* dynlib_sym(dynlib_handle_t h, const char* name) {
+#ifdef _WIN32
+    return (void*)GetProcAddress(h, name);
+#else
+    return dlsym(h, name);
+#endif
+}
+
+inline void dynlib_close(dynlib_handle_t h) {
+#ifdef _WIN32
+    FreeLibrary(h);
+#else
+    dlclose(h);
+#endif
+}
+
+inline const char* dynlib_error() {
+#ifdef _WIN32
+    static char buf[256];
+    FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL,
+        GetLastError(), 0, buf, sizeof(buf), NULL);
+    return buf;
+#else
+    return dlerror();
+#endif
+}
+\end{lstlisting}
+
+\section{Boost.DLL}
+
+Boost.DLL 提供了面向对象的跨平台动态库加载接口，自动管理句柄生命周期（RAII），并支持按类型安全地获取符号：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <boost/dll/shared_library.hpp>
+#include <boost/dll/import.hpp>
+#include <iostream>
+
+int main() {
+    namespace dll = boost::dll;
+
+    // 方式 1：shared_library 对象（RAII 管理句柄）
+    dll::shared_library lib("./libmathlib.so");  // Windows: "mathlib.dll"
+
+    if (!lib.has("add")) {
+        std::cerr << "symbol 'add' not found\n";
+        return 1;
+    }
+
+    auto add = lib.get<int(int, int)>("add");
+    std::cout << "3 + 4 = " << add(3, 4) << "\n";
+
+    // 方式 2：import 函数（自动生命周期管理）
+    auto multiply = dll::import<double(double, double)>(
+        "./libmathlib.so", "multiply",
+        dll::load_mode::append_decorations  (*@\textcolor{cppcomment}{// 自动处理 lib 前缀和 .so/.dll 后缀}@*)
+    );
+    std::cout << "2.5 * 4.0 = " << multiply(2.5, 4.0) << "\n";
+
+    // lib 析构时自动卸载；multiply 的 shared_library 由 shared_ptr 管理
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{Boost.DLL 加载模式}
+
+\begin{longtable}{lp{7cm}}
+\toprule
+\textbf{标志} & \textbf{含义} \\
+\midrule
+\texttt{load\_mode::default\_mode} & 等价于 \texttt{RTLD\_LAZY}（POSIX）或 \texttt{LoadLibrary}（Windows） \\
+\texttt{load\_mode::append\_decorations} & 自动添加 \texttt{lib} 前缀和 \texttt{.so}/\texttt{.dll} 后缀 \\
+\texttt{load\_mode::rtld\_now} & 等价于 \texttt{RTLD\_NOW}，立即解析所有符号 \\
+\texttt{load\_mode::rtld\_global} & 等价于 \texttt{RTLD\_GLOBAL}，符号全局可见 \\
+\texttt{load\_mode::search\_system\_folders} & 在系统目录中搜索库文件 \\
+\bottomrule
+\end{longtable}
+
+\begin{tcolorbox}[compare={三种动态加载方式对比}]
+\begin{longtable}{lp{3.5cm}p{3.5cm}p{3.5cm}}
+\toprule
+\textbf{特性} & \textbf{Win32 API} & \textbf{POSIX dlopen} & \textbf{Boost.DLL} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{特性} & \textbf{Win32 API} & \textbf{POSIX dlopen} & \textbf{Boost.DLL} \\
+\midrule
+\endhead
+平台          & 仅 Windows         & Linux/macOS         & 跨平台             \\
+句柄管理      & 手动 FreeLibrary   & 手动 dlclose        & RAII 自动管理      \\
+错误获取      & GetLastError       & dlerror             & 抛出异常           \\
+类型安全      & 手动强转函数指针   & 手动强转函数指针    & 模板指定签名       \\
+符号搜索      & GetProcAddress     & dlsym               & \Fn{get}/\Fn{import} \\
+外部依赖      & 无（系统 API）     & 无（系统 API）      & 需要 Boost         \\
+适用场景      & Windows 专用代码   & POSIX 专用代码      & 跨平台项目         \\
+\bottomrule
+\end{longtable}
+\end{tcolorbox}
+
+\begin{tcolorbox}[bestpractice={动态加载的最佳实践}]
+\begin{enumerate}[nosep]
+\item \textbf{优先使用延迟加载}：对非核心功能使用动态加载，减少启动时间和内存占用。
+\item \textbf{检查每个返回值}：\Fn{LoadLibrary}、\Fn{GetProcAddress}、\Fn{dlopen}、\Fn{dlsym} 均可能失败，必须逐一检查并处理错误。
+\item \textbf{RAII 封装}：使用 \texttt{std::unique\_ptr} + 自定义 deleter 或 Boost.DLL 管理句柄，避免泄漏。
+\item \textbf{安全搜索路径}：Windows 上使用 \Fn{LoadLibraryEx} 限制搜索范围，防止 DLL 劫持攻击。
+\item \textbf{符号存在性检查}：加载后先用 \Fn{has} 或检查返回值确认符号存在，再调用。
+\end{enumerate}
+\end{tcolorbox}
+
+
+\backmatter
+
+\end{document}
