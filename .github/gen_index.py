@@ -58,6 +58,9 @@ PROJECTS = [
     ("OpOverload",    "operator_overloading.pdf",
      "运算符重载",
      "运算符代数性质、C++ 可重载/不可重载运算符、C#/Python 跨语言对比。"),
+    ("NewDelete",     "new_delete.pdf",
+     "new/delete 运算符重载",
+     "全局/类级别 operator new 重载、内存调试、裸机、外设分配、CUDA Vector 封装与自定义分配器对比。"),
 ]
 
 HTML_TEMPLATE = """\

@@ -29,6 +29,7 @@ $projects = @(
     @{ dir = 'Serialization';                   job = 'serialization' }
     @{ dir = 'SFINAE and Concept';              job = 'sfinae_and_concepts' }
     @{ dir = 'Thread and Coroutine';            job = 'thread_coroutine' }
+    @{ dir = 'NewDelete';                       job = 'new_delete' }
 )
 
 $copied = 0
