@@ -1,6 +1,6 @@
 # C/C++ LaTeX 参考手册合集
 
-本仓库包含 **16 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
+本仓库包含 **17 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
 
 ## 目录结构
 
@@ -37,6 +37,9 @@ C、C++/
 │   └── build.ps1
 ├── memory leak/                  # C/C++ 内存泄漏：检测与防御
 │   ├── memory_leak.tex
+│   └── build.ps1
+├── NewDelete/                    # C++ new/delete 运算符重载
+│   ├── new_delete.tex
 │   └── build.ps1
 ├── Operator Overloading/         # C++ 运算符重载：原理、实践与跨语言对比
 │   ├── operator_overloading.tex
@@ -147,6 +150,7 @@ C、C++/
 | IO | IO | 文件/网络/进程间 I/O |
 | ExternC | extern C use in other language | extern C 跨语言集成 |
 | OpOverload | Operator Overloading | 运算符重载：原理、实践与跨语言对比 |
+| NewDelete | NewDelete | new/delete 运算符重载：内存调试、裸机、外设与分配器 |
 
 ## 统一格式规范
 

@@ -1,0 +1,1528 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}{\setmonofont{Consolas}}{\setmonofont{DejaVu Sans Mono}}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+\lstset{style=cppstyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{float}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={C++ Reference},
+  pdftitle={C++ new/delete 运算符重载},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+% ====================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C++ new/delete 运算符重载\par}
+\vspace{1cm}
+{\LARGE 内存调试、裸机、外设分配与自定义分配器\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+% ================================================================
+\chapter{operator new/delete 家族概览}
+% ================================================================
+
+C++ 将内存分配拆分为\textbf{原始内存获取}与\textbf{对象构造}两个层次。\texttt{operator new}/\texttt{operator delete} 仅负责获取与释放原始内存，\texttt{new}/\texttt{delete} 表达式则自动调用构造与析构函数。理解这一区分是掌握全部重载机制的前提。
+
+\section{六个重载点}
+
+标准库在 \texttt{<new>} 头文件中声明了六对全局重载函数。每一对都包含
+\texttt{nothrow} 版本和可能抛出 \texttt{std::bad\_alloc} 的版本。
+
+\begin{lstlisting}
+// === 单对象分配 ===
+void* operator new  (std::size_t count);
+void* operator new  (std::size_t count,
+                     const std::nothrow_t&) noexcept;
+
+// === 单对象释放 ===
+void  operator delete(void* ptr) noexcept;
+void  operator delete(void* ptr,
+                      std::size_t count) noexcept;
+
+// === 数组分配 ===
+void* operator new[](std::size_t count);
+void* operator new[](std::size_t count,
+                     const std::nothrow_t&) noexcept;
+
+// === 数组释放 ===
+void  operator delete[](void* ptr) noexcept;
+void  operator delete[](void* ptr,
+                        std::size_t count) noexcept;
+\end{lstlisting}
+
+\begin{note}
+\cpp{14} 起，\texttt{operator delete} 增加了带 \texttt{size\_t} 参数的
+sized deallocation 版本。编译器在知道对象大小时会自动调用带尺寸的版本，
+允许分配器进行更高效的回收。
+\end{note}
+
+\section{new 表达式与 operator new 的关系}
+
+以下伪代码展示了编译器对 \texttt{new} 表达式的展开过程：
+
+\begin{lstlisting}
+// 程序员写的代码:
+Widget* w = new Widget(arg1, arg2);
+
+// 编译器展开为:
+void* raw = operator new(sizeof(Widget));   // 1. 分配原始内存
+try {
+    w = new(raw) Widget(arg1, arg2);        // 2. placement new 构造
+} catch (...) {
+    operator delete(raw);                   // 3. 构造失败则释放
+    throw;
+}
+\end{lstlisting}
+
+\texttt{delete} 表达式的展开是镜像过程：先调用析构函数，再调用
+\texttt{operator delete} 释放内存。
+
+\section{数组版本的额外开销}
+
+\texttt{new[]}/ \texttt{delete[]} 的实现通常会在分配的内存块头部写入
+数组元素数量（cookie），以便 \texttt{delete[]} 知道需要调用多少次析构函数。
+这意味着：
+
+\begin{lstlisting}
+Widget* arr = new Widget[10];
+// 实际分配: sizeof(size_t) + sizeof(Widget) * 10
+// cookie 存放元素数量 10
+// arr 指向 cookie 之后第一个 Widget 的地址
+
+delete[] arr;  // 读 cookie, 调用 10 次析构, 释放整块
+\end{lstlisting}
+
+\begin{warning}
+对 \texttt{new[]} 的结果使用 \texttt{delete}（不带方括号）会导致
+未定义行为：cookie 不会被读取，析构函数调用次数错误，且释放的指针
+可能不指向分配时的实际起始地址。
+\end{warning}
+
+\section{Placement new}
+
+Placement new 是 \texttt{operator new} 的一个特殊重载，接受额外的
+地址参数，在已有内存上构造对象。它不分配任何内存：
+
+\begin{lstlisting}
+#include <new>
+
+alignas(Widget) char buffer[sizeof(Widget)];
+Widget* w = new (buffer) Widget(42);    // 在 buffer 上构造
+
+w->~Widget();                           // 手动析构
+// 不调用 operator delete, 因为内存不是 new 分配的
+\end{lstlisting}
+
+Placement new 在嵌入式系统、内存池和自定义分配器中广泛使用。
+对应的析构必须手动调用析构函数，不能使用 \texttt{delete} 表达式。
+
+% ================================================================
+\chapter{全局重载：内存调试与泄漏检测}
+% ================================================================
+
+全局重载 \texttt{operator new} 和 \texttt{operator delete} 可以拦截
+程序中所有的动态内存分配。这是实现内存调试、泄漏检测和分配统计的基础手段。
+
+\section{基本原理}
+
+在翻译单元中定义与全局版本相同签名的函数即可替换默认实现。
+链接器会使用自定义版本覆盖标准库的默认版本：
+
+\begin{lstlisting}
+#include <cstdlib>
+#include <cstdio>
+#include <new>
+
+void* operator new(std::size_t count) {
+    void* ptr = std::malloc(count);
+    if (!ptr) throw std::bad_alloc();
+    std::printf("[ALLOC] %zu bytes at %p\n", count, ptr);
+    return ptr;
+}
+
+void operator delete(void* ptr) noexcept {
+    std::printf("[FREE]  %p\n", ptr);
+    std::free(ptr);
+}
+
+// 必须同时重载 nothrow 版本和数组版本
+void* operator new(std::size_t count,
+                   const std::nothrow_t&) noexcept {
+    try { return operator new(count); }
+    catch (...) { return nullptr; }
+}
+
+void operator delete(void* ptr, std::size_t) noexcept {
+    operator delete(ptr);
+}
+
+void* operator new[](std::size_t count) {
+    return operator new(count);
+}
+
+void operator delete[](void* ptr) noexcept {
+    operator delete(ptr);
+}
+
+void* operator new[](std::size_t count,
+                     const std::nothrow_t&) noexcept {
+    return operator new(count, std::nothrow);
+}
+
+void operator delete[](void* ptr, std::size_t) noexcept {
+    operator delete(ptr);
+}
+\end{lstlisting}
+
+\begin{warning}
+全局重载时，自定义 \texttt{operator new} 不能内部使用 \texttt{new} 表达式，
+否则会导致无限递归。必须使用 \texttt{malloc}/\texttt{free} 或
+\texttt{mmap}/\texttt{munmap} 等底层 API 进行实际内存分配。
+\end{warning}
+
+\section{内存分配追踪}
+
+通过在全局重载中记录每次分配的信息（地址、大小），可以构建一个
+完整的内存使用图景。以下实现追踪所有活跃分配：
+
+\begin{lstlisting}
+#include <unordered_map>
+#include <mutex>
+#include <cstdio>
+#include <cstdlib>
+#include <new>
+
+namespace {
+    struct AllocInfo { std::size_t size; };
+    std::unordered_map<void*, AllocInfo> g_allocs;
+    std::mutex g_mutex;
+    std::size_t g_total = 0;
+    std::size_t g_peak  = 0;
+    std::size_t g_count = 0;
+}
+
+void* operator new(std::size_t count) {
+    void* ptr = std::malloc(count);
+    if (!ptr) throw std::bad_alloc();
+    {
+        std::lock_guard lock(g_mutex);
+        g_allocs[ptr] = {count};
+        g_total += count;
+        g_count++;
+        if (g_total > g_peak) g_peak = g_total;
+    }
+    return ptr;
+}
+
+void operator delete(void* ptr) noexcept {
+    if (!ptr) return;
+    {
+        std::lock_guard lock(g_mutex);
+        auto it = g_allocs.find(ptr);
+        if (it != g_allocs.end()) {
+            g_total -= it->second.size;
+            g_allocs.erase(it);
+        }
+    }
+    std::free(ptr);
+}
+\end{lstlisting}
+
+程序退出时，\texttt{g\_allocs} 中残留的条目即为泄漏的内存。
+可以注册 \texttt{atexit} 回调在程序结束时打印泄漏报告：
+
+\begin{lstlisting}
+void report_leaks() {
+    std::lock_guard lock(g_mutex);
+    if (g_allocs.empty()) {
+        std::printf("[MEM] No leaks detected.\n");
+        return;
+    }
+    std::printf("[MEM] %zu leaks, %zu bytes total\n",
+                g_allocs.size(), g_total);
+    for (auto& [ptr, info] : g_allocs) {
+        std::printf("  %p : %zu bytes\n", ptr, info.size);
+    }
+    std::printf("[MEM] Peak usage: %zu bytes\n", g_peak);
+}
+
+// 全局对象构造函数中注册
+static struct LeakReporter {
+    LeakReporter() { std::atexit(report_leaks); }
+} g_reporter;
+\end{lstlisting}
+
+\section{源码位置标记}
+
+结合 \cpp{20} 的 \texttt{std::source\_location}，可以在分配时记录
+调用位置。定义带额外参数的 placement new：
+
+\begin{lstlisting}
+#include <source_location>
+
+void* operator new(std::size_t count,
+                   const std::source_location& loc) {
+    void* ptr = std::malloc(count);
+    if (!ptr) throw std::bad_alloc();
+    std::printf("[ALLOC] %zu bytes at %p from %s:%d\n",
+                count, ptr, loc.file_name(), loc.line());
+    return ptr;
+}
+
+// 宏: 替换 new 表达式为携带位置信息的版本
+#define TRACKED_NEW new(std::source_location::current())
+
+// 使用:
+// Widget* w = TRACKED_NEW Widget(42);
+// 输出: [ALLOC] 24 bytes at 0x... from main.cpp:42
+\end{lstlisting}
+
+\begin{note}[title=Placement delete]
+带额外参数的 placement \texttt{operator new} 不会替换全局版本，
+而是作为重载解析的额外候选。\texttt{delete} 表达式仍然调用标准的全局
+\texttt{operator delete}，因此泄漏检测逻辑只需在分配端记录即可。
+\end{note}
+
+\section{裸机环境：无 malloc 的系统}
+
+在裸机（bare-metal）嵌入式系统中，标准库的 \texttt{malloc}/\texttt{free}
+可能根本不存在。此时必须全局重载 \texttt{operator new}，从预定义的内存池
+中分配内存。
+
+\subsection{静态内存池实现}
+
+\begin{lstlisting}
+#include <cstddef>
+#include <new>
+
+// 预分配的静态内存池（位于特定 RAM 段）
+static constexpr std::size_t POOL_SIZE = 64 * 1024;
+alignas(16) static char g_pool[POOL_SIZE];
+static std::size_t g_offset = 0;
+
+void* operator new(std::size_t count) {
+    // 对齐到 16 字节边界
+    std::size_t aligned = (g_offset + 15) & ~std::size_t(15);
+    if (aligned + count > POOL_SIZE)
+        throw std::bad_alloc();
+    void* ptr = &g_pool[aligned];
+    g_offset = aligned + count;
+    return ptr;
+}
+
+void* operator new(std::size_t count,
+                   const std::nothrow_t&) noexcept {
+    try { return operator new(count); }
+    catch (...) { return nullptr; }
+}
+
+// 裸机线性分配器: 不支持释放
+void operator delete(void*) noexcept { /* no-op */ }
+void operator delete(void*, std::size_t) noexcept {}
+void* operator new[](std::size_t count) {
+    return operator new(count);
+}
+void operator delete[](void*) noexcept { /* no-op */ }
+void operator delete[](void*, std::size_t) noexcept {}
+\end{lstlisting}
+
+\subsection{链接脚本配合}
+
+在实际嵌入式项目中，内存池通常由链接脚本定义在特定的内存段中。
+C++ 代码通过 \texttt{extern} 符号引用链接器提供的地址：
+
+\begin{lstlisting}
+extern "C" {
+    extern char __heap_start;
+    extern char __heap_end;
+}
+
+void* operator new(std::size_t count) {
+    static char* heap_ptr = &__heap_start;
+    auto aligned = reinterpret_cast<char*>(
+        (reinterpret_cast<std::uintptr_t>(heap_ptr) + 15)
+        & ~std::uintptr_t(15));
+    if (aligned + count > &__heap_end)
+        throw std::bad_alloc();
+    heap_ptr = aligned + count;
+    return aligned;
+}
+\end{lstlisting}
+
+\begin{guideline}
+裸机环境的全局 \texttt{operator new} 实现要点：
+\begin{itemize}
+    \item 使用静态数组或链接脚本定义的内存段，避免依赖运行时库。
+    \item 对齐通常为 8 或 16 字节，取决于目标平台的指针大小和 SIMD 需求。
+    \item 线性分配器（bump allocator）最简单，但不支持释放。
+    \item 如需释放，需实现简单的空闲链表或 buddy 分配器。
+    \item 在多线程裸机环境中，\texttt{operator new} 必须加锁。
+\end{itemize}
+\end{guideline}
+
+\section{外设内存分配}
+
+某些硬件架构要求特定数据必须位于特定内存区域。例如，DMA 缓冲区需要在
+物理连续的内存中，GPU 数据需要在显存中，共享内存需要在多核可见的区域。
+全局重载 \texttt{operator new} 可以实现对外设内存的透明分配。
+
+\subsection{DMA 缓冲区分配}
+
+\begin{lstlisting}
+#include <cstddef>
+#include <cstdint>
+#include <new>
+
+// 硬件 API: 分配物理连续的 DMA 内存
+extern "C" void* dma_alloc(std::size_t size,
+                            std::uintptr_t* phys_addr);
+extern "C" void  dma_free(void* virt_addr, std::size_t size);
+
+// 标记结构
+struct DmaTag {};
+inline constexpr DmaTag dma_tag{};
+
+// placement new: 分配 DMA 可用内存
+void* operator new(std::size_t count, DmaTag) {
+    std::uintptr_t phys = 0;
+    void* ptr = dma_alloc(count, &phys);
+    if (!ptr) throw std::bad_alloc();
+    return ptr;
+}
+
+// placement delete: 构造失败时调用
+void operator delete(void* ptr, DmaTag) noexcept {
+    dma_free(ptr, 0);
+}
+
+// 使用: auto* buf = new (dma_tag) DmaBuffer(4096);
+\end{lstlisting}
+
+\begin{note}[title=Placement delete 的触发时机]
+placement \texttt{operator delete} 只在对应的 placement \texttt{new}
+表达式中对象构造抛出异常时才会被调用。如果构造成功，程序员需要手动
+调用析构函数并自行释放内存。
+\end{note}
+
+% ================================================================
+\chapter{类级别重载}
+% ================================================================
+
+类级别的 \texttt{operator new} 和 \texttt{operator delete} 作为类的静态
+成员函数，仅影响该类对象的内存分配。它不影响标准库容器内部的元素分配
+（那由 allocator 控制），只在使用 \texttt{new} 表达式创建该类的对象时生效。
+
+\section{固定大小的对象池}
+
+对于频繁创建和销毁的同类型对象，类级别的 operator new 可以实现
+对象池，避免反复调用系统分配器：
+
+\begin{lstlisting}
+#include <cstddef>
+#include <new>
+#include <array>
+
+class Particle {
+public:
+    float x, y, z;
+    float vx, vy, vz;
+    int   lifetime;
+
+    static void* operator new(std::size_t) {
+        if (free_list_) {
+            Node* n = free_list_;
+            free_list_ = n->next;
+            return n;
+        }
+        return ::operator new(sizeof(Particle));
+    }
+
+    static void operator delete(void* ptr) noexcept {
+        Node* n = static_cast<Node*>(ptr);
+        n->next = free_list_;
+        free_list_ = n;
+    }
+
+private:
+    struct Node { Node* next; };
+    static inline Node* free_list_ = nullptr;
+    static inline std::array<Particle, 1024> pool_{};
+
+    struct PoolInit {
+        PoolInit() {
+            for (auto& p : pool_) {
+                auto* n = reinterpret_cast<Node*>(&p);
+                n->next = free_list_;
+                free_list_ = n;
+            }
+        }
+    };
+    static inline PoolInit init_{};
+};
+\end{lstlisting}
+
+使用方式与普通 \texttt{new} 完全相同，但内存来自预分配的对象池，
+分配和释放均为 $O(1)$ 时间复杂度：
+
+\begin{lstlisting}
+Particle* p = new Particle{
+    1.0f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f, 100};
+delete p;   // 归还到对象池
+\end{lstlisting}
+
+\section{GPU 向量：分配到显存的完整示例}
+
+以下实现一个 \texttt{GpuVector} 类，其数据存储在 GPU 可访问的内存中。
+类级别的 \texttt{operator new} 将对象本身（包括指针和元数据）分配到
+主机内存，而实际的数据缓冲区通过 GPU API 分配到显存。
+
+\subsection{GPU 内存管理接口}
+
+首先定义与 GPU 驱动交互的抽象接口：
+
+\begin{lstlisting}
+#include <cstddef>
+#include <cstdint>
+#include <new>
+
+namespace gpu {
+
+enum class MemoryType {
+    DeviceLocal,       // 显存, GPU 高速访问
+    HostVisible,       // 主机可见, CPU 可映射
+    UnifiedMemory      // 统一内存, CPU/GPU 共享
+};
+
+void* allocate(std::size_t size, MemoryType type);
+void  deallocate(void* ptr);
+void  upload(void* dst, const void* src, std::size_t size);
+void  download(void* dst, const void* src, std::size_t size);
+
+} // namespace gpu
+\end{lstlisting}
+
+\subsection{GpuVector 类定义}
+
+\begin{lstlisting}
+#include <cstddef>
+#include <new>
+#include <initializer_list>
+
+template <typename T>
+class GpuVector {
+public:
+    GpuVector() = default;
+
+    explicit GpuVector(std::size_t count) {
+        reserve(count);
+        size_ = count;
+    }
+
+    GpuVector(std::initializer_list<T> init) {
+        reserve(init.size());
+        size_ = init.size();
+        gpu::upload(gpu_data_, init.begin(),
+                    size_ * sizeof(T));
+    }
+
+    ~GpuVector() {
+        if (gpu_data_) gpu::deallocate(gpu_data_);
+        delete[] staging_;
+    }
+
+    GpuVector(const GpuVector&) = delete;
+    GpuVector& operator=(const GpuVector&) = delete;
+
+    GpuVector(GpuVector&& o) noexcept
+        : gpu_data_(o.gpu_data_),
+          staging_(o.staging_),
+          size_(o.size_),
+          capacity_(o.capacity_) {
+        o.gpu_data_ = nullptr;
+        o.staging_  = nullptr;
+        o.size_     = 0;
+        o.capacity_ = 0;
+    }
+
+    GpuVector& operator=(GpuVector&& o) noexcept {
+        if (this != &o) {
+            if (gpu_data_) gpu::deallocate(gpu_data_);
+            delete[] staging_;
+            gpu_data_  = o.gpu_data_;
+            staging_   = o.staging_;
+            size_      = o.size_;
+            capacity_  = o.capacity_;
+            o.gpu_data_ = nullptr;
+            o.staging_  = nullptr;
+            o.size_     = 0;
+            o.capacity_ = 0;
+        }
+        return *this;
+    }
+
+    T read(std::size_t index) const {
+        sync_to_host();
+        return staging_[index];
+    }
+
+    void write(std::size_t index, const T& value) {
+        ensure_staging();
+        staging_[index] = value;
+        gpu::upload(
+            static_cast<char*>(gpu_data_)
+                + index * sizeof(T),
+            &value, sizeof(T));
+    }
+
+    void push_back(const T& value) {
+        if (size_ >= capacity_) {
+            std::size_t new_cap = capacity_ == 0
+                ? 8 : capacity_ * 2;
+            reserve(new_cap);
+        }
+        write(size_++, value);
+    }
+
+    std::size_t size() const { return size_; }
+    bool empty() const { return size_ == 0; }
+
+    // GPU 指针, 供 shader / kernel 直接使用
+    T* gpu_data() {
+        return static_cast<T*>(gpu_data_);
+    }
+    const T* gpu_data() const {
+        return static_cast<const T*>(gpu_data_);
+    }
+
+private:
+    void* gpu_data_  = nullptr;
+    T*    staging_   = nullptr;
+    std::size_t size_     = 0;
+    std::size_t capacity_ = 0;
+
+    void reserve(std::size_t new_cap) {
+        if (new_cap <= capacity_) return;
+        void* new_gpu = gpu::allocate(
+            new_cap * sizeof(T),
+            gpu::MemoryType::DeviceLocal);
+        if (gpu_data_ && size_ > 0) {
+            gpu::upload(new_gpu, gpu_data_,
+                        size_ * sizeof(T));
+            gpu::deallocate(gpu_data_);
+        }
+        delete[] staging_;
+        staging_   = new T[new_cap];
+        gpu_data_  = new_gpu;
+        capacity_  = new_cap;
+        if (size_ > 0) {
+            gpu::download(staging_, gpu_data_,
+                          size_ * sizeof(T));
+        }
+    }
+
+    void ensure_staging() {
+        if (!staging_ && capacity_ > 0) {
+            staging_ = new T[capacity_];
+            if (gpu_data_ && size_ > 0) {
+                gpu::download(staging_, gpu_data_,
+                              size_ * sizeof(T));
+            }
+        }
+    }
+
+    void sync_to_host() const {
+        if (gpu_data_ && staging_ && size_ > 0) {
+            gpu::download(staging_, gpu_data_,
+                          size_ * sizeof(T));
+        }
+    }
+};
+\end{lstlisting}
+
+\subsection{类级别 operator new 重载}
+
+\texttt{GpuVector} 类级别的 \texttt{operator new} 控制的是
+\texttt{GpuVector} 对象本身（指针 + 元数据）的分配位置，而非其管理的
+数据缓冲区。如果需要将对象本身也放到特殊内存中（例如嵌入式系统的
+特定 SRAM 段），可以重载类级别的 operator new：
+
+\begin{lstlisting}
+template <typename T>
+class GpuVector {
+public:
+    // ... (同上) ...
+
+    // 类级别重载: 将对象本身分配到 GPU 统一内存
+    static void* operator new(std::size_t count) {
+        void* ptr = gpu::allocate(
+            count, gpu::MemoryType::UnifiedMemory);
+        if (!ptr) throw std::bad_alloc();
+        return ptr;
+    }
+
+    static void operator delete(void* ptr) noexcept {
+        gpu::deallocate(ptr);
+    }
+
+    static void* operator new[](std::size_t count) {
+        return operator new(count);
+    }
+
+    static void operator delete[](void* ptr) noexcept {
+        operator delete(ptr);
+    }
+};
+\end{lstlisting}
+
+此时 \texttt{new GpuVector<float>(100)} 会将 \texttt{GpuVector}
+对象本身分配到统一内存，而对象内部的 \texttt{gpu\_data\_} 指针指向
+设备本地显存。两层分配各司其职。
+
+\subsection{使用示例}
+
+\begin{lstlisting}
+int main() {
+    // 对象本身在统一内存, 数据在显存
+    auto* vec = new GpuVector<float>(1024);
+
+    // 写入数据（自动上传到 GPU）
+    for (std::size_t i = 0; i < 1024; i++) {
+        vec->write(i, static_cast<float>(i) * 0.1f);
+    }
+
+    // 将 GPU 指针传给计算 shader
+    // kernel_launch(vec->gpu_data(), vec->size());
+
+    // 读取回主机
+    float val = vec->read(42);
+
+    delete vec;
+    return 0;
+}
+\end{lstlisting}
+
+\begin{guideline}
+\texttt{GpuVector} 的设计要点：
+\begin{itemize}
+    \item 数据缓冲区通过 GPU API 分配到显存，这是构造函数内部的逻辑，
+          与 \texttt{operator new} 无关。
+    \item 类级别 \texttt{operator new} 控制的是 \texttt{GpuVector}
+          对象本身（约 32 字节的指针和整数）的分配位置。
+    \item 如果需要 CPU 端频繁读取，应维护主机端的 staging buffer
+          作为缓存，减少 GPU--CPU 数据传输。
+    \item \texttt{gpu\_data()} 返回裸指针供 GPU shader 直接使用，
+          避免任何 CPU 端的间接访问。
+\end{itemize}
+\end{guideline}
+
+% ================================================================
+\chapter{与自定义分配器的区别}
+% ================================================================
+
+类级别的 \texttt{operator new} 重载和 STL 自定义分配器
+（\texttt{Allocator}）都涉及"控制内存从哪里来"，但它们作用的层次、
+生效范围和适用场景完全不同。
+
+\section{作用层次对比}
+
+\texttt{operator new} 工作在\textbf{表达式}层次：每当使用 \texttt{new}
+表达式创建对象时，编译器调用该类的 \texttt{operator new} 获取内存。
+而 \texttt{Allocator} 工作在\textbf{容器内部}：标准库容器使用分配器
+来分配其内部元素存储，与对象本身的分配方式无关。
+
+\begin{compare}[title=operator new vs Allocator]
+\textbf{operator new 重载}：
+\begin{itemize}
+    \item 作用范围：\texttt{new T} 和 \texttt{delete p} 表达式
+    \item 控制目标：对象 \texttt{T} 本身的内存来源
+    \item 触发条件：使用 \texttt{new}/\texttt{delete} 创建/销毁对象
+    \item 典型场景：对象池、嵌入式裸机、GPU 统一内存
+\end{itemize}
+
+\textbf{自定义 Allocator}：
+\begin{itemize}
+    \item 作用范围：标准库容器内部的元素存储
+    \item 控制目标：\texttt{vector<T>} 中 \texttt{T} 元素的内存来源
+    \item 触发条件：容器扩容、元素插入/删除
+    \item 典型场景：内存池分配器、共享内存分配器、GPU 数据分配器
+\end{itemize}
+\end{compare}
+
+\section{具体差异演示}
+
+以下代码展示了两种机制各自影响的位置：
+
+\begin{lstlisting}
+// 场景 1: operator new 重载
+class Widget {
+public:
+    static void* operator new(std::size_t);
+    static void  operator delete(void*) noexcept;
+    int data[16];
+};
+
+Widget* w = new Widget;           // Widget::operator new
+auto* v = new std::vector<Widget>;
+v->push_back(Widget{});
+// push_back 内部分配 Widget 时:
+// 使用 std::allocator<Widget>::allocate
+// 不调用 Widget::operator new
+\end{lstlisting}
+
+\begin{lstlisting}
+// 场景 2: 自定义 Allocator
+template <typename T>
+struct GpuAllocator {
+    using value_type = T;
+    T* allocate(std::size_t n) {
+        return static_cast<T*>(gpu::allocate(
+            n * sizeof(T),
+            gpu::MemoryType::DeviceLocal));
+    }
+    void deallocate(T* p, std::size_t) noexcept {
+        gpu::deallocate(p);
+    }
+};
+
+// 容器内部的元素存储在 GPU 显存中
+std::vector<float, GpuAllocator<float>> data;
+data.push_back(3.14f);    // GpuAllocator::allocate
+
+// 但 vector 对象本身仍在堆上
+auto* pv = new std::vector<float, GpuAllocator<float>>;
+// ^ 使用全局 ::operator new 分配 vector 控制块
+\end{lstlisting}
+
+\section{协同使用}
+
+在实际的 GPU 计算场景中，两种机制可以协同工作：
+\texttt{operator new} 将对象分配到 GPU 可见的统一内存，
+自定义分配器将容器元素分配到设备本地显存。
+
+\begin{lstlisting}
+// 自定义分配器: 元素分配到 GPU 显存
+template <typename T>
+struct DeviceAllocator {
+    using value_type = T;
+    T* allocate(std::size_t n) {
+        return static_cast<T*>(gpu::allocate(
+            n * sizeof(T),
+            gpu::MemoryType::DeviceLocal));
+    }
+    void deallocate(T* p, std::size_t) noexcept {
+        gpu::deallocate(p);
+    }
+    bool operator==(const DeviceAllocator&) const {
+        return true;
+    }
+    bool operator!=(const DeviceAllocator&) const {
+        return false;
+    }
+};
+
+struct ParticleSystem {
+    // 粒子数据在显存
+    std::vector<Particle, DeviceAllocator<Particle>>
+        particles;
+
+    // 对象本身在 GPU 可见的统一内存
+    static void* operator new(std::size_t sz) {
+        return gpu::allocate(sz,
+            gpu::MemoryType::UnifiedMemory);
+    }
+    static void operator delete(void* ptr) noexcept {
+        gpu::deallocate(ptr);
+    }
+};
+
+auto* sys = new ParticleSystem;          // 统一内存
+sys->particles.resize(100000);           // 显存
+// GPU 内核直接读取 sys->particles.data()
+\end{lstlisting}
+
+\section{PMR 多态分配器}
+
+\cpp{17} 引入的 \texttt{std::pmr::polymorphic\_allocator} 将分配策略
+从编译时模板参数变为运行时选择。它基于 \texttt{memory\_resource} 接口，
+允许在不改变容器类型的情况下切换底层分配策略：
+
+\begin{lstlisting}
+#include <memory_resource>
+
+class GpuMemoryResource
+    : public std::pmr::memory_resource {
+protected:
+    void* do_allocate(std::size_t bytes,
+                      std::size_t /*alignment*/) override {
+        return gpu::allocate(bytes,
+            gpu::MemoryType::DeviceLocal);
+    }
+    void do_deallocate(void* p, std::size_t,
+                       std::size_t) override {
+        gpu::deallocate(p);
+    }
+    bool do_is_equal(
+        const memory_resource& o) const noexcept override {
+        return this == &o;
+    }
+};
+
+// 使用
+GpuMemoryResource gpu_res;
+std::pmr::vector<float> data(&gpu_res);
+// data 的内部存储从 gpu_res 分配（显存）
+
+// 切换到主机内存, 类型不变
+std::pmr::vector<float> host_data(
+    std::pmr::new_delete_resource());
+\end{lstlisting}
+
+\begin{bestpractice}[title=选择正确的机制]
+根据需求选择合适的内存控制方式：
+\begin{itemize}
+    \item \textbf{全局 operator new}：需要拦截所有分配（内存调试、泄漏检测），
+          或在裸机环境中完全替代 \texttt{malloc}。
+    \item \textbf{类级别 operator new}：特定类型的对象需要特殊分配位置
+          （对象池、统一内存），且主要通过 \texttt{new}/\texttt{delete} 创建。
+    \item \textbf{自定义 Allocator}：标准库容器的内部元素需要特殊分配
+          （显存、共享内存、NUMA 内存），容器类型在编译时确定。
+    \item \textbf{PMR 分配器}：需要在运行时动态切换分配策略，
+          或需要容器在不同分配器之间互操作。
+\end{itemize}
+\end{bestpractice}
+
+\section{完整决策流程}
+
+面对一个新的内存管理需求时，按以下逻辑决策：
+
+\begin{enumerate}
+    \item \textbf{需求是否涉及所有类型？}——如果是（如全局内存调试），
+          使用全局 \texttt{operator new} 重载。
+    \item \textbf{需求仅针对特定类型的对象？}——如果是（如对象池），
+          使用类级别 \texttt{operator new}。
+    \item \textbf{需求是否针对容器内部的元素存储？}——如果是
+          （如 GPU 显存上的 \texttt{vector}），使用自定义 Allocator。
+    \item \textbf{分配策略是否需要运行时切换？}——如果是，
+          使用 PMR \texttt{memory\_resource}。
+    \item \textbf{需要同时控制对象和元素？}——组合使用
+          类级别 \texttt{operator new} + 自定义 Allocator。
+\end{enumerate}
+
+
+% ================================================================
+\chapter{CUDA 实战：两种封装方式对比}
+% ================================================================
+
+本章以 CUDA 为具体平台，演示如何封装一个 GPU 向量。
+同一需求可以用两种截然不同的技术路线实现：
+重载 \texttt{operator new/delete}，或者编写自定义 \texttt{Allocator}。
+对比两者有助于加深理解上一章的理论区分。
+
+\section{CUDA 内存管理基础}
+
+CUDA 运行时提供以下核心 API：
+
+\begin{lstlisting}
+#include <cuda_runtime.h>
+
+// 分配/释放设备内存（显存）
+cudaError_t cudaMalloc(void** devPtr, size_t size);
+cudaError_t cudaFree(void* devPtr);
+
+// 主机与设备之间的数据传输
+cudaError_t cudaMemcpy(void* dst, const void* src,
+                       size_t count,
+                       cudaMemcpyKind kind);
+// kind: cudaMemcpyHostToDevice / cudaMemcpyDeviceToHost
+
+// 分配统一内存（CPU/GPU 均可访问）
+cudaError_t cudaMallocManaged(void** devPtr,
+                              size_t size);
+\end{lstlisting}
+
+以下封装中，\texttt{CudaVector} 的数据缓冲区始终通过
+\texttt{cudaMalloc} 分配到显存，而主机端维护一个 staging 副本
+用于 CPU 侧的元素访问。
+
+\section{方式一：类级别 operator new/delete}
+
+这种方式通过重载 \texttt{CudaVector} 类自身的分配函数，
+将对象控制块（指针 + 尺寸元数据）也放到 CUDA 统一内存中，
+使得 CPU 和 GPU 代码都可以直接访问 \texttt{CudaVector} 的成员变量。
+
+\subsection{完整实现}
+
+\begin{lstlisting}
+#include <cuda_runtime.h>
+#include <cstddef>
+#include <new>
+#include <stdexcept>
+#include <initializer_list>
+
+template <typename T>
+class CudaVector {
+public:
+    CudaVector() = default;
+
+    explicit CudaVector(std::size_t n) {
+        resize(n);
+    }
+
+    CudaVector(std::size_t n, const T& val) {
+        resize(n);
+        for (std::size_t i = 0; i < n; i++)
+            staging_[i] = val;
+        upload_all();
+    }
+
+    CudaVector(std::initializer_list<T> init) {
+        resize(init.size());
+        std::size_t i = 0;
+        for (auto& v : init) staging_[i++] = v;
+        upload_all();
+    }
+
+    ~CudaVector() {
+        if (device_ptr_) cudaFree(device_ptr_);
+        delete[] staging_;
+    }
+
+    // 禁止拷贝
+    CudaVector(const CudaVector&) = delete;
+    CudaVector& operator=(const CudaVector&) = delete;
+
+    // 允许移动
+    CudaVector(CudaVector&& o) noexcept
+        : device_ptr_(o.device_ptr_),
+          staging_(o.staging_),
+          size_(o.size_),
+          capacity_(o.capacity_) {
+        o.device_ptr_ = nullptr;
+        o.staging_    = nullptr;
+        o.size_       = 0;
+        o.capacity_   = 0;
+    }
+
+    CudaVector& operator=(CudaVector&& o) noexcept {
+        if (this != &o) {
+            if (device_ptr_) cudaFree(device_ptr_);
+            delete[] staging_;
+            device_ptr_ = o.device_ptr_;
+            staging_    = o.staging_;
+            size_       = o.size_;
+            capacity_   = o.capacity_;
+            o.device_ptr_ = nullptr;
+            o.staging_    = nullptr;
+            o.size_       = 0;
+            o.capacity_   = 0;
+        }
+        return *this;
+    }
+
+    // --- 类级别 operator new/delete ---
+    // 将 CudaVector 对象本身分配到统一内存
+    static void* operator new(std::size_t sz) {
+        void* ptr = nullptr;
+        auto err = cudaMallocManaged(&ptr, sz);
+        if (err != cudaSuccess || !ptr)
+            throw std::bad_alloc();
+        return ptr;
+    }
+
+    static void operator delete(void* ptr) noexcept {
+        if (ptr) cudaFree(ptr);
+    }
+
+    static void* operator new[](std::size_t sz) {
+        return operator new(sz);
+    }
+
+    static void operator delete[](void* p) noexcept {
+        operator delete(p);
+    }
+
+    // --- 元素访问 ---
+    T read(std::size_t i) const {
+        sync_to_host();
+        return staging_[i];
+    }
+
+    void write(std::size_t i, const T& val) {
+        staging_[i] = val;
+        cudaMemcpy(
+            device_ptr_ + i, &val, sizeof(T),
+            cudaMemcpyHostToDevice);
+    }
+
+    void push_back(const T& val) {
+        if (size_ >= capacity_)
+            grow(capacity_ == 0 ? 8 : capacity_ * 2);
+        staging_[size_] = val;
+        cudaMemcpy(
+            device_ptr_ + size_, &val, sizeof(T),
+            cudaMemcpyHostToDevice);
+        size_++;
+    }
+
+    std::size_t size() const { return size_; }
+    bool empty() const { return size_ == 0; }
+
+    // 供 CUDA kernel 直接使用
+    T* device_data() { return device_ptr_; }
+    const T* device_data() const { return device_ptr_; }
+
+private:
+    T*    device_ptr_ = nullptr;   // 显存
+    T*    staging_    = nullptr;   // 主机暂存
+    std::size_t size_     = 0;
+    std::size_t capacity_ = 0;
+
+    void resize(std::size_t n) {
+        if (n > capacity_) grow(n);
+        size_ = n;
+    }
+
+    void grow(std::size_t new_cap) {
+        T* new_dev = nullptr;
+        auto err = cudaMalloc(&new_dev,
+                              new_cap * sizeof(T));
+        if (err != cudaSuccess)
+            throw std::bad_alloc();
+
+        if (device_ptr_ && size_ > 0) {
+            // 设备到设备: 通过主机中转
+            cudaMemcpy(new_dev, device_ptr_,
+                       size_ * sizeof(T),
+                       cudaMemcpyDeviceToDevice);
+            cudaFree(device_ptr_);
+        }
+
+        T* new_staging = new T[new_cap];
+        if (staging_ && size_ > 0) {
+            for (std::size_t i = 0; i < size_; i++)
+                new_staging[i] = staging_[i];
+        }
+        delete[] staging_;
+
+        device_ptr_ = new_dev;
+        staging_    = new_staging;
+        capacity_   = new_cap;
+    }
+
+    void upload_all() {
+        if (device_ptr_ && staging_ && size_ > 0) {
+            cudaMemcpy(device_ptr_, staging_,
+                       size_ * sizeof(T),
+                       cudaMemcpyHostToDevice);
+        }
+    }
+
+    void sync_to_host() const {
+        if (device_ptr_ && staging_ && size_ > 0) {
+            cudaMemcpy(staging_, device_ptr_,
+                       size_ * sizeof(T),
+                       cudaMemcpyDeviceToHost);
+        }
+    }
+};
+\end{lstlisting}
+
+\subsection{使用方式与 CUDA kernel 调用}
+
+\begin{lstlisting}
+// CUDA kernel: 每个线程乘 2
+__global__ void scale_kernel(float* data, int n) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < n) data[idx] *= 2.0f;
+}
+
+int main() {
+    // new CudaVector: 对象本身在统一内存
+    auto* vec = new CudaVector<float>(1024, 1.0f);
+
+    // 启动 kernel，直接操作 vec->device_data()
+    int threads = 256;
+    int blocks = (1024 + threads - 1) / threads;
+    scale_kernel<<<blocks, threads>>>(
+        vec->device_data(),
+        static_cast<int>(vec->size()));
+    cudaDeviceSynchronize();
+
+    // CPU 端读取（自动从显存同步）
+    float val = vec->read(0);   // 2.0
+
+    delete vec;   // cudaFree 对象 + 数据
+    return 0;
+}
+\end{lstlisting}
+
+\begin{note}[title=统一内存的代价]
+\texttt{cudaMallocManaged} 分配的统一内存由 CUDA 驱动自动在 CPU 和 GPU
+之间迁移页面。这简化了编程，但在频繁跨设备访问时会产生 page fault 开销。
+对性能敏感的场景，应将对象控制块放在主机内存，仅数据放在显存。
+\end{note}
+
+\section{方式二：自定义 CUDA Allocator}
+
+第二种方式保持 \texttt{CudaVector} 作为普通类（对象在主机堆上），
+但为 \texttt{std::vector} 编写一个 CUDA 分配器，使容器内部的
+元素存储位于显存。
+
+\subsection{CudaAllocator 实现}
+
+\begin{lstlisting}
+#include <cuda_runtime.h>
+#include <cstddef>
+#include <new>
+#include <limits>
+
+template <typename T>
+struct CudaAllocator {
+    using value_type = T;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+
+    CudaAllocator() noexcept = default;
+
+    template <typename U>
+    CudaAllocator(const CudaAllocator<U>&) noexcept {}
+
+    T* allocate(std::size_t n) {
+        if (n > std::numeric_limits<std::size_t>::max()
+                / sizeof(T))
+            throw std::bad_alloc();
+        T* ptr = nullptr;
+        auto err = cudaMalloc(&ptr, n * sizeof(T));
+        if (err != cudaSuccess || !ptr)
+            throw std::bad_alloc();
+        return ptr;
+    }
+
+    void deallocate(T* p, std::size_t) noexcept {
+        if (p) cudaFree(p);
+    }
+
+    template <typename U>
+    bool operator==(const CudaAllocator<U>&) const {
+        return true;
+    }
+    template <typename U>
+    bool operator!=(const CudaAllocator<U>&) const {
+        return false;
+    }
+};
+\end{lstlisting}
+
+\subsection{CudaVector 封装}
+
+与方式一不同，\texttt{CudaVector} 现在是一个普通类，
+对象本身由标准 \texttt{new} 分配到主机堆上：
+
+\begin{lstlisting}
+#include <vector>
+#include <algorithm>
+
+template <typename T>
+class CudaVector {
+public:
+    CudaVector() = default;
+
+    explicit CudaVector(std::size_t n)
+        : device_data_(n) {}
+
+    CudaVector(std::size_t n, const T& val)
+        : device_data_(n, val) {}
+
+    // 无需自定义 operator new/delete
+    // 对象本身在主机堆上分配（默认行为）
+
+    void push_back(const T& val) {
+        // 通过 staging 上传
+        T host_val = val;
+        device_data_.push_back(host_val);
+    }
+
+    T read(std::size_t i) const {
+        // device_data_ 的元素在显存中
+        // 需要通过 cudaMemcpy 读取
+        T val;
+        cudaMemcpy(&val,
+                   device_data_.data() + i,
+                   sizeof(T),
+                   cudaMemcpyDeviceToHost);
+        return val;
+    }
+
+    void write(std::size_t i, const T& val) {
+        cudaMemcpy(device_data_.data() + i,
+                   &val, sizeof(T),
+                   cudaMemcpyHostToDevice);
+    }
+
+    std::size_t size() const {
+        return device_data_.size();
+    }
+
+    // 供 kernel 使用
+    T* device_data() { return device_data_.data(); }
+
+private:
+    std::vector<T, CudaAllocator<T>> device_data_;
+};
+\end{lstlisting}
+
+\subsection{使用方式}
+
+\begin{lstlisting}
+int main() {
+    // 对象在主机堆上（普通 new）
+    auto* vec = new CudaVector<float>(1024, 1.0f);
+
+    // kernel 调用方式相同
+    int threads = 256;
+    int blocks = (1024 + threads - 1) / threads;
+    scale_kernel<<<blocks, threads>>>(
+        vec->device_data(),
+        static_cast<int>(vec->size()));
+    cudaDeviceSynchronize();
+
+    float val = vec->read(0);
+    delete vec;   // 普通 delete，触发析构
+    return 0;     // 析构中 CudaAllocator 释放显存
+}
+\end{lstlisting}
+
+\section{两种方式的关键差异}
+
+\begin{compare}[title=new/delete 重载 vs Allocator 封装]
+\textbf{方式一：类级别 operator new/delete}
+\begin{itemize}
+    \item \texttt{CudaVector} 对象本身在 CUDA 统一内存中。
+    \item 对象控制块（\texttt{device\_ptr\_}、\texttt{size\_} 等）可被 GPU 直接访问。
+    \item 需要显式管理显存数据缓冲区的生命周期（构造函数/\allowbreak 析构函数中 \texttt{cudaMalloc}/\texttt{cudaFree}）。
+    \item 适合需要在 GPU kernel 中访问向量元数据（如 size）的场景。
+    \item \texttt{delete} 表达式同时释放统一内存中的对象和显存中的数据。
+\end{itemize}
+
+\textbf{方式二：自定义 CudaAllocator}
+\begin{itemize}
+    \item \texttt{CudaVector} 对象本身在主机堆上（标准 \texttt{new}）。
+    \item 仅元素数据通过 \texttt{CudaAllocator} 存储在显存中。
+    \item 利用 \texttt{std::vector} 管理显存缓冲区的生命周期（RAII），代码更简洁。
+    \item GPU kernel 无法直接访问向量的 \texttt{size()}（需传参）。
+    \item 对象析构时，\texttt{vector} 析构自动调用 \texttt{CudaAllocator::deallocate} 释放显存。
+\end{itemize}
+\end{compare}
+
+\section{选择建议}
+
+\begin{bestpractice}[title=CUDA 封装方式选择]
+\textbf{优先使用 Allocator 方式}，除非有明确的理由需要重载 operator new。
+具体考量：
+
+\begin{itemize}
+    \item \textbf{代码量}：Allocator 方式复用 \texttt{std::vector} 的内存管理逻辑，
+          自定义代码量少约 50\%。operator new 方式需要手写全部缓冲区管理。
+    \item \textbf{RAII 安全性}：Allocator 方式中，\texttt{vector} 析构自动释放显存。
+          operator new 方式需要确保所有退出路径（包括异常）都正确释放。
+    \item \textbf{GPU 元数据访问}：如果 kernel 需要读取 \texttt{size()} 等元数据，
+          方式一（统一内存）可以零拷贝访问；方式二需要将 size 作为 kernel 参数传入。
+    \item \textbf{性能控制}：方式一使用 \texttt{cudaMallocManaged} 有 page fault 开销。
+          对延迟敏感的代码，应在方式二中将元数据和数据分别放在主机和显存。
+    \item \textbf{与 STL 算法的兼容}：方式二的内部 \texttt{vector} 可以与
+          \texttt{thrust} 等 GPU STL 库直接互操作。方式一需要额外的适配。
+\end{itemize}
+\end{bestpractice}
+
+\section{混合方案}
+
+在高性能场景中，可以组合两种机制：用 Allocator 管理显存数据，
+用 placement new 将对象控制块放到固定地址的对齐内存中：
+
+\begin{lstlisting}
+#include <new>
+
+// 对齐的主机内存（适合 pinned memory 传输）
+alignas(64) static char control_block[256];
+static std::size_t cb_offset = 0;
+
+// 从预分配的对齐内存中分配
+template <typename T, typename... Args>
+T* create_pinned(Args&&... args) {
+    std::size_t aligned =
+        (cb_offset + alignof(T) - 1)
+        & ~(alignof(T) - 1);
+    void* ptr = &control_block[aligned];
+    cb_offset = aligned + sizeof(T);
+    return new (ptr) T(
+        std::forward<Args>(args)...);
+}
+
+// 使用:
+auto* vec = create_pinned<CudaVector<float>>(1024, 1.0f);
+// vec 在 64 字节对齐的主机内存中
+// vec->device_data() 指向显存
+// 可以用 cudaMemcpyAsync + pinned memory 实现
+// 零拷贝异步传输
+\end{lstlisting}
+
+\begin{warning}[title=混合方案的析构]
+使用 placement new 创建的对象不能用 \texttt{delete} 释放。
+必须手动调用析构函数，然后自行管理底层内存的回收：
+\begin{lstlisting}
+vec->~CudaVector();   // 手动析构，释放显存
+// control_block 内存由静态数组管理，无需释放
+\end{lstlisting}
+\end{warning}
+
+\end{document}
