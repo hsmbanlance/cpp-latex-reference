@@ -47,6 +47,12 @@
 \definecolor{jsheadbg}{HTML}{F7DF1E}
 % -- Shell --
 \definecolor{bashkw}{HTML}{1A1AFF}
+% -- Kotlin --
+\definecolor{kotlinheadbg}{HTML}{7F52FF}
+% -- Objective-C --
+\definecolor{objcheadbg}{HTML}{3F6C8E}
+% -- Swift --
+\definecolor{swiftheadbg}{HTML}{F05138}
 % -- 章节标题 --
 \definecolor{algheadbg}{HTML}{1A3C5E}
 
@@ -385,6 +391,27 @@
     arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
     halign=left,oversize]
     \textcolor{white}{\small\bfseries Shell}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\kotlinlabel}{%
+  \begin{tcolorbox}[enhanced,colback=kotlinheadbg,colframe=kotlinheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Kotlin}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\objclabel}{%
+  \begin{tcolorbox}[enhanced,colback=objcheadbg,colframe=objcheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Objective-C}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\swiftlabel}{%
+  \begin{tcolorbox}[enhanced,colback=swiftheadbg,colframe=swiftheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Swift}
   \end{tcolorbox}\vspace{-4pt}}
 
 % ===== 自定义命令 =====
@@ -2076,6 +2103,659 @@ int main() {
 \item \textbf{RAII 封装}：使用 \texttt{std::unique\_ptr} + 自定义 deleter 或 Boost.DLL 管理句柄，避免泄漏。
 \item \textbf{安全搜索路径}：Windows 上使用 \Fn{LoadLibraryEx} 限制搜索范围，防止 DLL 劫持攻击。
 \item \textbf{符号存在性检查}：加载后先用 \Fn{has} 或检查返回值确认符号存在，再调用。
+\end{enumerate}
+\end{tcolorbox}
+
+
+% ===================================================================
+\chapter{框架与平台调用 extern "C" 库}
+% ===================================================================
+
+前几章介绍了如何编写 \texttt{extern "C"} 导出库，以及 Java、C\#、Rust、Python、Node.js 的 FFI 调用方式。
+本附录补充说明主流游戏引擎（Unreal Engine、Unity、Godot）和移动/桌面原生平台（Android NDK、iOS/macOS）在集成已有 \texttt{extern "C"} 库时的特殊配置和注意事项。
+
+% -------------------------------------------------------------------
+\section{Unreal Engine 调用 extern "C" 库}
+% -------------------------------------------------------------------
+
+UE 项目本身是 \cpp{} 工程，可以直接 \texttt{\#include} C 库头文件并调用其函数。
+关键在于正确配置 UnrealBuildTool 的构建脚本（\texttt{.Build.cs}），让编译器和链接器找到头文件和库文件。
+
+\subsection{目录结构约定}
+
+第三方 C 库通常放在模块的 \texttt{ThirdParty/} 子目录下，按平台组织预编译产物：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+Source/MyProject/
+  ThirdParty/
+    mathlib/
+      include/
+        mathlib.h          (*@\textcolor{cppcomment}{# extern "C" 头文件}@*)
+      lib/
+        Win64/
+          mathlib.lib      (*@\textcolor{cppcomment}{# 导入库}@*)
+        Linux/
+          libmathlib.a     (*@\textcolor{cppcomment}{# 静态库}@*)
+      bin/
+        Win64/
+          mathlib.dll      (*@\textcolor{cppcomment}{# 运行时动态库}@*)
+\end{lstlisting}
+
+\subsection{Build.cs 配置}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+// Source/MyProject/MyProject.Build.cs
+using UnrealBuildTool;
+using System.IO;
+
+public class MyProject : ModuleRules {
+    public MyProject(ReadOnlyTargetRules Target)
+        : base(Target) {
+        PublicDependencyModuleNames.AddRange(
+            new string[] { "Core", "CoreUObject", "Engine" });
+
+        string ThirdParty =
+            Path.Combine(ModuleDirectory, "ThirdParty", "mathlib");
+
+        // 头文件搜索路径
+        PublicIncludePaths.Add(
+            Path.Combine(ThirdParty, "include"));
+
+        if (Target.Platform == UnrealTargetPlatform.Win64) {
+            // 链接导入库
+            PublicAdditionalLibraries.Add(
+                Path.Combine(ThirdParty, "lib", "Win64",
+                    "mathlib.lib"));
+            // 延迟加载 DLL（可选，减少启动时间）
+            PublicDelayLoadDLLs.Add("mathlib.dll");
+            // 打包时复制 DLL 到输出目录
+            RuntimeDependencies.Add(
+                Path.Combine(ThirdParty, "bin", "Win64",
+                    "mathlib.dll"));
+        }
+        else if (Target.Platform == UnrealTargetPlatform.Mac) {
+            PublicAdditionalLibraries.Add(
+                Path.Combine(ThirdParty, "lib", "Mac",
+                    "libmathlib.dylib"));
+        }
+        else if (Target.IsInPlatformGroup(
+            UnrealPlatformGroup.Unix)) {
+            PublicAdditionalLibraries.Add(
+                Path.Combine(ThirdParty, "lib", "Linux",
+                    "libmathlib.a"));
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection{在 UE C++ 中调用}
+
+配置完成后，在 UE 的 \cpp{} 源文件中直接包含头文件并调用：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// MyActor.cpp
+#include "MyActor.h"
+#include "mathlib.h"  (*@\textcolor{cppcomment}{// extern "C" 头文件，直接包含}@*)
+
+void AMyActor::BeginPlay() {
+    Super::BeginPlay();
+
+    int32 Result = add(3, 4);
+    UE_LOG(LogTemp, Log, TEXT("3 + 4 = %d"), Result);
+
+    const char* Ver = get_version();
+    UE_LOG(LogTemp, Log, TEXT("lib version: %s"),
+        UTF8_TO_TCHAR(Ver));
+}
+\end{lstlisting}
+
+\begin{tcolorbox}[warning={UE 的异常与 CRT 限制}]
+UE 在 Windows 上禁用 \cpp{} 异常（\texttt{/EHs-c-}），不能使用 \texttt{try/catch}。如果第三方 C 库内部使用了 \cpp{} 异常（例如链接了 \cpp{} 运行时），需要在包装层中捕获并转换为错误码。此外，UE 使用自己的内存分配器（\texttt{FMemory}），跨模块传递 \texttt{malloc/free} 分配的内存时需注意 CRT 版本一致性——确保第三方库与 UE 使用相同的 MSVC 运行时版本。
+\end{tcolorbox}
+
+\begin{tcolorbox}[note={打包分发}]
+Windows 上使用延迟加载（\texttt{PublicDelayLoadDLLs}）时，必须通过 \texttt{RuntimeDependencies.Add} 将 DLL 注册为运行时依赖，否则打包后的游戏找不到 DLL。Linux/macOS 上若使用静态库（\texttt{.a}），则无需额外分发。
+\end{tcolorbox}
+
+% -------------------------------------------------------------------
+\section{Unity 调用 extern "C" 库}
+% -------------------------------------------------------------------
+
+Unity 通过 C\# 的 P/Invoke 机制（\Tp{DllImport}）调用 \texttt{extern "C"} 导出的 C 函数。
+核心步骤是：将编译好的动态库放入指定目录，在 C\# 脚本中声明并调用。
+
+\subsection{插件目录结构}
+
+Unity 按平台和架构查找原生插件：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+Assets/
+  Plugins/
+    x86_64/
+      mathlib.dll          (*@\textcolor{cppcomment}{# Windows 64-bit}@*)
+    x86/
+      mathlib.dll          (*@\textcolor{cppcomment}{# Windows 32-bit}@*)
+    Android/
+      libs/
+        arm64-v8a/
+          libmathlib.so    (*@\textcolor{cppcomment}{# Android ARM64}@*)
+        armeabi-v7a/
+          libmathlib.so    (*@\textcolor{cppcomment}{# Android ARM32}@*)
+    iOS/
+      libmathlib.a         (*@\textcolor{cppcomment}{# iOS 静态库}@*)
+    mathlib.bundle         (*@\textcolor{cppcomment}{# macOS}@*)
+\end{lstlisting}
+
+也可以在 Unity Editor 的 Inspector 中为每个插件勾选目标平台，Unity 会在构建时自动选择正确的库。
+
+\subsection{C\# 端声明与调用}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+using System.Runtime.InteropServices;
+using UnityEngine;
+
+public class MathPlugin : MonoBehaviour {
+    // Windows/Linux/macOS: 按库名查找动态库
+    // iOS: 使用 "__Internal" 链接静态库
+#if UNITY_IOS && !UNITY_EDITOR
+    private const string LIB = "__Internal";
+#else
+    private const string LIB = "mathlib";
+#endif
+
+    [DllImport(LIB, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int add(int a, int b);
+
+    [DllImport(LIB, CallingConvention = CallingConvention.Cdecl)]
+    private static extern double multiply(double a, double b);
+
+    [DllImport(LIB, CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.LPStr)]
+    private static extern string get_version();
+
+    void Start() {
+        Debug.Log($"3 + 4 = {add(3, 4)}");
+        Debug.Log($"version: {get_version()}");
+    }
+}
+\end{lstlisting}
+
+\begin{tcolorbox}[warning={iOS 必须使用 extern "C" 和静态库}]
+iOS 禁止动态库加载（App Store 政策）。C 库必须编译为静态库（\texttt{.a}）或 XCFramework，所有导出函数\textbf{必须}使用 \texttt{extern "C"} 声明，否则 \cpp{} 名称修饰会导致链接器找不到符号。C\# 端使用 \texttt{[DllImport("\_\_Internal")]} 引用静态链接的符号。
+\end{tcolorbox}
+
+\subsection{Android 平台配置}
+
+Android 上，\texttt{.so} 文件放入 \texttt{Assets/Plugins/Android/libs/\{abi\}/} 目录。Unity 在构建 APK/AAB 时自动将其打包到 \texttt{lib/} 目录。需要注意：
+
+\begin{itemize}[nosep]
+\item 库文件名必须以 \texttt{lib} 开头（如 \texttt{libmathlib.so}）
+\item \Tp{DllImport} 中写不带前缀和后缀的名称：\texttt{[DllImport("mathlib")]}
+\item 在 Player Settings 中勾选目标 ABI（arm64-v8a、armeabi-v7a 等），未勾选的架构不会打包
+\item Android 上默认调用约定为 C ABI 标准，无需额外指定
+\end{itemize}
+
+\subsection{IL2CPP 回调注意事项}
+
+Unity 的 IL2CPP 后端将 C\# 编译为 \cpp{}，回调函数需要特殊标记才能被原生代码正确调用：
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+using AOT;
+
+public delegate void ProgressCallback(int percent);
+
+[DllImport("mathlib")]
+private static extern void start_task(ProgressCallback cb);
+
+// IL2CPP 要求：回调必须标记 MonoPInvokeCallback
+[MonoPInvokeCallback(typeof(ProgressCallback))]
+private static void OnProgress(int percent) {
+    Debug.Log($"Progress: {percent}%");
+}
+
+void Start() {
+    start_task(OnProgress);
+}
+\end{lstlisting}
+
+Mono 后端不需要此标记，但加上也不会出错。为了跨后端兼容，建议始终标记。
+
+\subsection{NativeArray 零拷贝传递}
+
+对于需要传递大量数据（顶点、像素、音频采样）的场景，\Tp{NativeArray<T>} 允许 C\# 和 C 库共享同一块内存，避免拷贝开销：
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
+
+[DllImport("mathlib")]
+private static extern void process_data(
+    IntPtr data, int count);
+
+void Run() {
+    var buffer = new NativeArray<float>(
+        1024, Allocator.TempJob);
+
+    unsafe {
+        process_data(
+            (IntPtr)NativeArrayUnsafeUtility
+                .GetUnsafePtr(buffer),
+            buffer.Length);
+    }
+
+    buffer.Dispose();  (*@\textcolor{cppcomment}{// 必须显式释放}@*)
+}
+\end{lstlisting}
+
+% -------------------------------------------------------------------
+\section{Godot 调用 extern "C" 库}
+% -------------------------------------------------------------------
+
+Godot 4.x 通过 GDExtension 加载 \cpp{} 扩展。在 GDExtension 的 \cpp{} 代码中，可以像普通 \cpp{} 项目一样链接和调用 \texttt{extern "C"} 库。
+
+\subsection{SCons 构建配置}
+
+godot-cpp 项目使用 SCons 构建。在 \texttt{SConstruct} 中添加第三方库的链接配置：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# SConstruct
+env = SConscript("godot-cpp/SConstruct")
+
+# 添加第三方 C 库
+env.Append(CPPPATH=["thirdparty/mathlib/include"])
+
+if env["platform"] == "windows":
+    env.Append(LIBPATH=["thirdparty/mathlib/lib/win64"])
+    env.Append(LIBS=["mathlib"])
+elif env["platform"] == "linux":
+    env.Append(LIBPATH=["thirdparty/mathlib/lib/linux"])
+    env.Append(LIBS=["mathlib"])
+elif env["platform"] == "macos":
+    env.Append(LIBPATH=["thirdparty/mathlib/lib/macos"])
+    env.Append(LIBS=["mathlib"])
+
+env.SharedLibrary(
+    target="bin/my_extension",
+    source=Glob("src/*.cpp"))
+\end{lstlisting}
+
+\subsection{在 GDExtension 代码中调用}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <godot_cpp/classes/node2d.hpp>
+#include "mathlib.h"  (*@\textcolor{cppcomment}{// extern "C" 头文件}@*)
+
+using namespace godot;
+
+class MathNode : public Node2D {
+    GDCLASS(MathNode, Node2D)
+
+protected:
+    static void _bind_methods() {
+        ClassDB::bind_method(
+            D_METHOD("compute_sum", "a", "b"),
+            &MathNode::compute_sum);
+    }
+
+public:
+    int compute_sum(int a, int b) {
+        return add(a, b);  (*@\textcolor{cppcomment}{// 直接调用 C 库函数}@*)
+    }
+
+    virtual void _ready() override {
+        const char* ver = get_version();
+        UtilityFunctions::print("mathlib v", ver);
+    }
+};
+\end{lstlisting}
+
+\subsection{运行时动态加载}
+
+如果不想在编译期链接，也可以在 GDExtension 代码中运行时动态加载 C 库，使用 \Fn{dlopen}（POSIX）或 \Fn{LoadLibrary}（Windows），参见附录 B 的跨平台封装：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <godot_cpp/classes/node2d.hpp>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <dlfcn.h>
+#endif
+
+using namespace godot;
+
+class DynMathNode : public Node2D {
+    GDCLASS(DynMathNode, Node2D)
+
+public:
+    virtual void _ready() override {
+#ifdef _WIN32
+        HMODULE h = LoadLibraryA("mathlib.dll");
+        if (h) {
+            auto fn = (int(*)(int,int))
+                GetProcAddress(h, "add");
+            if (fn) {
+                UtilityFunctions::print(
+                    "3+4=", fn(3, 4));
+            }
+            FreeLibrary(h);
+        }
+#else
+        void* h = dlopen("libmathlib.so", RTLD_LAZY);
+        if (h) {
+            auto fn = (int(*)(int,int))
+                dlsym(h, "add");
+            if (fn) {
+                UtilityFunctions::print(
+                    "3+4=", fn(3, 4));
+            }
+            dlclose(h);
+        }
+#endif
+    }
+};
+\end{lstlisting}
+
+\begin{tcolorbox}[note={.gdextension 配置}]
+GDExtension 动态库的路径在 \texttt{.gdextension} 文件中按平台配置。如果 C 库以动态链接方式集成，需确保运行时 C 库文件与 GDExtension 库在同一目录或系统搜索路径中。
+\end{tcolorbox}
+
+% -------------------------------------------------------------------
+\section{Android NDK 调用 extern "C" 库}
+% -------------------------------------------------------------------
+
+Android 原生开发通过 NDK 使用 C/\cpp{} 代码（NDK 即 Native Development Kit）。
+Java/Kotlin 通过 JNI 调用 \cpp{} 代码，\cpp{} 代码再链接 \texttt{extern "C"} 库；或者直接在 JNI 函数中调用 C 库函数。
+
+\subsection{JNI 桥接层}
+
+Android 的调用链为：Java/Kotlin $\to$ JNI $\to$ \texttt{extern "C"} 库。JNI 函数本身使用 \cpp{} 名称修饰（\texttt{Java\_} 前缀），但内部调用的 C 库函数保持 \texttt{extern "C"} 链接：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// native-lib.cpp
+#include <jni.h>
+#include "mathlib.h"  (*@\textcolor{cppcomment}{// extern "C" 头文件}@*)
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_example_app_MainActivity_nativeAdd(
+    JNIEnv *env, jobject /* this */, jint a, jint b) {
+    return add(a, b);  (*@\textcolor{cppcomment}{// 调用 extern "C" 库}@*)
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_example_app_MainActivity_nativeGetVersion(
+    JNIEnv *env, jobject /* this */) {
+    const char* ver = get_version();
+    return env->NewStringUTF(ver);
+}
+\end{lstlisting}
+
+Kotlin 端声明：
+
+\kotlinlabel
+\begin{lstlisting}[style=javastyle]
+// MainActivity.kt
+class MainActivity : AppCompatActivity() {
+    companion object {
+        init {
+            System.loadLibrary("native-lib")
+        }
+    }
+
+    external fun nativeAdd(a: Int, b: Int): Int
+    external fun nativeGetVersion(): String
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Log.d("NDK", "3+4=${nativeAdd(3, 4)}")
+        Log.d("NDK", "ver=${nativeGetVersion()}")
+    }
+}
+\end{lstlisting}
+
+\subsection{CMake 配置}
+
+Android Studio 使用 CMake 构建原生代码。在 \texttt{CMakeLists.txt} 中链接预编译的 C 库：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# CMakeLists.txt
+cmake_minimum_required(VERSION 3.22)
+project(native-lib)
+
+# 声明预编译的第三方 C 库
+add_library(mathlib SHARED IMPORTED)
+set_target_properties(mathlib PROPERTIES
+    IMPORTED_LOCATION
+    ${CMAKE_SOURCE_DIR}/../jniLibs/${ANDROID_ABI}/libmathlib.so)
+
+# 头文件路径
+include_directories(
+    ${CMAKE_SOURCE_DIR}/../thirdparty/mathlib/include)
+
+# 你的 JNI 库
+add_library(native-lib SHARED native-lib.cpp)
+
+# 链接：JNI 库 -> mathlib + Android log
+target_link_libraries(native-lib mathlib log)
+\end{lstlisting}
+
+\subsection{预编译库的 ABI 目录}
+
+Android 按 ABI（Application Binary Interface）分目录存放 \texttt{.so} 文件：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+app/src/main/
+  jniLibs/
+    arm64-v8a/
+      libmathlib.so
+    armeabi-v7a/
+      libmathlib.so
+    x86_64/
+      libmathlib.so
+  thirdparty/
+    mathlib/
+      include/
+        mathlib.h
+\end{lstlisting}
+
+在 \texttt{build.gradle} 中配置 ABI 过滤，避免打包不需要的架构：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+// build.gradle (Module: app)
+android {
+    defaultConfig {
+        ndk {
+            abiFilters 'arm64-v8a', 'armeabi-v7a'
+        }
+    }
+}
+\end{lstlisting}
+
+\begin{tcolorbox}[warning={Android 的 extern "C" 要求}]
+JNI 函数本身必须用 \texttt{extern "C"} 导出（否则 JVM 按修饰名查找会失败）。而被调用的第三方 C 库如果已经是 \texttt{extern "C"} 导出，则可以直接链接。如果第三方库是 \cpp{} 库（无 \texttt{extern "C"}），则必须手写 C 包装层，因为 JNI 只能调用 C 链接的函数。
+\end{tcolorbox}
+
+\subsection{ndk-build 方式（Android.mk）}
+
+对于不使用 CMake 的项目，ndk-build 使用 \texttt{Android.mk}：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# Android.mk
+LOCAL_PATH := $(call my-dir)
+
+# 预编译第三方库
+include $(CLEAR_VARS)
+LOCAL_MODULE := mathlib
+LOCAL_SRC_FILES := ../jniLibs/$(TARGET_ARCH_ABI)/libmathlib.so
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../thirdparty/mathlib/include
+include $(PREBUILT_SHARED_LIBRARY)
+
+# JNI 库
+include $(CLEAR_VARS)
+LOCAL_MODULE := native-lib
+LOCAL_SRC_FILES := native-lib.cpp
+LOCAL_SHARED_LIBRARIES := mathlib
+LOCAL_LDLIBS := -llog
+include $(BUILD_SHARED_LIBRARY)
+\end{lstlisting}
+
+% -------------------------------------------------------------------
+\section{iOS/macOS 调用 extern "C" 库}
+% -------------------------------------------------------------------
+
+Apple 平台上，Objective-C 是 C 的超集，可以直接调用 \texttt{extern "C"} 函数。
+Swift 则通过 Bridging Header 或 Module Map 导入 C 头文件。
+
+\subsection{Objective-C 直接调用}
+
+Objective-C 文件（\texttt{.m} 或 \texttt{.mm}）可以直接包含 C 头文件并调用：
+
+\objclabel
+\begin{lstlisting}[style=cstyle]
+// MathWrapper.m
+#import "MathWrapper.h"
+#include "mathlib.h"  (*@\textcolor{cppcomment}{// extern "C" 头文件}@*)
+
+@implementation MathWrapper
+
+- (int)addNumbers:(int)a b:(int)b {
+    return add(a, b);  (*@\textcolor{cppcomment}{// 直接调用}@*)
+}
+
+- (NSString *)libraryVersion {
+    const char* ver = get_version();
+    return [NSString stringWithUTF8String:ver];
+}
+
+@end
+\end{lstlisting}
+
+\subsection{Swift Bridging Header}
+
+Swift 不能直接包含 C 头文件，需要通过 Bridging Header 桥接。在 Xcode 中创建 \texttt{Bridging-Header.h}：
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+// MyApp-Bridging-Header.h
+#include "mathlib.h"
+\end{lstlisting}
+
+在 Xcode 的 Build Settings 中设置 \texttt{Objective-C Bridging Header} 指向该文件。之后 Swift 代码可以直接调用 C 函数：
+
+\swiftlabel
+\begin{lstlisting}[style=cppstyle]
+// ContentView.swift
+import SwiftUI
+
+struct ContentView: View {
+    var body: some View {
+        VStack {
+            // 直接调用 extern "C" 函数
+            Text("3 + 4 = \(add(3, 4))")
+            Text("version: \(String(cString: get_version()))")
+        }
+    }
+}
+\end{lstlisting}
+
+\begin{tcolorbox}[note={Swift 对 C 类型的映射}]
+Swift 自动将 C 类型映射为 Swift 类型：\texttt{int} $\to$ \texttt{Int32}，\texttt{double} $\to$ \texttt{Double}，\texttt{const char*} $\to$ \texttt{UnsafePointer<CChar>}（可用 \texttt{String(cString:)} 转换）。结构体按值传递，指针类型映射为 \texttt{UnsafeMutablePointer}。
+\end{tcolorbox}
+
+\subsection{Module Map（框架化导入）}
+
+对于更规范的集成方式，可以将 C 库封装为 Clang Module，用 \texttt{module.modulemap} 文件描述模块接口：
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+// mathlib/module.modulemap
+module mathlib {
+    header "include/mathlib.h"
+    export *
+}
+\end{lstlisting}
+
+Swift 端通过 \texttt{import mathlib} 导入整个模块，无需 Bridging Header。这种方式适合将 C 库打包为 XCFramework 分发。
+
+\subsection{静态库与 XCFramework}
+
+iOS 不支持动态库（App Store 限制），C 库必须编译为静态库。跨平台分发推荐使用 XCFramework：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# 编译 iOS 静态库
+xcodebuild archive -scheme mathlib \
+    -destination "generic/platform=iOS" \
+    -archivePath build/ios SKIP_INSTALL=NO
+
+xcodebuild archive -scheme mathlib \
+    -destination "generic/platform=iOS Simulator" \
+    -archivePath build/iossim SKIP_INSTALL=NO
+
+xcodebuild archive -scheme mathlib \
+    -destination "generic/platform=macOS" \
+    -archivePath build/mac SKIP_INSTALL=NO
+
+# 合并为 XCFramework
+xcodebuild -create-xcframework \
+    -library build/ios.xcarchive/.../libmathlib.a \
+    -library build/iossim.xcarchive/.../libmathlib.a \
+    -library build/mac.xcarchive/.../libmathlib.a \
+    -output mathlib.xcframework
+\end{lstlisting}
+
+在 Xcode 中将 \texttt{mathlib.xcframework} 拖入项目的 Frameworks 目录，即可在 Swift/ObjC 中链接使用。
+
+\begin{tcolorbox}[warning={extern "C" 在 Apple 平台上的必要性}]
+即使 Objective-C 可以直接调用 \cpp{} 函数（通过 \texttt{.mm} 文件），Swift 只能调用 C 链接的函数。如果库是 \cpp{} 编写的，\textbf{必须}提供 \texttt{extern "C"} 包装层，否则 Swift 无法导入。此外，iOS 的 \texttt{extern "C"} 函数名在静态链接时不能有任何修饰，否则链接器报 \texttt{Undefined symbols} 错误。
+\end{tcolorbox}
+
+% -------------------------------------------------------------------
+\section{各平台集成方式对比}
+% -------------------------------------------------------------------
+
+\begin{longtable}{lp{2.6cm}p{2.6cm}p{2.6cm}p{2.6cm}}
+\toprule
+\textbf{特性} & \textbf{UE} & \textbf{Unity} & \textbf{Android} & \textbf{iOS/macOS} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{特性} & \textbf{UE} & \textbf{Unity} & \textbf{Android} & \textbf{iOS/macOS} \\
+\midrule
+\endhead
+调用语言    & \cpp{}       & C\#          & Java/Kotlin  & Swift/ObjC \\
+桥接机制    & 直接 \#include & P/Invoke   & JNI          & Bridging Header \\
+库格式      & .lib/.a/.dll & .dll/.so/.a & .so          & .a / XCFramework \\
+构建配置    & Build.cs     & Editor 导入 & CMake/ndk-build & Xcode \\
+动态库支持  & 全平台       & 桌面+Android & 是           & 仅 macOS \\
+异常限制    & 禁用         & 无           & 无           & 无 \\
+\bottomrule
+\end{longtable}
+
+\begin{tcolorbox}[bestpractice={跨平台集成 extern "C" 库的建议}]
+\begin{enumerate}[nosep]
+\item \textbf{始终提供 extern "C" 头文件}：即使库内部用 \cpp{} 实现，公开接口必须用 \texttt{extern "C"} 导出。这是所有平台通用的最低要求。
+\item \textbf{按平台准备产物}：Windows 需要 \texttt{.dll} + \texttt{.lib}，Linux/Android 需要 \texttt{.so}，iOS 需要 \texttt{.a}（静态），macOS 可用 \texttt{.dylib} 或 \texttt{.a}。
+\item \textbf{避免跨边界分配内存}：由库分配的内存必须由库提供的函数释放，不要依赖调用方的 \texttt{free}/\texttt{delete}。
+\item \textbf{注意 CRT 版本}：Windows 上确保库和宿主应用使用相同版本的 MSVC 运行时，否则跨 DLL 边界的内存操作会崩溃。
+\item \textbf{回调函数指针}：所有平台都支持通过函数指针实现回调，但 Unity IL2CPP 需要 \texttt{[MonoPInvokeCallback]} 标记，Android JNI 回调需要通过 \texttt{JNIEnv} 调用 Java 方法。
 \end{enumerate}
 \end{tcolorbox}
 
