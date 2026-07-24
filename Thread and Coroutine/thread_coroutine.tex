@@ -1,6 +1,5 @@
 % !TEX program = xelatex
 % C++线程与协程：从C++11到C++26
-% !TEX program = xelatex
 \documentclass[12pt,a4paper]{ctexbook}
 
 % ==================== 页面 ====================
@@ -14,7 +13,7 @@
   {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
 
 % ==================== 颜色 ====================
-\usepackage{xcolor}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
 \definecolor{codebg}{HTML}{F5F5F5}
 \definecolor{codeframe}{HTML}{E0E0E0}
 \definecolor{cppkeyword}{HTML}{1A1AFF}
@@ -303,7 +302,7 @@ int main() {
 
 \section{线程管理：join与detach}
 
-\texttt{join()}阻塞调用线程，直到目标线程执行完毕。\texttt{detach()}将目标线程与\texttt{std::thread}对象分离，使其成为守护线程（daemon thread），在后台独立运行。
+\texttt{join()}阻塞调用线程，直到目标线程执行完毕。\texttt{detach()}将目标线程与\texttt{\seqsplit{std::thread}}对象分离，使其成为守护线程（daemon thread），在后台独立运行。
 
 \begin{warning}
 \texttt{detach()}后无法再\texttt{join()}该线程。如果分离的线程引用了栈上的局部变量，当创建线程的函数返回后，这些引用将变成悬空引用，导致未定义行为。\textbf{优先使用\texttt{join()}或\cpp{}20的\texttt{jthread}}。
@@ -343,7 +342,7 @@ int main() {
 
 \section{传递参数给线程}
 
-\texttt{std::thread}的参数默认以\textbf{值传递}方式传入。如果需要引用传递，必须使用\texttt{std::ref}或\texttt{std::cref}。
+\texttt{\seqsplit{std::thread}}的参数默认以\textbf{值传递}方式传入。如果需要引用传递，\allowbreak{}必须使用\texttt{\seqsplit{std::ref}}或\texttt{\seqsplit{std::cref}}。
 
 \begin{lstlisting}
 void increment(int& value) {
@@ -955,7 +954,7 @@ async IAsyncEnumerable<int> AsyncFibonacci() {
 \end{compare}
 
 % ───────────────────────────────────────────
-\chapter{协程机制深入：\texttt{promise\_type}与\texttt{coroutine\_handle}}
+\chapter[协程机制深入：\texttt{promise\_type}与\texttt{coroutine\_handle}]{协程机制深入：\texttt{\seqsplit{promise\_type}}与\texttt{\seqsplit{coroutine\_handle}}}
 % ───────────────────────────────────────────
 
 \section{协程的编译原理}
@@ -1516,7 +1515,7 @@ std::execution::start(op);
 
 \section{\texttt{sync\_wait}：阻塞等待结果}
 
-\texttt{this\_thread::sync\_wait}是最常用的sender消费者——阻塞当前线程直到sender完成：
+\texttt{\seqsplit{this\_thread::sync\_wait}}是最常用的sender消费者，阻塞当前线程直到sender完成：
 
 \begin{lstlisting}
 #include <execution>
@@ -1838,7 +1837,7 @@ int main() {
 \chapter{与协程的互操作}
 % ───────────────────────────────────────────
 
-\texttt{std::execution}与\cpp{}20协程可以无缝互操作——sender可以在协程中被\texttt{co\_await}，协程也可以产生sender。
+\texttt{\seqsplit{std::execution}}与\cpp{}20协程可以无缝互操作——sender可以在协程中被\texttt{\seqsplit{co\_await}}，协程也可以产生sender。
 
 \section{\texttt{as\_awaitable}：在协程中等待Sender}
 
@@ -1859,7 +1858,7 @@ Task<int> compute_with_execution() {
 
 \section{\texttt{with\_awaitable\_senders}：简化协程集成}
 
-通过让\texttt{promise\_type}继承\texttt{with\_awaitable\_senders}，协程可以直接\texttt{co\_await}任何sender，无需显式调用\texttt{as\_awaitable}：
+通过让\texttt{\seqsplit{promise\_type}}继承\texttt{\seqsplit{with\_awaitable\_senders}}，\allowbreak{}协程可以直接\texttt{\seqsplit{co\_await}}任何sender，无需显式调用\texttt{as\_awaitable}：
 
 \begin{lstlisting}
 template<typename T = void>
@@ -1958,7 +1957,7 @@ int main() {
 
 \section{错误在管道中的传播}
 
-错误通过\textbf{error通道}自动在sender管道中传播，直到被\texttt{upon\_error}或\texttt{let\_error}处理：
+错误通过\textbf{error通道}自动在sender管道中传播，直到被\texttt{\seqsplit{upon\_error}}或\texttt{\seqsplit{let\_error}}处理：
 
 \begin{lstlisting}
 auto pipeline = std::execution::just(0)
@@ -2045,6 +2044,6 @@ auto [result] = std::this_thread::sync_wait(std::move(pipeline)).value();
 
 \backmatter
 
-\printindex
+% \printindex  % 未使用 makeidx 宏包，暂无索引
 
 \end{document}

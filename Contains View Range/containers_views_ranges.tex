@@ -1,7 +1,6 @@
 % !TEX program = xelatex
 % C++ 容器、视图与范围完全参考
 % Containers, Views & Ranges — C++17/20/23
-% !TEX program = xelatex
 \documentclass[12pt,a4paper]{ctexbook}
 
 % ==================== 页面 ====================
@@ -15,7 +14,7 @@
   {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
 
 % ==================== 颜色 ====================
-\usepackage{xcolor}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
 \definecolor{codebg}{HTML}{F5F5F5}
 \definecolor{codeframe}{HTML}{E0E0E0}
 \definecolor{cppkeyword}{HTML}{1A1AFF}
@@ -399,8 +398,8 @@ int main() {
 
 \subsection{C++17 polymorphic\_allocator}
 
-\cpp{17} 引入了 \Tp{std::pmr::polymorphic\_allocator}，通过
-\Tp{std::pmr::memory\_resource} 实现运行时多态分配策略，避免模板参数传染：
+\cpp{17} 引入了 \Tp{\seqsplit{std::pmr::polymorphic\_allocator}}，通过
+\Tp{\seqsplit{std::pmr::memory\_resource}} 实现运行时多态分配策略，避免模板参数传染：
 
 \begin{lstlisting}
 #include <memory_resource>
@@ -1097,7 +1096,7 @@ C++ 提供两种实现策略：\emph{有序}关联容器和基于哈希表的\em
 （极少数实现使用 AVL 树或其他平衡二叉搜索树）。
 
 % ────────────────────────────────────────────────────────────
-\chapter{有序关联容器：map, set, multimap, multiset}
+\chapter[有序关联容器：map, set, multimap, multiset]{有序关联容器：\\map,\allowbreak{} set,\allowbreak{} multimap,\allowbreak{} multiset}
 % ────────────────────────────────────────────────────────────
 
 有序关联容器的实现未被标准指定，但主流标准库（libstdc++、libc++、MSVC STL）
@@ -1611,8 +1610,8 @@ C\# 的 \texttt{PriorityQueue} 默认是\emph{最小堆}，与 C++ 默认\emph{�
 \part{字符串（伪容器）}
 % ############################################################
 
-C++ 的 \Tp{std::basic\_string} 是一个完整的容器，支持迭代器、\Fn{size()}、
-\Fn{operator[]} 等容器接口。但由于字符串在编程中的特殊地位，标准库对其进行了
+C++ 的 \Tp{\seqsplit{std::basic\_string}} 是一个完整的容器，支持迭代器、\Fn{size}、
+\Tp{\seqsplit{operator[]}} 等容器接口。但由于字符串在编程中的特殊地位，标准库对其进行了
 专门优化（如小字符串优化 SSO），因此单独讨论。
 
 % ────────────────────────────────────────────────────────────
@@ -1756,7 +1755,7 @@ C++ 标准库\emph{不提供}编码转换函数。在 UTF-8/UTF-16/UTF-32 之间
 
 \section{format (C++20) 与 print (C++23)}
 
-\cpp{20} 引入了 \Fn{std::format}，\cpp{23} 引入了 \Fn{std::print} / \Fn{std::println}：
+\cpp{20} 引入了 \Fn{std::format}，\cpp{23} 引入了 \Fn{std::print} / \Fn{\seqsplit{std::println}}：
 
 \begin{lstlisting}
 #include <format>
@@ -2977,6 +2976,7 @@ int main() {
 % ────────────────────────────────────────────────────────────
 
 \begin{center}
+\resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
     every node/.style={draw, rounded corners, minimum width=3cm,
                        minimum height=0.8cm, align=center,
@@ -3001,7 +3001,8 @@ int main() {
     child { node {默认选择}
         child { node[fill=green!20] {\texttt{vector<T>}} }
     };
-\end{tikzpicture}
+\end{tikzpicture}%
+}
 \end{center}
 
 \vspace{1cm}

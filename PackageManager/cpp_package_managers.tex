@@ -12,7 +12,7 @@
   {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
 
 % ==================== 颜色 ====================
-\usepackage{xcolor}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
 \definecolor{codebg}{HTML}{F5F5F5}
 \definecolor{codeframe}{HTML}{E0E0E0}
 \definecolor{cppkeyword}{HTML}{1A1AFF}
@@ -311,8 +311,8 @@ Vcpkg 由微软开源并维护，采用 ports + triplet 的架构。每个库对
 \subsubsection*{Triplet 机制}
 
 Triplet 是 Vcpkg 区分不同平台配置的核心机制。每个 triplet 文件定义
-\texttt{VCPKG\_TARGET\_ARCHITECTURE}、\texttt{VCPKG\_CRT\_LINKAGE}、
-\texttt{VCPKG\_LIBRARY\_LINKAGE} 等变量。Vcpkg 内置了 \texttt{x64-windows}、
+\texttt{\seqsplit{VCPKG\_TARGET\_ARCHITECTURE}}、\texttt{\seqsplit{VCPKG\_CRT\_LINKAGE}}、
+\texttt{\seqsplit{VCPKG\_LIBRARY\_LINKAGE}} 等变量。Vcpkg 内置了 \texttt{x64-windows}、
 \texttt{x64-linux}、\texttt{arm64-osx} 等常见 triplet，也支持自定义 triplet。
 
 \begin{lstlisting}[language=CMake, caption={自定义 triplet 示例: arm-linux-custom.cmake}]
@@ -387,7 +387,7 @@ CPMAddPackage("gh:nlohmann/json#v3.11.3")
 
 FetchContent 在\textbf{配置阶段}下载和集成项目，而 ExternalProject 在\textbf{构建阶段}
 执行。FetchContent 的优势是依赖的 target 可以直接被主项目引用
-（\texttt{target\_link\_libraries}），而 ExternalProject 需要手动处理导入。
+（\texttt{\seqsplit{target\_link\_libraries}}），而 ExternalProject 需要手动处理导入。
 
 % ---------------------------------------------------------------------
 \subsection{XMake}
@@ -499,11 +499,11 @@ target_link_libraries(myapp PRIVATE fmt::fmt spdlog::spdlog)
 \small
 \begin{tabularx}{\textwidth}{l X X X X X}
 \toprule
-\textbf{特性} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{FetchContent} & \textbf{XMake} & \textbf{Git/SVN} \\
+\textbf{特性} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{Fetch\allowbreak Content} & \textbf{XMake} & \textbf{Git/SVN} \\
 \midrule
-描述格式     & conanfile.py  & vcpkg.json   & CMakeLists.txt & xmake.lua  & .gitmodules / svn 属性 \\
+描述格式     & conanfile.py  & vcpkg.json   & \seqsplit{CMakeLists.txt} & xmake.lua  & .gitmodules / svn 属性 \\
 版本表达     & 范围 + 约束   & 基线 + 覆盖  & 精确 tag/commit & 范围 + 精确 & 精确 commit/revision \\
-Lock 文件    & conan.lock    & vcpkg.json 基线 & package-lock.cmake & xmake-repo 锁 & 天然锁定 \\
+Lock 文件    & conan.lock    & vcpkg.json 基线 & \seqsplit{package-lock.cmake} & xmake-repo 锁 & 天然锁定 \\
 私有仓库     & 原生支持      & 原生支持     & 手动管理 URL   & 原生支持   & 原生支持 \\
 \bottomrule
 \end{tabularx}
@@ -529,12 +529,12 @@ Git Submodule 天然通过 commit hash 锁定，SVN Externals 通过 \texttt{-r}
 \small
 \begin{tabularx}{\textwidth}{l X X X X X}
 \toprule
-\textbf{特性} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{FetchContent} & \textbf{XMake} & \textbf{Git/SVN} \\
+\textbf{特性} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{Fetch\allowbreak Content} & \textbf{XMake} & \textbf{Git/SVN} \\
 \midrule
 默认构建方式  & 二进制优先     & 源码编译       & 源码编译          & 二进制/源码    & 源码编译 \\
 缓存机制     & 本地 + 远程缓存 & 二进制缓存     & \texttt{\_deps/} 目录 & 本地缓存      & 无 \\
-CMake 集成   & Generator 文件 & Toolchain 文件 & 原生内置         & 需切换构建系统 & add\_subdirectory \\
-其他构建系统  & 支持 Meson/Autotools & 有限支持 & 仅 CMake        & 自带构建系统  & 取决于子目录结构 \\
+CMake 集成   & Generator 文件 & Toolchain 文件 & 原生内置         & 需切换构建系统 & \seqsplit{add\_subdirectory} \\
+其他构建系统  & 支持 \seqsplit{Meson/Autotools} & 有限支持 & 仅 CMake        & 自带构建系统  & 取决于子目录结构 \\
 增量编译     & 良好（缓存命中跳过）& 良好（已安装包跳过）& 一般（每次配置重新处理）& 良好 & 手动控制 \\
 \bottomrule
 \end{tabularx}
@@ -551,11 +551,11 @@ CMake 集成   & Generator 文件 & Toolchain 文件 & 原生内置         & �
 \small
 \begin{tabularx}{\textwidth}{l X X X X X}
 \toprule
-\textbf{特性} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{FetchContent} & \textbf{XMake} & \textbf{Git/SVN} \\
+\textbf{特性} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{Fetch\allowbreak Content} & \textbf{XMake} & \textbf{Git/SVN} \\
 \midrule
 多配置共存    & 原生支持       & Triplet 切换   & 手动切换          & 配置切换       & 手动管理分支 \\
 交叉编译     & profile 机制   & 自定义 triplet & CMake 变量传递   & 命令行参数     & 手动配置 \\
-自定义工具链  & profile 完整定义 & triplet + toolchain & 手动传入 & 内置 + 自定义  & 完全手动 \\
+自定义工具链  & profile 完整定义 & triplet +\allowbreak{} toolchain & 手动传入 & 内置 + 自定义  & 完全手动 \\
 系统库探测    & 支持           & port 脚本处理  & 手动处理         & 包描述处理    & 完全手动 \\
 \bottomrule
 \end{tabularx}
@@ -806,9 +806,9 @@ Git Sub    & 依赖极少、对构建确定性要求高   & $\star\star\star$ \\
 \section{场景二：跨平台应用/库}
 % =====================================================================
 
-跨平台是 C++ 包管理的核心挑战。同一个项目需要在 Windows/Linux/macOS 上编译，
-可能需要处理不同编译器（MSVC/GCC/Clang）、不同 C 标准库（glibc/musl/MSVCRT）、
-不同图形后端（Win32/X11/Cocoa）等差异。
+跨平台是 C++ 包管理的核心挑战。同一个项目需要在 Windows/\allowbreak Linux/\allowbreak macOS 上编译，
+可能需要处理不同编译器（MSVC/\allowbreak GCC/\allowbreak Clang）、不同 C 标准库（glibc/\allowbreak musl/\allowbreak MSVCRT）、
+不同图形后端（Win32/\allowbreak X11/\allowbreak Cocoa）等差异。
 
 % ---------------------------------------------------------------------
 \subsection{各方案的跨平台策略}
@@ -956,7 +956,7 @@ vcpkg install --overlay-ports=./my-overlay-ports
 \end{lstlisting}
 
 \textbf{CMake FetchContent} 的定制非常直接：将源码 clone 到本地，
-修改后通过 \texttt{FetchContent\_Declare} 指向本地路径或修改后的 Git URL。
+修改后通过 \texttt{\seqsplit{FetchContent\_Declare}} 指向本地路径或修改后的 Git URL。
 由于依赖以源码形式集成到项目中，任何修改都可以直接反映在构建中。
 
 \begin{lstlisting}[language=CMake, caption={FetchContent 指向本地修改}]
@@ -1169,11 +1169,11 @@ FreeBSD/OpenBSD 基础系统等。在这些场景中，你编译的不是"运行
 管理 staging 目录、处理交叉编译 sysroot。
 
 \begin{lstlisting}[language=CMake, caption={Buildroot 包定义示例: package/mylib/mylib.mk}]
-################################################################################
+########################################################################
 #
 # mylib
 #
-################################################################################
+########################################################################
 
 MYLIB_VERSION = 1.0.0
 MYLIB_SITE = https://github.com/example/mylib/archive/v$(MYLIB_VERSION)
@@ -1285,7 +1285,7 @@ Git Sub    & 极致控制、与 Buildroot/Yocto 原生集成 & $\star\star\star\
 \small
 \begin{tabularx}{\textwidth}{l c c c c c}
 \toprule
-\textbf{场景} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{FetchContent} & \textbf{XMake} & \textbf{Git/SVN} \\
+\textbf{场景} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{Fetch\allowbreak Content} & \textbf{XMake} & \textbf{Git/SVN} \\
 \midrule
 指定平台     & 5 & 4 & 4 & 3 & 3 \\
 跨平台       & 5 & 5 & 3 & 3 & 2 \\

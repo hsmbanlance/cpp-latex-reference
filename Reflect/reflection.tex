@@ -12,7 +12,7 @@
   {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
 
 % ==================== 颜色 ====================
-\usepackage{xcolor}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
 \definecolor{codebg}{HTML}{F5F5F5}
 \definecolor{codeframe}{HTML}{E0E0E0}
 \definecolor{cppkeyword}{HTML}{1A1AFF}
@@ -289,7 +289,7 @@ int main() {
 
 \subsection{雅兰亭（yalantinglibs）}\label{subsec:ylt}
 
-雅兰亭是阿里巴巴开源的现代 C++20 工具库，其 \texttt{struct\_unpack} 和 \texttt{iguana} 组件提供了基于聚合体的反射能力。雅兰亭的核心优势是深度整合序列化（JSON/XML/Protobuf/YAML）和 RPC 框架。
+雅兰亭是阿里巴巴开源的现代 C++20 工具库，其 \texttt{\seqsplit{struct\_unpack}} 和 \texttt{iguana} 组件提供了基于聚合体的反射能力。雅兰亭的核心优势是深度整合序列化（JSON/\allowbreak XML/\allowbreak Protobuf/\allowbreak YAML）和 RPC 框架。
 
 \begin{lstlisting}[caption={雅兰亭: 聚合体序列化与反射}]
 #include <ylt/reflection/user_reflect_macro.hpp>
@@ -1116,7 +1116,7 @@ class ReflectDemo {
 性能开销 & 较大（JIT 可优化） & 编译期反射零开销；\\
          &                    & 运行时反射开销取决于方案 \\
 \addlinespace
-私有成员访问 & \texttt{setAccessible(true)} & C++26 允许；其他方案需要\\
+私有成员访问 & \texttt{\seqsplit{setAccessible(true)}} & C++26 允许；其他方案需要\\
              & 或 \texttt{BindingFlags}     & 公有接口或友元 \\
 \addlinespace
 动态加载 & \texttt{Class.forName()} & 无标准机制\\
@@ -1152,13 +1152,14 @@ C++ 的哲学恰恰相反。标准 C++ 在编译后不保留任何类型名称�
 \centering
 \caption{C++ 反射方案综合对比}
 \small
+\setlength{\tabcolsep}{4pt}
 \begin{tabularx}{\textwidth}{
-  >{\raggedright\arraybackslash}p{2.2cm}
-  >{\centering\arraybackslash}p{1.5cm}
-  >{\centering\arraybackslash}p{1.5cm}
-  >{\centering\arraybackslash}p{1.5cm}
-  >{\centering\arraybackslash}p{1.5cm}
-  >{\centering\arraybackslash}p{1.5cm}
+  >{\raggedright\arraybackslash}p{2.5cm}
+  >{\centering\arraybackslash}p{2.2cm}
+  >{\centering\arraybackslash}p{2.2cm}
+  >{\centering\arraybackslash}p{2.2cm}
+  >{\centering\arraybackslash}p{2.2cm}
+  >{\centering\arraybackslash}p{2.2cm}
 }
 \toprule
  & \textbf{Boost.PFR} & \textbf{雅兰亭} & \textbf{RTTR} & \textbf{QObject/} & \textbf{C++26} \\

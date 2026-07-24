@@ -12,7 +12,7 @@
   {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
 
 % ==================== 颜色 ====================
-\usepackage{xcolor}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
 \definecolor{codebg}{HTML}{F5F5F5}
 \definecolor{codeframe}{HTML}{E0E0E0}
 \definecolor{cppkeyword}{HTML}{1A1AFF}
@@ -453,7 +453,7 @@ T clamp(T val, T lo, T hi) {
 
 \begin{center}
 \small
-\begin{tabular}{@{}p{5.5cm}p{5.5cm}@{}}
+\begin{tabular}{@{}p{6.5cm}p{6.5cm}@{}}
 \toprule
 \textbf{SFINAE (C++11/14/17)} & \textbf{Concepts (C++20)} \\
 \midrule
@@ -521,7 +521,7 @@ void foo();
 \section{将 Concepts 转换为 SFINAE}
 % ═══════════════════════════════════════════════════════════
 
-本节是全文的核心：给出系统性的方法，将 C++20 的 Concepts 改写为 C++11/14/17 可用的 SFINAE 代码。
+本节是全文的核心：给出系统性的方法，将 C++20 的 Concepts 改写为 C++11/\allowbreak 14/\allowbreak 17 可用的\allowbreak SFINAE 代码。
 
 \subsection{简单类型约束 $\to$ \texttt{enable\_if}}
 
@@ -792,7 +792,7 @@ int main() {
 \subsection{案例：迭代器概念降级}
 
 C++20 标准库定义了精细的迭代器概念体系。
-以下演示如何将 \texttt{std::random\_access\_iterator} 降级到 C++17 SFINAE：
+以下演示如何将 \texttt{\seqsplit{std::random\_access\_iterator}} 降级到 C++17 SFINAE：
 
 \begin{lstlisting}
 // ══════════ C++20 ══════════
@@ -874,12 +874,12 @@ operator<<(std::ostream& os, const T& obj) {
 
 \begin{center}
 \small
-\begin{tabular}{lll}
+\begin{tabular}{p{2.5cm}p{5.8cm}p{5.8cm}}
 \toprule
 \textbf{} & \textbf{cereal} & \textbf{Boost.Serialization} \\
 \midrule
-成员函数方式 & \texttt{template<class Ar> serialize(Ar\&)} & \texttt{serialize(Ar\&, unsigned int)} \\
-自由函数方式 & \texttt{template<class Ar> serialize(Ar\&, T\&)} & \texttt{serialize(Ar\&, T\&, unsigned int)} \\
+成员函数方式 & \texttt{\seqsplit{template<class Ar> serialize(Ar\&)}} & \texttt{\seqsplit{serialize(Ar\&, unsigned int)}} \\
+自由函数方式 & \texttt{\seqsplit{template<class Ar> serialize(Ar\&, T\&)}} & \texttt{\seqsplit{serialize(Ar\&, T\&, unsigned int)}} \\
 归档类型 & 模板参数（泛型） & 具体归档类型 \\
 版本参数 & 无 & 有（\texttt{unsigned int version}） \\
 \bottomrule
@@ -1140,17 +1140,17 @@ int main() {
   \item \textbf{识别概念类型}
   \begin{itemize}[nosep]
     \item 纯类型特征（\texttt{std::integral}, \texttt{std::copyable}）$\to$ 直接用对应的 \texttt{type\_trait} + \texttt{enable\_if}。
-    \item 操作要求（\texttt{requires \{ expr; \}}）$\to$ 定义 \texttt{has\_xxx} trait，用 \texttt{void\_t} + \texttt{decltype}。
+    \item 操作要求（\texttt{\seqsplit{requires \{ expr; \}}}）$\to$ 定义 \texttt{has\_xxx} trait，用 \texttt{void\_t} + \texttt{decltype}。
     \item 嵌套要求（\texttt{requires bool-expr;}）$\to$ 直接写成布尔条件。
   \end{itemize}
   \item \textbf{处理返回值约束}
   \begin{itemize}[nosep]
     \item \texttt{\{ expr \} -> std::same\_as<U>} $\to$ \texttt{std::is\_same<decltype(expr), U>}。
-    \item \texttt{\{ expr \} -> std::convertible\_to<U>} $\to$ \texttt{std::is\_convertible<decltype(expr), U>}。
+    \item \texttt{\seqsplit{\{ expr \} -> std::convertible\_to<U>}} $\to$ \texttt{\seqsplit{std::is\_convertible<decltype(expr), U>}}。
   \end{itemize}
   \item \textbf{组合多个约束}
   \begin{itemize}[nosep]
-    \item \texttt{concept\_a<T> \&\& concept\_b<T>} $\to$ \texttt{enable\_if\_t<trait\_a<T>::value \&\& trait\_b<T>::value>}。
+    \item \texttt{concept\_a<T> \&\& concept\_b<T>} $\to$ \texttt{\seqsplit{enable\_if\_t<trait\_a<T>::value \&\& trait\_b<T>::value>}}。
     \item \texttt{concept\_a<T> || concept\_b<T>} $\to$ 同理用 \texttt{||}。
   \end{itemize}
   \item \textbf{选择合适的 \texttt{enable\_if} 位置}

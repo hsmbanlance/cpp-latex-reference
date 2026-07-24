@@ -12,7 +12,7 @@
   {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
 
 % ==================== 颜色 ====================
-\usepackage{xcolor}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
 \definecolor{codebg}{HTML}{F5F5F5}
 \definecolor{codeframe}{HTML}{E0E0E0}
 \definecolor{cppkeyword}{HTML}{1A1AFF}
@@ -504,7 +504,7 @@ public:
 };
 \end{lstlisting}
 
-正确的做法是让类继承 \texttt{std::enable\_shared\_from\_this}，
+\noindent 正确的做法是让类继承 \texttt{std::enable\_shared\_from\_this}，
 它内部使用一个 \texttt{weak\_ptr} 来确保返回的 \texttt{shared\_ptr}
 与外部已有的共享同一个引用计数。
 
@@ -717,7 +717,7 @@ SUMMARY: AddressSanitizer: 400 byte(s) leaked in 1 allocation(s).
   \item \textbf{性能开销}：CPU 开销约为 $2\times$，内存开销约为 $2$--$3\times$，
     不适合直接用于生产环境。
   \item \textbf{平台依赖}：在 Windows/MSVC 上的支持有限，
-    主要用于 Linux/macOS + Clang/GCC 环境。
+    主要用于 Linux/macOS + Clang/\allowbreak GCC 环境。
   \item \textbf{无法检测所有逻辑泄漏}：如果程序仍然持有指针（即使逻辑上不再需要），
     ASan 不会将其报告为泄漏——因为从技术上讲，内存仍然"可达"。
 \end{itemize}

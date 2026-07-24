@@ -1230,7 +1230,7 @@ Base* b = new Derived;
 Derived* d2 = dynamic_cast<Derived*>(b);  // 安全：运行时检查
 \end{lstlisting}
 
-\textbf{要点：} C++的四种转换关键字各有用途：\texttt{static\_cast}（安全的隐式转换的逆操作）、\texttt{dynamic\_cast}（安全的多态向下转换）、\texttt{const\_cast}（去除 \texttt{const}）、\texttt{reinterpret\_cast}（低层位模式转换，极少使用）。使用它们可以在代码搜索中轻松找到所有转换点。
+\textbf{要点：} C++的四种转换关键字各有用途：\texttt{static\_cast}（安全的隐式转换的逆操作）、\texttt{dynamic\_cast}（安全的多态向下转换）、\texttt{const\_cast}（去除 \texttt{const}）、\texttt{\seqsplit{reinterpret\_cast}}（低层位模式转换，极少使用）。使用它们可以在代码搜索中轻松找到所有转换点。
 
 \subsection*{\textbf{规则 ES.40:} 避免危险表达式}
 
@@ -1358,7 +1358,7 @@ buffer[buffer_size - 1] = '\0';
 
 \subsection*{\textbf{规则 ES.46:} 避免窄化转换}
 
-窄化转换（narrowing conversion）是指在转换过程中可能丢失信息的转换，如 \texttt{double} 到 \texttt{int}、\texttt{int} 到 \texttt{short} 等。这些转换往往是bug的来源。
+窄化转换（narrowing conversion）是指转换过程中可能丢失信息的转换，如 \texttt{double} 到 \texttt{int}、\texttt{int} 到 \texttt{short} 等。这些转换往往是bug的来源。
 
 \textbf{错误示例：}
 
@@ -1379,7 +1379,7 @@ int j = 1000;
 short s = gsl::narrow<short>(j);  // 运行时检查溢出
 \end{lstlisting}
 
-\textbf{要点：} 使用花括号初始化可以防止隐式窄化转换。如果确实需要窄化，使用 \texttt{static\_cast} 明确表达意图。
+\textbf{要点：} 使用花括号初始化可以防止隐式窄化转换。如果确实需要窄化，使用 \texttt{\seqsplit{static\_cast}} 明确表达意图。
 
 \subsection*{\textbf{规则 ES.50:} 不要把 \texttt{const} 转换掉}
 
@@ -2019,7 +2019,7 @@ void process() {
 }  // 自动 unlock
 \end{lstlisting}
 
-\textbf{要点：} \texttt{lock\_guard} 是最简单的RAII锁，适用于锁持有整个作用域的场景。\texttt{unique\_lock} 更灵活，支持延迟加锁、解锁、重新加锁，适用于需要更细粒度控制的场景（如条件变量）。
+\textbf{要点：} \texttt{\seqsplit{lock\_guard}} 是最简单的RAII锁，适用于锁持有整个作用域的场景。\texttt{\seqsplit{unique\_lock}} 更灵活，支持延迟加锁、解锁、重新加锁，适用于需要更细粒度控制的场景（如条件变量）。
 
 \subsection*{\textbf{规则 CP.22:} 不要持有锁调用未知代码}
 
@@ -2478,7 +2478,7 @@ void log(string_view fmt, Args&&... args) {
 log("Value: {}, Name: {}", 42, "hello");  // 类型安全
 \end{lstlisting}
 
-\textbf{要点：} C++的可变参数模板（variadic templates）是类型安全的替代方案。\texttt{std::format}（C++20）提供了类型安全的字符串格式化。
+\textbf{要点：} C++的可变参数模板（variadic templates）是类型安全的替代方案。\texttt{\seqsplit{std::format}}（C++20）提供了类型安全的字符串格式化。
 
 \subsection*{\textbf{规则 CPL.5:} 不要使用 \texttt{setjmp}/\texttt{longjmp}}
 
@@ -2811,7 +2811,7 @@ C++标准库是语言最强大的武器之一。它提供了经过广泛测试�
 
 \subsection*{\textbf{规则 SL.1:} 使用标准库}
 
-不要重新发明轮子。标准库提供了大量经过验证的组件：容器（\texttt{vector}、\texttt{map}、\texttt{unordered\_map} 等）、算法（\texttt{sort}、\texttt{find}、\texttt{transform} 等）、字符串（\texttt{string}、\texttt{string\_view}）、智能指针（\texttt{unique\_ptr}、\texttt{shared\_ptr}）、并发原语（\texttt{thread}、\texttt{mutex}、\texttt{atomic}）等。使用标准库可以节省开发时间、减少bug、提高代码可维护性。
+不要重新发明轮子。标准库提供了大量经过验证的组件：容器（\texttt{vector}、\texttt{map}、\texttt{\seqsplit{unordered\_map}} 等）、算法（\texttt{sort}、\texttt{find}、\texttt{transform} 等）、字符串（\texttt{string}、\texttt{string\_view}）、智能指针（\texttt{unique\_ptr}、\texttt{shared\_ptr}）、并发原语（\texttt{thread}、\texttt{mutex}、\texttt{atomic}）等。使用标准库可以节省开发时间、减少bug、提高代码可维护性。
 
 \textbf{错误示例：}
 

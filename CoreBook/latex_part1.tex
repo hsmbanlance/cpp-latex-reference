@@ -1064,7 +1064,7 @@ auto conn = connect("example.com");  // 异常会自动传播
 
 \subsection{规则 I.11：永远不要通过裸指针或裸引用转移所有权}
 
-\textbf{规则 I.11:} \textit{永远不要通过裸指针（raw pointer）或裸引用转移所有权。使用 \texttt{unique\_ptr} 或 \texttt{shared\_ptr}。}
+\textbf{规则 I.11:} \textit{永远不要通过裸指针（raw pointer）或裸引用转移所有权。使用 \texttt{\seqsplit{unique\_ptr}} 或 \texttt{\seqsplit{shared\_ptr}}。}
 
 如果函数返回一个裸指针，调用者无法知道是否需要释放它，或者它指向的对象何时失效。
 
@@ -1785,7 +1785,7 @@ void do_everything(char* input, int len, char* output,
 \end{lstlisting}
   \item 解释为什么 \texttt{return std::move(local\_variable)} 是一个反模式，以及它如何影响 NRVO。
   \item 设计一个函数，它需要返回三个值（最小值、最大值和平均值）。使用结构体返回值，并展示调用代码。
-  \item 编写一个 \texttt{constexpr} 函数来计算字符串的长度（不使用 \texttt{strlen}），并用 \texttt{static\_assert} 验证。
+  \item 编写一个 \texttt{constexpr} 函数来计算字符串的长度（不使用 \texttt{strlen}），并用 \texttt{\seqsplit{static\_assert}} 验证。
   \item 解释 \texttt{noexcept} 对 \texttt{std::vector} 的移动操作的影响。为什么移动构造函数应该标记为 \texttt{noexcept}？
 \end{enumerate}
 
@@ -2630,7 +2630,7 @@ T safe_divide(T a, T b) {
 
 \subsection{规则 T.3--T.10：类型要求与概念设计}
 
-\textbf{规则 T.3:} \textit{使用概念来指定类型的精确要求（而非使用 \texttt{requires} 子句或 \texttt{static\_assert}）。}
+\textbf{规则 T.3:} \textit{使用概念来指定类型的精确要求（而非使用 \texttt{requires} 子句或 \texttt{\seqsplit{static\_assert}}）。}
 
 虽然 \texttt{requires} 子句和 \texttt{static\_assert} 也可以约束模板参数，但概念更加可重用、可组合，并且提供更好的错误信息。
 

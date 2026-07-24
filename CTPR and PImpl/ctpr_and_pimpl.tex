@@ -12,7 +12,7 @@
   {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
 
 % ==================== 颜色 ====================
-\usepackage{xcolor}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
 \definecolor{codebg}{HTML}{F5F5F5}
 \definecolor{codeframe}{HTML}{E0E0E0}
 \definecolor{cppkeyword}{HTML}{1A1AFF}
@@ -1439,7 +1439,7 @@ CRTP 和 PImpl 并非银弹，以下场景应避免使用：
 \centering
 \caption{反模式：何时不使用 CRTP / PImpl}
 \label{tab:anti-pattern}
-\begin{tabular}{@{}lll@{}}
+\begin{tabular}{@{}p{3.5cm}p{3.2cm}p{7.8cm}@{}}
 \toprule
 \textbf{场景} & \textbf{不推荐} & \textbf{原因与替代} \\
 \midrule
@@ -1447,7 +1447,7 @@ CRTP 和 PImpl 并非银弹，以下场景应避免使用：
 简单类（1--2 个成员）    & PImpl     & 过度设计，增加不必要的间接层；直接暴露成员即可 \\
 对调试体验要求极高       & 传统 CRTP & 模板错误栈深，调试困难；考虑 C++23 或虚函数 \\
 头文件依赖本就很少       & PImpl     & 编译防火墙收益低，反而增加 .cpp 代码量 \\
-需要值语义 + 深拷贝      & shared\_ptr PImpl & shared\_ptr 默认浅拷贝，需额外手动实现 \\
+需要值语义 + 深拷贝      & \seqsplit{shared\_ptr} PImpl & shared\_ptr 默认浅拷贝，需额外手动实现 \\
 嵌入式/禁用动态分配      & PImpl     & PImpl 需要堆分配；考虑预分配或栈上实现 \\
 \bottomrule
 \end{tabular}
@@ -1476,7 +1476,7 @@ CRTP 和 PImpl 并非银弹，以下场景应避免使用：
 \centering
 \caption{完整技术选型指南}
 \label{tab:full-decision}
-\begin{tabular}{@{}llll@{}}
+\begin{tabular}{@{}p{4.2cm}p{4cm}p{1.5cm}p{4.5cm}@{}}
 \toprule
 \textbf{场景} & \textbf{推荐技术} & \textbf{C++ 标准} & \textbf{关键理由} \\
 \midrule

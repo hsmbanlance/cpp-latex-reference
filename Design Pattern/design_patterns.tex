@@ -1,9 +1,8 @@
+% !TEX program = xelatex
 % ============================================================
 % C++ 常用设计模式与 C# 对比
 % 结合 C++ Core Guidelines 的使用建议
 % ============================================================
-
-% !TEX program = xelatex
 \documentclass[12pt,a4paper]{ctexbook}
 
 % ==================== 页面 ====================
@@ -17,7 +16,7 @@
   {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
 
 % ==================== 颜色 ====================
-\usepackage{xcolor}
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
 \definecolor{codebg}{HTML}{F5F5F5}
 \definecolor{codeframe}{HTML}{E0E0E0}
 \definecolor{cppkeyword}{HTML}{1A1AFF}
@@ -369,7 +368,7 @@ Meyer's Singleton 至少保证了：局部静态变量的构造在 C++11 起是�
 
 \section{模板版本：CRTP 泛型 Singleton 基类}
 
-如果项目中确实存在多个必须使用单例的场景，可以用 CRTP 提取公共样板（\texttt{instance()}、删除拷贝/移动），避免每个单例类重复编写：
+如果项目中确实存在多个必须使用单例的场景，可以用 CRTP 提取公共样板（\texttt{\seqsplit{instance()}}、删除拷贝/移动），避免每个单例类重复编写：
 
 \begin{lstlisting}[style=cppstyle, caption={CRTP Singleton 基类 --- 可复用的单例骨架}]
 template<typename Derived>
@@ -2468,7 +2467,7 @@ ETL 管道 & 提取（Extract） → 转换（Transform） → 加载（Load）�
 
 \section{C++ 实现}
 
-C++ 标准库的迭代器体系是迭代器模式最完善的实现。自定义容器只需提供 \texttt{begin()}/\texttt{end()} 方法即可与所有标准算法兼容：
+C++ 标准库的迭代器体系是迭代器模式最完善的实现。自定义容器只需提供 \texttt{\seqsplit{begin()}}/\texttt{\seqsplit{end()}} 方法即可与所有标准算法兼容：
 
 \begin{lstlisting}[style=cppstyle, caption={自定义迭代器 --- 环形缓冲区}]
 template<typename T, size_t N>
@@ -2609,7 +2608,7 @@ foreach (var val in buf)  // 输出 3,4,5,6,7
 \endfoot
 自定义容器 & 为环形缓冲区、跳表、B 树等自定义数据结构提供标准迭代器接口 \\
 数据库游标 & 逐行遍历查询结果集，无需一次加载所有数据到内存 \\
-文件系统遍历 & 递归遍历目录树中的所有文件（如 \texttt{std::filesystem::recursive\_directory\_iterator}） \\
+文件系统遍历 & 递归遍历目录树中的所有文件（如 \texttt{\seqsplit{std::filesystem::recursive\_directory\_iterator}}） \\
 无限序列 & 延迟生成斐波那契数列、随机数序列等无限流（C++ Ranges 的 \texttt{views::iota}） \\
 图/树遍历 & 深度优先（DFS）、广度优先（BFS）等图遍历算法封装为迭代器 \\
 分页查询 & 将 API 分页结果封装为迭代器，对外表现为连续的完整数据集 \\
@@ -2649,7 +2648,7 @@ Builder & 创建型 & \texttt{build() \&\&}；\textbf{CRTP + Concepts} & C.41, F
 Adapter & 结构型 & 接口继承 + 组合 & C.120 & 遗留系统、SDK \\
 Decorator & 结构型 & \texttt{unique\_ptr} 链式包装 & R.20, C.120 & I/O 流、中间件 \\
 Proxy & 结构型 & \texttt{unique\_ptr} 延迟初始化 & R.20, P.9 & ORM、RPC、AOP \\
-Composite & 结构型 & \texttt{vector<unique\_ptr>} & C.35, R.20 & 文件系统、AST \\
+Composite & 结构型 & \texttt{\seqsplit{vector<unique\_ptr>}} & C.35, R.20 & 文件系统、AST \\
 Observer & 行为型 & 模板事件；\textbf{Concept 约束} & F.16, P.5 & GUI、Pub/Sub \\
 Strategy & 行为型 & \texttt{std::function}；\textbf{编译时 + Concepts} & C.120, P.5 & 压缩、支付、路由 \\
 Command & 行为型 & \texttt{unique\_ptr} 命令栈 & R.20, C.35 & Undo/Redo、宏 \\
