@@ -61,6 +61,9 @@ PROJECTS = [
     ("NewDelete",     "new_delete.pdf",
      "new/delete 运算符重载",
      "全局/类级别 operator new 重载、内存调试、裸机、外设分配、CUDA Vector 封装与自定义分配器对比。"),
+    ("UnitTest",      "unit_testing.pdf",
+     "C++ 单元测试",
+     "GTest/Catch2/doctest/Boost.Test/Qt Test 对比，Android/iOS 与 UE/U++ 实践，附 C#/Java 对照、纯函数与测试边界、依赖注入、Mock 与覆盖率。"),
 ]
 
 HTML_TEMPLATE = """\

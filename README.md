@@ -1,6 +1,6 @@
 # C/C++ LaTeX 参考手册合集
 
-本仓库包含 **17 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
+本仓库包含 **18 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
 
 ## 目录结构
 
@@ -59,8 +59,11 @@ C、C++/
 ├── SFINAE and Concept/           # C++ SFINAE 与 C++20 约束和概念
 │   ├── sfinae_and_concepts.tex
 │   └── build.ps1
-└── Thread and Coroutine/         # C++ 线程与协程参考手册
-    ├── thread_coroutine.tex
+├── Thread and Coroutine/         # C++ 线程与协程参考手册
+│   ├── thread_coroutine.tex
+│   └── build.ps1
+└── Unit Testing/                 # C++ 单元测试：框架、跨平台、测试边界、依赖注入、Mock 与覆盖率
+    ├── unit_testing.tex
     └── build.ps1
 ```
 
@@ -83,7 +86,7 @@ C、C++/
 ### 编译
 
 ```powershell
-# 编译全部 15 个项目（每个 2 pass + TOC 修复）
+# 编译全部 18 个项目（每个 2 pass + TOC 修复）
 .\workflow.ps1 build-all
 
 # 编译单个项目
@@ -120,7 +123,7 @@ C、C++/
 .\workflow.ps1 list
 ```
 
-显示全部 15 个项目名及其对应的文件夹路径。
+显示全部 18 个项目名及其对应的文件夹路径。
 
 ### 打开 PDF
 
@@ -151,6 +154,7 @@ C、C++/
 | ExternC | extern C use in other language | extern C 跨语言集成 |
 | OpOverload | Operator Overloading | 运算符重载：原理、实践与跨语言对比 |
 | NewDelete | NewDelete | new/delete 运算符重载：内存调试、裸机、外设与分配器 |
+| UnitTest | Unit Testing | 单元测试：框架对比、Android/iOS、UE/U++、测试边界、依赖注入、Mock 与覆盖率 |
 
 ## 统一格式规范
 

@@ -29,6 +29,7 @@ $projects = @(
     @{ dir = 'Serialization';                   job = 'serialization' }
     @{ dir = 'SFINAE and Concept';              job = 'sfinae_and_concepts' }
     @{ dir = 'Thread and Coroutine';            job = 'thread_coroutine' }
+    @{ dir = 'Unit Testing';                    job = 'unit_testing' }
     @{ dir = 'NewDelete';                       job = 'new_delete' }
 )
 
