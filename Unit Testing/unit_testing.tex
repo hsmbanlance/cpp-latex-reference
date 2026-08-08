@@ -1,0 +1,2547 @@
+% !TEX program = xelatex
+% C++ 单元测试：框架、跨平台实践、Mock 与覆盖率
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ===== 页面 =====
+\usepackage[margin=2.5cm]{geometry}
+
+% ===== 字体 =====
+\usepackage{fontspec}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}
+  {\setmonofont{Consolas}}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+
+% ===== 颜色 =====
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+% -- 代码基础 --
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{linenumgray}{HTML}{999999}
+% -- C / C++ --
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{cppheadbg}{HTML}{2E4057}
+% -- Java / Groovy --
+\definecolor{javakeyword}{HTML}{A020F0}
+\definecolor{javatype}{HTML}{005A9C}
+\definecolor{javaheadbg}{HTML}{1565C0}
+\definecolor{groovyheadbg}{HTML}{4298B8}
+% -- C\# --
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+\definecolor{csharpheadbg}{HTML}{68217A}
+% -- Objective-C / Objective-C++ --
+\definecolor{objcheadbg}{HTML}{3F6C8E}
+% -- CMake --
+\definecolor{cmakeheadbg}{HTML}{064F8C}
+% -- Shell --
+\definecolor{bashkw}{HTML}{1A1AFF}
+% -- 章节标题 --
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ===== 代码高亮 =====
+\usepackage{listings}
+
+% ---- C++ ----
+\lstdefinestyle{cppstyle}{%
+  language=C++,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    override,final,noexcept,constexpr,consteval,constinit,
+    decltype,auto,concept,requires,co_await,co_yield,co_return,
+    nullptr,sizeof...,static_assert,thread_local,alignas,alignof,
+    namespace,using,template,typename,virtual,explicit,friend,
+    mutable,volatile,register,extern,inline,
+    std,string,vector,map,unordered_map,set,unordered_set,
+    unique_ptr,shared_ptr,weak_ptr,optional,variant,any,
+    tuple,pair,array,span,string_view,
+    cin,cout,cerr,endl,
+    move,forward,swap,make_unique,make_shared,
+    begin,end,size,empty,push_back,emplace_back,
+    find,sort,copy,transform,for_each,accumulate
+  },
+  deletekeywords={int,char,float,double,bool,void,long,short,unsigned,signed},
+  emph={%
+    int,char,float,double,bool,void,long,short,unsigned,signed,
+    int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,
+    size_t,ptrdiff_t,intptr_t,uintptr_t,wchar_t,char8_t,char16_t,char32_t
+  },
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Java ----
+\lstdefinestyle{javastyle}{%
+  language=Java,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{javakeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    record,sealed,permits,var,yield,
+    native,strictfp,transient,volatile,synchronized
+  },
+  emph={%
+    int,long,short,byte,float,double,boolean,char,void,
+    String,Object,Integer,Long,Double,Float,Boolean,
+    System,Class,Thread,Exception,RuntimeException,
+    Override,FunctionalInterface,Deprecated,SuppressWarnings,
+    List,Map,Set,ArrayList,HashMap,Optional,Stream
+  },
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- C\# ----
+\lstdefinelanguage{CSharp}{%
+  morekeywords={%
+    abstract,as,base,bool,break,byte,case,catch,char,checked,class,const,
+    continue,decimal,default,delegate,do,double,else,enum,event,explicit,
+    extern,false,finally,fixed,float,for,foreach,goto,if,implicit,in,
+    int,interface,internal,is,lock,long,namespace,new,null,object,operator,
+    out,override,params,private,protected,public,readonly,ref,return,sbyte,
+    sealed,short,sizeof,stackalloc,static,string,struct,switch,this,throw,
+    true,try,typeof,uint,ulong,unchecked,unsafe,ushort,using,var,void,
+    volatile,while,async,await,record,required,file,init,nint,nuint
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]'
+}[keywords,comments,strings]
+
+\lstdefinestyle{csharpstyle}{%
+  language=CSharp,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{csharpkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={%
+    int,long,short,byte,float,double,decimal,bool,char,string,void,
+    object,dynamic,var,nint,nuint,
+    String,Int32,Int64,IntPtr,UIntPtr,
+    StringBuilder,Console,Math,Convert,
+    List,Dictionary,HashSet,Task,Span,Memory,
+    Assert,Fact,Theory,InlineData,TestClass,TestMethod,
+    TestFixture,TestCase,SetUp,TearDown,TestInitialize,
+    DataTestMethod,DataRow,Mock,It,Times,Substitute,
+    OrderService
+  },
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Objective-C++ ----
+\lstdefinestyle{objcstyle}{%
+  language={[Objective]C},
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    interface,implementation,end,property,synthesize,selector,
+    protocol,optional,required,nonatomic,strong,weak
+  },
+  emph={%
+    XCTestCase,NSString,NSArray,NSDictionary,BOOL,NSInteger,
+    testRunAll,InitGoogleTest,RUN_ALL_TESTS
+  },
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Groovy ----
+\lstdefinestyle{groovystyle}{%
+  language=Java,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{javakeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    plugins,id,test,dependencies,implementation,finalizedBy,
+    reports,xml,html,required,task,apply,check,dependsOn,
+    jacocoTestReport,jacocoTestCoverageVerification,violationRules,
+    rule,limit,minimum
+  },
+  escapeinside={(*@}{@*)}
+}
+
+% ---- CMake ----
+\lstdefinestyle{cmakestyle}{%
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=2,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    cmake_minimum_required,project,set,option,include,if,else,endif,
+    find_package,FetchContent_Declare,FetchContent_MakeAvailable,
+    add_executable,add_library,target_link_libraries,
+    target_include_directories,target_compile_options,
+    enable_testing,add_test,install,add_subdirectory
+  },
+  morecomment=[l]{\#},
+  morestring=[b]",
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Shell ----
+\lstdefinestyle{bashstyle}{%
+  language=bash,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{bashkw}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={gcc,g++,clang,clang++,cmake,ctest,make,adb,xcrun,simctl,
+    gcov,lcov,genhtml,llvm-cov,llvm-profdata,dotnet,mvn,gradle,chmod,cd},
+  escapeinside={(*@}{@*)}
+}
+
+\lstset{style=cppstyle}
+
+% ===== tcolorbox =====
+\usepackage[most]{tcolorbox}
+
+\tcbset{
+  guideline/.style={%
+    enhanced,breakable,
+    colback=blue!5!white,colframe=blue!50!black,colbacktitle=blue!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=blue!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  compare/.style={%
+    enhanced,breakable,
+    colback=green!5!white,colframe=green!40!black,colbacktitle=green!40!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=green!40!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  warning/.style={%
+    enhanced,breakable,
+    colback=red!5!white,colframe=red!50!black,colbacktitle=red!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=red!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  note/.style={%
+    enhanced,breakable,
+    colback=yellow!5!white,colframe=orange!50!black,colbacktitle=orange!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=orange!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  bestpractice/.style={%
+    enhanced,breakable,
+    colback=purple!5!white,colframe=purple!50!black,colbacktitle=purple!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=purple!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  }
+}
+
+% ===== 语言标签 =====
+\newcommand{\cpplabel}{%
+  \begin{tcolorbox}[enhanced,colback=cppheadbg,colframe=cppheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries C++}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\csharplabel}{%
+  \begin{tcolorbox}[enhanced,colback=csharpheadbg,colframe=csharpheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries C\#}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\javalabel}{%
+  \begin{tcolorbox}[enhanced,colback=javaheadbg,colframe=javaheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Java}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\objclabel}{%
+  \begin{tcolorbox}[enhanced,colback=objcheadbg,colframe=objcheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Objective-C++}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\bashlabel}{%
+  \begin{tcolorbox}[enhanced,colback=black!80,colframe=black!80,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Shell}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\cmdlabel}{%
+  \begin{tcolorbox}[enhanced,colback=black!60,colframe=black!60,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Windows CMD}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\cmakelabel}{%
+  \begin{tcolorbox}[enhanced,colback=cmakeheadbg,colframe=cmakeheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries CMake}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\groovylabel}{%
+  \begin{tcolorbox}[enhanced,colback=groovyheadbg,colframe=groovyheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Groovy}
+  \end{tcolorbox}\vspace{-4pt}}
+
+% ===== 自定义命令 =====
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+% ===== 标题与章节格式 =====
+\usepackage{titlesec}
+
+\titleformat{\chapter}[display]{\huge\bfseries\color{algheadbg}}{\chaptertitlename\ \thechapter}{10pt}{\huge}
+\titleformat{\section}{\Large\bfseries\color{blue!70!black}}{\thesection}{8pt}{}
+\titleformat{\subsection}{\large\bfseries\color{blue!60!black}}{\thesubsection}{6pt}{}
+
+% ===== 页眉页脚 =====
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ===== 超链接 =====
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,linkcolor=blue!70!black,urlcolor=blue!60!black,
+  pdftitle={C++ 单元测试：框架、跨平台、Mock 与覆盖率},
+  pdfauthor={C++ Reference}
+}
+
+% ===== 其他 =====
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{float}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ===================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C++ 单元测试\par}
+\vspace{1cm}
+{\LARGE 框架对比、移动端与引擎实践、依赖注入、Mock 与覆盖率，附 C\#/Java 对照\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+% ================================================================
+\chapter{单元测试方法论概览}
+% ================================================================
+
+单元测试（Unit Test）是针对程序中最小可测试单元——通常是一个函数、
+一个方法或一个类——编写的自动化验证代码。它在隔离环境中构造输入、
+调用被测代码、断言输出，并能在每次构建后数秒内给出“通过/失败”反馈。
+与依赖人工执行的集成测试和系统测试相比，单元测试是缺陷发现成本最低、
+反馈速度最快的一层。
+
+\section{FIRST 原则与 AAA 结构}
+
+高质量单元测试通常遵循 FIRST 原则：
+\textbf{Fast}（快速，单条用例毫秒级）、
+\textbf{Independent}（相互独立，不依赖执行顺序）、
+\textbf{Repeatable}（在任何环境可重复，不依赖网络、时钟等外部状态）、
+\textbf{Self-validating}（自动给出布尔结论，无需人工查看日志）、
+\textbf{Timely}（及时编写，最好与产品代码同步甚至先行）。
+
+单个用例的内部结构普遍遵循 AAA 模式：
+
+\begin{enumerate}
+  \item \textbf{Arrange}（准备）：构造被测对象、准备输入与依赖替身；
+  \item \textbf{Act}（执行）：调用被测函数，通常只有一行；
+  \item \textbf{Assert}（断言）：验证返回值、状态变化或交互行为。
+\end{enumerate}
+
+\begin{note}
+一个用例只验证一个行为。如果一个测试函数中出现多组互不相关的断言，
+应当拆分为多个用例——否则前面的断言一旦失败，后续行为的验证就被掩盖了。
+\end{note}
+
+\section{测试金字塔}
+
+业界普遍以“测试金字塔”描述各层测试的比例关系：底层单元测试数量最多、
+运行最快、维护成本最低；顶层端到端测试数量最少、运行最慢、最贴近真实
+场景。C++ 项目由于编译与链接成本高，更应当把验证重心下沉到单元层，
+避免让昂贵的集成测试承担本可由单元测试覆盖的职责。
+
+\begin{center}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llll}
+\toprule
+层次 & 数量 & 速度 & 典型工具 \\
+\midrule
+端到端 / 系统测试 & 少 & 分钟级以上 & 自研脚本、引擎内建流程 \\
+集成测试 & 中 & 秒至分钟 & CTest、CI 流水线 \\
+单元测试 & 多 & 毫秒 & Google Test、Catch2、JUnit 等 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{C++ 单元测试的特殊性}
+
+与 C\#、Java 相比，C++ 的单元测试生态有几个显著差异，它们贯穿全书：
+
+\begin{itemize}
+  \item \textbf{没有官方标准框架}。标准库只提供 \texttt{static\_assert}
+        这类编译期断言，运行期测试完全依赖第三方框架（Google Test、
+        Catch2 等），选型本身就是一个项目决策。
+  \item \textbf{无运行时反射}。Java/C\# 的测试框架可以扫描注解自动发现
+        用例、动态创建 mock 代理；C++ 框架只能依靠宏做静态注册，mock
+        只能建立在虚函数或模板之上（第 6 章详述）。
+  \item \textbf{编译与链接成本}。测试代码与被测代码一起编译，头文件
+        庞大的框架会显著拖慢构建，因此 header-only 与编译速度成为选型
+        指标之一。
+  \item \textbf{目标平台多样}。同一套测试代码可能要在桌面、Android、
+        iOS、嵌入式设备乃至游戏引擎内运行，交叉编译与结果收集方式各不
+        相同（第 3、4 章详述）。
+  \item \textbf{错误处理风格混合}。异常、错误码、\texttt{optional}、
+        返回值约定并存，断言写法需要覆盖多种风格（\texttt{EXPECT\_THROW}、
+        错误码比较等）。
+\end{itemize}
+
+\section{最小示例：从 assert 到测试框架}
+
+不使用任何框架时，可以用 \texttt{assert} 与退出码手写测试：
+
+\cpplabel
+\begin{lstlisting}
+// manual_test.cpp
+#include <cassert>
+#include <cstdlib>
+#include "math_utils.h"
+
+int main()
+{
+    assert(clamp(15, 0, 10) == 10);   // Arrange + Act + Assert
+    assert(clamp(-3, 0, 10) == 0);
+    return EXIT_SUCCESS;               // 失败时 assert 直接中止
+}
+\end{lstlisting}
+
+这种方式适合一次性验证，但缺少用例隔离、失败定位、统计汇总与选择性运行
+能力。测试框架解决的核心问题正是这些：自动注册用例、捕获失败并继续执行
+其余用例、输出结构化报告。后续章节以框架重写同一场景。
+
+\section{测试替身术语}
+
+当被测代码依赖数据库、网络、时间等外部组件时，需要用“测试替身”
+（Test Double）替代真实依赖。常用分类如下，第 6 章展开讲 Mock 部分：
+
+\begin{center}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{2.6cm}p{10.4cm}}
+\toprule
+替身类型 & 含义 \\
+\midrule
+Dummy & 仅用于填充参数、从不被真正使用的对象 \\
+Stub & 返回预设答案，不记录调用情况 \\
+Spy & 在真实实现基础上记录调用信息（次数、参数） \\
+Fake & 简化但可工作的实现（如内存数据库） \\
+Mock & 预先设定期望，自动验证调用是否按期望发生 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{纯函数与环境依赖：什么才算单元测试}
+
+纯函数指对相同输入永远返回相同输出、且不产生任何可观察副作用的函数：
+不写全局状态、不做 I/O、不读取时钟与随机数。纯函数是单元测试最友好
+的对象——无需准备环境、无需替身、用例可以穷举，前文的 \texttt{clamp}
+即是一例。
+
+与之相对的是\textbf{环境依赖代码}：行为取决于系统时钟、随机源、环境
+变量、文件系统、网络或外设。它们是测试不稳定的根源。良好的设计把计算
+逻辑收敛为纯函数，把环境读写隔离成薄层，再经第 7 章的依赖注入交给
+被测代码。
+
+由此可以回答“什么不算单元测试”：凡是必须依赖不可控外部环境才能运行
+的验证，都不再是单元测试，而是集成测试或系统测试。判断标准很直接——
+一条用例如果需要真实外网服务、实际硬件、共享目录里的特定文件，它就
+违背了 FIRST 中的 Repeatable 与 Fast：换一台机器、换一个时刻就可能
+失败，也无法在每次提交后秒级跑完。经验法则是：单元测试应当在断网的
+笔记本上随时全绿。
+
+\begin{note}{localhost 是灰区}
+不指向 localhost 的网络操作必须 mock；指向 loopback 的可控服务
+（测试自己启动、自己关闭的假服务器）是常见折中，但端口冲突与平台差异
+仍会带来脆性，用例规模大时应优先进程内 Fake。
+\end{note}
+
+\section{产品代码中的 assert 与测试断言的边界}
+
+非测试代码中使用 \texttt{assert} 是完全正当的：它表达契约与前置条件，
+是防御式编程的一部分，在内核与嵌入式裸机代码中也常与故障处理路径配合。
+但必须记住，\textbf{assert 的行为随构建配置而变}：定义
+\seqsplit{\texttt{NDEBUG}} 后（Release 配置的常态）整个条件表达式被
+整体移除；不同优化等级还会影响求值时机。内核里的
+\seqsplit{\texttt{BUG\_ON}}、\seqsplit{\texttt{WARN\_ON}} 受
+\seqsplit{\texttt{CONFIG\_BUG}} 控制，裸机 HAL 自定义的断言宏同样
+大多条件编译，性质完全一致。
+
+由此得到一条硬规则：\textbf{断言条件中不得出现任何有副作用的逻辑}，
+否则同一段代码在 Debug 与 Release 下行为不一致：
+
+\cpplabel
+\begin{lstlisting}
+// 错误：Release（NDEBUG）下 read() 根本不会被执行
+assert(stream.read(buffer, 4) == 4);
+
+// 正确：先执行逻辑，再断言结果
+size_t n = stream.read(buffer, 4);
+assert(n == 4);            // 内核 BUG_ON / HAL 断言同理
+\end{lstlisting}
+
+还要注意两者的分工：产品 \texttt{assert} 守卫“绝不应发生”的契约，
+且在 Release 中通常缺席；测试断言（\seqsplit{\texttt{EXPECT\_*}} 等）
+验证“应当发生”的行为，在所有配置下求值。单元测试不能依赖产品断言来
+判定正确性，产品断言也替代不了单元测试。
+
+% ================================================================
+\chapter{主流 C++ 测试框架}
+% ================================================================
+
+本章介绍五个主流框架：Google Test、Catch2、doctest、Boost.Test 与
+Qt Test，最后给出横向对比与选型建议。
+
+\section{Google Test（含 GoogleMock）}
+
+Google Test（下称 GTest）是工业界使用最广泛的 C++ 测试框架，Chromium、
+LLVM、OpenCV 等知名项目均以其为测试基座。自 1.10 版起 GoogleMock 并入
+同一仓库，测试与 mock 可一站式获得。当前版本要求 C++14 及以上。
+
+\subsection{基本用例与夹具}
+
+\texttt{TEST} 定义独立用例，\texttt{TEST\_F} 配合夹具类在每个用例前
+重新构造共享环境：
+
+\cpplabel
+\begin{lstlisting}
+#include <gtest/gtest.h>
+#include "math_utils.h"
+
+// 1. 独立用例: TEST(套件名, 用例名)
+TEST(MathUtils, ClampInRange)
+{
+    EXPECT_EQ(clamp(15, 0, 10), 10);   // 失败后继续执行
+    EXPECT_EQ(clamp(-3, 0, 10), 0);
+}
+
+// 2. 夹具用例: 每个用例独享一个 fresh 对象
+class StackTest : public ::testing::Test {
+protected:
+    void SetUp() override { stack_.push(1); }
+    void TearDown() override {}
+    IntStack stack_;
+};
+
+TEST_F(StackTest, PopReturnsTop)
+{
+    ASSERT_FALSE(stack_.empty());      // 失败立即终止本用例
+    EXPECT_EQ(stack_.pop(), 1);
+}
+\end{lstlisting}
+
+断言宏分成两族：\texttt{EXPECT\_*} 记录失败后继续执行，适合一个用例内
+的多点验证；\texttt{ASSERT\_*} 失败即从当前函数返回，适合“不满足则后续
+无意义”的前置条件。常用宏包括 \texttt{EXPECT\_EQ}/\texttt{NE}/\texttt{LT}、
+\texttt{EXPECT\_TRUE}、\texttt{EXPECT\_STREQ}（C 字符串）、
+\texttt{EXPECT\_DOUBLE\_EQ}（浮点精确比较）、
+\texttt{EXPECT\_NEAR}(a, b, tol)。
+
+\subsection{参数化与死亡测试}
+
+\cpplabel
+\begin{lstlisting}
+// 值参数化: 同一逻辑跑多组数据
+class ClampParamTest
+    : public ::testing::TestWithParam<std::tuple<int,int,int,int>> {};
+
+TEST_P(ClampParamTest, MatchesExpectation)
+{
+    auto [value, lo, hi, expected] = GetParam();
+    EXPECT_EQ(clamp(value, lo, hi), expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Typical, ClampParamTest,
+    ::testing::Values(std::make_tuple(15, 0, 10, 10),
+                      std::make_tuple(-3, 0, 10, 0),
+                      std::make_tuple(5,  0, 10, 5)));
+
+// 死亡测试: 验证断言/崩溃行为 (Debug 构建常用)
+TEST(MathUtilsDeath, NullPointerAborts)
+{
+    EXPECT_DEATH(clamp_ptr(nullptr, 0, 10), "null");
+}
+\end{lstlisting}
+
+\subsection{CMake 集成与运行选项}
+
+\cmakelabel
+\begin{lstlisting}
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.tar.gz
+)
+# Windows: 强制使用共享 CRT, 避免与主工程运行时不一致
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+add_executable(unit_tests test_math.cpp math_utils.cpp)
+target_link_libraries(unit_tests PRIVATE GTest::gtest_main)
+
+enable_testing()
+add_test(NAME unit_tests COMMAND unit_tests)
+\end{lstlisting}
+
+测试可执行文件支持丰富的命令行选项：
+
+\begin{center}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{p{5.6cm}p{8.6cm}}
+\toprule
+选项 & 作用 \\
+\midrule
+\endfirsthead
+\toprule
+选项 & 作用 \\
+\midrule
+\endhead
+\seqsplit{--gtest\_filter=Suite.*} & 按通配符筛选用例 \\
+\seqsplit{--gtest\_list\_tests} & 只列出用例不运行 \\
+\seqsplit{--gtest\_output=xml:r.xml} & 输出 JUnit 风格 XML 报告 \\
+\seqsplit{--gtest\_shuffle} & 随机顺序，暴露用例间依赖 \\
+\seqsplit{--gtest\_repeat=N} & 重复运行，捕捉偶发失败 \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\begin{note}
+CI 并行可用分片环境变量 \texttt{GTEST\_SHARD\_INDEX} 与
+\texttt{GTEST\_TOTAL\_SHARDS}：把用例集合切成 $N$ 份，$N$ 台机器各跑一份。
+\end{note}
+
+\section{Catch2}
+
+Catch2 以“自然表达”著称：用标签（tag）组织用例，用 SECTION 表达共享
+前置，断言宏只有 \texttt{REQUIRE}（失败即终止本用例）与 \texttt{CHECK}
+（失败后继续）两族。v3 起改为“预编译库 + 头文件”结构，编译速度优于
+单头文件时代，要求 C++14。
+
+\cpplabel
+\begin{lstlisting}
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/generators/catch_generators.hpp>
+#include <catch2/catch_approx.hpp>
+#include "math_utils.h"
+
+using Catch::Approx;
+
+TEST_CASE("clamp limits value to [lo, hi]", "[math][clamp]")
+{
+    // SECTION 共享 Arrange, 每个 SECTION 独立重跑前置
+    const int lo = 0, hi = 10;
+
+    SECTION("above range clamps down") {
+        REQUIRE(clamp(15, lo, hi) == 10);
+    }
+    SECTION("below range clamps up") {
+        REQUIRE(clamp(-3, lo, hi) == 0);
+    }
+    SECTION("data-driven via GENERATE") {
+        auto v = GENERATE(15, -3, 5);
+        CHECK(clamp(v, lo, hi) >= lo);
+        CHECK(clamp(v, lo, hi) <= hi);
+    }
+}
+
+TEST_CASE("floating point uses Approx", "[math]")
+{
+    REQUIRE(sin(0.5) == Approx(0.4794255386).epsilon(0.001));
+}
+\end{lstlisting}
+
+BDD 风格的 \texttt{GIVEN/WHEN/THEN} 宏（需包含
+\seqsplit{catch2/bdd/catch\_bdd.hpp}）本质上是带前缀的 SECTION，适合行为
+驱动开发团队。Catch2 的常用命令行选项：\texttt{-s} 显示成功断言、
+\seqsplit{--order rand} 随机顺序、\texttt{[tag]} 按标签过滤、
+\texttt{-r junit -o report.xml} 输出 JUnit XML。
+
+\section{doctest}
+
+doctest 是一个单头文件框架，API 与 Catch2 高度相似（TEST\_CASE/SUBCASE、
+CHECK/REQUIRE），但体积极小、编译速度快，官方定位包括“可以放进生产代码
+头文件里”的场景——例如在头文件的示例代码中内嵌自测。它支持 C++11，
+适合老标准项目与编译时间敏感的大型代码库：
+
+\cpplabel
+\begin{lstlisting}
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest/doctest.h>
+#include "math_utils.h"
+
+TEST_CASE("clamp")
+{
+    SUBCASE("upper bound") { CHECK(clamp(15, 0, 10) == 10); }
+    SUBCASE("lower bound") { CHECK(clamp(-3, 0, 10) == 0); }
+}
+\end{lstlisting}
+
+doctest 还提供 \texttt{doctest::Context} API，允许把测试运行器嵌入
+宿主程序（例如游戏引擎的工具进程）按需执行，这一能力在第 3、4 章的移动
+端与引擎场景中非常有用。
+
+\section{Boost.Test}
+
+Boost.Test 是 Boost 库自带的测试框架，适合已经深度使用 Boost 的项目，
+可以免引入新依赖。它支持编译链接 \seqsplit{boost\_unit\_test\_framework}
+库的模式，也支持纯头文件模式（包含
+\seqsplit{boost/test/included/unit\_test.hpp}）：
+
+\cpplabel
+\begin{lstlisting}
+#define BOOST_TEST_MODULE MathUtilsTests
+#include <boost/test/included/unit_test.hpp>   // 头文件模式
+#include "math_utils.h"
+
+BOOST_AUTO_TEST_SUITE(ClampSuite)
+
+BOOST_AUTO_TEST_CASE(clamps_to_range)
+{
+    BOOST_CHECK_EQUAL(clamp(15, 0, 10), 10);   // 失败后继续
+    BOOST_REQUIRE_EQUAL(clamp(-3, 0, 10), 0);  // 失败即终止
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+\end{lstlisting}
+
+Boost.Test 提供测试套件树、夹具
+（\seqsplit{\texttt{BOOST\_FIXTURE\_TEST\_CASE}}）、数据驱动
+（\seqsplit{\texttt{BOOST\_DATA\_TEST\_CASE}}）与日志级别控制，
+但其报告格式与现代 CI 的集成不如 GTest/Catch2 便利。
+
+\section{Qt Test}
+
+Qt 项目通常使用官方的 Qt Test 模块（\texttt{QT += testlib}）。测试类
+继承 \texttt{QObject}，每个私有槽函数就是一个用例；框架内建信号捕获、
+事件循环等待与基准测试能力，与 Qt 类型系统深度集成：
+
+\cpplabel
+\begin{lstlisting}
+#include <QtTest/QtTest>
+#include "stringutil.h"
+
+class StringUtilTest : public QObject {
+    Q_OBJECT
+private slots:
+    void testToUpper();
+    void testToUpper_data();        // 数据驱动: 与用例同名加 _data
+    void testSignal();
+};
+
+void StringUtilTest::testToUpper()
+{
+    QCOMPARE(toUpper("abc"), QString("ABC"));
+    QVERIFY(!toUpper("").isEmpty() == false);
+}
+
+void StringUtilTest::testToUpper_data()
+{
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("expected");
+    QTest::newRow("lower")  << "abc" << "ABC";
+    QTest::newRow("mixed")  << "aBc" << "ABC";
+}
+
+void StringUtilTest::testSignal()
+{
+    Emitter e;
+    QSignalSpy spy(&e, &Emitter::fired);
+    e.fire();
+    QCOMPARE(spy.count(), 1);        // 验证信号恰好发出一次
+}
+
+QTEST_MAIN(StringUtilTest)
+#include "stringutiltest.moc"
+\end{lstlisting}
+
+数据驱动用例通过 \texttt{QFETCH(input, QString)} 取出行数据；
+\texttt{QBENCHMARK} 块自动重复测量并输出耗时；QML 界面则用
+\texttt{QUICK\_TEST\_MAIN} 启动快速测试。Qt Test 的缺点是测试粒度绑定
+QObject，脱离 Qt 环境意义不大。
+
+\section{横向对比与选型建议}
+
+{
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\begin{longtable}{p{2.0cm}p{2.3cm}p{1.5cm}p{2.9cm}p{2.5cm}p{2.8cm}}
+\toprule
+框架 & 形态 & 标准 & 断言风格 & 参数化 & 典型场景 \\
+\midrule
+\endfirsthead
+\toprule
+框架 & 形态 & 标准 & 断言风格 & 参数化 & 典型场景 \\
+\midrule
+\endhead
+Google Test & 源码/包管理 & C++14 & \seqsplit{EXPECT\_*/ASSERT\_*} 宏族 & \seqsplit{TEST\_P} + 实例化 & 大型工程、需要 mock、CI 报告完善 \\
+Catch2 & v3 预编译库 & C++14 & REQUIRE / CHECK 表达式 & GENERATE & 中小项目、BDD、追求可读性 \\
+doctest & 单头文件 & C++11 & CHECK / REQUIRE & 模板用例 & 编译时间敏感、嵌入生产代码 \\
+Boost.Test & Boost 库 & C++11 & \seqsplit{BOOST\_CHECK\_*} 宏族 & \seqsplit{DATA\_TEST\_CASE} & 已深度使用 Boost \\
+Qt Test & Qt 模块 & 随 Qt & \seqsplit{QCOMPARE/QVERIFY} & \_data 槽函数 & Qt/QML 界面与信号测试 \\
+\bottomrule
+\end{longtable}
+}
+
+\begin{guideline}{选型建议}
+新项目无特殊约束时优先 Google Test：生态最大、GoogleMock 配套、CI 报告
+（XML/JSON）成熟。追求用例可读性与 BDD 选 Catch2；大型单体仓库在意编译
+时间选 doctest；Qt 技术栈选 Qt Test；已有 Boost 依赖且不想引入新库时选
+Boost.Test。
+\end{guideline}
+
+\begin{warning}{常见陷阱}
+GTest 的 \texttt{ASSERT\_*} 只从\textbf{当前函数}返回，因此在辅助函数里
+使用它并不会终止调用它的 \texttt{TEST} 本体；若需要跨函数传播失败，让
+辅助函数返回 \texttt{bool} 或改用 \texttt{[[nodiscard]]} 的断言封装。
+\end{warning}
+
+% ================================================================
+\chapter{移动端平台：Android 与 iOS}
+% ================================================================
+
+移动端的核心问题不是“用哪个框架”——GTest、Catch2、doctest 都是纯 C++，
+交叉编译即可——而是“测试产物如何运行、结果如何收集”。两个平台的策略
+可以概括为两条路线：\textbf{独立可执行文件}（adb / 模拟器直接运行，
+适合 CI）与\textbf{寄生在宿主应用内}（APK / XCTest 承载，适合需要应用
+上下文的场景）。
+
+\section{Android（NDK）}
+
+\subsection{交叉编译测试可执行文件}
+
+用 NDK 工具链文件把测试构建成可执行文件，是最直接的方式：
+
+\cmakelabel
+\begin{lstlisting}
+# 与桌面共用同一份 CMakeLists.txt, 仅工具链不同
+add_executable(unit_tests test_math.cpp math_utils.cpp)
+target_link_libraries(unit_tests PRIVATE GTest::gtest_main)
+enable_testing()
+add_test(NAME unit_tests COMMAND unit_tests)
+\end{lstlisting}
+
+\bashlabel
+\begin{lstlisting}
+# 配置 + 构建 (NDK 路径以 ANDROID_NDK_HOME 为例)
+cmake -B build-android \
+  -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+  -DANDROID_ABI=arm64-v8a \
+  -DANDROID_PLATFORM=android-24
+cmake --build build-android
+\end{lstlisting}
+
+\subsection{adb 推送与结果收集}
+
+\bashlabel
+\begin{lstlisting}
+adb push build-android/unit_tests /data/local/tmp/
+adb shell "cd /data/local/tmp && chmod +x unit_tests \
+  && ./unit_tests --gtest_output=xml:results.xml"
+adb pull /data/local/tmp/results.xml .
+\end{lstlisting}
+
+\begin{note}
+\texttt{/data/local/tmp} 是 adb shell 默认可写可执行的目录，适合 CI。
+GTest 的 XML 结果是 JUnit 风格，Jenkins/GitHub Actions 的测试报告插件
+可以直接解析。
+\end{note}
+
+\subsection{让 CTest 透传 adb：交叉模拟器技巧}
+
+CMake 提供了
+\seqsplit{\texttt{CMAKE\_CROSSCOMPILING\_EMULATOR}}
+变量，CTest 执行 \texttt{add\_test} 注册的命令时会自动加上该前缀。
+把它设成 \texttt{adb;shell}，交叉编译环境下也能照常运行 \texttt{ctest}：
+
+\cmakelabel
+\begin{lstlisting}
+# 仅当交叉编译时设置
+if(ANDROID)
+  set(CMAKE_CROSSCOMPILING_EMULATOR "adb;shell")
+endif()
+add_test(NAME unit_tests COMMAND unit_tests)
+\end{lstlisting}
+
+\bashlabel
+\begin{lstlisting}
+ctest --test-dir build-android --output-on-failure
+\end{lstlisting}
+
+\subsection{APK 内置 JNI 宿主}
+
+当测试需要访问应用私有目录、资源或已登录状态时，把测试编译成
+\texttt{.so}，用 JNI 暴露一个运行入口，再由 instrumented test 调用：
+
+\cpplabel
+\begin{lstlisting}
+// native_test_runner.cpp
+#include <jni.h>
+#include <gtest/gtest.h>
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_example_app_NativeTestRunner_runAllTests(
+    JNIEnv* /*env*/, jobject /*thiz*/)
+{
+    int argc = 1;
+    static char arg0[] = "unit_tests";
+    static char* argv[] = { arg0, nullptr };
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();      // 0 = 全部通过
+}
+\end{lstlisting}
+
+\javalabel
+\begin{lstlisting}
+// androidTest/java/com/example/app/NativeTestRunner.java
+@RunWith(AndroidJUnit4.class)
+public class NativeTestRunner {
+    static { System.loadLibrary("native_tests"); }
+    public native int runAllTests();
+
+    @Test
+    public void nativeTestsPass() {
+        assertEquals(0, runAllTests());
+    }
+}
+\end{lstlisting}
+
+\section{iOS}
+
+\subsection{静态库 + XCTest 宿主}
+
+iOS 没有 adb 式的命令行通道，主流做法是把测试代码编译为静态库，链接进
+XCTest bundle，用一个 XCTestCase 作宿主：
+
+\objclabel
+\begin{lstlisting}
+// NativeTests.mm -- Objective-C++ 宿主
+#import <XCTest/XCTest.h>
+#include <gtest/gtest.h>
+
+@interface NativeTests : XCTestCase
+@end
+
+@implementation NativeTests
+- (void)testRunAll {
+    int argc = 1;
+    static char arg0[] = "unit_tests";
+    static char* argv[] = { arg0, nullptr };
+    ::testing::InitGoogleTest(&argc, argv);
+    XCTAssertEqual(RUN_ALL_TESTS(), 0);
+}
+@end
+\end{lstlisting}
+
+用 Xcode 生成器交叉编译静态库：
+
+\bashlabel
+\begin{lstlisting}
+# 真机
+cmake -B build-ios -G Xcode \
+  -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_ARCHITECTURES=arm64
+# 模拟器 (Apple Silicon)
+cmake -B build-iossim -G Xcode \
+  -DCMAKE_SYSTEM_NAME=iOS \
+  -DCMAKE_OSX_ARCHITECTURES=arm64 \
+  -DCMAKE_OSX_SYSROOT=iphonesimulator
+\end{lstlisting}
+
+\subsection{Catch2 的宿主模式}
+
+Catch2 通过 \texttt{CATCH\_CONFIG\_RUNNER} 把 \texttt{main} 交还给使用
+者，天然适合嵌入 XCTest：
+
+\cpplabel
+\begin{lstlisting}
+#define CATCH_CONFIG_RUNNER
+#include <catch2/catch_session.hpp>
+
+int run_catch_tests(int argc, char* argv[])
+{
+    return Catch::Session().run(argc, argv);
+}
+\end{lstlisting}
+
+随后在 XCTestCase 中调用 \texttt{run\_catch\_tests} 并以返回值断言即可，
+与 GTest 宿主的写法一一对应。
+
+\subsection{模拟器命令行直跑}
+
+若测试完全不依赖 UIKit/应用上下文，可以构建面向模拟器 SDK 的普通可执行
+文件，用 \texttt{simctl spawn} 直接在模拟器进程空间执行，获得与桌面一致
+的命令行体验：
+
+\bashlabel
+\begin{lstlisting}
+xcrun simctl spawn booted /path/to/unit_tests --gtest_filter=MathUtils.*
+\end{lstlisting}
+
+\section{两平台对比}
+
+{
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{p{2.6cm}p{5.6cm}p{5.6cm}}
+\toprule
+维度 & Android (NDK) & iOS (Xcode) \\
+\midrule
+\endfirsthead
+\toprule
+维度 & Android (NDK) & iOS (Xcode) \\
+\midrule
+\endhead
+构建方式 & NDK 工具链 + CMake & Xcode 生成器或 XCFramework \\
+独立运行 & adb push + shell 直跑 & 模拟器 simctl spawn；真机无 \\
+宿主运行 & APK + JNI + AndroidJUnit & XCTest bundle + ObjC++ 宿主 \\
+结果收集 & XML 文件 pull；JUnit 输出 & XCTest 报告（xcresult） \\
+覆盖率 & clang 覆盖率 + 拉取 profraw & Xcode 自动收集并展示 \\
+\bottomrule
+\end{longtable}
+}
+
+\begin{bestpractice}{移动端测试建议}
+把“纯逻辑测试”与“需要平台上下文的测试”分开：前者构建成可执行文件进
+CI（Android 用 adb，iOS 用模拟器），跑得快、日志干净；后者才放进 APK /
+XCTest 宿主。两条路线共用同一份测试源码，仅入口不同。
+\end{bestpractice}
+
+% ================================================================
+\chapter{引擎内测试：Unreal Engine 与 U++}
+% ================================================================
+
+\section{Unreal Engine 自动化测试框架}
+
+UE 自带 Automation 测试框架，测试类继承 \texttt{FAutomationTestBase}，
+通过宏注册到引擎的测试目录树中。它与引擎生命周期、编辑器、渲染管线
+深度集成，是引擎模块测试的事实标准。
+
+\subsection{简单测试}
+
+\cpplabel
+\begin{lstlisting}
+#include "Misc/AutomationTest.h"
+#include "Math/UnrealMathUtility.h"
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+    FMathUtilsTest,                          // 测试类名
+    "Project.Math.Utils",                    // 目录树路径 (PrettyName)
+    EAutomationTestFlags::ApplicationContextMask |
+    EAutomationTestFlags::ClientContext)     // 过滤标志
+
+bool FMathUtilsTest::RunTest(const FString& Parameters)
+{
+    TestEqual(TEXT("Clamp to range"), FMath::Clamp(15, 0, 10), 10);
+    TestTrue (TEXT("IsFinite"),       FMath::IsFinite(3.14f));
+    return true;   // 返回值表示函数本身是否执行完毕
+}
+\end{lstlisting}
+
+\texttt{FAutomationTestBase} 提供的断言助手还包括 \texttt{TestNotEqual}、
+\texttt{TestNotNull}、\texttt{AddError}、\texttt{AddInfo} 等；测试所在
+模块需要在 \texttt{Build.cs} 中声明对 Automation 模块的依赖。
+
+\subsection{复杂测试与延迟命令}
+
+需要枚举多组参数时用复杂测试（\seqsplit{IMPLEMENT\_COMPLEX\_AUTOMATION\_TEST}）
+并重写 \texttt{GetTests} 生成子用例；需要跨帧执行（加载地图、等待动画）
+时入队延迟命令：
+
+\cpplabel
+\begin{lstlisting}
+class FWaitOneFrameCommand : public IAutomationLatentCommand {
+public:
+    virtual bool Update() override {
+        // Update 每帧调用; 返回 true 表示本命令结束
+        return true;
+    }
+};
+
+// RunTest 内:
+ADD_LATENT_AUTOMATION_COMMAND(FWaitOneFrameCommand());
+ADD_LATENT_AUTOMATION_COMMAND(FFunctionLatentCommand([this]() {
+    TestTrue(TEXT("World ready"), GetWorld() != nullptr);
+    return true;
+}));
+\end{lstlisting}
+
+\subsection{运行方式}
+
+\begin{itemize}
+  \item \textbf{编辑器 UI}：打开 Automation 窗口（Session Frontend），
+        按目录树勾选用例运行，结果可视化；
+  \item \textbf{编辑器控制台}：\texttt{Automation ListAll} 列出全部测试，
+        \seqsplit{Automation RunTests "Project."} 按路径前缀运行；
+  \item \textbf{命令行 / CI}：以无头模式启动编辑器执行并导出报告。
+\end{itemize}
+
+\cmdlabel
+\begin{lstlisting}
+UnrealEditor-Cmd.exe MyGame.uproject -stdout -FullStdOutLogOutput ^
+  -Unattended -NullRHI -NoSound -NoPause ^
+  -ExecCmds="Automation RunTests \"Project.\"; Quit" ^
+  -ReportOutputPath="C:\ci\reports"
+\end{lstlisting}
+
+\subsection{Functional Testing 与 Gauntlet}
+
+对于需要真实关卡、Actor 交互的“游戏行为级”验证，UE 提供 Functional
+Testing：测试本身是放进关卡的 Actor（继承 \texttt{AFunctionalTest}），
+在 \texttt{PrepareTest} 中执行步骤并断言：
+
+\cpplabel
+\begin{lstlisting}
+#include "FunctionalTest.h"
+
+UCLASS()
+class AMyLevelTest : public AFunctionalTest {
+    GENERATED_BODY()
+public:
+    virtual void PrepareTest() override;
+};
+
+void AMyLevelTest::PrepareTest()
+{
+    Super::PrepareTest();
+    UMyComponent* Comp = NewObject<UMyComponent>(this);
+    VerifyTrue (IsValid(Comp),       TEXT("Component created"));
+    VerifyEqual(Comp->Compute(2, 3), 5, TEXT("Compute result"));
+    FinishTest();
+}
+\end{lstlisting}
+
+再往上，Gauntlet 在 Automation 框架之上提供跨配置的性能与稳定性自动化
+（启动时间、帧率、崩溃率），常用于版本准入。三者层次为：
+Automation（代码级）$\to$ Functional（关卡级）$\to$ Gauntlet（构建级）。
+
+\begin{note}
+UE 没有官方 mock 库。实践中通过接口 + 依赖注入手工构造 Fake；对不依赖
+引擎模块的纯 C++ 库，也可以在模块内直接引入 GTest/GMock 单独编译测试
+目标，与 Automation 测试并存。
+\end{note}
+
+\section{U++（Ultimate++）的 autotest 约定}
+
+U++ 没有内置类似 GTest 的断言框架，官方仓库的 \texttt{autotest} 目录
+给出了其测试约定：\textbf{每个测试是一个独立的控制台包}，用
+\texttt{CONSOLE\_APP\_MAIN} 作入口，依靠 Core 库的 \texttt{ASSERT} 断言
+与 \texttt{LOG}/\texttt{DUMP} 输出诊断信息：
+
+\cpplabel
+\begin{lstlisting}
+// U++ autotest 风格: 独立的控制台包
+#include <Core/Core.h>
+using namespace Upp;
+
+CONSOLE_APP_MAIN
+{
+    StdLogSetup(LOG_COUT | LOG_FILE);       // 同时输出到控制台与日志文件
+
+    Vector<int> v = { 3, 1, 2 };
+    Sort(v);
+    DUMP(v);                                // 打印变量名与值
+    ASSERT(v[0] == 1 && v[1] == 2 && v[2] == 3);
+
+    LOG("================== OK");             // 约定俗成的成功标记
+}
+\end{lstlisting}
+
+\subsection{运行与 CI 集成}
+
+\begin{itemize}
+  \item \textbf{TheIDE}：打开测试包按 F5 直接运行，断言失败时以 panic
+        对话框定位到源码行；
+  \item \textbf{umk 命令行}：U++ 的无界面构建工具，可在 CI 中编译并运行
+        测试包；
+  \item \textbf{退出码}：\texttt{ASSERT} 在 Debug 编译下失败会中止进程
+        并给出非零退出码，shell 即可判断成败。
+\end{itemize}
+
+\bashlabel
+\begin{lstlisting}
+# umk <包目录> <主包> <构建方法> [输出] [选项]
+umk ./my_assemblies MyMathTests CLANG -brs ./out/my_math_tests
+./out/my_math_tests && echo PASS
+\end{lstlisting}
+
+\subsection{特点与局限}
+
+U++ 的方式本质是“每个测试即一个小型程序”：隔离性天然彻底（进程级），
+无需框架依赖；但没有用例聚合、筛选、结构化报告与 mock 支持，测试数量大
+时管理成本上升。这与 UE 的“引擎内注册式”形成鲜明对照：
+
+{
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{p{2.6cm}p{5.6cm}p{5.6cm}}
+\toprule
+维度 & Unreal Engine & U++ \\
+\midrule
+\endfirsthead
+\toprule
+维度 & Unreal Engine & U++ \\
+\midrule
+\endhead
+框架形态 & 引擎内建 Automation 框架 & 无框架，autotest 约定 \\
+用例注册 & 宏注册进目录树 & 每个测试独立成包 \\
+断言 & \seqsplit{TestEqual/TestTrue} 等 & ASSERT / ASSERT\_ \\
+交互测试 & 延迟命令、Functional Test & 不适用（控制台程序） \\
+Mock & 无官方方案，手工 Fake & 无，手工 Fake \\
+运行入口 & 编辑器 UI / 控制台 / 命令行 & TheIDE / umk \\
+报告 & JSON/HTML 报告导出 & 日志文件 + 退出码 \\
+\bottomrule
+\end{longtable}
+}
+
+\begin{compare}{与通用框架的关系}
+引擎自带框架的价值在于“拿得到引擎上下文”（World、Actor、帧循环）。
+通用框架（GTest/Catch2）与引擎框架并非互斥：把与引擎解耦的纯算法、
+序列化、协议模块放进通用框架测试，把需要引擎状态的逻辑留给引擎框架，
+是大型项目的常见分工。
+\end{compare}
+
+% ================================================================
+\chapter{C\# 与 Java 测试框架对比}
+% ================================================================
+
+本章先分别给出 C\# 三大框架与 Java 两大框架的等价示例（同一个
+OrderService 场景），再做横向对比，最后总结与 C++ 的生态差异。
+
+\section{C\#：xUnit.net、NUnit 与 MSTest}
+
+\subsection{xUnit.net}
+
+当前 .NET 社区的主流选择，由 NUnit 原作者重写，强调用例间完全隔离
+（每个用例新建测试类实例，构造函数即 SetUp，\texttt{IDisposable.Dispose}
+即 TearDown）：
+
+\csharplabel
+\begin{lstlisting}
+using Xunit;
+
+public class OrderServiceTests
+{
+    [Fact]
+    public void Total_EmptyOrder_ReturnsZero()
+    {
+        var svc = new OrderService();
+        Assert.Equal(0m, svc.Total());
+    }
+
+    [Theory]                       // 数据驱动用例
+    [InlineData(2, 3, 6)]
+    [InlineData(0, 5, 0)]
+    public void Multiply(int a, int b, int expected)
+    {
+        Assert.Equal(expected, a * b);
+    }
+}
+\end{lstlisting}
+
+\subsection{NUnit}
+
+历史最悠久、特性最丰富的框架：经典夹具生命周期属性，约束式断言以
+\seqsplit{\texttt{Assert.That}} 搭配 \seqsplit{\texttt{Is.*}} 书写，
+并内建重试、并行控制与丰富的用例过滤器：
+
+\csharplabel
+\begin{lstlisting}
+using NUnit.Framework;
+
+[TestFixture]
+public class OrderServiceTests
+{
+    private OrderService _svc;
+
+    [SetUp]    public void SetUp()    => _svc = new OrderService();
+    [TearDown] public void TearDown() => _svc = null;
+
+    [TestCase(2, 3, 6)]
+    [TestCase(0, 5, 0)]
+    public void Multiply(int a, int b, int expected)
+    {
+        Assert.That(a * b, Is.EqualTo(expected));
+    }
+}
+\end{lstlisting}
+
+\subsection{MSTest}
+
+微软官方框架，v3 之后与 .NET CLI 深度整合，适合 Visual Studio 团队：
+
+\csharplabel
+\begin{lstlisting}
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class OrderServiceTests
+{
+    private OrderService _svc;
+
+    [TestInitialize] public void Init()    => _svc = new OrderService();
+    [TestCleanup]    public void Cleanup() => _svc = null;
+
+    [DataTestMethod]
+    [DataRow(2, 3, 6)]
+    [DataRow(0, 5, 0)]
+    public void Multiply(int a, int b, int expected)
+    {
+        Assert.AreEqual(expected, a * b);   // 注意: expected 在前
+    }
+}
+\end{lstlisting}
+
+\section{Java：JUnit 5 与 TestNG}
+
+\subsection{JUnit 5}
+
+JUnit 5 由 Platform（运行器基础）、Jupiter（编程模型）与 Vintage
+（兼容 JUnit 4）三部分组成。注解驱动，内建参数化与嵌套测试：
+
+\javalabel
+\begin{lstlisting}
+import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class OrderServiceTests {
+
+    private OrderService svc;
+
+    @BeforeEach void setUp() { svc = new OrderService(); }
+
+    @Test
+    void totalOfEmptyOrderIsZero() {
+        assertEquals(0, svc.total());
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "2,3,6", "0,5,0" })
+    void multiply(int a, int b, int expected) {
+        assertEquals(expected, a * b);
+    }
+
+    @Nested                       // 嵌套分组, 共享外层夹具
+    class WhenOrderHasItems {
+        @Test void totalIsSum() { /* ... */ }
+    }
+}
+\end{lstlisting}
+
+\subsection{TestNG}
+
+面向集成与系统测试设计：分组（groups）、依赖（dependsOnMethods）、
+DataProvider 与 XML 套件级并行控制，在企业级测试平台中仍占一席之地：
+
+\javalabel
+\begin{lstlisting}
+import org.testng.annotations.*;
+import static org.testng.Assert.*;
+
+public class OrderServiceTests {
+
+    @DataProvider(name = "pairs")
+    public Object[][] pairs() {
+        return new Object[][] { { 2, 3, 6 }, { 0, 5, 0 } };
+    }
+
+    @Test(dataProvider = "pairs", groups = "math")
+    public void multiply(int a, int b, int expected) {
+        assertEquals(a * b, expected);   // 注意: actual 在前
+    }
+}
+\end{lstlisting}
+
+\section{跨语言对照表}
+
+{
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{p{2.8cm}p{3.9cm}p{3.9cm}p{3.2cm}}
+\toprule
+特性 & C++ (GTest / Catch2) & C\# (xUnit / NUnit / MSTest) & Java (JUnit 5 / TestNG) \\
+\midrule
+\endfirsthead
+\toprule
+特性 & C++ (GTest / Catch2) & C\# (xUnit / NUnit / MSTest) & Java (JUnit 5 / TestNG) \\
+\midrule
+\endhead
+用例定义 & TEST / TEST\_CASE 宏 & [Fact] / [Test] 属性 & @Test 注解 \\
+用例发现 & 宏静态注册 & 反射扫描程序集 & 反射扫描类路径 \\
+夹具 & SetUp/TearDown 重写 & 构造/Dispose、[SetUp] & @BeforeEach 等 \\
+数据驱动 & TEST\_P、GENERATE & [Theory]、[TestCase] & @CsvSource、DataProvider \\
+断言失败继续 & EXPECT / CHECK & Assert.Multiple (NUnit) & assertAll \\
+并行执行 & 分片环境变量 & 框架/运行器配置 & TestNG XML、Jupiter 配置 \\
+构建集成 & CTest、CMake & dotnet test (VSTest) & Maven Surefire / Gradle \\
+报告 & XML / JSON & TRX / JUnit XML & Surefire XML \\
+Mock & GMock 等（见第 6 章） & Moq / NSubstitute & Mockito \\
+覆盖率 & gcov/llvm-cov 等 & coverlet & JaCoCo \\
+\bottomrule
+\end{longtable}
+}
+
+\section{生态差异小结}
+
+\begin{compare}{为什么 C++ 的测试“长得不一样”}
+C\#/Java 依赖反射与托管运行时：测试框架可以在运行时发现用例、动态生成
+mock 代理、注入覆盖率探针。C++ 没有这些设施，于是框架用\textbf{宏做静态
+注册}、mock 用\textbf{虚函数重写或模板替换}、覆盖率用\textbf{编译器插桩}
+（gcov/llvm-cov）。理解了这一点，就能理解 C++ 测试生态中几乎所有“看起来
+繁琐”的设计。
+\end{compare}
+
+\begin{itemize}
+  \item C\# 的 \texttt{dotnet test} 与 Java 的 \texttt{mvn test} 都是
+        “一条命令跑全部”；C++ 需要先用 CMake/CTest 把测试目标纳入构建。
+  \item C\#/Java 的参数化用例由运行时展开；GTest 的参数化实例在编译期
+        生成，Catch2 的 GENERATE 在用例内循环展开。
+  \item Java/C\# 的断言参数顺序各家不同（JUnit/TestNG 的 actual 在前，
+        MSTest/JUnit 的 expected 在前），跨团队协作时值得在代码规范里
+        明确。
+\end{itemize}
+
+% ================================================================
+\chapter{Mock 技术}
+% ================================================================
+
+\section{为什么 C++ 的 Mock 更难}
+
+Java 的 Mockito、C\# 的 Moq 能在运行时为任意接口动态生成代理对象，
+因为托管平台有反射与运行时类型生成能力。C++ 是静态编译语言，没有运行时
+代理机制，mock 只能走三条路：
+
+\begin{enumerate}
+  \item \textbf{虚函数重写}：mock 类继承接口、重写虚函数——主流方案，
+        要求被测依赖通过接口注入；
+  \item \textbf{模板（编译期 seam）}：把依赖类型作为模板参数，测试时
+        传入手工 Fake，零运行时代价但泛化代码；
+  \item \textbf{链接期替换}：测试构建中用 Fake 实现替换整个目标文件或
+        静态库，适合无接口的 C 风格代码。
+\end{enumerate}
+
+\begin{warning}{设计先行}
+如果一段 C++ 代码难以 mock，通常说明设计耦合过紧：依赖是具体类而非接口、
+全局单例、直接 new 出来的协作者。mock 工具解决不了设计问题——先引入
+依赖注入，再谈 mock。
+\end{warning}
+
+\section{环境强相关调用必须 mock}
+
+第 1 章给出了判断标准，这里落到清单：凡是结果不由被测代码单独决定的
+调用，都必须替换为替身。典型包括：
+
+\begin{itemize}
+  \item \textbf{非 localhost 的网络操作}：真实服务器、云服务、对端设备
+        一律 mock；loopback 上的受控服务属于灰区，见第 1 章说明。
+  \item \textbf{外设与硬件}：串口、GPU、传感器寄存器访问，测试机器
+        上没有这些设备，也不应该有。
+  \item \textbf{不受用例控制的文件}：尤其是全系统构建或交叉编译时，
+        用例编译与运行都无法创建、清理的文件（系统目录、共享缓存、
+        设备节点）必须隔离或 mock。
+  \item \textbf{系统时钟、随机源、环境变量、当前用户}等隐式输入。
+\end{itemize}
+
+接口级注入（第 7 章）能解决大部分情况，但总有些依赖绕不开 libc、
+操作系统或硬件。针对这些系统级边界，有三套常用手段。
+
+\subsection{\seqsplit{LD\_PRELOAD} 与符号拦截}
+
+Linux 动态链接器允许用 \seqsplit{\texttt{LD\_PRELOAD}} 预加载同名的
+符号来拦截 libc 调用，无需改动被测代码：
+
+\cpplabel
+\begin{lstlisting}
+// fake_time.c：拦截 gettimeofday
+#include <sys/time.h>
+int gettimeofday(struct timeval* tv, void* tz) {
+    if (tv) { tv->tv_sec = 1700000000; tv->tv_usec = 0; }
+    return 0;
+}
+\end{lstlisting}
+
+\bashlabel
+\begin{lstlisting}
+gcc -shared -fPIC -o fake_time.so fake_time.c
+LD_PRELOAD=./fake_time.so ./unit_tests
+\end{lstlisting}
+
+Windows 没有对等机制，常用 Detours、PolyHook 之类的挂钩库在运行时
+改写函数入口，或在链接期替换导入库达到类似效果。
+
+\subsection{测试时不链接真实库，改链接 mock 实现}
+
+链接器只认符号不认实现：测试目标不链接真实库，换入同签名的 mock
+目标文件即可。CMake 中一目了然：
+
+\cmakelabel
+\begin{lstlisting}
+# 产品固件链接真实驱动库
+target_link_libraries(firmware PRIVATE uart_driver)
+
+# 测试可执行文件换入 mock 实现
+add_library(uart_mock STATIC uart_mock.cpp)
+target_link_libraries(unit_tests PRIVATE uart_mock)
+\end{lstlisting}
+
+裸机项目里这套思路尤其常见：HAL 声明一组 extern C 符号，产品构建
+链接寄存器实现，测试构建链接记录调用的 Fake，用例直接检查调用序列。
+
+\subsection{覆盖内核调用}
+
+用户态测试拦截系统调用，可以在 libc 包装层做符号替换，也可以借助
+用户态仿真环境（QEMU user 模式等）统一接管；内核态代码（如 Linux
+KUnit）与裸机固件则通常把硬件访问收敛为函数指针表或 arch 操作表，
+测试时替换整张表。原则不变：给系统调用留出可替换的 seam，测试才有
+介入点。
+
+\begin{guideline}{选择顺序}
+优先接口注入，其次链接期替换，最后才上符号拦截与挂钩——层级越低，
+手段越“魔法”，调试与维护成本越高，应把它留给无法重构的遗留边界。
+\end{guideline}
+
+\section{手工 Fake 与 Stub}
+
+最简单也最稳健的替身是手写类。下面的内存价格仓库同时充当 Stub（返回
+预设值）与 Spy（记录调用）：
+
+\cpplabel
+\begin{lstlisting}
+class FakePriceRepository : public IPriceRepository {
+public:
+    explicit FakePriceRepository(double price) : price_(price) {}
+
+    double Price(std::string_view /*sku*/) const override {
+        ++calls_;                    // 记录调用次数 (Spy 行为)
+        return price_;               // 预设答案 (Stub 行为)
+    }
+    int calls_ = 0;
+private:
+    double price_;
+};
+
+TEST(OrderService, TotalWithFake)
+{
+    FakePriceRepository repo(3.5);
+    OrderService svc(repo);
+    EXPECT_DOUBLE_EQ(svc.Total("apple", 2), 7.0);
+    EXPECT_EQ(repo.calls_, 2);
+}
+\end{lstlisting}
+
+\begin{bestpractice}{何时优先手工 Fake}
+依赖接口小且稳定、多个测试共享同一替身、替身自身带状态（如内存数据库）
+时，手工 Fake 比 mock 框架更清晰也更不易碎。mock 框架更适合“交互验证”
+场景：调用次数、参数匹配、调用顺序。
+\end{bestpractice}
+
+\section{GoogleMock}
+
+GoogleMock 与 GTest 同仓库，是 C++ 世界事实标准的 mock 框架。核心三步：
+用 \texttt{MOCK\_METHOD} 声明 mock 方法，用 \texttt{EXPECT\_CALL} 设定
+期望，框架在析构时验证期望是否满足。
+
+\cpplabel
+\begin{lstlisting}
+#include <gmock/gmock.h>
+using ::testing::Return, ::testing::_;
+
+class MockPriceRepository : public IPriceRepository {
+public:
+    // 参数列表与限定符各自放在一对括号内
+    MOCK_METHOD(double, Price, (std::string_view sku),
+                (const, override));
+};
+
+TEST(OrderService, TotalUsesRepositoryPrice)
+{
+    MockPriceRepository repo;
+    EXPECT_CALL(repo, Price("apple"))   // 精确匹配参数
+        .Times(2)                       // 恰好两次
+        .WillRepeatedly(Return(3.5));   // 动作
+
+    OrderService svc(repo);
+    EXPECT_DOUBLE_EQ(svc.Total("apple", 2), 7.0);
+}   // repo 析构时验证 Times(2) 是否满足
+\end{lstlisting}
+
+\subsection{匹配器（Matchers）}
+
+\texttt{EXPECT\_CALL} 的每个参数位都可以是匹配器：
+
+\begin{center}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{p{5.0cm}p{8.8cm}}
+\toprule
+匹配器 & 含义 \\
+\midrule
+\endfirsthead
+\toprule
+匹配器 & 含义 \\
+\midrule
+\endhead
+\texttt{\_} & 匹配任意值 \\
+\seqsplit{Eq(v) / Ne(v) / Lt(v) / Gt(v)} & 等于 / 不等 / 小于 / 大于 \\
+\seqsplit{HasSubstr("ab")} & 字符串包含子串 \\
+\seqsplit{ElementsAre(1, 2, \_)} & 容器元素逐个匹配 \\
+\seqsplit{AllOf(m1, m2) / AnyOf(...)} & 组合匹配器 \\
+\seqsplit{Pointee(m)} & 对指针解引用后匹配 \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\subsection{基数、动作与默认行为}
+
+常用基数：\seqsplit{Times(n)}、\seqsplit{AtLeast(n)}、\seqsplit{AtMost(n)}；
+常用动作：\texttt{Return(v)}、\seqsplit{ReturnRef(v)}、\texttt{Throw(e)}、
+\texttt{Invoke(f)}、\seqsplit{SetArgReferee<0>(v)}。多个期望按
+LIFO（后定义者优先）匹配。用 \texttt{ON\_CALL} 设定默认返回值，与
+\texttt{EXPECT\_CALL} 的验证职责分离。
+
+\subsection{包装器：NiceMock 与 StrictMock}
+
+默认情况下，未被期望覆盖的调用会打印“uninteresting call”警告。
+\texttt{NiceMock<T>} 静默这类调用；\texttt{StrictMock<T>} 则把一切未预期
+调用直接判为失败——对安全攸关模块建议 Strict。
+
+\section{trompeloeil}
+
+trompeloeil 是头文件 mock 库（C++14），本身不绑定测试框架，常与 Catch2
+搭配。语法紧凑，期望未满足在作用域结束时报告：
+
+\cpplabel
+\begin{lstlisting}
+#include <trompeloeil.hpp>
+#include <catch2/catch_test_macros.hpp>
+
+class MockPriceRepository : public IPriceRepository {
+public:
+    MAKE_MOCK1(Price, double(std::string_view), (const, override));
+};
+
+TEST_CASE("OrderService totals")
+{
+    MockPriceRepository repo;
+    REQUIRE_CALL(repo, Price("apple"))   // 期望恰好一次
+        .RETURN(3.5);
+
+    OrderService svc(repo);
+    REQUIRE(svc.Total("apple", 1) == 3.5);
+}
+\end{lstlisting}
+
+它还提供 \texttt{ALLOW\_CALL}（允许多次）、\texttt{FORBID\_CALL}、
+\texttt{.TIMES(n)}、\texttt{.WITH(expr)} 以及调用序列对象
+（\texttt{trompeloeil::sequence}）验证先后顺序。
+
+\section{FakeIt 与 HippoMocks}
+
+FakeIt 以“无需继承样板”著称——直接用模板为接口生成 mock，内部通过操纵
+虚表实现，但因此要求接口只有单继承的虚方法：
+
+\cpplabel
+\begin{lstlisting}
+#include <fakeit.hpp>
+
+fakeit::Mock<IPriceRepository> mock;          // 无需派生类
+fakeit::When(Method(mock, Price)).Return(3.5);
+
+IPriceRepository& repo = mock.get();
+OrderService svc(repo);
+// ... 调用被测代码 ...
+fakeit::Verify(Method(mock, Price).Using("apple")).Exactly(2);
+\end{lstlisting}
+
+HippoMocks 同样是单头文件，兼容老标准与嵌入式环境（不依赖 RTTI），
+API 基于 \texttt{MockRepository}：
+
+\cpplabel
+\begin{lstlisting}
+#include <hippomocks.h>
+
+HippoMocks::MockRepository mocks;
+auto* repo = mocks.Mock<IPriceRepository>();
+mocks.OnCall(repo, IPriceRepository::Price).Return(3.5);
+// 作用域结束时自动验证
+\end{lstlisting}
+
+\section{C\#：Moq 与 NSubstitute}
+
+托管平台有运行时代理，mock 不需要任何样板类。Moq 基于表达式树：
+
+\csharplabel
+\begin{lstlisting}
+var repo = new Mock<IPriceRepository>();
+repo.Setup(r => r.Price("apple")).Returns(3.5);
+
+var svc = new OrderService(repo.Object);      // .Object 取代理实例
+Assert.Equal(7.0, svc.Total("apple", 2), 10);
+
+repo.Verify(r => r.Price("apple"), Times.Exactly(2));
+// It.IsAny<string>() / It.Is<int>(i => i > 0) 等匹配器
+\end{lstlisting}
+
+NSubstitute 走“自然语法”路线，用 \texttt{Received} 验证：
+
+\csharplabel
+\begin{lstlisting}
+var repo = Substitute.For<IPriceRepository>();
+repo.Price("apple").Returns(3.5);
+
+var svc = new OrderService(repo);             // 代理即接口
+Assert.Equal(7.0, svc.Total("apple", 2), 10);
+
+repo.Received(2).Price("apple");
+\end{lstlisting}
+
+\section{Java：Mockito}
+
+Mockito 是 Java 事实标准，JUnit 5 下通过扩展注入 mock：
+
+\javalabel
+\begin{lstlisting}
+@ExtendWith(MockitoExtension.class)
+class OrderServiceTest {
+
+    @Mock IPriceRepository repo;          // 自动生成代理
+    @InjectMocks OrderService svc;        // 构造注入 mock
+
+    @Test
+    void totalUsesRepositoryPrice() {
+        when(repo.price("apple")).thenReturn(3.5);
+
+        assertEquals(7.0, svc.total("apple", 2), 1e-9);
+
+        verify(repo, times(2)).price("apple");
+        // ArgumentCaptor 可捕获实参做进一步断言
+    }
+}
+\end{lstlisting}
+
+Mockito 5 起默认可以 mock final 类与方法（inline mock maker）；静态方法
+用 \texttt{mockStatic} 在 try-with-resources 块内打桩。
+
+\section{Mock 框架横向对比}
+
+{
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\begin{longtable}{p{2.4cm}p{2.4cm}p{3.2cm}p{2.8cm}p{3.2cm}}
+\toprule
+框架 & 语言 & 形态 & mock 对象要求 & 备注 \\
+\midrule
+\endfirsthead
+\toprule
+框架 & 语言 & 形态 & mock 对象要求 & 备注 \\
+\midrule
+\endhead
+GoogleMock & C++ & 随 GTest & 继承 + 虚函数 & 生态最大， matcher 丰富 \\
+trompeloeil & C++ & 头文件 & 继承 + 虚函数 & 框架无关，序列验证好 \\
+FakeIt & C++ & 头文件 & 纯虚接口（单继承） & 无样板，虚表技巧 \\
+HippoMocks & C++ & 头文件 & 虚函数 & 嵌入式友好，无 RTTI \\
+Moq & C\# & NuGet & 接口/虚成员 & 表达式树 API \\
+NSubstitute & C\# & NuGet & 接口/虚成员 & 自然语法 \\
+Mockito & Java & Maven/Gradle & 类/接口（含 final） & inline mock，行业标准 \\
+\bottomrule
+\end{longtable}
+}
+
+\begin{bestpractice}{Mock 使用原则}
+只 mock 你拥有的接口，第三方库类型用包装层隔离后再 mock；优先验证行为
+（“是否调用了支付”）而非实现细节（“是否调用了三次内部函数”）；期望写得
+越精确越脆，关键路径用精确匹配，辅助调用放宽为 \texttt{NiceMock} 或干脆
+不验证。
+\end{bestpractice}
+
+\section{灰色手段：私有成员访问与 C++26 反射}
+
+遗留代码常把关键状态藏在 private 后面，测试想直接验证它。社区里最
+常见的 hack 是宏替换关键字：
+
+\cpplabel
+\begin{lstlisting}
+#define private public
+#define protected public
+#include "legacy_cache.h"   // 此后私有成员“可见”
+#undef private
+#undef protected
+
+TEST(LegacyCache, evicts_lru_entry) {
+    LegacyCache cache(2);
+    cache.put("a", 1); cache.put("b", 2); cache.put("c", 3);
+    EXPECT_EQ(cache.entries_.size(), 2u);   // 直接读私有成员
+}
+\end{lstlisting}
+
+这本质上是\textbf{非规范行为}：把关键字定义为宏违反标准要求，布局
+兼容性、ODR 与 ABI 都没有任何保证。不过在平台与编译器固定、头文件
+完全自有的项目里，它确实稳定可用，作为改造遗留代码的过渡手段可以
+接受，但应登记为技术债。更正统的替代方案依次是：为测试夹具添加
+\texttt{friend} 声明、提供受限的测试访问接口、或干脆借第 7 章的注入
+重构设计。
+
+C++26 的静态反射（\seqsplit{\texttt{std::meta}}）落地后，建议改用
+反射在编译期合法地枚举与访问成员，替代这类宏技巧：
+
+\cpplabel
+\begin{lstlisting}
+// C++26 反射示意（编译器支持仍在推进中）
+constexpr auto members = nonstatic_data_members_of(^LegacyCache);
+// 编译期拿到成员句柄，测试可受控访问而无需宏替换
+\end{lstlisting}
+
+但要管理预期：C++26 反射是\textbf{静态反射}——它能在编译期检视类型、
+生成代码，却不能观察运行时对象状态。单元测试的核心痛点在于运行时替换
+与观测（虚函数替身、系统调用拦截），这些静态反射都解决不了；它改善
+的主要是测试代码的编写与访问方式，对 UT 的整体改善有限。
+
+% ================================================================
+\chapter{依赖注入：可测试性设计的基石}
+% ================================================================
+
+上一章说过“先引入依赖注入，再谈 mock”。本章把这句话展开：
+依赖注入（Dependency Injection，DI）是什么，它为什么决定了单元测试
+能不能写，以及在 C++、C\#、Java 中分别如何落地。
+
+\section{为什么硬编码依赖无法测试}
+
+先看一个典型反例：协作者全部在类内部创建，全局单例也被直接伸手获取：
+
+\cpplabel
+\begin{lstlisting}
+// 反例：依赖全部硬编码
+class OrderService {
+public:
+    bool placeOrder(const Order& order) {
+        PaymentClient pay;                        // 直接构造
+        pay.charge(order.amount());
+        SmtpMailer mailer;                        // 直接构造
+        mailer.send(order.customerEmail(), "...");
+        Config::instance().auditLog(order.id());  // 伸手拿单例
+        return true;
+    }
+};
+\end{lstlisting}
+
+测试这个版本的 \texttt{placeOrder}，就不得不真的连接支付网关、真的发送
+邮件，还依赖全局配置状态；任何一环不可用，测试都写不了。问题不在逻辑，
+而在于类\textbf{自己创建依赖}，测试没有介入点。
+
+\begin{warning}{硬编码依赖的特征}
+依赖关系隐藏在实现内部，外部无从替换；单元测试退化为集成测试，变慢、
+变脆，也无法模拟异常分支（支付失败、邮件服务器不可用）。
+\end{warning}
+
+\section{三种注入方式}
+
+解法只有一句话：把“内部创建依赖”改成“外部传入依赖”。传入的方式
+即注入方式。
+
+\subsection{构造器注入（首选）}
+
+依赖作为构造参数声明，对象构造完成即可用：
+
+\cpplabel
+\begin{lstlisting}
+class OrderService {
+public:
+    OrderService(std::shared_ptr<IPayment> payment,
+                 std::shared_ptr<IMailer> mailer)
+        : payment_(std::move(payment)), mailer_(std::move(mailer)) {}
+
+    bool placeOrder(const Order& order) {
+        if (!payment_->charge(order.amount())) return false;
+        mailer_->send(order.customerEmail(), "订单成功");
+        return true;
+    }
+private:
+    std::shared_ptr<IPayment> payment_;
+    std::shared_ptr<IMailer>  mailer_;
+};
+\end{lstlisting}
+
+构造器注入的好处有三：依赖关系在签名上一目了然，不存在“忘了注入”；
+对象一经构造即处于有效状态；测试时一行就能塞进替身：
+
+\cpplabel
+\begin{lstlisting}
+TEST(OrderService, payment_fail_should_not_send_email) {
+    auto payment = std::make_shared<FakePayment>(/* charge 结果 */ false);
+    auto mailer  = std::make_shared<RecordingMailer>();
+    OrderService svc(payment, mailer);
+
+    EXPECT_FALSE(svc.placeOrder(makeTestOrder()));
+    EXPECT_TRUE(mailer->sentMessages().empty());
+}
+\end{lstlisting}
+
+\subsection{Setter 注入}
+
+依赖在构造之后经成员函数注入，适合可选的、后绑定的依赖：
+
+\cpplabel
+\begin{lstlisting}
+class MetricsReporter {
+public:
+    void setSink(std::shared_ptr<IMetricsSink> sink)
+    { sink_ = std::move(sink); }
+
+    void report(const Event& e);   // sink_ 未设置时丢弃或写日志
+private:
+    std::shared_ptr<IMetricsSink> sink_;
+};
+\end{lstlisting}
+
+代价是对象可能处于“未完整”状态，每次使用都要做空检查或依赖文档约定。
+除非依赖确实可选，否则优先构造器注入。
+
+\subsection{接口注入}
+
+由依赖方提供注入方法，调用者把自己交给依赖注册。这种风格在 C++ 中
+很少见，在早期 Java 的 Injector 流派中出现过，此处不展开。
+
+\section{C++ 的三种注入实现形态}
+
+DI 的本质是“让依赖可替换”，而 C++ 的替换手段比托管语言更多样。
+
+\subsection{虚接口 + 智能指针（运行时多态）}
+
+最正统的方式：定义纯虚接口，用基类指针注入，测试时换成假实现。
+前文的 \texttt{IPayment}、\texttt{IMailer} 即是。代价是虚表间接开销
+与接口定义的样板，对多数业务代码可以忽略。
+
+\subsection{模板注入（编译期多态）}
+
+用模板参数化依赖类型，不需要虚函数：
+
+\cpplabel
+\begin{lstlisting}
+template <typename Payment, typename Mailer>
+class OrderServiceT {
+public:
+    OrderServiceT(Payment& payment, Mailer& mailer)
+        : payment_(payment), mailer_(mailer) {}
+
+    bool placeOrder(const Order& order) {
+        if (!payment_.charge(order.amount())) return false;
+        mailer_.send(order.customerEmail(), "订单成功");
+        return true;
+    }
+private:
+    Payment& payment_;
+    Mailer& mailer_;
+};
+
+using ProdOrderService = OrderServiceT<PaymentClient, SmtpMailer>;
+
+TEST(OrderService, fake_injection) {
+    FakePayment payment(/* charge 结果 */ true);
+    RecordingMailer mailer;
+    OrderServiceT<FakePayment, RecordingMailer> svc(payment, mailer);
+    EXPECT_TRUE(svc.placeOrder(makeTestOrder()));
+}
+\end{lstlisting}
+
+这种方式零运行时开销，依赖无需定义接口，签名匹配即可（鸭子类型）；
+失去的是异构存放与运行时替换能力，模板实参还会造成上下层编译期耦合。
+高频低延迟的代码，例如引擎核心路径，往往偏好这一形态。
+
+\subsection{\seqsplit{std::function} 注入（轻量接缝）}
+
+对时钟、随机数、单个回调这类小依赖，定义接口太重，一个
+\seqsplit{\texttt{std::function}} 就够了：
+
+\cpplabel
+\begin{lstlisting}
+class RetryPolicy {
+public:
+    using Clock = std::function<std::chrono::steady_clock::time_point()>;
+    explicit RetryPolicy(Clock now = std::chrono::steady_clock::now)
+        : now_(std::move(now)) {}
+    bool expired(std::chrono::milliseconds timeout) const;
+private:
+    Clock now_;
+};
+
+TEST(RetryPolicy, expired) {
+    auto t = std::chrono::steady_clock::time_point{};
+    RetryPolicy policy([&] { return t; });      // 注入可控时间
+    t += std::chrono::milliseconds(500);
+    EXPECT_FALSE(policy.expired(std::chrono::seconds(1)));
+    t += std::chrono::milliseconds(600);
+    EXPECT_TRUE(policy.expired(std::chrono::seconds(1)));
+}
+\end{lstlisting}
+
+这是处理“时间依赖”最经济的办法，远好过打桩系统 API。
+
+\subsection{\seqsplit{std::function} 与模板 Func：同一种接缝}
+
+把依赖写成模板参数 \seqsplit{\texttt{typename Func}}，与
+\seqsplit{\texttt{std::function}} 注入本质相同——前者是编译期版本，
+后者是类型擦除的运行时版本，测试时两者都可直接塞 lambda：
+
+\cpplabel
+\begin{lstlisting}
+// 编译期版本：零开销，但调用方被模板化
+template <typename Func>
+bool retry(Func&& op, int times);
+
+// 运行时版本：可存储、可替换，带少量间接开销
+using Op = std::function<bool()>;
+bool retry(const Op& op, int times);
+
+// 测试代码完全一致
+retry([] { return fakeDevice.ready(); }, 3);
+\end{lstlisting}
+
+选型依据与“虚接口对模板注入”一致：热路径、头文件库用模板 Func；
+需要把回调存进成员、运行时替换或多态容器存放，用
+\seqsplit{\texttt{std::function}}。两者没有高下之分，按场景使用即可。
+
+\section{反模式：单例、全局状态与服务定位器}
+
+\begin{itemize}
+  \item \textbf{单例}：相当于隐藏的构造器注入，依赖不出现在签名上；
+        全局状态还会让测试互相污染，甲测试写入的数据被乙测试读到。
+        确需单例时，至少为测试保留重置或注入实例的入口。
+  \item \textbf{全局变量与自由函数}：直接调用 \texttt{getenv}、时间、
+        网络等同样是硬编码，常规解法是包一层接口或
+        \seqsplit{\texttt{std::function}} 接缝。
+  \item \textbf{服务定位器}：形如 \seqsplit{\texttt{locator.get<IMailer>()}}，
+        从全局容器取依赖，本质仍是伪装的全局状态，依赖清单再次被隐藏；
+        在 C\#/Java 社区也已被主流实践淘汰。
+\end{itemize}
+
+\begin{guideline}{判断 DI 的经验法则}
+只看类签名：凡是影响行为的协作者都出现在构造参数或方法参数里，就是
+可测试的；凡是需要在类内部“伸手去拿”的东西，就是测试障碍。
+\end{guideline}
+
+\section{C++ DI 容器：Boost.DI 与 Google Fruit}
+
+托管语言有 Spring、ASP.NET Core 这类成熟 DI 容器，C++ 没有同等地位
+的主流方案，手工构造器注入是绝对主流。只有当对象图嵌套很深、组装代码
+成为样板时，才值得考虑容器。
+
+\subsection{Boost.DI}
+
+头文件实现，借助编译期推导自动组装依赖图：
+
+\cpplabel
+\begin{lstlisting}
+#include <boost/di.hpp>
+namespace di = boost::di;
+
+// 生产环境组装
+auto injector = di::make_injector(
+    di::bind<IPayment>.to<PaymentClient>(),
+    di::bind<IMailer>.to<SmtpMailer>()
+);
+auto service = injector.create<std::unique_ptr<OrderService>>();
+
+// 测试环境：只换绑定
+auto testInjector = di::make_injector(
+    di::bind<IPayment>.to<FakePayment>(),
+    di::bind<IMailer>.to<RecordingMailer>()
+);
+\end{lstlisting}
+
+\subsection{Google Fruit}
+
+Google 出品的 DI 框架，用 \texttt{INJECT} 宏声明注入点，支持
+assisted injection 与 partial injection：
+
+\cpplabel
+\begin{lstlisting}
+#include <fruit/fruit.h>
+
+class SmtpMailer : public IMailer {
+public:
+    INJECT(SmtpMailer()) {}
+    void send(const std::string& to, const std::string& body) override;
+};
+
+fruit::Component<IMailer> productionComponent() {
+    return fruit::createComponent().bind<IMailer, SmtpMailer>();
+}
+fruit::Component<IMailer> testComponent() {
+    return fruit::createComponent().bind<IMailer, FakeMailer>();
+}
+
+// 测试中
+fruit::Injector<IMailer> injector(testComponent);
+IMailer* mailer = injector.get<IMailer*>();
+\end{lstlisting}
+
+\begin{note}{要不要引入容器？}
+社区共识是：几十个类以内的 C++ 项目，手写构造器注入更清晰，也没有
+学习成本；只有当组装图复杂、且需要多套环境切换（生产/测试/命令行工具）
+时容器才划算。滥用容器反而会把依赖图藏得更深。
+\end{note}
+
+\section{DI 与 Mock 的配合：完整示例}
+
+DI 为 mock 打开了大门。把构造器注入的 \texttt{OrderService} 与
+GoogleMock 结合，即可同时验证结果与交互行为：
+
+\cpplabel
+\begin{lstlisting}
+class MockPayment : public IPayment {
+public:
+    MOCK_METHOD(bool, charge, (int amount), (override));
+};
+class MockMailer : public IMailer {
+public:
+    MOCK_METHOD(void, send,
+                (const std::string&, const std::string&), (override));
+};
+
+TEST(OrderService, success_path) {
+    auto payment = std::make_shared<MockPayment>();
+    auto mailer  = std::make_shared<MockMailer>();
+    EXPECT_CALL(*payment, charge(1200)).WillOnce(testing::Return(true));
+    EXPECT_CALL(*mailer, send("user@example.com", testing::_));
+
+    OrderService svc(payment, mailer);
+    EXPECT_TRUE(svc.placeOrder(makeOrder(/* amount */ 1200)));
+}   // Mock 析构时自动校验未满足的期望
+\end{lstlisting}
+
+Mock 一章的手工 Fake 与本节的 GMock 是同一枚硬币的两面：\textbf{DI 决定
+能不能替换，Fake 还是 Mock 决定替换成什么}。
+
+\section{C\# 与 Java：构造器注入是默认约定}
+
+托管语言里，DI 早已是生态级约定，单元测试因此格外自然：直接构造被测
+对象，把 mock 当参数传进去即可。
+
+\subsection{C\#：ASP.NET Core DI}
+
+容器负责生产环境组装；单元测试要么绕过容器直接 \texttt{new}，要么替换
+容器中的注册：
+
+\csharplabel
+\begin{lstlisting}
+// Program.cs：生产注册
+builder.Services.AddScoped<IPayment, StripePayment>();
+builder.Services.AddSingleton<IMailer, SmtpMailer>();
+
+// 单元测试：绕过容器，直接注入 Moq 的 mock
+var payment = new Mock<IPayment>();
+var mailer  = new Mock<IMailer>();
+payment.Setup(p => p.Charge(1200)).Returns(true);
+
+var sut = new OrderService(payment.Object, mailer.Object);
+Assert.True(sut.PlaceOrder(MakeOrder(1200)));
+mailer.Verify(m => m.Send("user@example.com", It.IsAny<string>()));
+\end{lstlisting}
+
+\subsection{Java：Spring}
+
+Spring 提倡构造器注入，单元测试同样不依赖容器：
+
+\javalabel
+\begin{lstlisting}
+@Service
+public class OrderService {
+    private final Payment payment;   // 构造器注入
+    private final Mailer mailer;
+
+    public OrderService(Payment payment, Mailer mailer) {
+        this.payment = payment;
+        this.mailer = mailer;
+    }
+}
+
+// 测试：Mockito mock + 直接构造
+class OrderServiceTest {
+    @Test
+    void sendsEmailOnSuccess() {
+        Payment payment = mock(Payment.class);
+        Mailer mailer = mock(Mailer.class);
+        when(payment.charge(1200)).thenReturn(true);
+
+        var sut = new OrderService(payment, mailer);
+        assertTrue(sut.placeOrder(makeOrder(1200)));
+        verify(mailer).send(eq("user@example.com"), anyString());
+    }
+}
+\end{lstlisting}
+
+需要替换容器内 bean 的是集成测试层：C\# 用测试工厂
+\seqsplit{\texttt{WebApplicationFactory}} 加注册替换，Java 用
+\seqsplit{\texttt{@MockBean}} 或 \seqsplit{\texttt{@TestConfiguration}}。
+普通单元测试不应为此启动容器。
+
+\section{引擎与遗留代码中的 DI}
+
+在 Unreal Engine 这类大型框架中，DI 不以容器形式出现，原则仍然适用：
+避免直接伸手取 \seqsplit{\texttt{GEngine}} 等全局对象，优先通过构造
+参数、\seqsplit{\texttt{UPROPERTY}} 配置或 Subsystem 注入引用；
+Automation 测试里手工构造被测对象，尽量注入可控的协作者。U++ 同样
+建议把协作者经构造参数传入，autotest 控制台包里才能方便地组装 Fake。
+
+遗留代码的常见路径是\textbf{接缝技术}：不追求一次重写，先把最难测试
+的外部调用（时间、网络、文件系统）包进接口或 \seqsplit{\texttt{std::function}}，
+在调用点注入，再逐步扩大接缝。
+
+\section{注入方式对比}
+
+{
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{p{2.7cm}p{2.9cm}p{2.7cm}p{4.5cm}}
+\toprule
+方式 & 机制 & 运行时开销 & 适用场景 \\
+\midrule
+\endfirsthead
+\toprule
+方式 & 机制 & 运行时开销 & 适用场景 \\
+\midrule
+\endhead
+构造器 + 虚接口 & 运行时多态 & 虚表间接 & 通用业务代码，跨模块 \\
+模板注入 & 编译期多态 & 零 & 性能热点，头文件库 \\
+\seqsplit{std::function} & 类型擦除可调用对象 & 小 & 时钟、随机数、单回调 \\
+Boost.DI / Fruit & 容器组装 & 近零（编译期） & 复杂对象图、多环境 \\
+单例 / 全局 & 无注入 & --- & 反模式，尽量避免 \\
+\bottomrule
+\end{longtable}
+}
+
+\begin{bestpractice}{DI 实践清单}
+所有协作者出现在构造参数中；接口定义在使用方而非实现方；时间与随机数
+永远注入；测试中不新增全局单例；手工注入优先，组装代码确实成为负担时
+再考虑容器。
+\end{bestpractice}
+
+% ================================================================
+\chapter{代码覆盖率}
+% ================================================================
+
+\section{覆盖率指标}
+
+\begin{center}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{p{3.0cm}p{10.0cm}}
+\toprule
+指标 & 含义 \\
+\midrule
+\endfirsthead
+\toprule
+指标 & 含义 \\
+\midrule
+\endhead
+行覆盖率 & 被执行到的源码行比例（最常用，但可能高估） \\
+语句覆盖率 & 被执行到的语句比例，与行覆盖率大体相当 \\
+函数覆盖率 & 被调用过的函数比例 \\
+分支覆盖率 & if/switch 每个分支走向的比例（更严格） \\
+条件覆盖率 & 布尔子表达式取真/取假的比例 \\
+MC/DC & 每个条件独立影响判定结果，适航 DO-178C 要求 \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+\begin{note}
+覆盖率高不等于测试好：100\% 行覆盖可以全部来自无断言的“冒烟调用”。
+覆盖率的作用是\textbf{发现没测到的代码}，而不是证明测试充分。把它当作
+下限检查与盲区探测器，配合变异测试（mutation testing）评估测试有效性。
+\end{note}
+
+\section{GCC：gcov 与 lcov}
+
+GCC 用 \texttt{--coverage} 一步完成插桩与链接；运行测试生成
+\texttt{.gcda} 计数文件；lcov 汇总并生成 HTML 报告：
+
+\bashlabel
+\begin{lstlisting}
+g++ -O0 -g --coverage math_utils.cpp test_math.cpp -o tests
+./tests
+
+lcov --capture --directory . --output-file coverage.info \
+     --rc lcov_branch_coverage=1          # 开启分支统计
+lcov --remove coverage.info '/usr/*' '*/test_*' \
+     --output-file app.info               # 剔除系统与测试代码
+genhtml app.info --output-directory coverage_html
+\end{lstlisting}
+
+\begin{warning}{覆盖率构建必须低优化}
+\texttt{-O2} 及以上会内联、合并、消除代码，使行覆盖数据失真甚至无法
+插桩。覆盖率目标请用 \texttt{-O0 -g} 单独构建，不要复用发布产物。
+\end{warning}
+
+\section{Clang：source-based coverage}
+
+Clang 推荐使用 source-based coverage：编译期记录映射、运行期采样，
+数据精确且报告能力强大：
+
+\bashlabel
+\begin{lstlisting}
+clang++ -O0 -g -fprofile-instr-generate -fcoverage-mapping \
+        math_utils.cpp test_math.cpp -o tests
+
+LLVM_PROFILE_FILE="tests.profraw" ./tests
+llvm-profdata merge -sparse tests.profraw -o tests.profdata
+
+llvm-cov report ./tests -instr-profile=tests.profdata   # 摘要
+llvm-cov show   ./tests -instr-profile=tests.profdata \
+    --format=html -output-dir=coverage_html             # 逐行报告
+\end{lstlisting}
+
+\texttt{llvm-cov export -format=lcov} 可导出 lcov 格式，接入 SonarQube、
+Codecov 等平台。
+
+\section{Windows：OpenCppCoverage 与 Visual Studio}
+
+MSVC 二进制没有 gcov 插桩，可用开源的 OpenCppCoverage 对未优化的
+Debug 可执行文件做动态插桩：
+
+\cmdlabel
+\begin{lstlisting}
+OpenCppCoverage.exe --sources E:\proj\src --modules E:\proj\build\* ^
+  --export_type html:report ^
+  -- test.exe
+\end{lstlisting}
+
+\texttt{--sources}/\texttt{--modules} 用于过滤统计范围；还支持
+\texttt{--input\_coverage} 合并多次运行。Visual Studio Enterprise 则内建
+代码覆盖率（“测试 → 分析代码覆盖率”），输出 \texttt{.coverage} 文件，
+但仅限 Enterprise 版本。
+
+\section{移动端覆盖率}
+
+\subsection{Android（NDK）}
+
+NDK 的 clang 支持完整的 Clang 覆盖率管线：在插桩参数下交叉编译，设备上
+运行后把 \texttt{.profraw} 拉回主机，用主机端 llvm 工具解析（需要保留未
+strip 的目标二进制）：
+
+\bashlabel
+\begin{lstlisting}
+# CMAKE_CXX_FLAGS 追加: -fprofile-instr-generate -fcoverage-mapping
+adb shell "cd /data/local/tmp && ./unit_tests"
+adb pull /data/local/tmp/default.profraw .
+llvm-profdata merge -sparse default.profraw -o tests.profdata
+llvm-cov show ./build-android/unit_tests -instr-profile=tests.profdata
+\end{lstlisting}
+
+\subsection{iOS}
+
+Xcode 对 XCTest 目标内建覆盖率支持：在 Edit Scheme 的 Test、
+Options 页勾选“Gather coverage data”，运行测试后即可在
+Report Navigator 中按文件逐行查看；也可通过 \texttt{xcodebuild}
+导出 xcresult，再用 \texttt{xcrun llvm-cov} 解析。由于 C++ 测试
+静态链接进 XCTest bundle，覆盖率统计自然包含 C++ 源文件。
+
+\section{C\#：coverlet 与 ReportGenerator}
+
+.NET 社区标准是 coverlet（采集）+ ReportGenerator（出报告）：
+
+\bashlabel
+\begin{lstlisting}
+# 方式一: VSTest 采集器 (输出 cobertura XML)
+dotnet test --collect:"XPlat Code Coverage" \
+            --results-directory ./coverage
+
+# 方式二: MSBuild 属性
+dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
+
+# 生成 HTML 报告
+dotnet tool install -g dotnet-reportgenerator-globaltool
+reportgenerator -reports:"coverage/**/coverage.cobertura.xml" \
+                -targetdir:"coverage/html" -reporttypes:Html
+\end{lstlisting}
+
+\section{Java：JaCoCo}
+
+JaCoCo 以 Java agent 字节码插桩，零源码侵入。Gradle 示例含报告与
+阈值校验：
+
+\groovylabel
+\begin{lstlisting}
+plugins {
+    id 'java'
+    id 'jacoco'
+}
+
+test {
+    finalizedBy jacocoTestReport        // 测试后自动出报告
+}
+
+jacocoTestReport {
+    reports {
+        xml.required  = true            // 供 Sonar/CI 平台
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit { minimum = 0.80 }    // 行覆盖低于 80% 即失败
+        }
+    }
+}
+check.dependsOn jacocoTestCoverageVerification
+\end{lstlisting}
+
+Maven 用 \seqsplit{jacoco-maven-plugin} 的 prepare-agent / report / check
+三个目标达成同样效果。
+
+\section{CI 集成与阈值策略}
+
+\begin{bestpractice}{落地建议}
+\begin{itemize}
+  \item 覆盖率工具全部纳入 CI：PR 显示增量覆盖率（diff coverage）比总
+        覆盖率更能阻止“越摊越薄”；
+  \item 阈值分模块设定：核心算法模块 90\%+，胶水代码 60\% 即可，一刀切
+        的 80\% 往往逼出无断言的凑数测试；
+  \item 分支覆盖比行覆盖更能暴露遗漏的 else 分支，关键模块建议同时
+        开启；
+  \item 报告产物（HTML/lcov/cobertura）上传 CI artifact，并结合
+        Codecov、SonarQube 等平台做趋势跟踪。
+\end{itemize}
+\end{bestpractice}
+
+\section{覆盖率工具速查}
+
+{
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{p{2.6cm}p{3.2cm}p{3.8cm}p{4.2cm}}
+\toprule
+平台 & 工具 & 插桩方式 & 报告 \\
+\midrule
+\endfirsthead
+\toprule
+平台 & 工具 & 插桩方式 & 报告 \\
+\midrule
+\endhead
+GCC & gcov + lcov & \seqsplit{--coverage} 编译期 & HTML (genhtml)、lcov \\
+Clang & llvm-cov & 编译期映射 & HTML/lcov/JSON \\
+MSVC & OpenCppCoverage & 运行期动态 & HTML/XML \\
+MSVC & VS Enterprise & 运行期 & .coverage \\
+Android & clang + llvm-cov & 编译期 & 主机端解析 profraw \\
+iOS & Xcode & 编译期 & Report Navigator \\
+C\# & coverlet & IL 插桩 & cobertura/XML \\
+Java & JaCoCo & agent 字节码 & HTML/XML \\
+\bottomrule
+\end{longtable}
+}
+
+% ================================================================
+\chapter{总结}
+% ================================================================
+
+C++ 单元测试的版图可以浓缩为五条主线，而贯穿全书的判据只有一条：
+单元测试只验证纯逻辑，一切环境强相关的调用——非 localhost 网络、外设、
+不受用例控制的文件——都必须交给替身。
+
+\begin{enumerate}
+  \item \textbf{框架选型}：Google Test 生态最完整，Catch2 表达力
+        最好，doctest 最轻，Qt 项目用 Qt Test；框架差异主要在断言风格、
+        参数化方式与编译成本。
+  \item \textbf{平台执行}：桌面直接运行 + CTest；Android 交叉编译后
+        adb 直跑或 APK 宿主；iOS 静态库 + XCTest 宿主；UE 用 Automation/
+        Functional/Gauntlet 三层，U++ 用独立控制台包 + ASSERT 约定。
+        入口不同，但“同一份测试源码多端复用”是共同目标。
+  \item \textbf{Mock}：C++ 只能靠虚函数或模板 seam，GMock、trompeloeil、
+        FakeIt 各有所长；C\#/Java 借助运行时代理几乎零样板。绕不开系统
+        边界时用 LD\_PRELOAD、链接期替换与内核调用覆盖；
+        \seqsplit{\texttt{\#define private public}} 之类灰色手段只能作为
+        遗留代码的过渡，C++26 静态反射是更体面的替代，但对 UT 改善有限。
+  \item \textbf{依赖注入}：一切替身的前提。构造器注入是首选，模板注入
+        与 \seqsplit{std::function} 覆盖性能与轻量场景，模板 Func 与
+        \seqsplit{std::function} 本就是同一种接缝的两种形态；C\#/Java 的
+        容器生态让这一步几乎隐形，C++ 则靠手工注入保持同样的可测试性。
+  \item \textbf{覆盖率}：GCC/Clang 编译期插桩、MSVC 动态插桩、托管平台
+        字节码插桩，殊途同归于 lcov/cobertura/XML 等通用报告格式，最终
+        汇入 CI 的阈值检查与趋势看板。
+\end{enumerate}
+
+对团队的最终建议：先让测试\textbf{跑起来}（一个框架 + 一条 CI 命令），
+再让测试\textbf{跑得全}（移动端与引擎入口），最后让测试\textbf{跑得值}
+（覆盖率门槛 + mock 规范化 + 变异测试）。工具链的完善是渐进过程，而
+“每次提交都有自动化验证”这一习惯本身，才是质量收益的最大来源。
+
+\end{document}

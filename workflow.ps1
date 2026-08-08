@@ -3,7 +3,7 @@
 .SYNOPSIS
     C/C++ LaTeX 参考手册 — 项目工作流
 .DESCRIPTION
-    统一管理 17 个子项目的编译、清理、状态检查。
+    统一管理 18 个子项目的编译、清理、状态检查。
 .PARAMETER Action
     操作类型: build-all, build, clean-all, clean, status, list, open
 .PARAMETER Project
@@ -51,6 +51,7 @@ $projects = [ordered]@{
     'ExternC'       = @{ dir = 'extern C use in other language';  tex = 'externC.tex';                          job = 'externC' }
     'OpOverload'    = @{ dir = 'Operator Overloading';            tex = 'operator_overloading.tex';             job = 'operator_overloading' }
     'NewDelete'     = @{ dir = 'NewDelete';                     tex = 'new_delete.tex';                     job = 'new_delete' }
+    'UnitTest'      = @{ dir = 'Unit Testing';                    tex = 'unit_testing.tex';                     job = 'unit_testing' }
 }
 
 # ─── 辅助函数 ───
