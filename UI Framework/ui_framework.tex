@@ -1,0 +1,1556 @@
+% !TEX program = xelatex
+% C++ GUI 框架：MFC / WinUI 3 / wxWidgets / Qt / UE
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ===== 页面 =====
+\usepackage[margin=2.5cm]{geometry}
+
+% ===== 字体 =====
+\usepackage{fontspec}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}
+  {\setmonofont{Consolas}}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+
+% ===== 颜色 =====
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+% -- 代码基础 --
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{linenumgray}{HTML}{999999}
+% -- C / C++ --
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{cppheadbg}{HTML}{2E4057}
+% -- C\# --
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+\definecolor{csharpheadbg}{HTML}{68217A}
+% -- XAML --
+\definecolor{xamlheadbg}{HTML}{0078D4}
+% -- QML --
+\definecolor{qmlheadbg}{HTML}{41CD52}
+% -- 章节标题 --
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ===== 代码高亮 =====
+\usepackage{listings}
+
+% ---- C++ ----
+\lstdefinestyle{cppstyle}{%
+  language=C++,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    override,final,noexcept,constexpr,consteval,constinit,
+    decltype,auto,concept,requires,co_await,co_yield,co_return,
+    nullptr,sizeof...,static_assert,thread_local,alignas,alignof,
+    namespace,using,template,typename,virtual,explicit,friend,
+    mutable,volatile,register,extern,inline,
+    std,string,vector,map,unordered_map,set,unordered_set,
+    unique_ptr,shared_ptr,weak_ptr,optional,variant,any,
+    tuple,pair,array,span,string_view,
+    cin,cout,cerr,endl,
+    move,forward,swap,make_unique,make_shared,
+    begin,end,size,empty,push_back,emplace_back,
+    find,sort,copy,transform,for_each,accumulate
+  },
+  deletekeywords={int,char,float,double,bool,void,long,short,unsigned,signed},
+  emph={%
+    int,char,float,double,bool,void,long,short,unsigned,signed,
+    int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,
+    size_t,ptrdiff_t,intptr_t,uintptr_t,wchar_t,char8_t,char16_t,char32_t
+  },
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- C\# ----
+\lstdefinelanguage{CSharp}{%
+  morekeywords={%
+    abstract,as,base,bool,break,byte,case,catch,char,checked,class,const,
+    continue,decimal,default,delegate,do,double,else,enum,event,explicit,
+    extern,false,finally,fixed,float,for,foreach,goto,if,implicit,in,
+    int,interface,internal,is,lock,long,namespace,new,null,object,operator,
+    out,override,params,private,protected,public,readonly,ref,return,sbyte,
+    sealed,short,sizeof,stackalloc,static,string,struct,switch,this,throw,
+    true,try,typeof,uint,ulong,unchecked,unsafe,ushort,using,var,void,
+    volatile,while,async,await,record,required,file,init,nint,nuint
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]@",
+}
+\lstdefinestyle{csharpstyle}{%
+  language=CSharp,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{csharpkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={String,Object,Task,List,Dictionary,IEnumerable,ObservableCollection},
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- XAML ----
+\lstdefinelanguage{XAML}{%
+  morekeywords={xmlns,x,Grid,StackPanel,Button,TextBlock,TextBox,%
+    Window,Page,NavigationWindow,Application,ResourceDictionary,%
+    Border,Canvas,DockPanel,ListView,ComboBox,CheckBox,%
+    Binding,StaticResource,DynamicResource,DataTemplate,%
+    Setter,Style,Trigger,EventTrigger,Storyboard},
+  sensitive=true,
+  morecomment=[s]{<!--}{-->},
+  morestring=[b]",
+  tag=[s]{<}{>},
+}
+\lstdefinestyle{xamlstyle}{%
+  language=XML,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=2,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  tagstyle=\color{csharpkeyword}\bfseries,
+  escapeinside={(*@}{@*)}
+}
+
+% ---- CMake ----
+\lstdefinestyle{cmakestyle}{%
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={cmake_minimum_required,project,add_executable,%
+    target_link_libraries,find_package,set,include,%
+    target_include_directories,CMAKE_PREFIX_PATH},
+  escapeinside={(*@}{@*)}
+}
+
+\lstset{style=cppstyle}
+
+% ===== 代码标签 =====
+\usepackage[most]{tcolorbox}
+
+\newcommand{\cpplabel}{%
+  \tcbox[on line,colback=cppheadbg,colframe=cppheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{C++}}
+
+\newcommand{\csharplabel}{%
+  \tcbox[on line,colback=csharpheadbg,colframe=csharpheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{C\#}}
+
+\newcommand{\xamllabel}{%
+  \tcbox[on line,colback=xamlheadbg,colframe=xamlheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{XAML}}
+
+\newcommand{\qmllabel}{%
+  \tcbox[on line,colback=qmlheadbg,colframe=qmlheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{QML}}
+
+\newcommand{\cmakelabel}{%
+  \tcbox[on line,colback=cppheadbg!80!black,colframe=cppheadbg!80!black,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{CMake}}
+
+% ===== tcolorbox =====
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ===== 章节标题 =====
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{float}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ===== 超链接 =====
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={hsmbanlance},
+  pdftitle={C++ GUI 框架参考手册},
+}
+
+% ===== 自定义命令 =====
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+
+% ====================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C++ GUI 框架参考手册\par}
+\vspace{1cm}
+{\LARGE MFC / WinUI 3 / wxWidgets / Qt / FTXUI / Unreal Engine\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+% ╔══════════════════════════════════════════════════════════════════╗
+% ║  Part I — 总览对比                                              ║
+% ╚══════════════════════════════════════════════════════════════════╝
+\part{总览对比}
+
+\chapter{C++ GUI 框架全景}
+
+\section{为什么需要 GUI 框架}
+
+C++ 作为系统级语言，原生不提供跨平台图形界面能力。Windows 上的 Win32 API 虽然直接可用，
+但消息循环、窗口类注册、GDI 绑画等样板代码繁重，开发效率极低。GUI 框架的核心价值在于：
+封装平台原生控件、统一事件模型、提供布局系统，使开发者聚焦业务逻辑。
+
+\section{框架对比总表}
+
+\begin{scriptsize}
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}>{\raggedright}p{1.8cm} >{\raggedright}p{2.4cm}
+  >{\raggedright}p{2.2cm} >{\raggedright}p{2.2cm}
+  >{\raggedright\arraybackslash}p{4.8cm}@{}}
+\toprule
+\textbf{框架} & \textbf{平台} & \textbf{语言绑定} &
+  \textbf{许可证} & \textbf{适用场景} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{框架} & \textbf{平台} & \textbf{语言绑定} &
+  \textbf{许可证} & \textbf{适用场景} \\
+\midrule
+\endhead
+MFC & Windows & C++ (原生) &
+  随 VS 商业授权 & 遗留企业应用维护、MFC 插件生态 \\
+\addlinespace
+WinUI 3 & Windows & C\# / C++/WinRT &
+  MIT & 现代 Windows 桌面、Fluent Design \\
+\addlinespace
+wxWidgets & Win / macOS / Linux & C++ (原生) &
+  wxWindows (LGPL 例外) & 需原生外观的跨平台桌面工具 \\
+\addlinespace
+Qt & Win / macOS / Linux / 嵌入式 & C++ / QML / Python &
+  LGPL 3 / GPL / 商业 & 全品类桌面与嵌入式应用 \\
+\addlinespace
+UE (Slate/UMG) & Win / macOS / Linux / Console & C++ / Blueprint &
+  Epic EULA & 游戏与实时 3D 应用的 UI 层 \\
+\addlinespace
+FTXUI & Win / macOS / Linux & C++ (原生) &
+  MIT & 终端 TUI 工具、CLI 交互界面 \\
+\bottomrule
+\end{longtable}
+\end{scriptsize}
+
+\section{选型决策树}
+
+\begin{guideline}[title=选型要点]
+\begin{enumerate}
+  \item \textbf{仅 Windows 且已有 MFC 代码}：继续用 MFC，逐步迁移到 WinUI 3 或 Qt。
+  \item \textbf{仅 Windows 新项目}：优先 WinUI 3（Fluent 设计、现代工具链），
+        或 Qt（成熟稳定、社区大）。
+  \item \textbf{跨平台 + 原生外观}：wxWidgets（轻量、无运行时依赖）。
+  \item \textbf{跨平台 + 统一外观 + 丰富控件}：Qt（生态最完整、文档最好）。
+  \item \textbf{游戏/实时 3D 内嵌 UI}：UE Slate/UMG（与渲染管线深度集成）。
+  \item \textbf{终端/CLI 交互界面}：FTXUI（纯 C++17、header-only、零依赖、跨平台终端）。
+\end{enumerate}
+\end{guideline}
+
+\begin{compare}[title=渲染方式对比]
+\begin{itemize}
+  \item \textbf{MFC}：封装 Win32 GDI/GDI+，使用系统原生控件 (HWND)。
+  \item \textbf{WinUI 3}：DirectComposition + XAML 渲染引擎 (Composition API)。
+  \item \textbf{wxWidgets}：直接调用各平台原生控件 API (Win32/Cocoa/GTK)。
+  \item \textbf{Qt Widgets}：自绘引擎 QPainter，可混合原生控件 (QStyle)。
+  \item \textbf{Qt Quick/QML}：GPU 加速场景图 (Scene Graph)，基于 OpenGL/Vulkan/Metal。
+  \item \textbf{UE Slate}：自绘即时模式 GUI，通过 RHI 直接提交 GPU 批次。
+  \item \textbf{FTXUI}：终端字符网格渲染，通过 ANSI 转义序列输出到 stdout，无 GPU 依赖。
+\end{itemize}
+\end{compare}
+
+% ╔══════════════════════════════════════════════════════════════════╗
+% ║  Part II — Windows 平台专用方案                                  ║
+% ╚══════════════════════════════════════════════════════════════════╝
+\part{Windows 平台专用方案}
+
+\chapter{MFC (Microsoft Foundation Classes)}
+
+\section{架构概述}
+
+MFC 是微软于 1992 年推出的 C++ 类库，对 Win32 API 进行面向对象封装。
+其核心设计围绕以下概念：
+
+\begin{itemize}
+  \item \textbf{CWinApp}：应用程序对象，管理消息循环和初始化。
+  \item \textbf{CWnd / CFrameWnd}：窗口封装，HWND 句柄的 C++ 映射。
+  \item \textbf{消息映射 (Message Map)}：用宏替代虚函数表实现消息分发，
+        避免为每条 Windows 消息引入虚函数开销。
+  \item \textbf{文档/视图 (Doc/View)}：将数据 (CDocument) 与显示 (CView) 分离，
+        支持多视图、MDI 架构。
+\end{itemize}
+
+\begin{note}[title=MFC 现状]
+MFC 仍随 Visual Studio 发布并持续获得安全修复（VS 2022 17.x 仍支持），
+但微软不再为其添加新功能。新项目推荐 WinUI 3 或跨平台框架。
+\end{note}
+
+\section{消息映射机制}
+
+MFC 最具特色的设计是消息映射宏体系，它将 Windows 消息与 C++ 成员函数关联，
+而无需在头文件中声明虚函数：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// MyView.h
+class CMyView : public CView {
+protected:
+    DECLARE_MESSAGE_MAP()
+public:
+    afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+    afx_msg void OnPaint();
+    afx_msg int  OnCreate(LPCREATESTRUCT lpCreateStruct);
+};
+
+// MyView.cpp
+BEGIN_MESSAGE_MAP(CMyView, CView)
+    ON_WM_LBUTTONDOWN()
+    ON_WM_PAINT()
+    ON_WM_CREATE()
+    ON_COMMAND(ID_EDIT_CLEAR, &CMyView::OnEditClear)
+    ON_UPDATE_COMMAND_UI(ID_EDIT_CLEAR,
+                         &CMyView::OnUpdateEditClear)
+END_MESSAGE_MAP()
+\end{lstlisting}
+
+消息映射宏展开后生成一个 \seqsplit{\texttt{AFX\_MSGMAP}} 结构数组，MFC 运行时通过
+\seqsplit{\texttt{AfxFindMessageEntry()}} 在继承链中线性搜索匹配项。与 Win32 的
+\Tp{switch(msg)} 相比，宏写法更紧凑，但调试时难以直接跳转到分发逻辑。
+
+\section{最小 MFC 应用程序}
+
+以下示例创建一个带菜单的单文档界面 (SDI) 应用，展示 MFC 的核心骨架：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <afxwin.h>
+
+// --- 应用程序类 ---
+class CMyApp : public CWinApp {
+public:
+    BOOL InitInstance() override {
+        // 注册文档模板
+        auto* pDocTemplate = new CSingleDocTemplate(
+            IDR_MAINFRAME,
+            RUNTIME_CLASS(CMyDoc),
+            RUNTIME_CLASS(CMainFrame),
+            RUNTIME_CLASS(CMyView));
+        AddDocTemplate(pDocTemplate);
+
+        // 解析命令行并创建主窗口
+        CCommandLineInfo cmdInfo;
+        ParseCommandLine(cmdInfo);
+        if (!ProcessShellCommand(cmdInfo))
+            return FALSE;
+        m_pMainWnd->ShowWindow(SW_SHOW);
+        m_pMainWnd->UpdateWindow();
+        return TRUE;
+    }
+};
+
+// --- 文档类 ---
+class CMyDoc : public CDocument {
+    DECLARE_DYNCREATE(CMyDoc)
+public:
+    CString m_strContent = _T("Hello MFC!");
+};
+IMPLEMENT_DYNCREATE(CMyDoc, CDocument)
+
+// --- 主框架 ---
+class CMainFrame : public CFrameWnd {
+    DECLARE_DYNCREATE(CMainFrame)
+protected:
+    int OnCreate(LPCREATESTRUCT lpcs) {
+        if (CFrameWnd::OnCreate(lpcs) == -1) return -1;
+        return 0;
+    }
+    DECLARE_MESSAGE_MAP()
+};
+BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
+    ON_WM_CREATE()
+END_MESSAGE_MAP()
+IMPLEMENT_DYNCREATE(CMainFrame, CFrameWnd)
+
+// --- 视图类 ---
+class CMyView : public CView {
+    DECLARE_DYNCREATE(CMyView)
+protected:
+    void OnDraw(CDC* pDC) override {
+        auto* pDoc = GetDocument();
+        pDC->TextOut(20, 20, pDoc->m_strContent);
+    }
+    DECLARE_MESSAGE_MAP()
+};
+BEGIN_MESSAGE_MAP(CMyView, CView)
+END_MESSAGE_MAP()
+IMPLEMENT_DYNCREATE(CMyView, CView)
+
+// --- 入口 ---
+CMyApp theApp;
+\end{lstlisting}
+
+\section{MFC 优缺点}
+
+\begin{compare}[title=MFC 优劣分析]
+\begin{itemize}
+  \item \textbf{优势}：
+    \begin{itemize}
+      \item 与 Win32 API 零距离，可无缝混用原生调用。
+      \item Doc/View 架构对文档编辑类应用天然适配。
+      \item Visual Studio 资源编辑器 (对话框、菜单、工具栏) 成熟。
+      \item 大量遗留代码库需要维护，人才市场仍有需求。
+    \end{itemize}
+  \item \textbf{劣势}：
+    \begin{itemize}
+      \item 仅限 Windows，无法跨平台。
+      \item 宏驱动的消息映射调试困难、代码可读性差。
+      \item 不支持现代 UI 特性（高 DPI 感知有限、无 Fluent 动画）。
+      \item 微软不再添加新功能，社区活跃度持续下降。
+      \item 与 C++20/23 模块、协程等现代特性集成不佳。
+    \end{itemize}
+\end{itemize}
+\end{compare}
+
+\chapter{WinUI 3 与 C++/WinRT}
+
+\section{WinUI 3 定位}
+
+WinUI 3 (Windows App SDK) 是微软推出的现代原生 UI 框架，基于 XAML 声明式标记 +
+Composition 渲染引擎，提供 Fluent Design 视觉体验。与 UWP 时代不同，
+WinUI 3 支持传统桌面窗口模型 (Win32 HWND)，可打包 (MSIX) 或非打包部署。
+
+\begin{itemize}
+  \item \textbf{WinUI 1/2}：作为 UWP 控件库存在，依附于 UWP 应用模型。
+  \item \textbf{WinUI 3}：独立于 UWP，属于 Windows App SDK，可在 Win32 桌面进程中使用。
+  \item \textbf{C++/WinRT}：标准 C++17 投影层，将 WinRT API 映射为原生 C++ 类型，
+        无需 C++/CX 扩展语法。
+\end{itemize}
+
+\section{C++/WinRT 基础}
+
+C++/WinRT 通过头文件投影（由 \texttt{cppwinrt.exe} 从 \texttt{.winmd} 生成）
+提供类型安全的 WinRT 访问。核心规则：
+
+\begin{guideline}[title=C++/WinRT 关键约定]
+\begin{itemize}
+  \item 命名空间：\Tp{winrt::Microsoft.UI.Xaml}、\Tp{winrt::Windows::Foundation} 等。
+  \item 异步：使用 \Tp{co\_await} + \Tp{winrt::fire\_and\_forget}。
+  \item 事件：\Tp{auto\_revoke} token 或 \Tp{event\_token} 手动管理。
+  \item 接口投影：每个 WinRT 接口对应一个 C++ 类，支持 \Tp{as<>} 查询接口。
+  \item 字符串：\Tp{winrt::hstring}（UTF-16），可与 \Tp{std::wstring} 互转。
+\end{itemize}
+\end{guideline}
+
+\section{最小 WinUI 3 C++/WinRT 应用}
+
+项目结构通常包含：\texttt{App.xaml}、\texttt{App.cpp}、\texttt{MainWindow.xaml}、
+\texttt{MainWindow.cpp}、\texttt{pch.h}、\texttt{.vcxproj}。
+以下为核心文件内容：
+
+\xamllabel
+\begin{lstlisting}[style=xamlstyle,language=XML]
+<!-- App.xaml -->
+<Application
+    x:Class="MyApp.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources
+                    xmlns="using:Microsoft.UI.Xaml.Controls"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// App.cpp
+#include "pch.h"
+#include "App.h"
+#include "MainWindow.h"
+
+using namespace winrt;
+using namespace Microsoft::UI::Xaml;
+
+namespace winrt::MyApp::implementation {
+
+App::App() {
+    InitializeComponent();
+}
+
+void App::OnLaunched(
+    LaunchActivatedEventArgs const&) {
+    m_window = make<MainWindow>();
+    m_window.Activate();
+}
+
+} // namespace
+\end{lstlisting}
+
+\xamllabel
+\begin{lstlisting}[style=xamlstyle,language=XML]
+<!-- MainWindow.xaml -->
+<Window
+    x:Class="MyApp.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Orientation="Vertical"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="12">
+        <TextBlock x:Name="TitleText"
+                   Text="Hello WinUI 3 from C++!"
+                   FontSize="24"
+                   HorizontalAlignment="Center"/>
+        <Button x:Name="ClickBtn"
+                Content="Click Me"
+                HorizontalAlignment="Center"
+                Click="OnClickBtn"/>
+    </StackPanel>
+</Window>
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// MainWindow.cpp (核心片段)
+#include "pch.h"
+#include "MainWindow.h"
+#if __has_include("MainWindow.g.cpp")
+#include "MainWindow.g.cpp"
+#endif
+
+using namespace winrt;
+using namespace Microsoft::UI::Xaml;
+
+namespace winrt::MyApp::implementation {
+
+MainWindow::MainWindow() {
+    InitializeComponent();
+    Title(L"WinUI 3 C++/WinRT Demo");
+}
+
+void MainWindow::OnClickBtn(
+    IInspectable const&, RoutedEventArgs const&) {
+    static int count = 0;
+    TitleText().Text(
+        hstring(L"Clicked ") + to_hstring(++count)
+        + hstring(L" times"));
+}
+
+} // namespace
+\end{lstlisting}
+
+\section{数据绑定 (x:Bind)}
+
+WinUI 3 使用 \texttt{x:Bind} 进行编译时数据绑定，比传统的 \texttt{Binding}
+性能更好且支持 IntelliSense：
+
+\xamllabel
+\begin{lstlisting}[style=xamlstyle,language=XML]
+<!-- 在 MainWindow.xaml 中绑定 ViewModel 属性 -->
+<TextBlock Text="{x:Bind ViewModel.Greeting,
+                   Mode=OneWay}"/>
+<Button Content="{x:Bind ViewModel.ButtonLabel,
+                   Mode=OneWay}"
+        Command="{x:Bind ViewModel.IncrementCommand}"/>
+\end{lstlisting}
+
+C++/WinRT 侧需实现 \Tp{INotifyPropertyChanged}：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+struct MyViewModel
+    : implements<MyViewModel,
+        winrt::MyApp::MyViewModel,
+        component::IObservableObject> {
+
+    hstring Greeting() const { return m_greeting; }
+    void Greeting(hstring const& value) {
+        if (m_greeting != value) {
+            m_greeting = value;
+            RaisePropertyChanged(L"Greeting");
+        }
+    }
+
+private:
+    hstring m_greeting{ L"Hello" };
+    void RaisePropertyChanged(hstring const& prop) {
+        m_propertyChanged(*this,
+            PropertyChangedEventArgs(prop));
+    }
+    event<PropertyChangedEventHandler> m_propertyChanged;
+};
+\end{lstlisting}
+
+\section{与 Win32 Interop}
+
+WinUI 3 窗口底层仍是 HWND，可与传统 Win32 代码互操作：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <microsoft.ui.xaml.window.h>
+
+// 获取 WinUI 3 窗口的 HWND
+HWND GetWindowHandle(Window const& window) {
+    auto native = window.try_as<
+        IWindowNative>();
+    HWND hwnd = nullptr;
+    native->get_WindowHandle(&hwnd);
+    return hwnd;
+}
+
+// 在 WinUI 窗口中嵌入 Win32 子窗口
+void EmbedWin32Child(Window const& parent) {
+    HWND hwndParent = GetWindowHandle(parent);
+    HWND hwndChild = CreateWindowEx(
+        0, L"STATIC", L"Win32 Child",
+        WS_CHILD | WS_VISIBLE | SS_CENTER,
+        50, 50, 200, 30,
+        hwndParent, nullptr, nullptr, nullptr);
+}
+\end{lstlisting}
+
+\section{WinUI 3 优缺点}
+
+\begin{compare}[title=WinUI 3 优劣分析]
+\begin{itemize}
+  \item \textbf{优势}：
+    \begin{itemize}
+      \item Fluent Design 视觉语言，与 Windows 11 系统 UI 一致。
+      \item 声明式 XAML + 编译时绑定，开发体验接近现代前端框架。
+      \item C++/WinRT 投影是标准 C++17，无需编译器扩展。
+      \item 支持 MSIX 打包与非打包部署，渐进式迁移旧 Win32 应用。
+    \end{itemize}
+  \item \textbf{劣势}：
+    \begin{itemize}
+      \item 仅限 Windows 10 1809+，无法跨平台。
+      \item C++/WinRT 的 XAML 工具链尚不如 C\# 成熟（设计器支持有限）。
+      \item Windows App SDK 版本碎片化（1.0--1.6+ API 差异大）。
+      \item 运行时依赖 Windows App SDK Runtime 安装。
+      \item 社区资源以 C\# 为主，C++ 示例相对稀少。
+    \end{itemize}
+\end{itemize}
+\end{compare}
+
+% ╔══════════════════════════════════════════════════════════════════╗
+% ║  Part III — 跨平台方案                                           ║
+% ╚══════════════════════════════════════════════════════════════════╝
+\part{跨平台方案}
+
+\chapter{wxWidgets}
+
+\section{架构概述}
+
+wxWidgets（原名 wxWindows）创建于 1992 年，是最早的跨平台 C++ GUI 框架之一。
+其核心设计哲学是\textbf{平台原生控件封装}：在每个平台上，wxWidgets 控件直接映射到
+操作系统原生 widget（Windows 用 HWND、macOS 用 Cocoa NSView、Linux 用 GTK）。
+
+\begin{itemize}
+  \item \textbf{无中间渲染层}：不像 Qt 自绘控件，wxWidgets 直接使用系统原生控件，
+        因此外观与平台一致。
+  \item \textbf{纯 C++ API}：无需代码生成器 (MOC)、无需 IDL 文件，标准 C++ 编译即可。
+  \item \textbf{宽松许可}：wxWindows Library Licence（类 LGPL 但允许静态链接不公开源码）。
+  \item \textbf{抽象层}：除 GUI 外还提供文件 I/O、网络、线程、数据库等跨平台抽象。
+\end{itemize}
+
+\section{事件系统}
+
+wxWidgets 提供两种事件绑定方式：
+
+\subsection{静态事件表 (Event Table)}
+
+类似 MFC 消息映射，用宏声明事件处理关系：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+class MyFrame : public wxFrame {
+public:
+    MyFrame(const wxString& title);
+private:
+    void OnPaint(wxPaintEvent& event);
+    void OnButton(wxCommandEvent& event);
+    void OnSize(wxSizeEvent& event);
+    wxDECLARE_EVENT_TABLE();
+};
+
+wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
+    EVT_PAINT(MyFrame::OnPaint)
+    EVT_BUTTON(wxID_OK, MyFrame::OnButton)
+    EVT_SIZE(MyFrame::OnSize)
+wxEND_EVENT_TABLE()
+\end{lstlisting}
+
+\subsection{动态绑定 (Bind)}
+
+推荐方式，类型安全且支持 lambda：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+MyFrame::MyFrame(const wxString& title)
+    : wxFrame(nullptr, wxID_ANY, title)
+{
+    auto* btn = new wxButton(this, wxID_ANY,
+                             "Click Me");
+    auto* panel = new wxPanel(this);
+
+    // lambda 绑定
+    btn->Bind(wxEVT_BUTTON,
+        [this](wxCommandEvent& event) {
+            wxMessageBox("Button clicked!",
+                         "Info",
+                         wxOK | wxICON_INFORMATION);
+        });
+
+    // 成员函数绑定
+    Bind(wxEVT_SIZE, &MyFrame::OnSize, this);
+}
+\end{lstlisting}
+
+\section{最小 wxWidgets 应用}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <wx/wx.h>
+
+class MyApp : public wxApp {
+public:
+    bool OnInit() override {
+        auto* frame = new wxFrame(
+            nullptr, wxID_ANY,
+            "wxWidgets Hello");
+        auto* panel = new wxPanel(frame);
+        auto* sizer = new wxBoxSizer(wxVERTICAL);
+
+        auto* text = new wxStaticText(
+            panel, wxID_ANY,
+            "Hello from wxWidgets!");
+        auto* btn = new wxButton(
+            panel, wxID_EXIT, "Quit");
+
+        sizer->Add(text, 0,
+                   wxALL | wxCENTER, 20);
+        sizer->Add(btn, 0, wxALL | wxCENTER, 10);
+        panel->SetSizer(sizer);
+
+        frame->Bind(wxEVT_BUTTON,
+            [frame](wxCommandEvent&) {
+                frame->Close();
+            }, wxID_EXIT);
+
+        frame->Show(true);
+        return true;
+    }
+};
+
+wxIMPLEMENT_APP(MyApp);
+\end{lstlisting}
+
+\section{布局系统 (Sizer)}
+
+wxWidgets 使用 Sizer 体系管理布局，类似 GTK Box 模型：
+
+\begin{itemize}
+  \item \Tp{wxBoxSizer}：水平或垂直线性排列。
+  \item \Tp{wxGridSizer} / \Tp{wxFlexGridSizer}：网格布局。
+  \item \Tp{wxGridBagSizer}：可跨行跨列的灵活网格。
+  \item \Tp{wxWrapSizer}：自动换行的流式布局。
+\end{itemize}
+
+Sizer 不拥有控件所有权（控件的 parent 仍负责生命周期），
+通过 \Fn{Add} 将控件纳入布局计算。
+
+\section{wxWidgets 优缺点}
+
+\begin{compare}[title=wxWidgets 优劣分析]
+\begin{itemize}
+  \item \textbf{优势}：
+    \begin{itemize}
+      \item 真正原生外观，用户无感知跨平台差异。
+      \item 许可证宽松，可静态链接进闭源商业软件。
+      \item 纯 C++ API，无代码生成步骤，集成简单。
+      \item 历史悠久，在审计、金融等保守行业有稳定用户群。
+      \item 二进制体积小（相比 Qt 运行时）。
+    \end{itemize}
+  \item \textbf{劣势}：
+    \begin{itemize}
+      \item 控件集有限，缺少现代控件（无内建 TreeView 动画、无 GPU 加速渲染）。
+      \item 在高 DPI 混合显示环境下表现不一致。
+      \item 社区规模和文档质量远不及 Qt。
+      \item Linux 上依赖 GTK 版本，GTK3/GTK4 迁移带来兼容性问题。
+      \item 无声明式 UI 语言（类似 QML/XAML），复杂布局代码冗长。
+    \end{itemize}
+\end{itemize}
+\end{compare}
+
+\chapter{Qt}
+
+\section{架构概述}
+
+Qt 由 Trolltech 于 1995 年发布，现为 The Qt Company 维护，
+是 C++ 生态中最成熟、最全面的跨平台应用框架。Qt 6 要求 C++17，
+支持 Windows、macOS、Linux、Android、iOS、嵌入式 (QNX, Yocto) 等平台。
+
+Qt 提供两套 UI 技术栈：
+
+\begin{itemize}
+  \item \textbf{Qt Widgets}：传统桌面控件，自绘引擎 (QPainter + QStyle)，
+        适合工具类、企业桌面应用。
+  \item \textbf{Qt Quick / QML}：声明式语言 + GPU 加速场景图 (Scene Graph)，
+        适合触控界面、动画密集型应用。
+\end{itemize}
+
+\section{信号与槽 (Signals \& Slots)}
+
+Qt 最核心的创新是信号槽机制——一种类型安全的观察者模式实现，
+通过元对象编译器 (MOC) 在编译前生成胶水代码：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// counter.h
+#include <QObject>
+
+class Counter : public QObject {
+    Q_OBJECT  // MOC 宏，触发元对象生成
+public:
+    int value() const { return m_value; }
+
+public slots:
+    void setValue(int newValue) {
+        if (m_value != newValue) {
+            m_value = newValue;
+            emit valueChanged(newValue);
+        }
+    }
+
+signals:
+    void valueChanged(int newValue);
+
+private:
+    int m_value = 0;
+};
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// 连接方式
+Counter a, b;
+
+// 1. 函数指针语法 (Qt5+，编译时检查)
+QObject::connect(&a, &Counter::valueChanged,
+                 &b, &Counter::setValue);
+
+// 2. 旧式 SIGNAL/SLOT 宏 (运行时检查)
+QObject::connect(&a, SIGNAL(valueChanged(int)),
+                 &b, SLOT(setValue(int)));
+
+// 3. Lambda 连接
+QObject::connect(&a, &Counter::valueChanged,
+    [](int val) {
+        qDebug() << "Value changed to" << val;
+    });
+
+// 连接类型
+// Qt::AutoConnection  — 同线程直接调用，跨线程队列调用
+// Qt::DirectConnection — 立即在发射线程调用
+// Qt::QueuedConnection — 投递到接收者线程事件循环
+\end{lstlisting}
+
+\section{最小 Qt Widgets 应用}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <QApplication>
+#include <QWidget>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QPushButton>
+
+int main(int argc, char* argv[]) {
+    QApplication app(argc, argv);
+
+    QWidget window;
+    window.setWindowTitle("Qt Hello");
+    window.resize(400, 200);
+
+    auto* layout = new QVBoxLayout(&window);
+    auto* label  = new QLabel("Hello Qt Widgets!");
+    auto* button = new QPushButton("Click Me");
+
+    layout->addWidget(label);
+    layout->addWidget(button);
+
+    int count = 0;
+    QObject::connect(button, &QPushButton::clicked,
+        [&]() {
+            label->setText(
+                QString("Clicked %1 times")
+                    .arg(++count));
+        });
+
+    window.show();
+    return app.exec();
+}
+\end{lstlisting}
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+cmake_minimum_required(VERSION 3.19)
+project(QtHello LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
+find_package(Qt6 REQUIRED COMPONENTS
+    Core Gui Widgets)
+
+add_executable(QtHello main.cpp)
+
+target_link_libraries(QtHello PRIVATE
+    Qt6::Core Qt6::Gui Qt6::Widgets)
+\end{lstlisting}
+
+\section{Qt Quick / QML 简介}
+
+QML 是 Qt 的声明式 UI 语言，适合动画、触控和现代界面：
+
+\qmllabel
+\begin{lstlisting}[style=cppstyle]
+// main.qml
+import QtQuick
+import QtQuick.Controls
+
+ApplicationWindow {
+    width: 400; height: 300
+    visible: true
+    title: "Qt Quick Demo"
+
+    Column {
+        anchors.centerIn: parent
+        spacing: 12
+
+        Text {
+            id: greeting
+            text: "Hello QML!"
+            font.pixelSize: 24
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+
+        Button {
+            text: "Click Me"
+            anchors.horizontalCenter: parent.horizontalCenter
+            onClicked: {
+                count++
+                greeting.text = "Clicked " + count
+                                + " times"
+            }
+        }
+    }
+
+    property int count: 0
+}
+\end{lstlisting}
+
+C++ 侧加载 QML 并暴露数据：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+
+int main(int argc, char* argv[]) {
+    QGuiApplication app(argc, argv);
+
+    QQmlApplicationEngine engine;
+
+    // 暴露 C++ 对象到 QML
+    MyViewModel viewModel;
+    engine.rootContext()->setContextProperty(
+        "viewModel", &viewModel);
+
+    engine.load(
+        QUrl(QStringLiteral("qrc:/main.qml")));
+
+    return app.exec();
+}
+\end{lstlisting}
+
+\section{MOC (Meta-Object Compiler)}
+
+\Tp{Q\_OBJECT} 宏标记的类需要 MOC 预处理。MOC 解析头文件中的
+\texttt{signals}、\texttt{slots}、\Tp{Q\_PROPERTY} 声明，
+生成 \texttt{moc\_*.cpp} 文件包含：
+
+\begin{itemize}
+  \item 元对象类 (\Tp{staticMetaObject})：包含类名、信号槽签名表。
+  \item \Fn{qt\_metacall}：运行时信号发射和槽调用的分发函数。
+  \item 属性系统的 getter/setter 注册表。
+\end{itemize}
+
+CMake 的 \Tp{CMAKE\_AUTOMOC} 自动处理此步骤，开发者无需手动调用。
+
+\begin{warning}[title=MOC 常见陷阱]
+\begin{itemize}
+  \item 模板类不能使用 \Tp{Q\_OBJECT}（MOC 不解析模板）。
+  \item 在 \texttt{.cpp} 中定义 QObject 子类需手动 \texttt{\#include "file.moc"}。
+  \item 信号槽连接签名不匹配时，旧式 SIGNAL/SLOT 宏仅运行时警告，
+        新式函数指针语法在编译时报错——始终推荐后者。
+\end{itemize}
+\end{warning}
+
+\section{Qt 优缺点}
+
+\begin{compare}[title=Qt 优劣分析]
+\begin{itemize}
+  \item \textbf{优势}：
+    \begin{itemize}
+      \item 平台覆盖最广：桌面 (Win/macOS/Linux)、移动 (Android/iOS)、嵌入式。
+      \item 双 UI 栈：Widgets（成熟稳定）+ Quick/QML（现代声明式）。
+      \item 信号槽机制优雅，跨线程通信安全。
+      \item 非 GUI 模块丰富：Network、Sql、Concurrent、Multimedia、3D、WebEngine。
+      \item 文档和社区质量在 C++ 框架中首屈一指。
+      \item Qt Creator IDE 提供可视化设计器、性能分析器。
+    \end{itemize}
+  \item \textbf{劣势}：
+    \begin{itemize}
+      \item LGPL 3 动态链接义务对闭源项目有合规风险（或购买商业许可）。
+      \item MOC 代码生成步骤增加构建复杂度。
+      \item 运行时体积较大（\textasciitilde30--80 MB 部署包）。
+      \item 自绘控件在细节上可能与平台原生外观有偏差。
+      \item Qt 6 对 Qt 5 有破坏性变更（移除 Qt Script、部分模块重组）。
+    \end{itemize}
+\end{itemize}
+\end{compare}
+
+% ╔══════════════════════════════════════════════════════════════════╗
+% ║  Part IV — 终端 UI (TUI) 方案                                    ║
+% ╚══════════════════════════════════════════════════════════════════╝
+\part{终端 UI (TUI) 方案}
+
+\chapter{FTXUI}
+
+\section{架构概述}
+
+FTXUI (Functional Terminal User Interface) 是一个纯 C++17 的终端 UI 库，
+由 Arthur Sonzogni 开发，MIT 许可证。它在终端中通过 ANSI 转义序列绘制
+富交互界面，适用于 CLI 工具、系统监控面板、配置向导等无需图形窗口的场景。
+
+核心设计特征：
+
+\begin{itemize}
+  \item \textbf{函数式声明}：UI 由纯函数 \Tp{Element f()} 描述，每帧重新计算，
+        类似 React 的虚拟 DOM 思想——无保留模式 (retained mode) 状态树。
+  \item \textbf{三层架构}：\Tp{Element}（渲染树）$\rightarrow$ \Tp{Screen}
+        （字符缓冲区）$\rightarrow$ \Tp{ScreenInteractive}（事件循环 + 终端 I/O）。
+  \item \textbf{零外部依赖}：header-only 或 CMake FetchContent 集成，
+        无需额外运行时库。
+  \item \textbf{跨平台}：Windows (ConPTY)、macOS、Linux 终端均支持。
+\end{itemize}
+
+\section{组件 (Element) 体系}
+
+FTXUI 使用可组合的 Element 构建 UI 树。常用组件：
+
+\begin{itemize}
+  \item \textbf{文本}：\Fn{text}、\Fn{paragraph}、\Fn{header}。
+  \item \textbf{布局}：\Fn{vbox}、\Fn{hbox}、\Fn{grid}、\Fn{flex}、\Fn{fill}。
+  \item \textbf{装饰}：\Fn{border}、\Fn{color}、\Fn{bgcolor}、\Fn{bold}、\Fn{underlined}。
+  \item \textbf{交互控件}：\Fn{Button}、\Fn{Checkbox}、\Fn{Radiobox}、
+        \Fn{Menu}、\Fn{Input}、\Fn{Slider}、\Fn{Tab}。
+\end{itemize}
+
+组合示例——用管道操作符 \texttt{|} 链式添加装饰：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <ftxui/dom/elements.hpp>
+using namespace ftxui;
+
+Element MakeWidget() {
+    return vbox({
+        text("System Monitor") | bold | hcenter,
+        separator(),
+        hbox({
+            text("CPU: ") | flex,
+            gauge(0.73f),
+        }) | border,
+        hbox({
+            text("RAM: ") | flex,
+            gauge(0.45f),
+        }) | border,
+    });
+}
+\end{lstlisting}
+
+\section{事件循环与交互}
+
+\Tp{ScreenInteractive} 提供事件循环，通过 \Fn{Loop} 启动、
+\Fn{Quit} 退出。事件处理器接收键盘/鼠标事件：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <ftxui/screen/screen_interactive.hpp>
+#include <ftxui/component/component.hpp>
+using namespace ftxui;
+
+int main() {
+    auto screen = ScreenInteractive::Fullscreen();
+
+    int selected = 0;
+    std::vector<std::string> entries = {
+        "Start Server", "View Logs",
+        "Configure", "Quit"
+    };
+
+    auto menu = Menu(&entries, &selected);
+
+    auto button_quit = Button("Quit", [&] {
+        screen.ExitLoopClosure()();
+    });
+
+    auto layout = Container::Vertical({
+        menu, button_quit,
+    });
+
+    auto renderer = Renderer(layout, [&] {
+        return vbox({
+            text("Select an action:") | bold,
+            separator(),
+            layout->Render(),
+        }) | border;
+    });
+
+    screen.Loop(renderer);
+    return 0;
+}
+\end{lstlisting}
+
+\section{最小完整应用}
+
+一个带按钮和文本的交互式终端程序：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <ftxui/component/component.hpp>
+#include <ftxui/component/screen_interactive.hpp>
+#include <ftxui/dom/elements.hpp>
+#include <string>
+
+int main() {
+    using namespace ftxui;
+
+    std::string message = "Hello FTXUI!";
+    int click_count = 0;
+
+    auto screen =
+        ScreenInteractive::TerminalOutput();
+
+    auto button = Button("Click me", [&] {
+        click_count++;
+        message = "Clicked "
+            + std::to_string(click_count)
+            + " times";
+    });
+
+    auto quit = Button("Quit",
+        screen.ExitLoopClosure());
+
+    auto layout = Container::Horizontal({
+        button, quit,
+    });
+
+    auto renderer = Renderer(layout, [&] {
+        return vbox({
+            text(message) | bold | color(Color::Green),
+            separator(),
+            layout->Render() | center,
+        }) | border | size(WIDTH, LESS_THAN, 40);
+    });
+
+    screen.Loop(renderer);
+    return 0;
+}
+\end{lstlisting}
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+cmake_minimum_required(VERSION 3.19)
+project(FTXUIDemo LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+
+include(FetchContent)
+FetchContent_Declare(ftxui
+    GIT_REPOSITORY
+        https://github.com/ArthurSonzogni/FTXUI
+    GIT_TAG v5.0.0)
+FetchContent_MakeAvailable(ftxui)
+
+add_executable(demo main.cpp)
+target_link_libraries(demo PRIVATE
+    ftxui::screen
+    ftxui::dom
+    ftxui::component)
+\end{lstlisting}
+
+\section{FTXUI 与其他 TUI 库对比}
+
+\begin{compare}[title=TUI 生态横向比较]
+\begin{itemize}
+  \item \textbf{FTXUI (C++)}：函数式声明、零依赖、组件化、现代 C++17 风格。
+  \item \textbf{ncurses (C)}：底层终端控制库，无高级组件抽象，需手动管理窗口/面板。
+  \item \textbf{notcurses (C)}：ncurses 替代品，支持图片/视频输出，API 更现代。
+  \item \textbf{Ratatui (Rust)}：Rust 生态的即时模式 TUI，设计思想与 FTXUI 类似。
+  \item \textbf{Textual (Python)}：CSS 风格样式的 Python TUI 框架，非 C++ 生态。
+\end{itemize}
+\end{compare}
+
+\section{FTXUI 优缺点}
+
+\begin{compare}[title=FTXUI 优劣分析]
+\begin{itemize}
+  \item \textbf{优势}：
+    \begin{itemize}
+      \item 零外部依赖，CMake FetchContent 一行集成。
+      \item 函数式组合设计，UI 代码简洁可测试。
+      \item 跨平台终端支持（含 Windows ConPTY）。
+      \item MIT 许可，无任何合规风险。
+      \item 编译体积和运行时开销极小。
+      \item 适合嵌入到已有 CLI 工具中增加交互性。
+    \end{itemize}
+  \item \textbf{劣势}：
+    \begin{itemize}
+      \item 受限于终端能力：无真彩色保证（取决于终端模拟器）、无图片/富媒体。
+      \item 控件集有限，无 TreeView、无表格排序等高级 GUI 控件。
+      \item 不适合面向普通用户的桌面应用（终端操作门槛高）。
+      \item 社区规模小于 Qt/wxWidgets，第三方扩展生态有限。
+      \item 在 Windows 传统 cmd.exe 下渲染效果不如 Windows Terminal。
+    \end{itemize}
+\end{itemize}
+\end{compare}
+
+% ╔══════════════════════════════════════════════════════════════════╗
+% ║  Part V — 游戏引擎 UI                                            ║
+% ╚══════════════════════════════════════════════════════════════════╝
+\part{游戏引擎 UI}
+
+\chapter{Unreal Engine UI 简述}
+
+\section{Slate 框架}
+
+Slate 是 UE 内置的底层 UI 框架，完全由 C++ 驱动，采用\textbf{即时模式声明}风格。
+UE 编辑器本身就是用 Slate 构建的。核心特征：
+
+\begin{itemize}
+  \item \textbf{无 HWND 依赖}：Slate 直接在 UE 渲染管线中绘制 GUI，
+        通过 RHI (Rendering Hardware Interface) 提交 GPU 批次。
+  \item \textbf{Widget 继承体系}：\Tp{SWidget} $\rightarrow$ \Tp{SCompoundWidget}
+        $\rightarrow$ \Tp{SPanel} $\rightarrow$ 具体控件。
+  \item \textbf{属性声明宏}：\Tp{SLATE\_BEGIN\_ARGS} / \Tp{SLATE\_ARGUMENT} /
+        \Tp{SLATE\_EVENT} 定义控件构造参数。
+  \item \textbf{适用场景}：编辑器扩展工具、插件 UI、性能敏感场景。
+\end{itemize}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// Slate 控件声明示例
+SNew(SVerticalBox)
++ SVerticalBox::Slot()
+.AutoHeight()
+.Padding(4.f)
+[
+    SNew(STextBlock)
+    .Text(FText::FromString("Hello Slate"))
+    .Font(FCoreStyle::GetDefaultFontStyle()
+          .GetFontStyle("Bold", 16))
+]
++ SVerticalBox::Slot()
+.AutoHeight()
+[
+    SNew(SButton)
+    .Text(FText::FromString("Click"))
+    .OnClicked(this, &SMyWidget::OnButtonClick)
+]
+\end{lstlisting}
+
+\section{UMG (Unreal Motion Graphics)}
+
+UMG 是面向游戏运行时的 UI 系统，建立在 Slate 之上，增加了：
+
+\begin{itemize}
+  \item \textbf{UUserWidget}：UObject 包装，支持 Blueprint 可视化编辑。
+  \item \textbf{Widget Blueprint}：在编辑器中拖拽布局、绑定动画、
+        编写逻辑，无需纯 C++。
+  \item \textbf{数据绑定}：支持属性绑定 (Property Binding) 和
+        MVVM 插件 (UE 5.1+)。
+\end{itemize}
+
+C++ 创建 UMG Widget 的典型模式：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+UCLASS()
+class UMyHUDWidget : public UUserWidget {
+    GENERATED_BODY()
+public:
+    UPROPERTY(meta = (BindWidget))
+    UTextBlock* ScoreText;
+
+    UPROPERTY(meta = (BindWidget))
+    UButton* PauseButton;
+
+    virtual void NativeConstruct() override {
+        Super::NativeConstruct();
+        PauseButton->OnClicked.AddDynamic(
+            this, &UMyHUDWidget::OnPause);
+    }
+
+    UFUNCTION()
+    void OnPause();
+};
+
+// 在游戏中创建并显示
+void AMyPlayerController::ShowHUD() {
+    auto* Widget = CreateWidget<UMyHUDWidget>(
+        this, HUDWidgetClass);
+    Widget->AddToViewport();
+}
+\end{lstlisting}
+
+\section{UE UI vs 原生 GUI 框架}
+
+\begin{compare}[title=UE UI 与传统框架对比]
+\begin{itemize}
+  \item \textbf{适用性}：UE UI 仅在 UE 项目内有意义——若应用本身运行在 UE 引擎中
+        （游戏、仿真、数字孪生），Slate/UMG 是唯一合理选择，因为它直接共享
+        引擎的渲染上下文和输入系统。
+  \item \textbf{不适用}：独立桌面工具、服务端管理界面等非 UE 项目不应使用 UE UI。
+  \item \textbf{开发效率}：UMG Widget Blueprint 对美术和策划友好；
+        纯 C++ Slate 开发效率低于 Qt/wxWidgets。
+  \item \textbf{性能}：Slate 批渲染高度优化，在游戏帧预算内表现良好；
+        但启动开销 (UE 引擎初始化) 远超原生 GUI。
+\end{itemize}
+\end{compare}
+
+% ╔══════════════════════════════════════════════════════════════════╗
+% ║  Part V — 综合对比与迁移建议                                      ║
+% ╚══════════════════════════════════════════════════════════════════╝
+\part{综合对比与迁移建议}
+
+\chapter{横向对比}
+
+\section{构建与部署对比}
+
+\begin{small}
+\begin{longtable}{@{}>{\raggedright}p{2.2cm} >{\raggedright}p{3.5cm}
+  >{\raggedright}p{3.0cm} >{\raggedright\arraybackslash}p{4.0cm}@{}}
+\toprule
+\textbf{框架} & \textbf{构建要求} & \textbf{部署体积} &
+  \textbf{额外工具} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{框架} & \textbf{构建要求} & \textbf{部署体积} &
+  \textbf{额外工具} \\
+\midrule
+\endhead
+MFC & VS + MFC 组件 & 极小（系统 DLL）&
+  VS 资源编辑器 \\
+\addlinespace
+WinUI 3 & VS + Windows App SDK & 中等（Runtime）&
+  Windows App SDK installer \\
+\addlinespace
+wxWidgets & 任意 C++17 编译器 & 小（可静态链接）&
+  wx-config / CMake Find \\
+\addlinespace
+Qt & 任意 C++17 + Qt 安装器 & 大（30--80 MB）&
+  MOC、UIC、RCC、Qt Creator \\
+\addlinespace
+UE & VS/Rider + UE 源码或安装器 & 极大（引擎运行时）&
+  UBT、UHT、UE Editor \\
+\addlinespace
+FTXUI & 任意 C++17 编译器 & 极小（header-only）&
+  无（CMake FetchContent） \\
+\bottomrule
+\end{longtable}
+\end{small}
+
+\section{API 风格对比}
+
+\begin{small}
+\begin{longtable}{@{}>{\raggedright}p{2.2cm} >{\raggedright}p{2.8cm}
+  >{\raggedright}p{2.8cm} >{\raggedright\arraybackslash}p{4.8cm}@{}}
+\toprule
+\textbf{框架} & \textbf{UI 描述方式} & \textbf{事件模型} &
+  \textbf{布局系统} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{框架} & \textbf{UI 描述方式} & \textbf{事件模型} &
+  \textbf{布局系统} \\
+\midrule
+\endhead
+MFC & C++ 类继承 + 资源脚本 & 消息映射宏 &
+  手动坐标 / Dialog 编辑器 \\
+\addlinespace
+WinUI 3 & XAML 声明式 & 事件委托 (C++/WinRT) &
+  XAML Panel 体系 \\
+\addlinespace
+wxWidgets & C++ 类继承 & 事件表宏 / Bind &
+  Sizer 体系 \\
+\addlinespace
+Qt Widgets & C++ 类继承 & 信号槽 (MOC) &
+  QLayout 体系 \\
+\addlinespace
+Qt Quick & QML 声明式 & 信号槽 + JS handler &
+  锚点 + Positioner \\
+\addlinespace
+UE Slate & C++ 声明宏 (SNew) & 委托 (Delegate) &
+  Slot + HBox/VBox \\
+\addlinespace
+FTXUI & C++ 函数式组合 & 回调 / 事件循环 &
+  vbox / hbox / flex \\
+\bottomrule
+\end{longtable}
+\end{small}
+
+\chapter{迁移路径建议}
+
+\section{从 MFC 迁移}
+
+\begin{bestpractice}[title=MFC 迁移策略]
+\begin{enumerate}
+  \item \textbf{MFC $\rightarrow$ WinUI 3}（保留 Windows 独占）：
+    使用 XAML Islands 逐步将 MFC 对话框替换为 WinUI 控件，
+    HWND interop 允许渐进迁移而非重写。
+  \item \textbf{MFC $\rightarrow$ Qt}（需要跨平台）：
+    映射关系——\Tp{CWnd} $\rightarrow$ \Tp{QWidget}，
+    消息映射 $\rightarrow$ 信号槽，\Tp{CDC} $\rightarrow$ \Tp{QPainter}，
+    Doc/View $\rightarrow$ Model/View (QAbstractItemModel)。
+  \item \textbf{MFC $\rightarrow$ wxWidgets}（需要原生外观）：
+    类名高度相似——\Tp{CFrameWnd} $\rightarrow$ \Tp{wxFrame}，
+    \Tp{CDialog} $\rightarrow$ \Tp{wxDialog}，
+    \Tp{CButton} $\rightarrow$ \Tp{wxButton}。
+\end{enumerate}
+\end{bestpractice}
+
+\section{跨框架通用建议}
+
+\begin{guideline}[title=架构层面的迁移准备]
+\begin{itemize}
+  \item 将业务逻辑与 UI 层解耦（MVVM / MVP / 中介者模式），
+        使 UI 框架成为可替换的薄层。
+  \item 使用抽象接口封装平台特定调用（文件系统、网络、进程管理），
+        避免在 UI 代码中直接调用 Win32/POSIX API。
+  \item 构建系统选用 CMake 并模块化，方便切换底层 GUI 库依赖。
+\end{itemize}
+\end{guideline}
+
+\end{document}
