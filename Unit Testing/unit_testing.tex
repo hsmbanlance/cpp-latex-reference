@@ -228,47 +228,50 @@
 % ===== tcolorbox =====
 \usepackage[most]{tcolorbox}
 
-\tcbset{
-  guideline/.style={%
-    enhanced,breakable,
-    colback=blue!5!white,colframe=blue!50!black,colbacktitle=blue!50!black,
-    title={#1},fonttitle=\bfseries,
-    boxed title style={size=small,colframe=blue!50!black},
-    attach boxed title to top left={yshift=-2mm,xshift=2mm},
-    arc=2mm,boxrule=0.8mm
-  },
-  compare/.style={%
-    enhanced,breakable,
-    colback=green!5!white,colframe=green!40!black,colbacktitle=green!40!black,
-    title={#1},fonttitle=\bfseries,
-    boxed title style={size=small,colframe=green!40!black},
-    attach boxed title to top left={yshift=-2mm,xshift=2mm},
-    arc=2mm,boxrule=0.8mm
-  },
-  warning/.style={%
-    enhanced,breakable,
-    colback=red!5!white,colframe=red!50!black,colbacktitle=red!50!black,
-    title={#1},fonttitle=\bfseries,
-    boxed title style={size=small,colframe=red!50!black},
-    attach boxed title to top left={yshift=-2mm,xshift=2mm},
-    arc=2mm,boxrule=0.8mm
-  },
-  note/.style={%
-    enhanced,breakable,
-    colback=yellow!5!white,colframe=orange!50!black,colbacktitle=orange!50!black,
-    title={#1},fonttitle=\bfseries,
-    boxed title style={size=small,colframe=orange!50!black},
-    attach boxed title to top left={yshift=-2mm,xshift=2mm},
-    arc=2mm,boxrule=0.8mm
-  },
-  bestpractice/.style={%
-    enhanced,breakable,
-    colback=purple!5!white,colframe=purple!50!black,colbacktitle=purple!50!black,
-    title={#1},fonttitle=\bfseries,
-    boxed title style={size=small,colframe=purple!50!black},
-    attach boxed title to top left={yshift=-2mm,xshift=2mm},
-    arc=2mm,boxrule=0.8mm
-  }
+% 盒子环境：标题可省略，\begin{note} 与 \begin{note}{标题} 均可
+\NewTColorBox{guideline}{+g}{%
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!50!black,colbacktitle=blue!50!black,
+  IfNoValueTF={#1}{}{title={#1}},fonttitle=\bfseries,
+  boxed title style={size=small,colframe=blue!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm
+}
+
+\NewTColorBox{compare}{+g}{%
+  enhanced,breakable,
+  colback=green!5!white,colframe=green!40!black,colbacktitle=green!40!black,
+  IfNoValueTF={#1}{}{title={#1}},fonttitle=\bfseries,
+  boxed title style={size=small,colframe=green!40!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm
+}
+
+\NewTColorBox{warning}{+g}{%
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!50!black,colbacktitle=red!50!black,
+  IfNoValueTF={#1}{}{title={#1}},fonttitle=\bfseries,
+  boxed title style={size=small,colframe=red!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm
+}
+
+\NewTColorBox{note}{+g}{%
+  enhanced,breakable,
+  colback=yellow!5!white,colframe=orange!50!black,colbacktitle=orange!50!black,
+  IfNoValueTF={#1}{}{title={#1}},fonttitle=\bfseries,
+  boxed title style={size=small,colframe=orange!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm
+}
+
+\NewTColorBox{bestpractice}{+g}{%
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!50!black,colbacktitle=purple!50!black,
+  IfNoValueTF={#1}{}{title={#1}},fonttitle=\bfseries,
+  boxed title style={size=small,colframe=purple!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm
 }
 
 % ===== 语言标签 =====
@@ -1523,7 +1526,7 @@ Java 的 Mockito、C\# 的 Moq 能在运行时为任意接口动态生成代理�
 接口级注入（第 7 章）能解决大部分情况，但总有些依赖绕不开 libc、
 操作系统或硬件。针对这些系统级边界，有三套常用手段。
 
-\subsection{\seqsplit{LD\_PRELOAD} 与符号拦截}
+\subsection{\texttt{LD\_PRELOAD} 与符号拦截}
 
 Linux 动态链接器允许用 \seqsplit{\texttt{LD\_PRELOAD}} 预加载同名的
 符号来拦截 libc 调用，无需改动被测代码：
@@ -2025,7 +2028,7 @@ TEST(OrderService, fake_injection) {
 失去的是异构存放与运行时替换能力，模板实参还会造成上下层编译期耦合。
 高频低延迟的代码，例如引擎核心路径，往往偏好这一形态。
 
-\subsection{\seqsplit{std::function} 注入（轻量接缝）}
+\subsection{\texttt{std::function} 注入（轻量接缝）}
 
 对时钟、随机数、单个回调这类小依赖，定义接口太重，一个
 \seqsplit{\texttt{std::function}} 就够了：
@@ -2054,7 +2057,7 @@ TEST(RetryPolicy, expired) {
 
 这是处理“时间依赖”最经济的办法，远好过打桩系统 API。
 
-\subsection{\seqsplit{std::function} 与模板 Func：同一种接缝}
+\subsection{\texttt{std::function} 与模板 Func：同一种接缝}
 
 把依赖写成模板参数 \seqsplit{\texttt{typename Func}}，与
 \seqsplit{\texttt{std::function}} 注入本质相同——前者是编译期版本，
@@ -2508,6 +2511,331 @@ Java & JaCoCo & agent 字节码 & HTML/XML \\
 \bottomrule
 \end{longtable}
 }
+
+% ================================================================
+\chapter{为什么往往建议手写单元测试（含 Vibe Coding）}
+% ================================================================
+
+大语言模型让“自动生成整套单元测试”看起来触手可及：把工具指向代码库，
+按下按钮，收获一份全绿的测试报告。这很诱人。但本章要给出一个与潮流
+相反的结论：对 C++ 这类静态类型语言，手写单元测试仍然是值得坚持的
+默认建议。先澄清一点——这里的“手写”不等于“不用 AI”。让 AI 起草测试
+的 Vibe Coding 完全可以接受，因为编写者随时可以介入；真正要警惕的，
+是那种把人移出回路、全权交给机器的“全自动生成工具”，
+或者人仅可黑箱的修改配置项。
+
+注：完全信任SonarQube作为代码静态分析工具属于类似情况。
+简单的场景如，1000、12等被认为是magic number，SonarQube会提示你把它们提取成常量。
+但在某些场景下，这些数字就是业务逻辑的一部分，提取成常量反而会降低代码的可读性和可维护性。
+这种会使得开发人员使用英文、中文或者其他什么文字绕过magic number检查。
+但实际上，就算使用无实际使用者的死文字（如阿卡德语），也不能改变其为magic number的事实。
+
+因此，对应白箱场景信任黑箱环境是不建议的。
+
+\section{先分清两种“自动生成”}
+
+“让 AI 写测试”这句话，实际指向至少两种截然不同的工作流，其结论
+完全不同：
+
+\begin{itemize}
+  \item \textbf{人在环内的 AI 辅助编写（含 Vibe Coding）}：你给出
+        意图，AI 起草测试代码，你审查、修改、删掉或重写，最终的通过
+        与否由你判定。即便采取最“随性”的 Vibe Coding 风格——用自然
+        语言描述目标、几乎不逐行阅读——只要你能随时叫停、随时改断言、
+        随时否决产物，主动权就仍在人手里。
+  \item \textbf{全自动生成工具}：指向代码仓库，一键运行，工具吐出一套
+        “完整”测试。整个过程没有人的逐用例决策，生成规则通常也不透明。
+\end{itemize}
+
+\begin{note}{为什么 Vibe Coding 仍算手写}
+判据不是“谁敲的键盘”，而是“谁拥有最终决定权、能否随时介入”。Vibe
+Coding 的阅读比例再低，编写者依然可以随时修正、补充、删除、重来，
+测试文件仍是自己版本库里的源码，因此它本质上仍是手写的延伸，与
+“不可介入的全自动工具”有质的区别。前者是 AI 帮你打字，后者是脚本（且正常连AI都没有）
+替你决策——本章反对的只有后者。
+\end{note}
+
+本章其余部分聚焦第二类：为什么“全自动生成工具”在 C++ 这类静态类型
+语言上格外不可靠。
+
+\section{硬伤一：不经过 LSP，读不懂语义}
+
+C++ 代码的含义，很大程度上不由表面语法决定，而由编译器前端的语义
+分析决定：调用点选中哪个重载、模板实例化成什么、cv 限定选中哪个版本、
+宏展开成什么。这些信息，现代工具链通过语言服务器协议（LSP）与编译器
+AST 对外提供——IDE 的跳转、重命名、诊断都依赖它。
+
+自动化工具往往不使用AI，更不使用LSP，它们使用轻量语法解析或模板匹配，既不调用编译器前端，也不查询 LSP。
+实际上往往只是基于一个简单的语法树或正则表达式来分析代码，而没有真正理解代码的语义。
+不像IDE中的类似工具，其使用LSP来获取代码的语义信息，且在LSP失败时拒绝生成。
+这种缺失在动态语言里影响尚可，在静态类型语言里却是致命的：
+
+\cpplabel
+\begin{lstlisting}
+struct Widget {
+    void process(int x);        // 重载 1
+    void process(double x);     // 重载 2
+    int  value() const;         // const 版本
+    int& value();               // 非 const 版本
+};
+
+template <typename T>
+T clamp(T v, T lo, T hi);       // T 由调用点推导
+
+template <typename T>
+auto makeDefault() -> std::enable_if_t<std::is_default_constructible_v<T>, T> {
+    return T{};
+} // SFINAE 限定，非默认构造类型无法实例化
+
+// 返回类型和参数相关
+template <typename T>
+auto getValue(T& obj) -> decltype(obj.value()) {
+    return obj.value();
+}
+
+// 返回类型后置
+auto coroFunc() -> exec::task<int> {
+    co_return 42;
+}
+
+Widget w;
+w.process(3.14);    // 调用哪个重载？需要重载决议
+w.value();          // 哪个版本？取决于 w 是否为 const
+clamp(1, 2, 5);     // T 是什么？需要类型推导
+\end{lstlisting}
+
+在缺乏语义信息的情况下，生成器只能猜：猜调用的是哪个重载、猜模板实例化
+成什么、猜返回类型。C++ 里“同名不同义”是常态，这种猜测注定大面积失准。
+同时 C++ 的 SFINAE、\texttt{enable\_if}、\texttt{concepts} 等特性也会让生成器无法判断哪些模板实例化是合法的，哪些是非法的。
+此时不同的实例化返回不同的类型，生成器无法正确生成测试代码。
+因此结论不是对某个具体工具的悲观，而是对这一技术路线的悲观——只要不
+消费 LSP 与编译器语义，对任何静态类型语言的支持都必然极为差劲。
+这自然不限于 C++，Rust、Go、Java、C\# 等静态类型语言同样受此影响。
+即使是动态但有类型系统的语言（如 TypeScript），也会因为缺乏类型信息而生成错误的测试。
+
+\begin{note}{编译器是最权威的 LSP}
+手写测试有一个免费的语义裁判：编译器本身。每一次编译，都是一次完整的
+重载决议、模板实例化与类型检查，错了立刻报错。全自动工具跳过了编译、
+也不问 LSP，只剩文本层面的猜测。这是手写（含带编译反馈的 Vibe Coding）
+在静态类型语言里更可靠的又一重原因：你永远握有最权威的裁判，而且它
+随叫随到。而且你可以无限制的简单重试，直到测试通过。
+\end{note}
+
+\section{硬伤二：每次全量重新生成，期望时间失控}
+
+全自动工具通常还有一个放大缺陷：只要你的修复不在工具的配置中，它的每一次运行都是“推倒重来”。
+它基于已有配置与当前代码，把整套测试完全重新生成，而不是在既有测试上
+做增量修补。这意味着：
+
+\begin{itemize}
+  \item 你上次手工修正的用例，会被这次生成覆盖；
+  \item 你为贴合项目约定而调整的断言，顷刻被抹掉；
+  \item 流程没有“记忆”，不收敛——每一轮都从零开始。
+\end{itemize}
+
+一个不收敛的流程，其“达到可维护状态的期望时间”是不可控的：每一轮的
+修正都被丢弃，总投入随轮次无界增长。说得夸张些，最坏情况下需要
+1000 年甚至 $10^6$ 年——这不是玩笑，而是“无积累”的必然算术。
+
+\begin{warning}{没有积累，就没有改进}
+工程方法有效的前提是“投入可积累”：每一次修正都让下一次更容易。
+全量重新生成恰恰摧毁了这个前提——你永远在做同样的修正，进度原地
+踏步。相比之下，手写测试（含 AI 起草）可持续编辑、可保留，每一次
+投入都沉淀在仓库里。
+\end{warning}
+
+\section{硬伤三：黑箱，只能丢弃、无法修改}
+
+全自动工具的生成规则、提示模板与启发式通常不透明。这在实际使用中
+意味着：
+
+\begin{itemize}
+  \item 生成用例出错时，你无法修正“它为什么这么生成”，只能修改那份
+        产物；
+  \item 而产物修改又会被下一次全量生成覆盖，错误反复出现；
+  \item 你无法注入项目知识：命名约定、领域不变量、历史缺陷模式，这些
+        在 Vibe Coding 里可以讲给 AI 听的东西，黑箱工具一概吃不下。
+\end{itemize}
+
+手写测试恰好相反：每一行都是普通源码，可读、可审、可 diff，任何一处
+都能随时修改。“可修改”看似是不起眼的要求，却正是工程与赌博的分水岭。
+
+\section{逐项失守：全自动工具在 C++ 上的失分点}
+
+\begin{center}
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{p{3.2cm}p{9.4cm}}
+\toprule
+失分点 & 后果 \\
+\midrule
+\endfirsthead
+\toprule
+失分点 & 后果 \\
+\midrule
+\endhead
+模板支持 & 不知道实例化成什么 \texttt{T}、该覆盖哪些特化，生成的用例
+往往编译不过或只覆盖表面实例化 \\
+CV 限定 & 分不清 const 成员函数重载与引用限定，误判只读与可变语义，
+断言对象选错 \\
+标准支持 & 误判项目的 C++ 标准版本与标准库实现，产出的代码可能无法
+编译或误用特性，宣称的“支持”不可信 \\
+条件编译 & 无视 \texttt{\#ifdef} 分支，连哪套平台代码在生效都判断不了，
+更谈不上测对 \\
+非标扩展 & 对编译器扩展支持任意，典型如核函数（\texttt{\_\_global\_\_}、
+OpenCL 等），无法识别、无法测试 \\
+Mock 决策 & 无法判定该在哪一层、以何种保真度建立替身，分析动辄卡死
+或产出不一致的 mock \\
+\bottomrule
+\end{longtable}
+\end{center}
+
+其中几项值得展开。
+
+\subsection{条件编译与多平台}
+
+大量 C++ 代码活在 \seqsplit{\texttt{\#ifdef}} 里：不同平台宏、特性开关、
+Debug/Release 差异。哪份代码真正生效，取决于实际构建配置。不读构建
+配置的全自动工具，要么把所有分支混为一谈，要么只取其一，生成的测试
+与真正运行的代码对不上。本书第 3、4 章讨论的移动端与引擎平台差异，
+恰恰是黑箱生成器看不见的部分。
+
+\subsection{非标准扩展：以核函数为例}
+
+当然编译器扩展也是一种非标准扩展，这里示例的是一种典型的非标准扩展：核函数。
+
+异构计算代码（CUDA、OpenCL、SYCL）的核心逻辑在核函数里，而核函数
+使用的是非标准语法与执行模型：
+
+\cpplabel
+\begin{lstlisting}
+// CUDA 核函数：__global__、线程索引、启动配置都不是标准 C++
+__global__ void add_kernel(const float* a, const float* b,
+                           float* c, int n)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) c[i] = a[i] + b[i];
+}
+\end{lstlisting}
+
+还有一种的模板很像的核运算符 \texttt{<<<>>>}，它是 CUDA 的启动配置语法，非标准 C++ 语法。
+
+\cpplabel
+\begin{lstlisting}
+// CUDA 启动配置语法：<<<grid, block>>>
+add_kernel<<<grid, block>>>(a, b, c, n);
+\end{lstlisting}
+
+测核函数要理解启动配置、线程模型与主机/设备内存边界，这些是“设计
+决策”，无法从表面文本中获得。语言无关的生成器看到
+\seqsplit{\texttt{\_\_global\_\_}} 与 \seqsplit{\texttt{blockIdx.x}}
+只会当作未知记号，要么直接报错，要么生成无意义的调用。这类代码往往
+是项目里最关键、也最容易出错的部分，却正是全自动生成最先放弃的地方。
+
+但是自动化工具本身连基本的模板使用（这里还不包含定义一个模板函数或模板类）都无法理解，更别提 CUDA 的非标准扩展了。
+
+比如标准容器和独占指针，其支持大量的自定义，且在底层、HAL、嵌入式、数学库等等大量使用。
+一个典型的就是嵌入式环境下的std::vector，它的分配器往往是自定义的模板参数。
+而部分自动化工具，仅识别在最简单场景的std::vector，即std::vector<int> v; 这种简单的场景。
+这类工具无法理解std::vector<int, MyAllocator> v; 这种自定义分配器的场景。
+这些和那些一知半解不知道std::vector的分配不一定在堆上的人员不同，这个人员的认识是可以被修正的。
+或者简单来说，某个人员的认识不被修正但可以修正对应的人，直接AI介入即可，但自动化工具的认识是无法被修正的。
+
+\subsection{Mock 决策卡死}
+
+自动生成 mock，必须先回答：哪些依赖需要 mock、在哪一层 mock、以多高
+保真度 mock？这个问题没有通用答案——它取决于测试意图、依赖的纯净度与
+架构留出的接缝（见第 7 章的依赖注入）。全自动工具试图自动做出这一
+判断，通常在循环依赖与复杂调用图前卡死，或产出自相矛盾的替身。手写
+测试配合 DI 与第 6 章的 Mock 工具，把判断权留给人，反而更稳。或者更简单的，
+自动化工具对于std::filesytem的运算符，也往往判断需要Mock，但实际上它是纯逻辑的，Mock反而会破坏测试。
+
+很多自动化工具机械的把所有依赖都Mock掉，导致测试的覆盖率和测试的有效性都大幅下降。
+甚至包括tinyxml2这种配置读取（不含I/O）部分，Lua/Pybind的绑定部分。
+而access等系统调用在某些场景下需要Mock，又无法操作。
+
+\section{手写的真正优势：通过条件由你定义}
+
+手写与自动生成最本质的区别，在于“通过条件”（测试预言，test oracle）
+的来源。
+
+全自动工具无从得知“代码应该做什么”，它只能看到“代码现在做了什么”。
+于是它生成的断言，多半是对当前行为的快照：跑一遍，把返回值记下，之后
+断言这个返回值。这类测试能发现“行为变了”，却发现不了“行为本来就错”
+——如果实现有缺陷，快照会把缺陷固化为期望值。
+
+\cpplabel
+\begin{lstlisting}
+// 被测函数：应返回正数之和；实现有 bug，把所有元素都加了
+int sum_positive(const std::vector<int>& v);
+
+// 全自动工具的典型产物：快照当前行为，把 bug 固化成“期望值”
+EXPECT_EQ(sum_positive({1, -2, 3}), 2);   // 2 是跑出来的，不是算出来的
+
+// 手写：通过条件来自规格，与当前实现无关
+EXPECT_EQ(sum_positive({1, -2, 3}), 4);   // 1 + 3 = 4
+\end{lstlisting}
+
+第一行的期望值 $2$ 是“测出来的”，第二行的 $4$ 是“推出来的”。当实现
+错误时，前者绿灯放行，后者红灯报警。单元测试的价值，恰恰全在第二种
+断言。手写测试让你从规格、契约与领域知识出发自行指定通过条件，这正是
+它能抓住 bug 的原因；自动生成的测试，最多只能证明“代码和上次一样”。
+
+不过上面的示例不显著，因为自动化工具往往许可你修改断言条件，但问题就出现在修改上。
+因为修改的断言条件有限，如等于/不等于/大于/小于等或者在某个值附近。但实际的返回值可能
+表示一个图形或者一段音频，这些都无法用简单的断言条件来描述。于是你就会发现，自动化工具生成的断言条件
+无法覆盖你想要的测试场景，最终你还是需要手写断言条件。但自动化工具对此需求的支持有限。
+实际手动和Vibe Coding编写时复杂的断言是大量复用的函数组合而成，但自动化工具无法实现这种水平的复用，使得使用过于繁杂。
+往往是你对每一个场景配置一个断言条件，最终你发现你需要的场景太多，断言条件太复杂，自动化工具无法满足你的需求。
+
+如果你需要的断言涉及被Mock的对象，你会发现自动化工具无法生成你想要的断言条件。
+因为自动化工具无法理解被Mock对象的行为，它只能生成一些简单的断言条件，无法覆盖你想要的测试场景。
+
+自动化工具的另一个误导是覆盖率：
+
+大部分自动化工具会声称“覆盖率高”，但覆盖率只是“跑过了多少行代码”，而不是“验证了多少逻辑”。
+简单的，对于某个逻辑，希望满足复杂的断言，对于另一个逻辑，则是不抛出异常即可。
+而多数情况，希望的是一些函数按指定顺序调用的结果和副作用，这对于自动化工具可行性极低。
+但对于作者、审阅人员和任何可靠的生成式AI都是可行的。
+
+自动化工具生成的代码是被混淆的，这意味作者和审阅人员（几乎）无法理解代码的逻辑，无法判断覆盖率是否真实有效。
+
+\section{如何正确使用 AI：起草可以，决策不行}
+
+本章并非反对使用 AI——恰恰相反，把重复性的脚手架工作交给 AI，正是
+值得拥抱的效率提升。关键在于定位：AI 起草，人决策。
+
+\begin{bestpractice}{Vibe Coding 单元测试的几条底线}
+\begin{itemize}
+  \item 先给定通过条件，再让 AI 填用例：告诉它“什么算对”，而不是让它
+        从实现里反推期望值；
+  \item 对每一条生成的断言问一句：这一行能否抓住“错误的实现”？不能
+        就删掉或改写；
+  \item 生成的代码必须经过审查再提交，测试代码同样是源码，享有同等的
+        评审待遇；
+  \item 警惕恒真断言与快照断言，它们抬高覆盖率却不提供验证力——为什么
+        高覆盖率不等于好测试，见第 8 章；
+  \item 工具可以建议“该补什么”，但是否采纳由你决定，绝不让一键生成器的UT
+        直接入库。
+\end{itemize}
+\end{bestpractice}
+
+\section{本章小结}
+
+\begin{compare}{手写（含 Vibe Coding）对全自动生成}
+\begin{itemize}
+  \item 分水岭不在是否用 AI，而在人是否在环内、能否随时介入；Vibe
+        Coding 仍算手写，反对的只是不可介入的全自动工具。
+  \item 全自动工具不经过 LSP 与编译器语义，对静态类型语言支持极差；
+        每次全量重新生成，投入无法积累，期望时间失控；且为黑箱，无法
+        修改。
+  \item 模板、CV 限定、标准版本、条件编译、非标扩展（如核函数）、
+        Mock 决策，处处是失分点。
+  \item 手写测试不可替代的价值：通过条件来自规格而非当前行为的快照，
+        因此能抓住“本来就错”。
+  \item 正确使用 AI：起草可以，决策不行；AI 提供效率，人提供正确性。
+\end{itemize}
+\end{compare}
 
 % ================================================================
 \chapter{总结}

@@ -747,6 +747,340 @@ int y = sr.Value.Id;  // 必须通过 .Value 访问，无法用 *sr 或 sr->Id
 \end{note}
 
 % ----------------------------------------------------------------------
+\section{位或 \texttt{\textbar} 的现代用法：管道操作符}
+% ----------------------------------------------------------------------
+
+\cpplabel
+
+在 \cpp{20} 之前，\Op{|} 在 \cpp{} 中几乎只有两种用法：内置整数的按位或，以及标志位/集合的并集。\cpp{20} 引入的 Ranges 库把 \Op{|} 重新塑造为\textbf{管道操作符}（pipe operator），成为现代 \cpp{} 中最显眼的语法之一：
+
+\begin{lstlisting}[language=C++]
+#include <ranges>
+#include <vector>
+#include <iostream>
+
+int main() {
+    std::vector<int> v = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+    // 管道：偶数 → 平方 → 取前 3 个
+    auto result = v
+        | std::views::filter([](int n){ return n % 2 == 0; })
+        | std::views::transform([](int n){ return n * n; })
+        | std::views::take(3);
+
+    for (int x : result) std::cout << x << ' ';  // 4 16 36
+}
+\end{lstlisting}
+
+整段表达式是\textbf{惰性}的：\Tp{result} 不会立即计算任何元素，只有被迭代时才会按需拉取。这一点与 \csharp{} 的 LINQ 完全一致——但实现路径大相径庭。
+
+\subsection{实现机制：range adaptor closure}
+
+\Op{|} 能作为管道，依赖一个名为 range adaptor closure 的协议：每个 view 适配器（如 \seqsplit{\texttt{views::filter}}）被调用时返回一个``闭包对象''，该对象重载了 \Op{|}，把左侧的 range 与右侧的适配器组合成新的 view。下面是简化的实现骨架：
+
+\begin{lstlisting}[language=C++]
+// 简化版的 range adaptor closure
+template <typename F>
+struct AdaptorClosure {
+    F f;
+    template <typename R>
+    auto operator()(R&& r) const { return f(std::forward<R>(r)); }
+};
+
+// range | closure —— 把闭包应用到 range 上
+template <typename R, typename C>
+    requires std::ranges::range<R>
+auto operator|(R&& r, const C& c) {
+    return c(std::forward<R>(r));
+}
+
+// closure | closure —— 组合两个适配器
+template <typename C1, typename C2>
+auto operator|(const C1& c1, const C2& c2) {
+    return AdaptorClosure{[c1, c2](auto&& r) {
+        return c2(c1(std::forward<R>(r)));
+    }};
+}
+\end{lstlisting}
+
+\begin{note}[title=语义的彻底改变]
+对内置整数类型而言，\Op{|} 仍然是按位或；只有当左操作数满足 \seqsplit{\texttt{std::ranges::range}} 概念时，新的重载才会被选中。这种``按概念分发''保证了既有代码（如 \Tp{flags = a | b}）不会受到任何影响。
+\end{note}
+
+\subsection{与 \csharp{} LINQ 的区分}
+
+\csharp{} 的 LINQ 解决的是同一类问题——对集合做\textbf{惰性、可组合}的链式变换——但走的是完全不同的语法路径：\textbf{LINQ 不使用 \Op{|}，也无法使用 \Op{|}}。\csharp{} 把 \Op{|} 严格保留为按位或/逻辑或，不允许把它征用为管道符。
+
+\csharplabel
+
+\begin{lstlisting}[language=CSharp]
+using System.Linq;
+
+var v = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+// 方法链式（fluent API）—— LINQ 的"管道"
+var result = v
+    .Where(n => n % 2 == 0)
+    .Select(n => n * n)
+    .Take(3);
+
+// 查询语法糖（受 SQL 启发）
+var result2 = from n in v
+              where n % 2 == 0
+              select n * n;
+
+// 注意：v | Where(...) 在 C# 中是非法语法
+//       | 永远是按位或，编译器不会把它解析为管道
+\end{lstlisting}
+
+LINQ 的链式调用之所以能作用于任何集合，靠的是\textbf{扩展方法}——一个带 \Tp{this} 修饰第一个参数的静态方法：
+
+\begin{lstlisting}[language=CSharp]
+public static class MyExtensions
+{
+    // 自定义"管道阶段"：扩展方法即可
+    public static IEnumerable<T> Squared<T>(this IEnumerable<T> src)
+        where T : struct
+    {
+        foreach (var x in src) yield return (dynamic)x * (dynamic)x;
+    }
+}
+
+// 使用：和 .Where() / .Select() 完全同样的链式语法
+var r = v.Where(n => n % 2 == 0).Squared().Take(3);
+\end{lstlisting}
+
+\begin{compare}[title=\cpp{20} Ranges 与 \csharp{} LINQ 的设计差异]
+\begingroup
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{p{3.6cm}p{5.2cm}p{5.2cm}}
+\toprule
+\textbf{维度} & \textbf{\cpp{20} Ranges} & \textbf{\csharp{} LINQ} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{维度} & \textbf{\cpp{20} Ranges} & \textbf{\csharp{} LINQ} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+组合符号 & \Op{|}（管道） & 点号链式调用 \\
+底层机制 & \Op{|} 重载 + closure 对象 & 扩展方法 \Tp{this} 参数 \\
+惰性求值 & \Tp{views::} 默认惰性 & \Tp{IEnumerable} 默认惰性 \\
+查询语法糖 & 无（曾提案 \texttt{|>}\ 未通过） & \Tp{from/where/select} \\
+新增算子 & 写 range adaptor & 写静态扩展方法 \\
+\Op{|} 可否挪用 & 可以（受概念约束） & 不可以（语言层面禁止） \\
+\end{longtable}
+\endgroup
+
+\textbf{关键差异}：\csharp{} 把 \Op{|} 锁定为按位或/逻辑或，因此 LINQ 必须借助\textbf{扩展方法}机制让 \Tp{.Where()} 这样的链式调用看起来像实例方法；\cpp{} 没有扩展方法，但有运算符重载，于是把 \Op{|} 重新征用为管道符，达成视觉上与 Unix shell 一致的可读性。
+\end{compare}
+
+\subsection{为什么两种语言做了相反的选择}
+
+\begin{itemize}
+  \item \textbf{\csharp{}}：LINQ（2007 年）的灵感主要来自 SQL 与函数式语言中的 \Tp{map}/\Tp{filter}。设计组选择``点号链 + 扩展方法''，因为它对所有 \Tp{IEnumerable<T>} 自动可用，无需类型实现任何特殊接口；同时引入 \Tp{from/where/select} 查询语法，让熟悉 SQL 的开发者无缝过渡。\csharp{} 的运算符重载范围受限——\Op{|} 必须保留按位/逻辑语义，不能挪用为管道符。
+  \item \textbf{\cpp{}}：Ranges（\cpp{20}）的灵感主要来自 F\#、Haskell 的函数组合算子以及 Unix shell 的 \texttt{|}。设计组（Eric Niebler 等）刻意选择 \Op{|}，原因有三：视觉上与 shell 管道一致，可读性强；借助运算符重载，无需引入新关键字；概念约束（\seqsplit{\texttt{std::ranges::range}}）保证只对 range 类型生效，与内置位或不冲突。
+\end{itemize}
+
+\begin{note}[title=关于 C++ 的 \texttt{|>} 提案]
+\cpp{} 委员会曾讨论过引入一个独立的``前向管道''运算符 \texttt{|>}（类似 F\# 的 \texttt{|>} 与 Elixir 的 \texttt{|>}），用于一般化的函数链式调用 \Tp{x |> f |> g}。该提案因与 Ranges 现有 \Op{|} 重载冲突、且语义难以一致定义而被搁置；目前 \cpp{26} 仍未纳入。Ranges 的 \Op{|} 是当前 \cpp{} 中唯一的``管道''语法。
+\end{note}
+
+% ----------------------------------------------------------------------
+\subsection{类 SQL 实践：自定义类作为 \Op{|} 的左操作数}
+% ----------------------------------------------------------------------
+
+Ranges 的管道并非语言特权：\Op{|} 终究只是一个普通的可重载运算符，\textbf{任何自定义类}都可以作为它的左操作数。借助这一点，我们可以为自有领域类型带来类 SQL 的声明式可读性——最典型的两种形态是\textbf{内存通用表格}与\textbf{SQL 查询构造器}。
+
+\cpplabel
+
+下面是一个最小但完整的实现：\Tp{Table<Row>} 作为 \Op{|} 的左操作数，三个管道阶段 \Tp{where}、\Tp{select}、\Tp{order\_by} 分别对应 SQL 的 \Tp{WHERE}、\Tp{SELECT}、\Tp{ORDER BY} 子句：
+
+\begin{lstlisting}[language=C++]
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <functional>
+
+namespace sqlpipe {
+
+// ---------- 通用内存表格：| 的左操作数 ----------
+template <typename Row>
+class Table {
+    std::vector<Row> rows_;
+public:
+    explicit Table(std::vector<Row> r) : rows_(std::move(r)) {}
+    const std::vector<Row>& rows() const { return rows_; }
+    std::size_t size() const { return rows_.size(); }
+};
+
+// ---------- 管道阶段（闭包类型） ----------
+template <typename Pred> struct WhereCl   { Pred pred; };
+template <typename F>    struct SelectCl  { F proj; };
+template <typename Key>  struct OrderByCl { Key key; bool desc; };
+
+template <typename Pred>
+WhereCl<Pred> where(Pred p) { return {std::move(p)}; }
+template <typename F>
+SelectCl<F> select(F f) { return {std::move(f)}; }
+template <typename Key>
+OrderByCl<Key> order_by(Key k, bool d = false)
+    { return {std::move(k), d}; }
+
+// ---------- | 的重载：左 Table，右阶段 ----------
+template <typename Row, typename Pred>
+Table<Row> operator|(const Table<Row>& t, WhereCl<Pred> w) {
+    std::vector<Row> out;
+    for (const auto& r : t.rows())
+        if (w.pred(r)) out.push_back(r);
+    return Table<Row>(std::move(out));
+}
+
+template <typename Row, typename F>
+auto operator|(const Table<Row>& t, SelectCl<F> s) {
+    using Out = std::invoke_result_t<F, const Row&>;
+    std::vector<Out> out;
+    out.reserve(t.size());
+    for (const auto& r : t.rows()) out.push_back(s.proj(r));
+    return Table<Out>(std::move(out));
+}
+
+template <typename Row, typename Key>
+Table<Row> operator|(Table<Row> t, OrderByCl<Key> o) {
+    auto rows = t.rows();
+    std::sort(rows.begin(), rows.end(),
+              [&](const Row& a, const Row& b) {
+                  return o.desc ? o.key(b) < o.key(a)
+                                : o.key(a) < o.key(b);
+              });
+    return Table<Row>(std::move(rows));
+}
+
+}  // namespace sqlpipe
+\end{lstlisting}
+
+注意两个设计点：所有重载与 \Tp{Table} 放在\textbf{同一命名空间}（保证 ADL 能找到它们）；右操作数是\textbf{专用闭包类型}，因此永远不会与内置按位或产生歧义。
+
+使用时，管道的阶段顺序与 SQL 子句的执行顺序完全一致，从左到右读作``哪张表 $\to$ 保留哪些行 $\to$ 取哪些列 $\to$ 如何排序''：
+
+\begin{lstlisting}[language=C++]
+using namespace sqlpipe;
+
+struct User    { std::string name; int age; std::string city; };
+struct NameAge { std::string name; int age; };
+
+Table<User> users(std::vector<User>{
+    {"Zhang", 34, "Beijing"}, {"Li", 28, "Beijing"},
+    {"Wang", 41, "Shanghai"}, {"Zhao", 37, "Beijing"},
+});
+
+// 等价 SQL:
+//   SELECT name, age FROM users
+//    WHERE age > 30 AND city = 'Beijing'
+//    ORDER BY age DESC;
+auto q = users
+    | where([](const User& u) {
+          return u.age > 30 && u.city == "Beijing"; })
+    | select([](const User& u) { return NameAge{u.name, u.age}; })
+    | order_by([](const NameAge& r) { return r.age; }, true);
+
+for (const auto& r : q.rows())
+    std::cout << r.name << ' ' << r.age << '\n';
+// Zhao 37
+// Zhang 34
+\end{lstlisting}
+
+\begin{note}[title=急式 vs 惰式]
+上面的 \Tp{Table} 版本是\textbf{急式}的：每个 \Op{|} 立即产出一张新的中间表，简单直观但有额外拷贝。\Tp{std::views} 是惰式的（迭代时按需拉取）；下面的 SQL 构造器则是完全惰式的（只拼文本、不执行）。工程中选择哪一种，取决于数据量与阶段是否需要复用。
+\end{note}
+
+第二种形态是\textbf{通用 SQL 类}：管道阶段完全不碰数据，只把子句记录为字符串，直到终端操作才一次性提交给数据库。这是 ORM 与 query builder 类库最常见的形态：
+
+\begin{lstlisting}[language=C++]
+// 子句类型即"闭包"，聚合初始化直接构造
+struct From    { std::string table; };
+struct Where   { std::string cond; };
+struct OrderBy { std::string key; };
+struct Limit   { int n; };
+
+class SqlBuilder {
+    std::string from_, where_, order_;
+    int limit_ = -1;
+public:
+    explicit SqlBuilder(From f) : from_(std::move(f.table)) {}
+
+    std::string str() const {
+        std::string s = "SELECT * FROM " + from_;
+        if (!where_.empty()) s += " WHERE "    + where_;
+        if (!order_.empty()) s += " ORDER BY " + order_;
+        if (limit_ >= 0)     s += " LIMIT "    + std::to_string(limit_);
+        return s;
+    }
+
+    // 中间阶段：返回新 builder，可继续链接
+    friend SqlBuilder operator|(SqlBuilder q, Where w)
+        { q.where_ = std::move(w.cond); return q; }
+    friend SqlBuilder operator|(SqlBuilder q, OrderBy o)
+        { q.order_ = std::move(o.key);  return q; }
+    friend SqlBuilder operator|(SqlBuilder q, Limit l)
+        { q.limit_ = l.n;               return q; }
+};
+
+auto q = From{"users"}
+       | Where{"age > 30 AND city = 'Beijing'"}
+       | OrderBy{"age DESC"}
+       | Limit{2};
+
+q.str();
+// SELECT * FROM users WHERE age > 30 AND city = 'Beijing'
+//   ORDER BY age DESC LIMIT 2
+\end{lstlisting}
+
+``管道即值''是这一模式的额外红利：每个阶段都是普通函数对象，整条管线是普通表达式值，因此可以存入变量、跨函数传递、甚至在运行时按条件拼装：
+
+\begin{lstlisting}[language=C++]
+auto q = users | where(base_filter);
+if (only_local)
+    q = q | where([](const User& u) { return u.city == "Beijing"; });
+if (need_sorted)
+    q = q | order_by([](const User& u) { return u.age; });
+// where / order_by 不改变行类型，q 的类型始终为 Table<User>，
+// 故条件拼装合法
+\end{lstlisting}
+
+\begin{compare}[title=与 \csharp{} LINQ 查询语法的对照]
+\csharp{} 的 \Tp{from}、\Tp{where}、\Tp{select} 查询语法同样受 SQL 启发，但它是\textbf{编译器语法糖}——编译期被翻译为点号方法调用，查询体本身既不是值也不是类型，无法在运行时追加子句。\cpp{} 的管道版则是纯运算符重载：管线是值，可以在运行时条件拼装（如上例）。需要说明的是，LINQ 的\textbf{方法链}写法（\Tp{.Where().OrderBy()}）同样具备条件拼装能力，缺失这一能力的只是查询语法糖；而 \cpp{} 用 \Op{|} 一个机制同时覆盖了两种风格。
+\end{compare}
+
+\begin{guideline}[title=自定义左操作数三要素]
+\begin{enumerate}
+  \item \textbf{同命名空间重载}：\Op{|} 与左操作数类型放在同一命名空间，依靠 ADL 查找，避免污染全局命名空间；
+  \item \textbf{专用右操作数类型}：右侧必须是自定义的闭包/子句类型，从根本上杜绝与内置按位或的歧义；
+  \item \textbf{阶段与终端分离}：中间阶段返回新的可管道对象（保持可链接），终端操作（\Fn{rows}、\Fn{str}、\Fn{execute}）才触发真实计算或 I/O。
+\end{enumerate}
+\end{guideline}
+
+\subsection{自定义类型重载 \Op{|} 的工程建议}
+
+\begin{warning}[title=不要随意重载 \Op{|}]
+若要在自己的库中重载 \Op{|} 实现管道，应当遵守以下原则：
+\begin{itemize}
+  \item 仅对明确的``可流水线''类型（range、parser、builder、pipeline stage）启用，不要污染整数/枚举/标志位的按位或语义。
+  \item 用概念（\Tp{concept}）或 SFINAE 限定左操作数类型，避免与内置 \Op{|} 或 \Tp{std::ranges} 的重载产生歧义。
+  \item 保持结合律：\Tp{(a | f) | g} 应等价于 \Tp{a | (f | g)}，让用户可以自由分段书写。
+  \item 不要重载 \Op{|=}——其复合赋值语义（``把右侧并入左侧''）与管道（``把左侧送入右侧''）方向相反，混用会造成阅读障碍。
+  \item 在头文件中提供 \Tp{operator|} 时，应同时支持 ``range | adaptor'' 与 ``adaptor | adaptor''（组合）两种形式，否则用户无法预先拼装管线。
+\end{itemize}
+\end{warning}
+
+\begin{guideline}[title=一句话总结]
+\Op{|} 在 \cpp{20} Ranges 中是``惰性变换的管道分隔符''；在 \csharp{} LINQ 中，对应的角色由点号链 + 扩展方法承担。\csharp{} 的 \Op{|} 永远只是按位或/逻辑或——这是两种语言在``运算符重载边界''上的根本分歧。
+\end{guideline}
+
+% ----------------------------------------------------------------------
 \section{实战案例：复数类}
 % ----------------------------------------------------------------------
 
