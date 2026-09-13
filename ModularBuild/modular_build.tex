@@ -1,0 +1,1171 @@
+% !TEX program = xelatex
+% C++ 模块化构建：Modules vs Headers 与工程化迁移
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ===== 页面 =====
+\usepackage[margin=2.5cm]{geometry}
+
+% ===== 字体 =====
+\usepackage{fontspec}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}
+  {\setmonofont{Consolas}}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+
+% ===== 颜色 =====
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{cppheadbg}{HTML}{2E4057}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+\definecolor{bashheadbg}{HTML}{4EAA25}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ===== listings =====
+\usepackage{listings}
+
+% ---- C++ ----
+\lstdefinestyle{cppstyle}{%
+  language=C++,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    override,final,noexcept,constexpr,consteval,constinit,
+    decltype,auto,concept,requires,co_await,co_yield,co_return,
+    nullptr,sizeof...,static_assert,thread_local,alignas,alignof,
+    namespace,using,template,typename,virtual,explicit,friend,
+    mutable,volatile,register,extern,inline,
+    module,import,export,
+    std,string,vector,map,unordered_map,set,unordered_set,
+    unique_ptr,shared_ptr,weak_ptr,optional,variant,any,
+    tuple,pair,array,span,string_view,
+    cin,cout,cerr,endl,
+    move,forward,swap,make_unique,make_shared,
+    begin,end,size,empty,push_back,emplace_back
+  },
+  deletekeywords={int,char,float,double,bool,void,long,short,unsigned,signed},
+  emph={%
+    int,char,float,double,bool,void,long,short,unsigned,signed,
+    int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,
+    size_t,ptrdiff_t,intptr_t,uintptr_t,wchar_t
+  },
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- CMake ----
+\lstdefinestyle{cmakestyle}{%
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=2,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    cmake_minimum_required,project,add_library,add_executable,%
+    target_sources,target_link_libraries,target_include_directories,%
+    target_compile_features,target_compile_options,%
+    find_package,include,set,option,if,else,elseif,endif,%
+    foreach,endforeach,function,endfunction,macro,endmacro,%
+    FILE_SET,CXX_MODULES,INTERFACE,PUBLIC,PRIVATE,
+    CMAKE_CXX_STANDARD,CMAKE_CXX_STANDARD_REQUIRED,CMAKE_BUILD_TYPE,%
+    install,export,configure_package_config_file
+  },
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Shell / 命令行 ----
+\lstdefinestyle{bashstyle}{%
+  basicstyle=\small\ttfamily,numbers=none,
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{bashheadbg}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={cl,clang,gcc,g++,cmake,ninja,make,msbuild,vcpkg,conan,
+                pwsh,bash,python,clangd,clang-scan-deps},
+  escapeinside={(*@}{@*)}
+}
+
+\lstset{style=cppstyle}
+
+% ===== tcolorbox（统一一次加载，避免 option clash） =====
+\usepackage[most]{tcolorbox}
+
+% ===== 代码标签 =====
+
+\newcommand{\cpplabel}{%
+  \tcbox[on line,colback=cppheadbg,colframe=cppheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{C++}}
+
+\newcommand{\cmakelabel}{%
+  \tcbox[on line,colback=cppheadbg!80!black,colframe=cppheadbg!80!black,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{CMake}}
+
+\newcommand{\shelllabel}{%
+  \tcbox[on line,colback=bashheadbg,colframe=bashheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{Shell}}
+
+% ===== tcolorbox 提示框 =====
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{evidence}[1][]{
+  enhanced,breakable,
+  colback=gray!5!white,colframe=gray!70!black,
+  fonttitle=\bfseries,title=证据,#1,
+  boxed title style={colback=gray!70!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ===== 章节标题 =====
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{float}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ===== 超链接 =====
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={hsmbanlance},
+  pdftitle={C++ 模块化构建参考手册},
+}
+
+% ===== 自定义命令 =====
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+\newcommand{\flag}[1]{\texttt{#1}}
+
+% ====================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C++ 模块化构建参考手册\par}
+\vspace{1cm}
+{\LARGE Modules vs Headers \quad 优势 \quad 成熟度困局 \quad CMake 实战\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+% ╔══════════════════════════════════════════════════════════════════╗
+% ║  Part I — 头文件机制：本质与痛点                                ║
+% ╚══════════════════════════════════════════════════════════════════╝
+\part{头文件机制：本质与痛点}
+
+\chapter{\#include 的工作模型}
+
+\section{预处理器视角：纯文本替换}
+
+C++ 编译流程的第一阶段是预处理。\flag{\#include} 不是语言关键字，而是预处理指令，
+其语义就是把目标文件的内容逐字符粘贴到指令所在位置。经过预处理后，编译器看到的
+是一个被完全展开的、没有任何 \flag{\#include} 的翻译单元（Translation Unit, TU）。
+
+举例：一个仅有 \texttt{int main()\{\}} 的源文件，在 MSVC 下展开
+\texttt{\#include <iostream>} 之后，预处理产物的行数大约在 4 万到 7 万行之间，
+具体取决于标准库实现版本。换言之，每次重新编译一个翻译单元，都要重新解析这几万行
+本质上和你业务无关的代码。
+
+\begin{compare}[title=文本替换 vs 语义导入]
+\begin{itemize}
+  \item \textbf{\#include}：预处理器层面的复制粘贴，编译器对原始边界一无所知。
+  \item \textbf{import}：编译器层面的语义导入，导入的是已经编译好的接口快照（BMI）。
+\end{itemize}
+\end{compare}
+
+\section{Include Guard 与 \#pragma once 的局限}
+
+为了避免同一个头文件在一个 TU 中被多次展开，业界长期采用两种手段：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// 方式 A: 经典 include guard
+#ifndef MYLIB_FOO_H
+#define MYLIB_FOO_H
+// ... declarations ...
+#endif
+
+// 方式 B: 编译器扩展（被所有主流编译器接受）
+#pragma once
+// ... declarations ...
+\end{lstlisting}
+
+但这两者只能解决“同一 TU 内的重复展开”，无法解决跨 TU 的重复解析。
+即便项目里有 200 个 .cpp 都包含了同一个头文件，编译器仍要分别解析 200 次。
+预编译头（PCH）是对此的局部缓解，但 PCH 本身存在粒度过粗、跨编译器不通用、
+依赖维护成本高等问题。
+
+\begin{warning}[title=include guard 的两个常见坑]
+\begin{enumerate}
+  \item 不同库使用相同 guard 宏名（如 \texttt{\_H\_} 或库前缀冲突）会导致
+        头文件被静默跳过，链接期才报“未声明的标识符”。
+  \item \flag{\#pragma once} 在符号链接、网络盘或 bind mount 下，部分编译器
+        基于 inode 判重失败，仍可能重复展开。
+\end{enumerate}
+\end{warning}
+
+\section{头文件机制带来的工程痛点}
+
+\subsection{编译时间膨胀}
+
+C++ 标准库的设计天然“头文件密集”：模板必须放在头文件中以供实例化，
+\texttt{<algorithm>}、\texttt{<vector>}、\texttt{<string>} 之间存在大量传递性
+include。一个中型项目里，单个 .cpp 文件展开后超过 10 万行预处理产物并不罕见。
+对增量构建来说，修改一个公共头文件会触发几乎所有依赖它的 TU 重新编译。
+
+\subsection{宏污染}
+
+头文件中的所有 \flag{\#define} 会泄漏到包含它的所有 TU。
+经典案例是 Windows 平台 \texttt{<windows.h>} 定义的 \texttt{min}、\texttt{max}、
+\texttt{ERROR}、\texttt{interface} 等宏，与 \texttt{std::min}、\texttt{std::max}
+冲突，迫使开发者要么定义 \texttt{NOMINMAX}，要么写
+\texttt{(std::min)(a, b)} 这种带括号的诡异语法。
+
+\subsection{顺序依赖}
+
+某些头文件之间存在隐式顺序要求：A 头文件假设 B 头文件已被包含。
+这种依赖不在文件中显式声明，编译失败时只报“A 中的某个类型未声明”，
+排查困难。
+
+\subsection{ODR 与传递性泄漏}
+
+C++ 的“单一定义规则”（One Definition Rule, ODR）要求在同一个程序中，
+某个实体只能有一个定义。头文件机制下，\texttt{inline}、模板、\texttt{constexpr}
+变量等是 ODR 例外的少数载体，而绝大多数代码必须放在 .cpp 中。
+但开发者经常无意中通过头文件传递依赖：A.h 因为内部用了 \texttt{std::vector}
+而 include 了 \texttt{<vector>}，B.cpp 包含 A.h 后就能直接用 vector，
+看似省事，实则使 B 的真实依赖被掩盖。一旦 A.h 重构去掉 vector，
+B 立刻编译失败。
+
+\begin{note}[title=头文件机制的本质局限]
+头文件机制是 1970 年代 C 语言的产物，其设计假设是“源代码很小、宏很有用、
+编译速度无所谓”。C++ 把这套机制扩展到模板、内联函数、constexpr、概念之后，
+预处理的成本与语义复杂性已经远超原始设计意图。Modules 的诞生正是为了
+从根本上替代这套机制。
+\end{note}
+
+% ╔══════════════════════════════════════════════════════════════════╗
+% ║  Part II — Modules：语法、原理与构件                            ║
+% ╚══════════════════════════════════════════════════════════════════╝
+\part{Modules：语法、原理与构件}
+
+\chapter{核心语法}
+
+C++20 引入了模块（Modules）作为头文件的语义级替代品。
+模块由一个或多个模块单元（module unit）组成，分为模块接口单元
+（module interface unit）和模块实现单元（module implementation unit）。
+
+\section{最小示例：定义与导入}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// math.cppm  —— 模块接口单元
+export module math;          // 声明这是一个名为 math 的模块接口
+
+export int add(int a, int b) {
+    return a + b;
+}
+
+int helper(int x) {          // 没有 export，对外不可见
+    return x * 2;
+}
+
+// main.cpp
+import math;                 // 语义级导入
+import std;                  // C++23 起允许整体导入标准库
+
+int main() {
+    return add(1, 2);        // OK
+    // helper(1);            // 错误：未导出
+}
+\end{lstlisting}
+
+关键点：
+
+\begin{itemize}
+  \item \flag{export module math;} 必须出现在文件最前面（在 global module fragment 之后）。
+  \item \flag{export} 修饰的实体构成模块的公共接口，未修饰的实体对外不可见。
+  \item \flag{import math;} 不需要任何 \flag{\#include}，也不会引入宏。
+  \item 模块名是字符串字面量风格的标识符，由实现自由分配命名空间，
+        不会与文件系统路径绑定。
+\end{itemize}
+
+\section{Global Module Fragment}
+
+模块接口单元在 \flag{export module} 之前可以有一段 global module fragment，
+其中只能放预处理指令（如 \flag{\#include}）和声明，不能放定义：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+module;                       // 开启 global module fragment
+
+#include <cstdio>             // 仅供本模块内部使用的传统头文件
+#include "legacy_helper.h"
+
+export module my.lib;         // 模块接口开始
+
+export void do_work() {
+    std::printf("works\n");   // OK，cstdio 在 GMF 中已可见
+}
+\end{lstlisting}
+
+GMF 的语义是“这些声明属于全局模块（global module），不是 my.lib 的一部分”，
+它们对导入方完全不可见。这是与传统头文件互操作的关键桥梁。
+
+\section{Private Module Fragment}
+
+C++20 还允许在模块接口单元末尾追加 private module fragment，
+其中放置不希望被任何导入方看见的实现细节：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+export module fast.string;
+
+export class FastString {
+public:
+    void append(char c);
+private:
+    char buf_[64];
+    int  len_;
+};
+
+module :private;             // private fragment 起点
+
+void FastString::append(char c) {
+    if (len_ < 64) buf_[len_++] = c;
+}
+\end{lstlisting}
+
+修改 private fragment 中的代码不会使导入方的 BMI 失效，
+因此可以加快增量构建。
+
+\section{Module Partition：分区的接口与实现}
+
+随着单个模块的代码量增长，可以把接口拆分为多个分区
+（partition），再由主接口聚合：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// 主接口 math.cppm
+export module math;
+export import :basic;        // 重导出 basic 分区
+export import :advanced;
+
+// 分区 basic.cppm
+export module math:basic;
+export int add(int, int);
+
+// 分区 advanced.cppm
+export module math:advanced;
+import :basic;               // 分区之间可以互相 import
+export int power(int base, int exp);
+
+// 实现单元 math_impl.cpp（不属于接口）
+module math;                 // 注意：没有 export
+import :basic;
+int add(int a, int b) { return a + b; }
+\end{lstlisting}
+
+分区的好处：
+
+\begin{enumerate}
+  \item 接口可以拆成多个文件，便于团队协作。
+  \item 修改一个分区只触发依赖该分区的其他分区重新编译，
+        而不是整个模块。
+  \item 分区名（如 \flag{:basic}）只在模块内部可见，
+        外部用户始终只看到一个 \flag{math} 模块。
+\end{enumerate}
+
+\section{Header Units：传统头文件的模块化包装}
+
+C++20 提供了 header unit 机制，允许把现有头文件当作模块导入：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+import <vector>;             // header unit
+import "my_legacy.h";        // 用户头文件也可以
+
+int main() {
+    std::vector<int> v;      // 与 #include <vector> 等效
+    v.push_back(1);
+}
+\end{lstlisting}
+
+Header unit 的语义介于纯 \flag{\#include} 和完整 module 之间：
+
+\begin{itemize}
+  \item 头文件本身不需要修改，编译器自动把它当作匿名模块编译并缓存。
+  \item 头文件中的宏依然会泄漏到导入方（这是为了向后兼容）。
+  \item 同一个头文件在一个 TU 中只能 import 一次，多次 import 等同于一次。
+\end{itemize}
+
+\begin{warning}[title=Header Units 的局限]
+\begin{enumerate}
+  \item 编译器必须把头文件解析为合法的模块单元，遇到
+        \flag{\#pragma once} + 复杂的宏拼接时可能失败。
+  \item MSVC 与 Clang 在 header unit 的支持度上差异较大，
+        Clang 17 之前几乎不可用。
+  \item Header unit 之间互相 import 容易形成循环依赖。
+\end{enumerate}
+\end{warning}
+
+\chapter{BMI：编译模型的核心}
+
+\section{什么是 BMI}
+
+BMI（Binary Module Interface）是模块接口被编译器解析后生成的二进制快照，
+包含模块导出实体的完整语义信息：类型、模板、函数签名、概念、命名空间结构等。
+它不是目标文件（.obj/.o），不能直接链接；它也不是文本头文件，不能被
+预处理器读取。BMI 是编译器私有的、版本相关的中间格式。
+
+各编译器的 BMI 文件后缀和默认路径：
+
+\begin{itemize}
+  \item \textbf{MSVC}：\texttt{.ifc}（Interface File Container），
+        默认输出到构建目录。
+  \item \textbf{Clang}：\texttt{.pcm}（Precompiled Module），
+        默认放在模块缓存目录。
+  \item \textbf{GCC}：\texttt{.gcm}（GCC Module），
+        默认在 \texttt{gcm.cache/} 子目录。
+\end{itemize}
+
+\begin{warning}[title=BMI 不可移植]
+BMI 是编译器内部表示，跨编译器、跨编译器版本、甚至跨编译选项都不兼容。
+你不能把 MSVC 生成的 .ifc 给 Clang 用，也不能把 Clang 18 的 .pcm 给
+Clang 19 用。这是当前模块化工具链最大的工程负担之一：
+任何发布二进制库的尝试都必须附带特定编译器版本的 BMI。
+\end{warning}
+
+\section{编译流程对比}
+
+\begin{compare}[title=传统 vs 模块化构建]
+\textbf{传统}：每个 .cpp 独立预处理（展开所有 \#include）→ 编译 → 链接。
+公共头文件被解析 $N$ 次，$N$ 是包含它的 TU 数。
+
+\textbf{模块化}：先编译每个模块接口生成 BMI（一次）→ 编译实现单元
+（直接读 BMI，跳过文本解析）→ 链接。BMI 的解析成本是 $O(1)$
+而非 $O(N)$。
+\end{compare}
+
+\section{依赖扫描：构建系统的新职责}
+
+模块的依赖关系不再能从 \flag{\#include} 行简单解析，因为：
+
+\begin{enumerate}
+  \item \flag{import math;} 中的 \texttt{math} 是模块名，不对应任何文件路径。
+  \item 模块的接口可能由多个分区文件组成，需要构建系统知道分区到文件的映射。
+  \item 模块依赖必须先于编译被解析，构建系统需要按拓扑顺序生成 BMI。
+\end{enumerate}
+
+P1689R5 提案规定了构建系统与编译器之间传递模块依赖信息的格式，
+MSVC 通过 \flag{/scanDependencies} 输出，Clang 通过
+\flag{clang-scan-deps} 工具输出。CMake 3.28+ 内部调用这些机制
+完成依赖图构建。
+
+% ╔══════════════════════════════════════════════════════════════════╗
+% ║  Part III — Modules 的优势                                      ║
+% ╚══════════════════════════════════════════════════════════════════╝
+\part{Modules 的优势}
+
+\chapter{为什么 Modules 是更好的抽象}
+
+\section{编译速度：从 $O(N)$ 到 $O(1)$}
+
+最直观的优势是编译速度。Microsoft 在 Visual Studio 2022 17.5+ 的实测中，
+对一个包含 1500 个 TU 的中型项目，把
+\seqsplit{\texttt{\#include\ <vector>}},
+\seqsplit{\texttt{<string>}},
+\seqsplit{\texttt{<algorithm>}}
+等常用头文件替换为 \flag{import std;}，
+全量重建时间下降约 35\%-50\%，增量构建（修改一个常用头文件）下降更为显著。
+
+C++23 起 \flag{import std;} 成为标准库的官方模块化接口，
+\texttt{std} 模块整体只需解析一次。各编译器的进度：
+
+\begin{itemize}
+  \item \textbf{MSVC 19.34+}（VS 2022 17.4）：完整支持 \flag{import std;}，
+        通过 \flag{/std:c++latest} 启用。
+  \item \textbf{GCC 15}：标准库模块化的初步支持。
+  \item \textbf{Clang 19+}：libc++ 提供 \texttt{std.cppm}，需要手动编译为模块。
+\end{itemize}
+
+\section{真正的封装}
+
+模块内未 \flag{export} 的实体对外完全不可见，且默认具有模块链接性
+（module linkage），不会与其他 TU 中的同名实体冲突：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// util.cppm
+export module util;
+
+namespace detail {           // 不需要 export，外部完全看不见
+    int counter = 0;
+    void log(const char* msg);
+}
+
+export void init() {
+    detail::counter = 0;
+}
+\end{lstlisting}
+
+对比传统头文件：在 \texttt{util.h} 中放进 \texttt{namespace detail} 的实体，
+任何包含该头文件的 TU 都能看到，并可能在链接期与另一个库的同名 detail
+冲突（即便用了匿名命名空间，跨 TU 也常被误用）。模块从根本上消除了
+“内部细节被外部意外依赖”的可能性。
+
+\section{没有宏污染、顺序无关}
+
+\flag{import} 不会把任何宏引入到当前 TU。即便模块的实现内部使用了
+\flag{\#define}，导入方也完全感知不到：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// legacy.cppm
+module;
+#include <windows.h>          // 引入 min/max 等臭名昭著的宏
+export module legacy;
+
+export void do_win32_thing();
+
+// main.cpp
+import legacy;
+int x = std::min(1, 2);       // 完全 OK，min 宏没有泄漏过来
+\end{lstlisting}
+
+模块之间也没有顺序依赖：\flag{import A; import B;} 与
+\flag{import B; import A;} 等价，因为每个模块都是自包含的语义单元。
+
+\section{显式接口与自描述}
+
+模块接口文件本身就是一份精确的“这个库对外暴露什么”的清单，
+不需要再去头文件目录里翻找哪些是公共的、哪些是内部的。
+配合 \flag{module :private;} 还能把实现细节进一步隐藏。
+对代码审查、文档生成、IDE 智能感知都更友好。
+
+\section{ODR 友好}
+
+模块内未导出的实体具有模块链接性，不会与其他模块/ TU 中的同名实体
+冲突，从而大幅减少 ODR 违反。模板实例化的去重规则也更清晰：
+同一个模板在不同模块中实例化时，编译器可以确定它们是同一个实体。
+
+\begin{guideline}[title=Modules 的核心价值]
+\begin{enumerate}
+  \item 编译模型从“每个 TU 重新解析所有依赖”变为“依赖被解析一次后复用”。
+  \item 封装从“约定（namespace detail）”变为“语言级保证（不 export 就不可见）”。
+  \item 接口从“文本展开”变为“语义快照（BMI）”，可被工具链精确分析。
+\end{enumerate}
+\end{guideline}
+
+% ╔══════════════════════════════════════════════════════════════════╗
+% ║  Part IV — 成熟慢的根本原因                                     ║
+% ╚══════════════════════════════════════════════════════════════════╝
+\part{成熟慢的根本原因}
+
+\chapter{Clang 支持的长期滞后}
+
+\section{两套 Modules 的历史包袱}
+
+Clang 团队从 2012 年开始就在做“Clang Modules”，目标是给 C 语言的
+系统头文件提供模块化机制（典型用例是 Darwin SDK 的 \texttt{module.modulemap}）。
+这套机制是为 C 设计的，与 C++20 Modules 是两套独立的实现，但共用大量底层代码。
+
+C++20 Modules 标准化后，Clang 团队需要在已有 Clang Modules 的基础上
+增加 C++ 专属语义（template、concept、ODR、module linkage、partition），
+工程量巨大。结果是：
+
+\begin{itemize}
+  \item Clang 15（2022 年 9 月）：初步支持 \flag{-fmodules-ts}，仅能编译
+        最简单的 module，分区与 header unit 几乎不可用。
+  \item Clang 16-17：修复大量崩溃，但实现仍标记为 experimental。
+  \item Clang 18（2024 年 3 月）：开始落地 P1815R2（明确模块依赖图、
+        模块链接性等关键语义），但仍有约 30\% 的提案条目未实现。
+  \item Clang 19（2024 年 9 月）：\flag{import std;} 在 libc++ 下可用，
+        但需要用户自行编译 \texttt{std.cppm} 为 BMI。
+  \item Clang 20（2025 年 3 月）：进一步完善，但仍被官方文档标记为
+        “experimental support”。
+\end{itemize}
+
+\begin{evidence}[title=Clang 模块支持时间线证据]
+\begin{itemize}
+  \item Clang 官方文档
+        \texttt{clang.llvm.org/docs/StandardLibrary.html}
+        长期保留 “Modules support is experimental” 字样。
+  \item LLVM GitHub 上以 \texttt{[Modules]} 标签的 issue 截至 2025 年仍有
+        数百条 open，其中 \texttt{C++20 Modules} 子标签下的 issue 多为
+        模板特化、ADL、链接错误。
+  \item P1815R2 “Clarifying C++20 Modules” 是模块语义的关键修订，
+        Clang 直到 18 才开始系统性落地，比 MSVC 晚约 2-3 年。
+\end{itemize}
+\end{evidence}
+
+\section{典型 Bug 类别}
+
+Clang 当前在以下场景仍频繁出问题：
+
+\begin{enumerate}
+  \item \textbf{模板特化跨模块}：在模块 A 中声明模板，在模块 B 中提供
+        特化，导入方有时会得到“特化未声明”的错误。
+  \item \textbf{ADL 与 using-directive}：模块边界破坏了 ADL 的传统假设，
+        Clang 在某些重载解析路径上仍然出错。
+  \item \textbf{Concept 与 requires 表达式}：模块导出的 concept 在
+        导入方的 requires 子句中匹配失败。
+  \item \textbf{链接器层面}：模板实例化的弱符号去重在不同模块间不一致，
+        导致 ODR 违反或重复符号。
+  \item \textbf{Global Module Fragment 边界}：GMF 中的声明对模块内可见，
+        但 Clang 偶尔错误地认为它们对外可见。
+\end{enumerate}
+
+\section{标准库模块化的进度差距}
+
+MSVC 在 VS 2022 17.4（2022 年 11 月）就提供了开箱即用的
+\flag{import std;}，而 Clang 直到 19 才在 libc++ 中提供 \texttt{std.cppm}，
+且需要用户手动编译为 BMI 并配置查找路径。GCC 14 之前完全不支持
+\flag{import std;}，GCC 15 才提供初步实现。
+
+这种进度差距直接导致：
+
+\begin{itemize}
+  \item 跨平台项目无法统一启用 \flag{import std;}，必须为每个编译器
+        写条件编译。
+  \item CI 矩阵中 Clang/GCC 的模块化构建经常失败，开发者被迫退回
+        \flag{\#include}。
+  \item 教程与示例多以 MSVC 为准，Clang 用户照搬时频繁踩坑。
+\end{itemize}
+
+\chapter{LSP / IDE 支持的极度滞后}
+
+\section{clangd：模块支持仍处实验阶段}
+
+clangd 是当前 C++ 生态最主流的 LSP 实现，与 Clang 编译器同步演进。
+但 clangd 对 C++20 Modules 的支持长期落后于编译器本身，原因有三：
+
+\begin{enumerate}
+  \item \textbf{索引架构假设}：clangd 的索引基于“TU 包含的头文件路径”，
+        而模块依赖不对应路径，索引器无法直接复用现有数据结构。
+  \item \textbf{BMI 增量更新}：编辑一个模块接口文件需要重新生成 BMI，
+        然后通知所有导入该模块的 TU 刷新。这套增量协议在 LSP 标准中
+        尚未规范化。
+  \item \textbf{补全 / 跳转 / 重命名}：所有这些功能都依赖语义树，
+        而模块边界使得 AST 节点的所有权变得复杂（一个名字可能属于
+        另一个模块的 BMI）。
+\end{enumerate}
+
+截至 2025 年，clangd 的模块支持仍需要显式启用 \flag{--enable-config}，
+并在 \texttt{.clangd} 中配置类似
+\seqsplit{\texttt{CompileFlags:\ \{CompilationDatabase:\ build\}}}
+的选项；同时项目要正确生成
+\seqsplit{\texttt{compile\_commands.json}}，
+其中包含 \flag{-fmodule-file=} 等参数。即便配置正确，常见症状包括：
+
+\begin{itemize}
+  \item 模块导入后，\flag{std::} 下的符号补全列表残缺。
+  \item “跳转到定义”跳到 BMI 的临时反序列化结果，而非源文件。
+  \item 修改模块接口后，IDE 中所有依赖文件仍显示陈旧错误，
+        需要重启 clangd。
+\end{itemize}
+
+\begin{evidence}[title=clangd 模块支持证据]
+clangd 的 GitHub 仓库（\texttt{clangd/clangd}）上有大量
+\texttt{[modules]} 标签的 open issue，时间跨度从 2021 年到 2025 年。
+其中编号靠前的几个核心 issue（关于 BMI 缓存、import std 支持、
+跨模块跳转）至今仍处于 open 或 partial fix 状态。
+\end{evidence}
+
+\section{Visual Studio IntelliSense}
+
+Visual Studio 的 IntelliSense 在 MSVC 后端下对模块支持相对较好，
+因为 MSVC 编译器与 IDE 是同一团队开发。但仍有以下限制：
+
+\begin{itemize}
+  \item 使用 Clang 后端（Visual Studio 提供 Clang 工具集选项）时，
+        IntelliSense 对模块的支持几乎为零。
+  \item 模块接口文件的“大纲视图”有时不显示 export 实体的层级。
+  \item 修改模块后需要等待 IntelliSense 数据库刷新，期间整个项目
+        显示红色波浪线，体验较差。
+\end{itemize}
+
+\section{CLion / VS Code / Neovim}
+
+\begin{itemize}
+  \item \textbf{CLion}：基于自家解析器 + clangd，模块支持随 clangd 演进，
+        2024.3 版本起提供实验性开关。
+  \item \textbf{VS Code}：依赖 clangd 或 Microsoft C/C++ 扩展。
+        Microsoft C/C++ 扩展使用 EDG 前端，对模块的支持仅限于 MSVC 风格，
+        Clang 项目几乎不可用。
+  \item \textbf{Neovim}：通过 \texttt{nvim-lspconfig} 配置 clangd，
+        与 VS Code 上的 clangd 体验一致。LazyVim 的
+        \texttt{lang.clangd} extra 默认不开启模块支持。
+\end{itemize}
+
+\begin{warning}[title=LSP 滞后是模块化的最大体验杀手]
+即便编译器支持完善，如果 IDE 在编辑过程中频繁误报、补全失败、
+跳转混乱，开发者会主动放弃模块。这是当前 Clang 工具链下
+模块化的真实瓶颈：不是“能不能编译”，而是“能不能愉快地写代码”。
+\end{warning}
+
+\chapter{第三方库模块化的困境}
+
+这是即便你既是库作者又是库使用者，仍然会遇到的根本性难题。
+
+\section{双轨发布的成本}
+
+库作者必须同时维护两种发布形式：
+
+\begin{enumerate}
+  \item \textbf{传统头文件 + 静态/动态库}：服务于绝大多数下游用户，
+        包括使用旧编译器、未启用模块的项目、跨语言绑定（如
+        \flag{extern "C"} 接口）。
+  \item \textbf{模块接口（.cppm 或 .ixx）+ BMI}：服务于已启用模块的下游。
+\end{enumerate}
+
+这两套发布物的代码必须严格保持语义一致。常见的做法是：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// mylib.h —— 传统头文件，仍由 #include 提供
+#pragma once
+namespace mylib { void do_thing(); }
+
+// mylib.cppm —— 模块接口
+export module mylib;
+export namespace mylib { void do_thing(); }
+
+// mylib.cpp —— 单一实现源
+#include "mylib.h"
+namespace mylib { void do_thing() { /* ... */ } }
+\end{lstlisting}
+
+这种双轨结构的代价：
+
+\begin{itemize}
+  \item 接口签名变更必须同步两处，遗漏一处就会出现“头文件用户能编译，
+        模块用户报错”的奇怪 bug。
+  \item CI 需要为两套发布物分别构建测试。
+  \item 文档（Doxygen、Sphinx）需要识别两种接口源。
+\end{itemize}
+
+\section{模板与 inline 函数的导出困境}
+
+C++ 模板必须在每个使用点可见完整定义，传统头文件机制下这是天然的：
+模板代码直接放在 .h 中。\flag{export} 一个模板到模块时，
+编译器需要在 BMI 中保留完整的模板定义，以便导入方实例化。
+当前编译器在以下场景仍有问题：
+
+\begin{itemize}
+  \item 模板的偏特化、变量模板、模板模板参数。
+  \item 模板内部使用了 GMF 中 \flag{\#include} 进来的类型。
+  \item 概念约束的模板跨模块匹配。
+\end{itemize}
+
+\texttt{inline} 函数也类似：在模块中 \flag{export inline} 的函数，
+其定义需要随 BMI 一起被导入方看见。这与传统 ODR 规则的交互仍在
+P1815R2 等提案中被持续澄清。
+
+\section{ABI 兼容性}
+
+模块的 BMI 不可跨编译器版本，这意味着：
+
+\begin{itemize}
+  \item 发布二进制库时，必须为每个目标编译器版本提供独立的 BMI。
+  \item vcpkg 的 binary caching 在模块化场景下命中率大幅下降，
+        因为缓存键需要包含编译器版本、模块编译选项等额外信息。
+  \item Conan 2.x 的 \texttt{package\_id} 计算尚未完全覆盖模块场景。
+\end{itemize}
+
+\section{vcpkg / Conan 的支持现状}
+
+\begin{itemize}
+  \item \textbf{vcpkg}：从 2024 年起在 ports 中陆续添加模块化支持，
+        但绝大多数官方 port 仍只发布传统头文件 + 库。
+        vcpkg 工具链脚本 \seqsplit{\texttt{vcpkg.cmake}}
+        对 \seqsplit{\texttt{FILE\_SET\ CXX\_MODULES}}
+        的传递仍有边界情况。
+  \item \textbf{Conan 2}：\seqsplit{\texttt{cpp\_info.builddirs}}
+        与模块查找路径的集成在 2.7+ 改善，但
+        \seqsplit{\texttt{conan-center-index}}
+        中的 recipe 几乎都没有提供模块发布物。
+\end{itemize}
+
+\section{知名库的进度}
+
+\begin{itemize}
+  \item \textbf{fmt}：作者 Victor Zverovich 是模块化的积极推动者，
+        但 fmt 自身仍未提供官方 .cppm 接口，主要原因是“下游用户的
+        编译器矩阵过于碎片化”。
+  \item \textbf{spdlog}：依赖 fmt，模块化进度跟随 fmt。
+  \item \textbf{Boost}：Boost 1.86 起在少数库（如 Boost.URL）提供
+        实验性模块支持，主体仍为头文件。
+  \item \textbf{Qt}：Qt 6.7+ 提供 \texttt{qt\_add\_modules} CMake 函数，
+        但本质是 Qt 自己的元对象系统模块，不是 C++20 Modules。
+        Qt 团队公开表态“在工具链稳定前不会全面切换”。
+  \item \textbf{Abseil}：Google 内部已大规模使用模块化构建，
+        但开源版本仍只发布头文件。
+  \item \textbf{标准库}：libc++ 与 MSVC STL 提供 \texttt{std} 模块，
+        libstdc++ 在 GCC 15 跟进。
+\end{itemize}
+
+\section{库作者亲历：你是作者也无能为力}
+
+即便一个库的所有代码都掌握在你手里，模块化仍然会遇到以下“非技术”难题：
+
+\begin{enumerate}
+  \item \textbf{下游编译器版本不受你控制}：你的库可以发布模块，
+        但用户的 CI 用 Clang 15、Clang 16、Clang 17、GCC 13、GCC 14、
+        MSVC 19.36、MSVC 19.40 各跑一遍，每一种组合都需要你提供
+        对应的 BMI，或者要求用户自己编译，体验立刻劣化。
+  \item \textbf{依赖的库还没模块化}：你的库 \flag{import} 了第三方库
+        \texttt{dep}，但 dep 还没发布模块。你只能用 GMF
+        \flag{\#include "dep.h"}，于是你的模块接口又“污染”回了头文件世界。
+  \item \textbf{用户的构建系统五花八门}：CMake 3.20、3.28、Bazel、
+        Meson、xmake、自研构建脚本……\flag{FILE\_SET CXX\_MODULES}
+        仅在 CMake 3.28+ 可用，其他构建系统的模块支持成熟度参差不齐。
+  \item \textbf{Issue 维护成本上升}：用户报告“模块导入失败”，
+        你需要先排查是编译器 bug、CMake 版本、还是自己接口的问题，
+        而前两者你都无法修复，只能引导用户升级工具链。
+  \item \textbf{双轨发布的同步成本}：每次发布新版本，都要确保
+        头文件接口与模块接口语义一致，且 CI 同时跑两套构建。
+\end{enumerate}
+
+\begin{warning}[title=库作者的现实选择]
+截至 2025 年，绝大多数库作者的实际策略是：
+\begin{enumerate}
+  \item 继续以传统头文件为主要发布形式。
+  \item 提供实验性 \texttt{.cppm} 接口（通常作为单独构建产物），
+        在文档中明确标注“需要 Clang 18+ / MSVC 19.34+ / GCC 15+”。
+  \item 等下游用户中“启用模块”的比例超过某个阈值（经验值约 30\%），
+        再考虑把模块接口提升为一等公民。
+\end{enumerate}
+\end{warning}
+
+% ╔══════════════════════════════════════════════════════════════════╗
+% ║  Part V — 实战：CMake 集成与渐进迁移                            ║
+% ╚══════════════════════════════════════════════════════════════════╝
+\part{实战：CMake 集成与渐进迁移}
+
+\chapter{CMake 模块化构建}
+
+CMake 3.28（2023 年 11 月）首次提供对 C++20 Modules 的官方支持，
+核心是 \flag{FILE\_SET CXX\_MODULES} 与配套的依赖扫描机制。
+CMake 3.30 与 3.31 持续修复边界情况，建议生产项目至少使用 3.30。
+
+\section{最小可用 CMakeLists.txt}
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+cmake_minimum_required(VERSION 3.30)
+project(mylib VERSION 1.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_library(mylib)
+add_library(mylib::mylib ALIAS mylib)
+
+# 关键：FILE_SET CXX_MODULES 声明模块接口源
+target_sources(mylib
+  PUBLIC
+    FILE_SET HEADERS
+      BASE_DIRS include
+      FILES include/mylib/legacy.h
+    FILE_SET CXX_MODULES
+      BASE_DIRS src
+      FILES
+        src/mylib.cppm
+        src/util.cppm
+  PRIVATE
+    src/mylib_impl.cpp
+)
+
+target_include_directories(mylib
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+target_compile_features(mylib PUBLIC cxx_std_20)
+\end{lstlisting}
+
+要点说明：
+
+\begin{itemize}
+  \item \flag{FILE\_SET CXX\_MODULES} 告诉 CMake 这些是模块接口源，
+        需要先生成 BMI 再编译依赖它们的 TU。
+  \item \flag{PUBLIC} 修饰意味着这些模块接口会被传递给链接 mylib 的目标，
+        下游 \flag{import mylib;} 时 CMake 自动配置 BMI 查找路径。
+  \item \flag{BASE\_DIRS} 决定模块名的解析基准。
+  \item \flag{FILE\_SET HEADERS} 与 \flag{CXX\_MODULES} 共存，
+        支持双轨发布。
+\end{itemize}
+
+\section{下游消费}
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+cmake_minimum_required(VERSION 3.30)
+project(myapp LANGUAGES CXX)
+
+find_package(mylib REQUIRED)
+
+add_executable(myapp main.cpp)
+target_link_libraries(myapp PRIVATE mylib::mylib)
+
+# main.cpp 中可直接 import mylib;
+# CMake 自动把 BMI 路径传给编译器
+\end{lstlisting}
+
+\section{install 与 export：发布模块化包}
+
+\cmakelabel
+\begin{lstlisting}[style=cmakestyle]
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+install(TARGETS mylib
+  EXPORT mylibTargets
+  FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILE_SET CXX_MODULES DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mylib
+)
+
+install(EXPORT mylibTargets
+  FILE mylibTargets.cmake
+  NAMESPACE mylib::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mylib
+)
+
+configure_package_config_file(
+  cmake/mylibConfig.cmake.in
+  ${CMAKE_BINARY_DIR}/mylibConfig.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mylib
+)
+
+install(FILES ${CMAKE_BINARY_DIR}/mylibConfig.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mylib
+)
+\end{lstlisting}
+
+注意 \flag{FILE\_SET CXX\_MODULES DESTINATION} 把 .cppm 源文件
+（而非 BMI）安装到目标位置。下游通过 \flag{find\_package} 拿到
+源文件后，由自己的编译器重新生成 BMI——这是当前规避 BMI 不可移植
+问题的标准做法。
+
+\section{Ninja 与依赖扫描}
+
+CMake 的模块化构建强依赖支持 P1689 依赖格式的生成器，目前最完整的是
+\flag{Ninja} 与 \flag{Ninja Multi-Config}。\flag{Unix Makefiles} 与
+\flag{Visual Studio} 生成器的支持仍有限制。
+
+\shelllabel
+\begin{lstlisting}[style=bashstyle]
+# 推荐：Ninja Multi-Config（支持多配置 + 模块化）
+cmake -G "Ninja Multi-Config" -B build -S .
+
+# MSVC 下显式启用模块（VS 2022 17.5+）
+cmake -G "Ninja" -B build -S . \
+  -DCMAKE_CXX_COMPILER=cl \
+  -DCMAKE_CXX_FLAGS="/std:c++latest /experimental:module"
+
+# Clang 下
+cmake -G "Ninja" -B build -S . \
+  -DCMAKE_CXX_COMPILER=clang++ \
+  -DCMAKE_CXX_FLAGS="-std=c++20 -fmodules -fmodule-file=mylib=build/mylib.pcm"
+\end{lstlisting}
+
+CMake 内部会调用编译器的依赖扫描接口（MSVC 的
+\flag{/scanDependencies}、Clang 的 \flag{clang-scan-deps}），
+生成 P1689 格式的依赖文件，再据此构建 BMI 编译的拓扑顺序。
+
+\section{常见报错与排错}
+
+\begin{warning}[title=CMake 模块化的典型错误]
+\begin{enumerate}
+  \item \textbf{“Cannot find module 'mylib'”}：通常是
+        \flag{FILE\_SET CXX\_MODULES} 的 \flag{BASE\_DIRS} 配置错误，
+        或下游未正确链接 \flag{mylib::mylib} 别名目标。
+  \item \textbf{“Module file is out of date”}：BMI 缓存与源文件不同步。
+        清理构建目录或显式 \flag{cmake --build build --target clean} 后重建。
+  \item \textbf{“Generator does not support C++ modules”}：当前生成器
+        不支持，改用 Ninja。
+  \item \textbf{“/experimental:module is deprecated”}：MSVC 19.34+
+        模块支持已脱离实验，移除该 flag 即可。
+\end{enumerate}
+\end{warning}
+
+\section{vcpkg / Conan 与模块化}
+
+vcpkg 的 manifest 模式下，可以在 \texttt{vcpkg.json} 中声明依赖；
+但 vcpkg port 是否提供模块化构建仍取决于上游 recipe。
+若上游未提供 .cppm，CMake 侧 \flag{find\_package} 后只能继续用
+\flag{\#include}。
+
+Conan 2 的 \texttt{CMakeDeps} 生成器在 2.7+ 起会把
+\flag{target\_sources} 中的 \flag{FILE\_SET CXX\_MODULES} 信息
+传递到下游 \texttt{*-config.cmake}，但 \texttt{conan-center-index}
+中真正提供模块的 recipe 仍是少数。
+
+\chapter{渐进迁移策略}
+
+\section{迁移决策树}
+
+\begin{guideline}[title=是否启用 Modules]
+按以下顺序评估：
+\begin{enumerate}
+  \item 编译器矩阵是否包含 MSVC 19.34+ 或 Clang 18+ 或 GCC 15+？
+        若否，暂缓。
+  \item 构建系统是否为 CMake 3.30+ 且生成器为 Ninja？
+        若否，先升级构建系统。
+  \item LSP / IDE 是否可接受当前的模块支持成熟度？
+        若团队严重依赖 IDE 智能感知，建议先在内部小项目试点。
+  \item 直接依赖的第三方库是否已提供模块接口？
+        若否，可以用 GMF + \flag{\#include} 过渡。
+\end{enumerate}
+\end{guideline}
+
+\section{三步走方案}
+
+\begin{bestpractice}[title=推荐的渐进路径]
+\begin{enumerate}
+  \item \textbf{第 1 步：Header Units 过渡}。在不动现有头文件的前提下，
+        把项目内部对标准库的 \flag{\#include} 改为
+        \flag{import <vector>;} 等 header unit。这一步对编译器要求最低，
+        能立刻享受到“标准库只解析一次”的收益。
+  \item \textbf{第 2 步：内部模块、外部头文件}。把项目内部的若干
+        子系统改写为模块（\flag{module myapp.db;}、
+        \flag{module myapp.net;} 等），但对外发布的接口仍保留头文件形式。
+        这一步只在自家代码库内闭环，不需要协调下游。
+  \item \textbf{第 3 步：双轨发布}。在内部模块化稳定后，再为库添加
+        \flag{.cppm} 接口与 \flag{FILE\_SET CXX\_MODULES} 安装规则，
+        让下游可以选择模块化消费。
+\end{enumerate}
+\end{bestpractice}
+
+\section{与 PCH 的取舍}
+
+预编译头（PCH）与模块在“减少重复解析”这一目标上重叠。
+两者的差异：
+
+\begin{compare}[title=PCH vs Modules]
+\begin{itemize}
+  \item \textbf{PCH}：粒度粗（一个 .pch 包含一组头文件），
+        跨编译器不通用，修改任一被包含的头文件都会使 PCH 失效。
+  \item \textbf{Modules}：粒度细（每个模块独立 BMI），
+        语义级缓存，修改模块内部实现不一定使下游 BMI 失效。
+\end{itemize}
+\end{compare}
+
+实际项目中两者可以共存：用 PCH 包裹那些“还没模块化但被到处包含”
+的稳定第三方头文件，用模块组织自家代码。
+
+\section{展望}
+
+C++23 引入了 \flag{import std;}，C++26 预计会进一步规范模块的
+分区粒度、ABI 稳定性与跨编译器互操作。但工具链的成熟需要时间：
+LLVM 团队的模块负责人 Chuanqi Xu 在 2024 年 CppCon 上指出，
+Clang 模块支持要达到“生产可用”至少还需要 2-3 个主版本周期。
+在此之前，绝大多数项目的现实策略是“渐进迁移、双轨发布、
+保持回退路径”。
+
+\begin{note}[title=结语]
+Modules 的设计是正确的，它解决了头文件机制几十年来的根本问题。
+但一项语言特性的真正落地不仅取决于标准与编译器，还取决于
+工具链（构建系统、LSP、IDE、包管理器）和生态（第三方库的集体迁移）。
+当前的滞后并非设计缺陷，而是工程现实——
+任何一项触及编译模型底层的变革都需要十年级别的生态磨合。
+\end{note}
+
+\end{document}
