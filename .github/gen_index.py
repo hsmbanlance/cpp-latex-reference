@@ -64,6 +64,12 @@ PROJECTS = [
     ("UnitTest",      "unit_testing.pdf",
      "C++ 单元测试",
      "GTest/Catch2/doctest/Boost.Test/Qt Test 对比，Android/iOS 与 UE/U++ 实践，附 C#/Java 对照、纯函数与测试边界、依赖注入、Mock 与覆盖率。"),
+    ("UIFwk",         "ui_framework.pdf",
+     "C++ GUI 框架",
+     "MFC / WinUI 3 (C++/WinRT) / wxWidgets / Qt (Widgets + Quick) / UE Slate 对比，选型决策与迁移路径。"),
+    ("ModularBuild",  "modular_build.pdf",
+     "C++ 模块化构建",
+     "Modules vs Headers 对比、BMI 编译模型、优势详解、Clang/LSP/三方库三大成熟度困局、CMake FILE_SET CXX_MODULES 实战与渐进迁移路径。"),
 ]
 
 HTML_TEMPLATE = """\
