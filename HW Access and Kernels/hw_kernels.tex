@@ -1,0 +1,1399 @@
+% !TEX program = xelatex
+% 硬件访问与 GPU/NPU 核函数
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ===== 页面 =====
+\usepackage[margin=2.5cm]{geometry}
+
+% ===== 字体 =====
+\usepackage{fontspec}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}
+  {\setmonofont{Consolas}}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+
+% ===== 颜色 =====
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{cppheadbg}{HTML}{2E4057}
+\definecolor{cheadbg}{HTML}{34495E}
+\definecolor{cudakeyword}{HTML}{006224}
+\definecolor{cudatype}{HTML}{76B900}
+\definecolor{cudaheadbg}{HTML}{76B900}
+\definecolor{syclkeyword}{HTML}{00549F}
+\definecolor{sycltype}{HTML}{0071C5}
+\definecolor{syclheadbg}{HTML}{0071C5}
+\definecolor{npucheck}{HTML}{E8710A}
+\definecolor{npuheadbg}{HTML}{E8710A}
+\definecolor{bashkw}{HTML}{1A1AFF}
+\definecolor{javatype}{HTML}{005A9C}
+\definecolor{javaheadbg}{HTML}{005A9C}
+\definecolor{pyheadbg}{HTML}{306998}
+\definecolor{aidlheadbg}{HTML}{00796B}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ===== listings =====
+\usepackage{listings}
+
+% ---- C ----
+\lstdefinestyle{cstyle}{%
+  language=C,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={%
+    size_t,ptrdiff_t,int8_t,int16_t,int32_t,int64_t,
+    uint8_t,uint16_t,uint32_t,uint64_t,uintptr_t,intptr_t,
+    NULL,void,printf,memcpy,memset,mmap,munmap,open,close,read,write,ioctl
+  },
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- C++ ----
+\lstdefinestyle{cppstyle}{%
+  language=C++,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    override,final,noexcept,constexpr,consteval,constinit,
+    decltype,auto,concept,requires,co_await,co_yield,co_return,
+    nullptr,sizeof...,static_assert,thread_local,alignas,alignof,
+    namespace,using,template,typename,virtual,explicit,friend,
+    mutable,volatile,register,extern,inline
+  },
+  deletekeywords={int,char,float,double,bool,void,long,short,unsigned,signed},
+  emph={%
+    int,char,float,double,bool,void,long,short,unsigned,signed,
+    int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,
+    size_t,ptrdiff_t,intptr_t,uintptr_t,
+    std,string,vector,array,span,atomic
+  },
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- CUDA ----
+\lstdefinestyle{cudastyle}{%
+  language=C++,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    __global__,__device__,__shared__,__constant__,__host__,__restrict__,
+    __launch_bounds__,threadIdx,blockIdx,blockDim,gridDim,warpSize,
+    __syncthreads,__threadfence,__threadfence_block,__threadfence_system,
+    __shfl_down_sync,__shfl_xor_sync,__ballot_sync,__any_sync,__all_sync,
+    atomicAdd,atomicExch,atomicCAS,
+    cudaMalloc,cudaFree,cudaMemcpy,cudaMemset,
+    cudaMemcpyHostToDevice,cudaMemcpyDeviceToHost,cudaMemcpyDeviceToDevice,
+    cudaMallocManaged,cudaMallocHost,cudaFreeHost,cudaHostAlloc,
+    cudaStreamCreate,cudaStreamSynchronize,cudaDeviceSynchronize,
+    cudaEventCreate,cudaEventRecord,cudaEventSynchronize,cudaEventElapsedTime,
+    cudaGetLastError,cudaGetErrorString,cudaSuccess,
+    cudaDeviceCanAccessPeer,cudaDeviceEnablePeerAccess
+  },
+  deletekeywords={int,char,float,double,bool,void,long,short,unsigned,signed},
+  emph={%
+    int,char,float,double,bool,void,long,short,unsigned,signed,
+    float2,float4,int2,int4,double2,
+    dim3,cudaError_t,cudaStream_t,cudaEvent_t,cudaMemcpyKind,
+    size_t,uint32_t,uint64_t
+  },
+  emphstyle=\color{cudatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- SYCL ----
+\lstdefinestyle{syclstyle}{%
+  language=C++,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{syclkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    sycl,queue,device,context,platform,nd_range,range,nd_item,item,group,
+    buffer,accessor,local_accessor,host_accessor,
+    read_write,read,write,discard_write,
+    parallel_for,single_task,submit,wait,
+    usm,malloc_device,malloc_shared,malloc_host,free,
+    group_barrier,mem_fence,atomic_ref,
+    default_selector_v,gpu_selector_v,cpu_selector_v,
+    property_list,property,
+    id,span
+  },
+  deletekeywords={int,char,float,double,bool,void,long,short,unsigned,signed},
+  emph={%
+    int,char,float,double,bool,void,long,short,unsigned,signed,
+    size_t,float4,int4,
+    sycl::queue,sycl::buffer,sycl::accessor,sycl::nd_range,sycl::range,
+    sycl::nd_item,sycl::item,sycl::group,sycl::local_accessor,
+    sycl::read_write,sycl::read,sycl::write
+  },
+  emphstyle=\color{sycltype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Shell ----
+\lstdefinestyle{bashstyle}{%
+  language=bash,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{bashkw}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={lspci,setpci,i2cdetect,i2cget,i2cset,spidev_test,stty,nvcc,icpx,dpcpp,lsmod,modprobe,devmem},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Java ----
+\lstdefinestyle{javastyle}{%
+  language=Java,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={SensorManager,Sensor,String,System,Override},
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Python ----
+\lstdefinestyle{pystyle}{%
+  language=Python,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={torch,load,randn,randn_like,empty_like,assert_close,ops,testing},
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+\lstset{style=cppstyle}
+
+% ===== tcolorbox =====
+\usepackage[most]{tcolorbox}
+
+\tcbset{
+  guideline/.style={%
+    enhanced,breakable,
+    colback=blue!5!white,colframe=blue!50!black,colbacktitle=blue!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=blue!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  compare/.style={%
+    enhanced,breakable,
+    colback=green!5!white,colframe=green!40!black,colbacktitle=green!40!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=green!40!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  warning/.style={%
+    enhanced,breakable,
+    colback=red!5!white,colframe=red!50!black,colbacktitle=red!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=red!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  note/.style={%
+    enhanced,breakable,
+    colback=yellow!5!white,colframe=orange!50!black,colbacktitle=orange!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=orange!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  bestpractice/.style={%
+    enhanced,breakable,
+    colback=purple!5!white,colframe=purple!50!black,colbacktitle=purple!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=purple!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  }
+}
+
+% ===== 语言标签 =====
+\newcommand{\clabel}{%
+  \begin{tcolorbox}[enhanced,colback=cheadbg,colframe=cheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries C}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\cpplabel}{%
+  \begin{tcolorbox}[enhanced,colback=cppheadbg,colframe=cppheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries C++}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\cudalabel}{%
+  \begin{tcolorbox}[enhanced,colback=cudaheadbg,colframe=cudaheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries CUDA}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\sycllabel}{%
+  \begin{tcolorbox}[enhanced,colback=syclheadbg,colframe=syclheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries SYCL}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\npulabel}{%
+  \begin{tcolorbox}[enhanced,colback=npuheadbg,colframe=npuheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries NPU}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\bashlabel}{%
+  \begin{tcolorbox}[enhanced,colback=black!80,colframe=black!80,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Shell}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\javalabel}{%
+  \begin{tcolorbox}[enhanced,colback=javaheadbg,colframe=javaheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Java}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\pylabel}{%
+  \begin{tcolorbox}[enhanced,colback=pyheadbg,colframe=pyheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Python}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\aidllabel}{%
+  \begin{tcolorbox}[enhanced,colback=aidlheadbg,colframe=aidlheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries AIDL}
+  \end{tcolorbox}\vspace{-4pt}}
+
+% ===== 自定义命令 =====
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+\newcommand{\kw}[1]{\texttt{#1}}
+\newcommand{\seqkw}[1]{\seqsplit{\texttt{#1}}}
+
+% ===== 章节格式 =====
+\usepackage{titlesec}
+\titleformat{\chapter}[display]{\huge\bfseries\color{algheadbg}}{\chaptertitlename\ \thechapter}{10pt}{\huge}
+\titleformat{\section}{\Large\bfseries\color{blue!70!black}}{\thesection}{8pt}{}
+\titleformat{\subsection}{\large\bfseries\color{blue!60!black}}{\thesubsection}{6pt}{}
+
+% ===== 页眉页脚 =====
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ===== 超链接 =====
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,linkcolor=blue!70!black,urlcolor=blue!60!black,
+  pdftitle={Hardware Access and GPU/NPU Kernels},
+  pdfauthor={HW Access Reference}
+}
+
+% ===== 其他 =====
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{amssymb}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+
+% ===================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\Huge\bfseries\color{algheadbg} 硬件访问与 GPU/NPU 核函数\par}
+\vspace{1cm}
+{\LARGE\color{blue!70!black} MMIO \textbullet{} DMA/PCIe \textbullet{} I2C/SPI/UART \textbullet{} CUDA \textbullet{} SYCL\par}
+\vfill
+{\large\color{gray} \today\par}
+\end{titlepage}
+
+\chapter*{前\quad 言}
+\addcontentsline{toc}{chapter}{前言}
+
+CPU 与外部世界的交互只有两条路：\textbf{读写设备的存储/寄存器}，以及\textbf{把计算搬到设备上去执行}。前者是传统意义上的"硬件访问"——MMIO 寄存器、DMA 描述符环、PCIe 配置空间、以及 I2C/SPI/UART 这类低速总线协议；后者是加速器编程——GPU 的 SIMT 核函数、NPU 的算子与片上存储管理。两者看似分属驱动开发与高性能计算两个世界，实则共享同一组底层概念：地址空间如何映射、缓存一致性如何保证、内存屏障放在哪里、主机与设备如何交换数据。
+
+本文把这两条路放在同一本书里讲。第~1~章建立硬件访问的分层模型，区分 PIO 与 MMIO、解释缓存一致性为何是驱动正确性的第一难题；第~2~章深入 PCIe 与 MMIO 实战：配置空间、BAR、\texttt{mmap}、doorbell、write-combining 与内存屏障；第~3~章讲 DMA 与中断：描述符环、coherent 与 streaming DMA、MSI-X、IOMMU；第~4~章转向低速总线协议 I2C（IIC）、SPI、UART 与 GPIO，说明"协议"与"地址"两类硬件接口的本质差异；第~5~章进入 GPU，讲 CUDA 的 SIMT 执行模型、内存层级与核函数编写；第~6~章讲 CUDA 的主机—设备内存模型与流并发；第~7~章给出跨厂商的 SYCL/oneAPI 模型并与 CUDA 概念映射；第~8~章简介 NPU 的架构差异与异构推理栈；第~9~章把两条路交汇，总结屏障、\kw{volatile} 与性能清单。除核函数外的各章都会区分 Unix 与 Windows 两套 API 词汇，并给出把差异下沉到三方库的做法。附录~A 用一个仿传感器把"驱动、HAL、应用接口"全链在 Linux、Android、Windows 上各走一遍；附录~B 走通一个 CUDA 算子从核函数到 PyTorch 绑定的最短路径。
+
+阅读本书需要熟悉 C/\cpp{} 与指针，了解基本的计算机组成（缓存、总线、中断）。第~5~章之后假设读者有一块可用的 GPU 或至少能阅读 CUDA 代码。
+
+\section*{文档约定}
+
+\begin{itemize}[nosep]
+  \item \textcolor{blue!50!black}{\textbf{要点框}}~给出语义/硬件层面的关键结论。
+  \item \textcolor{green!40!black}{\textbf{对比框}}~总结不同方案/模型的差异。
+  \item \textcolor{red!50!black}{\textbf{陷阱框}}~提示常见错误与平台兼容性问题。
+  \item \textcolor{orange!50!black}{\textbf{注意框}}~补充规范条款、寄存器细节或工具行为。
+  \item \textcolor{purple!50!black}{\textbf{最佳实践框}}~给出工程上的推荐写法。
+\end{itemize}
+
+% --- TOC 修复（LaTeX 2025-11-01 kernel bug）---
+\makeatletter
+\renewcommand*{\@starttoc}[1]{%
+  \IfFileExists{\jobname-manual.toc}{%
+    \@input{\jobname-manual.toc}%
+  }{}%
+}
+\makeatother
+
+\tableofcontents
+
+\mainmatter
+
+% ===================================================================
+\chapter{硬件访问的分层模型}\label{ch:layers}
+% ===================================================================
+
+\section{CPU 如何"看见"设备}\label{sec:cpu-sees-device}
+
+从 CPU 的视角，一个外设最终呈现为两类可访问资源之一：
+
+\begin{enumerate}[nosep]
+  \item \textbf{一组地址}：设备把寄存器或内存映射进 CPU 的地址空间。CPU 用普通的 load/store 指令访问。这就是 MMIO（Memory-Mapped I/O）。
+  \item \textbf{一组端口}（仅 x86）：设备占用独立的 I/O 端口空间，CPU 用 \texttt{in}/\texttt{out} 指令访问。这就是 PIO（Port-Mapped I/O）。
+\end{enumerate}
+
+现代设备几乎全部走 MMIO。原因有三：地址空间远大于 64KB 的端口空间；load 与 store 指令可以复用缓存与预取逻辑，这对 frame buffer 尤其重要；非 x86 架构（如 ARM、RISC-V）根本没有 I/O 端口指令。PIO 只残留在少数 legacy 设备上，例如串口 \texttt{16550}、并口、老式 VGA。
+
+\begin{tcolorbox}[guideline={MMIO 与 RAM 的本质区别}]
+MMIO 地址背后不是存储单元，而是设备的\textbf{状态机}。读一个寄存器可能触发一次转换（如读中断状态寄存器会清中断）；写一个寄存器可能有副作用（如写 doorbell 会通知设备）。因此编译器与 CPU 都不能像对待 RAM 那样对 MMIO 访问做"看起来等价"的优化：不能缓存、不能合并、不能重排、不能省略。
+\end{tcolorbox}
+
+\section{缓存一致性：驱动正确性的第一难题}\label{sec:coherence}
+
+CPU 与设备共享内存时，必须回答一个问题：\textbf{谁看到的内存是真的？}
+
+CPU 有各级缓存；设备（网卡、GPU、NPU）通过 DMA 直接读写物理内存，绕过 CPU 缓存。如果 CPU 把数据写进了 L1 但没刷回内存，设备 DMA 读到的是旧值；反之，设备 DMA 写完内存后，CPU 缓存里可能还留着旧副本。这就是\textbf{缓存一致性}问题。
+
+x86 的缓存对 DMA 是\textbf{硬件一致}的（snooping）：设备 DMA 写内存会使对应缓存行失效。因此 x86 上驱动通常不需要显式刷缓存。但 ARM/RISC-V 等 SoC 上，DMA 往往\textbf{不}参与缓存一致性协议，驱动必须显式调用 \Fn{dma\_sync\_single\_for\_device} 等 API 做 clean/invalidate。
+
+\begin{tcolorbox}[warning={不要假设 x86 的便利是通用的}]
+在 x86 上调试通过的驱动，移植到 ARM 服务器或嵌入式 SoC 后出现"偶发数据错误"，十有八九是漏了 DMA 同步。写驱动时永远通过内核 DMA API 而非裸物理地址，让内核替你做平台相关的同步。
+\end{tcolorbox}
+
+\section{三层访问模型}\label{sec:three-layers}
+
+把硬件访问按抽象层次切开，可以清晰定位每一层的职责：
+
+\begin{longtable}{p{2.6cm}p{5.2cm}p{6.9cm}}
+\toprule
+\textbf{层} & \textbf{谁在做} & \textbf{典型操作} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{层} & \textbf{谁在做} & \textbf{典型操作} \\
+\midrule
+\endhead
+寄存器层 & 驱动 / 用户态映射 & 读写 MMIO 寄存器、doorbell、状态轮询 \\
+传输层   & DMA 引擎 + 驱动     & 描述符环、scatter-gather、中断/轮询回收 \\
+协议层   & 控制器 + 驱动/库     & I2C/SPI/UART 帧格式、时序、ack、重试 \\
+\bottomrule
+\end{longtable}
+
+寄存器层解决"如何触发与查询设备"；传输层解决"如何批量搬数据"；协议层解决"低速设备如何按位/字节对话"。后三章分别展开。
+
+% ===================================================================
+\chapter{PCIe 与 MMIO 实战}\label{ch:pcie-mmio}
+% ===================================================================
+
+\section{PCIe 配置空间与 BAR}\label{sec:pcie-config}
+
+每个 PCIe 设备在枚举时被分配一段配置空间（Configuration Space），包含 vendor/device ID、class code、以及最多 6 个 BAR（Base Address Register）。BAR 声明了设备需要多大的 MMIO 窗口、以及它希望被映射到内存空间还是 I/O 空间。
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+# 查看设备与 BAR
+lspci -vvv -s 03:00.0 | grep -i "region"
+#   Region 0: Memory at fce00000 (64-bit, non-prefetchable) [size=128K]
+#   Region 3: Memory at fc000000 (64-bit, prefetchable) [size=16M]
+
+# 读配置空间寄存器（偏移 0x04 = Command）
+setpci -s 03:00.0 0x04.w
+\end{lstlisting}
+
+\texttt{Region 0} 通常是寄存器窗口（non-prefetchable，因为读有副作用）；\texttt{Region 3} 标为 prefetchable，说明读它没有副作用、可以预取与合并——这通常是设备的显存/帧缓冲。这个区分直接决定了 CPU 该用什么缓存策略访问（见 §2.3）。
+
+\section{把 BAR 映射进进程}\label{sec:mmap-bar}
+
+内核驱动通过 \Fn{pci\_ioremap\_bar} 拿到内核虚拟地址。用户态程序（DPDK、SPDK、GPU 用户态驱动）则通过 \seqsplit{\texttt{/sys/bus/pci/devices/.../resource0}} 或 UIO/VFIO 的 \texttt{mmap} 直接映射：
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <stdint.h>
+
+volatile uint32_t *map_bar0(int pci_fd, size_t len) {
+    // resource0 对应 BAR0；必须 PROT_READ|PROT_WRITE 且 MAP_SHARED
+    void *base = mmap(NULL, len, PROT_READ | PROT_WRITE,
+                      MAP_SHARED, pci_fd, 0);
+    return (volatile uint32_t *)base;   // volatile: 见 Asm Embedding 第 1 章
+}
+\end{lstlisting}
+
+\kw{volatile} 在这里是强制的：BAR 背后的寄存器随时可能被设备改变，且读有副作用。去掉 \kw{volatile}，编译器可能把状态轮询优化成死循环（与 \texttt{UART\_SR} 的例子完全同构）。
+
+\section{缓存策略：UC / WC / 屏障}\label{sec:cache-policy}
+
+MMIO 窗口的缓存属性由页表项（PAT/MTRR）决定，常见三种：
+
+\begin{longtable}{p{2.6cm}p{4.6cm}p{7.5cm}}
+\toprule
+\textbf{策略} & \textbf{含义} & \textbf{适用} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{策略} & \textbf{含义} & \textbf{适用} \\
+\midrule
+\endhead
+UC（uncacheable） & 每次访问都到设备，严格保序 & 控制寄存器、doorbell \\
+WC（write-combining） & 写合并到 64B 行再突发，不保序 & frame buffer、显存写 \\
+WB（write-back） & 进 CPU 缓存 & 仅 prefetchable 且设备参与一致性 \\
+\bottomrule
+\end{longtable}
+
+对 doorbell 用 WC 是灾难性的：多次写 doorbell 可能被合并成一次，设备只收到一个通知。对帧缓冲用 UC 则带宽极差。Linux 用 \Fn{ioremap}（UC）与 \Fn{ioremap\_wc}（WC）区分；用户态 \texttt{mmap} 的属性由驱动在 \seqsplit{\texttt{vm\_area\_struct}} 里设定（\seqsplit{\texttt{pgprot\_writecombine}}）。
+
+写完 WC 区域后、再写 doorbell 之前，必须插一条\textbf{写屏障}，确保合并的写已经离开 CPU：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// 伪代码：先写数据(WC)，再敲门(doorbell, UC)
+memcpy_wc(fb, pixels, n);          // write-combining 写
+std::atomic_thread_fence(std::memory_order_seq_cst);  // 或 mfence
+*doorbell = 1;                     // UC 写，触发设备读取
+\end{lstlisting}
+
+\section{doorbell 与生产者—消费者}\label{sec:doorbell}
+
+doorbell 是 MMIO 里最经典的模式：主机把请求写进共享内存（描述符环），然后写一个寄存器"敲门"通知设备来取。设备处理完再写另一个寄存器（或触发中断）通知主机。这套生产者—消费者模型是第~3~章描述符环的基础，也是 GPU 命令提交（command submission）的原型。
+
+\begin{tcolorbox}[note={doorbell 的写必须是"可见且有序"的}]
+doorbell 写之前，所有描述符写必须对设备可见。在 x86 上 WC 写 + \texttt{mfence}（或 UC 写天然保序）即可；在弱序架构上需要 \Fn{wmb()} 之类的写屏障。漏掉屏障的表现是"设备读到半写的描述符"，极难复现。
+\end{tcolorbox}
+
+\section{直接访问特定物理地址：裸机、Unix、Windows 三条路}\label{sec:direct-phys}
+
+前面所有例子都隐含一个前提：拿到一个物理地址（比如 \texttt{0x40004000}）之后，"访问它"这件事是直接的。这个前提是否成立，完全取决于你跑在什么平台上。同一句 C 代码，在裸机、Unix、Windows 上是三种完全不同的写法，也是三种完全不同的代价。
+
+\subsection{裸机：物理地址就是指针}
+
+没有操作系统、通常也没有启用 MMU（Cortex-M 一类 MCU 根本没有 MMU），物理地址、虚拟地址、总线地址三者是同一个数。于是"访问特定地址"退化成最原始的形式——把整数强转成指针再解引用：
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+/* 裸机（Cortex-M 风格）：地址即指针 */
+#define UART0_BASE  0x40004000UL
+#define UART0_DR    (*(volatile uint32_t *)(UART0_BASE + 0x00))
+#define UART0_SR    (*(volatile uint32_t *)(UART0_BASE + 0x04))
+
+void uart_putc(char c) {
+    while (!(UART0_SR & 0x20))   /* TXE: 等发送寄存器空 */
+        ;
+    UART0_DR = (uint32_t)c;
+}
+\end{lstlisting}
+
+厂商头文件（如 \seqsplit{\texttt{stm32f4xx.h}}）做的是同一件事，只是把基址包装成结构体。写下 \texttt{USART1->DR = c} 时，展开后仍然是一次 volatile 限定的指针解引用。Cortex-M 无缓存、无 MMU，写完这条语句，写事务立刻上总线。
+
+但"裸机"不等于"一定没有 MMU"。bootloader、Cortex-A 上的 hypervisor 同样是无 OS 环境，却启用了 MMU 与缓存。这时必须先自己建页表，把设备区间映射为 device / strongly-ordered 内存，否则写会停在 cache 里永远到不了设备——问题与第~\ref{sec:cache-policy}~节完全同类，只是页表握在你自己手里。
+
+\subsection{Unix：内核留了一道门}
+
+Linux 用户态的虚拟地址被 MMU 隔离，直接解引用 \texttt{0x40004000} 只会查自己的页表，通常以 SIGSEGV 收场，碰不到设备。正统做法是请内核把这段物理地址映射进进程页表：
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+/* Linux 用户态：经 /dev/mem 映射物理地址 */
+int fd = open("/dev/mem", O_RDWR | O_SYNC);
+long page = sysconf(_SC_PAGESIZE);
+uintptr_t phys = 0x40004000UL;
+off_t  base  = phys & ~(page - 1);   /* 向下页对齐 */
+size_t delta = phys - (uintptr_t)base;
+
+volatile uint32_t *regs = mmap(NULL, page,
+        PROT_READ | PROT_WRITE, MAP_SHARED, fd, base);
+regs += delta / sizeof(*regs);       /* 补页内偏移 */
+\end{lstlisting}
+
+这道门有三道关卡。其一是权限：需要 root 或 \seqsplit{\texttt{CAP\_SYS\_RAWIO}}。其二是 \seqsplit{\texttt{CONFIG\_STRICT\_DEVMEM}}：主流发行版只允许映射"非 RAM 且未被内核驱动独占"的区间，已被驱动接管的设备要改走 UIO 或 VFIO。其三是缓存属性：\texttt{/dev/mem} 映射默认 UC，适合寄存器；想要 WC 得在自己的驱动里设 \seqsplit{\texttt{pgprot\_writecombine}}。PCI 设备另有更体面的入口，即第~\ref{sec:mmap-bar}~节的 sysfs \texttt{resource0}。
+
+树莓派的 \texttt{/dev/gpiomem}、\texttt{/dev/vcio} 是内核为此特开的专用节点：只映射特定外设、允许普通用户打开，是"把门开小一点"的设计。BSD 系同样保留 \texttt{/dev/mem}；macOS 则早已移除它，用户态碰硬件只能走 DriverKit，门槛比写 Linux 驱动更高。
+
+\subsection{Windows：先有驱动，再谈签名}
+
+Windows 没有 \texttt{/dev/mem} 的对应物，用户态不存在任何官方途径把物理地址映射进进程。映射只能发生在内核态：
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+/* Windows 内核驱动：物理地址 -> 内核虚拟地址 */
+PHYSICAL_ADDRESS phys;
+phys.QuadPart = 0x40004000ULL;
+
+volatile uint32_t *regs = MmMapIoSpaceEx(
+        phys, 0x1000,
+        PAGE_READWRITE | PAGE_NOCACHE);  /* UC */
+/* 要 WC 则改用 PAGE_WRITECOMBINE */
+...
+MmUnmapIoSpace((void *)regs, 0x1000);
+\end{lstlisting}
+
+用户态程序调用不到它，标准做法是驱动暴露一个 IOCTL：用户态用 \seqsplit{\texttt{DeviceIoControl}} 把"物理地址 + 偏移 + 读或写"递进去，由驱动映射后代为读写。WinIo、WinRing0、\texttt{inpoutx64} 这些库本质就是预置了一个做这件事的小 \texttt{.sys}。
+
+真正的关卡是签名。Windows 强制驱动签名（DSE），未签名的 \texttt{.sys} 除非开启测试签名模式否则拒绝加载；XP 时代直接打开旧物理内存设备节点的偏方也早已封死。于是 Linux 的门槛是"特权"，Windows 的门槛是"签名"——后者的工程成本高出一个量级，这也是 Windows 上的硬件测试工具几乎都自带一个驱动的原因。
+
+\subsection{三条路的对照}
+
+\begin{longtable}{p{2.4cm}p{3.9cm}p{4.0cm}p{4.0cm}}
+\toprule
+\textbf{维度} & \textbf{裸机} & \textbf{Unix（Linux）} & \textbf{Windows} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{维度} & \textbf{裸机} & \textbf{Unix（Linux）} & \textbf{Windows} \\
+\midrule
+\endhead
+前提 & 无 MMU 或未启用 & MMU 开启，页表隔离 & MMU 开启，页表隔离 \\
+访问形态 & 指针直接解引用 & mmap 系统调用 & 内核驱动 IOCTL 代理 \\
+典型入口 & 厂商头文件地址宏 & /dev/mem、resource0、UIO & 自研驱动、WinIo、WinRing0 \\
+权限关卡 & 无，固件即特权 & root 或 CAP\_SYS\_RAWIO & 驱动签名（DSE） \\
+缓存属性 & 自设 MMU 或 MPU 页表 & 驱动 pgprot 或 ioremap 决定 & 映射函数的 PAGE 标志 \\
+风险承担 & 全部自担 & 内核以 STRICT\_DEVMEM 过滤 & 驱动承担，签名是系统级关卡 \\
+典型场景 & MCU 固件、bootloader & DPDK、SPDK、嵌入式 Linux & 硬件测试工具、监控软件 \\
+\bottomrule
+\end{longtable}
+
+\begin{tcolorbox}[warning={三条路共通的三个坑}]
+其一，页对齐：mmap 的偏移必须页对齐，页内偏移自己补，把物理地址直接当偏移传是最常见的错误。其二，volatile：无论哪条路，映射得到的指针都必须带 volatile 限定，否则轮询循环会被优化掉（与第~\ref{sec:mmap-bar}~节的讨论同构）。其三，缓存属性：寄存器映射成 WB 会读到 cache 里的旧值，frame buffer 映射成 UC 则带宽惨不忍睹。
+\end{tcolorbox}
+
+\begin{tcolorbox}[guideline={三条路最终汇合到同一件事}]
+剥掉 API 差异，裸机、Unix、Windows 做的都是同一件事：把一段物理地址区间，以设备属性（UC 或 WC）映射进某张页表，然后以 volatile 限定的指针访问它。区别只在于"谁有资格改那张页表"：裸机上你就是页表的主人；Unix 上内核留了一道叫 /dev/mem 的门并守在门口；Windows 上内核要求你先出示凭证（签名），再由它代你改页表。理解了这一层，选平台就只是选一把不同的钥匙。
+\end{tcolorbox}
+
+% ===================================================================
+\chapter{DMA 与中断}\label{ch:dma-irq}
+% ===================================================================
+
+\section{为什么需要 DMA}\label{sec:why-dma}
+
+PIO（CPU 逐字搬运）的带宽受限于 CPU 每次 load/store 的开销。DMA 让设备自己读写物理内存，CPU 只负责"下达命令 + 收中断"。现代网卡、NVMe、GPU 的全部数据面都走 DMA。
+
+\section{描述符环}\label{sec:desc-ring}
+
+描述符环（descriptor ring / queue）是 DMA 的标准数据结构：一块主机与设备共享的环形数组，每个元素（描述符）描述一段缓冲区的物理地址与长度。主机填描述符（生产），设备取描述符并搬运（消费），完成后写回状态或触发中断。
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+struct desc {
+    uint64_t phys_addr;   // 缓冲区物理地址（DMA 地址）
+    uint32_t length;
+    uint32_t flags;       // OWN: 0=host, 1=device
+    uint64_t next;        // 或隐含为环上下一项
+};
+
+// 主机提交：填描述符 -> 置 OWN=device -> 写 doorbell
+void submit(struct desc *ring, unsigned *tail, void *buf, dma_addr_t pa, uint32_t len) {
+    struct desc *d = &ring[*tail];
+    d->phys_addr = pa;
+    d->length    = len;
+    d->flags     = OWN_DEVICE;      // 最后写 flags（发布语义）
+    wmb();                          // 写屏障：保证 addr/len 先于 flags 可见
+    *tail = (*tail + 1) & (RING_SIZE - 1);
+    writel(*tail, doorbell);        // 敲门
+}
+\end{lstlisting}
+
+注意 \texttt{flags} 最后写、且写之前有 \Fn{wmb}：这是典型的\textbf{发布}（publish）模式。设备先看到 \texttt{OWN=device} 才会去读 \texttt{phys\_addr}/\texttt{length}，因此必须保证后两者先可见。
+
+\section{coherent 与 streaming DMA}\label{sec:dma-types}
+
+Linux DMA API 区分两类：
+
+\begin{itemize}[nosep]
+  \item \textbf{一致性 DMA}（\Fn{dma\_alloc\_coherent}）：分配一块主机与设备都可见、且缓存策略已处理好的缓冲。适合描述符环、控制块这类双方频繁读写的结构。返回内核虚拟地址 + DMA 地址。
+  \item \textbf{流式 DMA}（\Fn{dma\_map\_single}/\Fn{dma\_map\_sg}）：把已有的内核缓冲临时映射给设备，用完 \Fn{dma\_unmap\_single}。适合一次性的大块数据（网络包、磁盘扇区）。在弱序平台上，map/unmap 隐含了必要的缓存同步。
+\end{itemize}
+
+\begin{tcolorbox}[guideline={选型的经验法则}]
+双方都要反复读写、生命周期长 $\rightarrow$ coherent；单向、一次性、大块 $\rightarrow$ streaming。把大块数据放 coherent 会浪费缓存一致性带宽；把描述符环放 streaming 则需要每轮手动 sync，易错且慢。
+\end{tcolorbox}
+
+\section{中断：MSI/MSI-X 与轮询}\label{sec:msix}
+
+设备完成 DMA 后通知主机的方式有两种：
+
+\begin{enumerate}[nosep]
+  \item \textbf{中断}：设备发 MSI/MSI-X 消息（本质是一次特殊的内存写），CPU 跳到 ISR。适合低负载、事件稀疏的场景。
+  \item \textbf{轮询}：主机线程忙等描述符状态位。适合高负载、低延迟场景（DPDK/SPDK 的核心思想），代价是占满一个核。
+\end{enumerate}
+
+MSI-X 相比老式 INTx 的优势：每个队列独立向量（多队列网卡可为每个 CPU 核绑一个中断）、无需共享中断线、消息直接写 CPU 指定地址因此更快。Linux 用 \Fn{pci\_alloc\_irq\_vectors} 申请，\Fn{irq\_set\_affinity} 绑核。
+
+\begin{tcolorbox}[compare={中断 vs 轮询}]
+\begin{itemize}[nosep]
+  \item 中断：CPU 利用率好，但每次事件有 $\mu s$ 级中断开销与上下文切换。
+  \item 轮询：延迟稳定在百 ns 级，但空转烧一个核；低负载时浪费。
+  \item 混合（NAPI）：有包时切轮询、空闲时回中断，是 Linux 网络栈的默认策略。
+\end{itemize}
+\end{tcolorbox}
+
+\section{IOMMU}\label{sec:iommu}
+
+IOMMU 是设备侧的 MMU：把设备发出的 DMA 地址翻译为物理地址，并提供保护（设备不能越界写）。开启 IOMMU 后，驱动拿到的"DMA 地址"不再是物理地址而是 IOVA，必须通过 DMA API 映射——这正是"永远用 DMA API 而非裸物理地址"的另一个理由。IOMMU 也是 VFIO 用户态驱动与设备直通（SR-IOV）的安全基础。
+
+\section{Unix 与 Windows：DMA 与中断的两套词汇}\label{sec:dma-irq-os}
+
+前面四节的概念（coherent、streaming、顶半部、底半部）与操作系统无关，但落进代码立刻分裂成两套词汇。同样是"申请一块 coherent 内存、注册一个中断"，Linux 与 Windows（KMDF）的写法如下：
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+/* Linux: coherent 内存 + 线程化中断 */
+void *cpu = dma_alloc_coherent(dev, SIZE, &dma, GFP_KERNEL);
+/* cpu 是内核虚拟地址, dma 是设备侧 DMA 地址 */
+
+request_threaded_irq(pdev->irq, NULL, handler,
+                     IRQF_SHARED, "mydev", priv);
+/* handler 跑进程上下文: 可睡眠、可调度、可慢慢处理 */
+\end{lstlisting}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+/* Windows (KMDF): DMA enabler + ISR/DPC 两级 */
+WDF_DMA_ENABLER enabler;
+WdfDmaEnablerCreate(device, &profile,
+                    WDF_NO_OBJECT_ATTRIBUTES, &enabler);
+WdfDmaTransactionCreate(enabler, WDF_NO_OBJECT_ATTRIBUTES, &txn);
+
+WdfInterruptCreate(device, &cfg, WDF_NO_OBJECT_ATTRIBUTES, &irq);
+/* EVT_WDF_INTERRUPT_ISR 跑 DIRQL, 只排队; DPC 里做实际处理 */
+\end{lstlisting}
+
+\begin{longtable}{p{3.4cm}p{5.5cm}p{5.5cm}}
+\toprule
+\textbf{概念} & \textbf{Linux} & \textbf{Windows（KMDF）} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{概念} & \textbf{Linux} & \textbf{Windows（KMDF）} \\
+\midrule
+\endhead
+coherent 内存 & dma\_alloc\_coherent 一次到位 & DMA enabler 加 transaction 两级 \\
+streaming 映射 & dma\_map\_single 与 unmap 成对 & transaction 的 Initialize 与 Execute \\
+中断注册 & request\_irq 或线程化版本 & WdfInterruptCreate 加两个回调 \\
+中断上下文 & 硬中断顶半部加 workqueue 底半部 & ISR 在 DIRQL，DPC 做底半部 \\
+用户态等中断 & poll 或 eventfd（UIO、VFIO） & Overlapped I/O 加事件对象 \\
+IOMMU 接入 & DMA API 自动穿过 IOMMU & 同样自动，由 HAL 管理映射 \\
+\bottomrule
+\end{longtable}
+
+两套词汇背后是同一个状态机：中断来了先在最窄的上下文里确认并排队，再放到宽松的上下文里处理；DMA 内存先决定一致性语义（coherent 还是 streaming），再决定映射与解映射的时机。记住状态机，词汇只是方言。
+
+核函数是这套二分法的例外。CUDA 与 SYCL 的运行时把上述 OS 差异全部吸收：stream、event、pinned 内存在 Unix 与 Windows 上同名同义，应用代码一行不改。这也是本书的结构原则——\textbf{除核函数外，凡是碰设备的地方都要区分平台}：MMIO 的区分见第~\ref{sec:direct-phys}~节，总线的区分见第~\ref{sec:bus-os}~节，把区分下沉给三方库见第~\ref{sec:libserialport}~节。
+
+% ===================================================================
+\chapter{低速总线协议}\label{ch:slow-bus}
+% ===================================================================
+
+MMIO/DMA 面向"高速、地址化"的设备。传感器、EEPROM、显示屏、MCU 之间则大量使用\textbf{低速串行总线}。它们不是地址空间，而是\textbf{按时序逐位对话的协议}。理解 I2C/SPI/UART 的关键是帧格式与主控/从控角色。
+
+\section{I2C（IIC）}\label{sec:i2c}
+
+I2C（Inter-Integrated Circuit，也写作 IIC）是两线半双工总线：SDA（数据）+ SCL（时钟），开漏输出需上拉电阻。每个从设备有 7 位（或 10 位）地址。
+
+\subsection{帧格式与时序}
+
+一次传输的结构为：START $\rightarrow$ 从地址(7bit) + R/W 位 $\rightarrow$ ACK $\rightarrow$ 数据字节 $\times$ N（每字节后 ACK）$\rightarrow$ STOP。
+
+\begin{itemize}[nosep]
+  \item \textbf{START/STOP}：SCL 高电平期间 SDA 的下降沿/上升沿。
+  \item \textbf{ACK}：接收方在第 9 个时钟把 SDA 拉低表示确认。
+  \item \textbf{clock stretching}：从机可以拉住 SCL 不放，迫使主机等待——这是从机"减速"主机的机制，bit-bang 实现必须检测。
+  \item 速率档：Standard 100kHz、Fast 400kHz、Fast+ 1MHz、High-speed 3.4MHz。
+\end{itemize}
+
+\subsection{Linux 用户态访问}
+
+Linux 把 I2C 控制器暴露为 \seqsplit{\texttt{/dev/i2c-N}}，用户态用 \seqsplit{\texttt{i2c-tools}} 或 \seqsplit{\texttt{ioctl(I2C\_SLAVE)}} + \texttt{read}/\texttt{write} 访问：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+i2cdetect -y 1                 # 扫描总线 1 上的从设备
+i2cget -y 1 0x48 0x00 w        # 读 0x48 的寄存器 0x00（字）
+i2cset -y 1 0x48 0x01 0x60 w   # 写寄存器
+\end{lstlisting}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
+
+int fd = open("/dev/i2c-1", O_RDWR);
+ioctl(fd, I2C_SLAVE, 0x48);          // 选中从地址 0x48
+uint8_t reg = 0x00;
+write(fd, &reg, 1);                  // 写寄存器指针
+uint8_t val[2];
+read(fd, val, 2);                    // 读两个字节的寄存器值
+\end{lstlisting}
+
+\section{SPI}\label{sec:spi}
+
+SPI 是四线全双工：SCLK、MOSI、MISO、CS（每从设备一根）。没有地址概念，靠 CS 片选区分从设备；没有 ACK，靠约定长度。四种 mode（CPOL/CPHA 组合）决定采样沿，主从必须一致。Linux 暴露为 \texttt{/dev/spidevB.C}，用 \texttt{spidev\_test} 或 \texttt{ioctl(SPI\_IOC\_MESSAGE)} 做全双工传输。SPI 速率远高于 I2C（可达数十 MHz），适合 flash、ADC、显示屏。
+
+\section{UART}\label{sec:uart}
+
+UART 是异步两线（TX/RX），无时钟线，靠双方约定的波特率与帧格式（起始位 + 数据位 + 校验 + 停止位）同步。经典控制器是 16550，其寄存器既可 PIO 也可 MMIO 访问（§1.1 的 \texttt{UART\_SR}/\texttt{UART\_DR} 即其抽象）。Linux 暴露为 \texttt{/dev/ttySn}，用 \texttt{termios} 配置波特率与帧格式。
+
+\begin{tcolorbox}[compare={I2C vs SPI vs UART}]
+\begin{itemize}[nosep]
+  \item I2C：两线、多从设备靠地址、有 ACK、速率低、适合传感器阵列。
+  \item SPI：四线、多从设备靠 CS、无 ACK、速率高、适合 flash/显示。
+  \item UART：两线、点对点、异步、适合调试串口与模组通信。
+  \item 三者都是"协议"而非地址空间；CPU 侧仍需一个控制器把协议翻译成 MMIO 寄存器操作。
+\end{itemize}
+\end{tcolorbox}
+
+\section{GPIO}\label{sec:gpio}
+
+GPIO 是最原始的硬件接口：单根线的电平输入/输出。Linux 现代接口是 \texttt{libgpiod}（字符设备 \texttt{/dev/gpiochipN}），取代了已废弃的 sysfs。GPIO 常用于复位线、中断线、bit-bang 模拟 I2C/SPI。bit-bang 时同样要遵守 §2.3 的屏障与 \kw{volatile} 规则。
+
+\section{Unix 与 Windows：总线与 GPIO 的 API 分野}\label{sec:bus-os}
+
+Linux 把每条总线都做成文件：I2C 是 \seqsplit{\texttt{/dev/i2c-N}} 加 \texttt{ioctl}，SPI 是 \seqsplit{\texttt{/dev/spidevB.C}} 加 \texttt{ioctl}，UART 是 \texttt{/dev/ttyX} 加 termios，GPIO 是字符设备加 libgpiod。"一切皆文件"在低速总线上贯彻得最彻底。Windows 没有这棵设备树，四条总线的处境各不相同：
+
+\begin{longtable}{p{2.0cm}p{4.6cm}p{4.6cm}p{3.1cm}}
+\toprule
+\textbf{总线} & \textbf{Linux 用户态} & \textbf{Windows 用户态} & \textbf{备注} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{总线} & \textbf{Linux 用户态} & \textbf{Windows 用户态} & \textbf{备注} \\
+\midrule
+\endhead
+UART & /dev/ttyX 加 termios & COM 口：CreateFile 加 DCB & 两侧抽象最接近 \\
+I2C & /dev/i2c-N 加 ioctl & 无官方通道，需 SpbCx 驱动 & Windows 必先写驱动 \\
+SPI & /dev/spidevB.C 加 ioctl & 无官方通道，需 SpbCx 驱动 & 同上 \\
+GPIO & /dev/gpiochipN 加 libgpiod & WinRT 的 GPIO 类（仅 IoT 版） & 桌面 Windows 无通道 \\
+\bottomrule
+\end{longtable}
+
+UART 是唯一两侧都有原生用户态通道的总线：Linux 的 termios 与 Windows 的 DCB（波特率、数据位、停止位、流控）在概念上同构，都是"打开串口、设帧格式、读写"。代码形态不同，心智模型相同。I2C 与 SPI 在 Windows 上则完全没有用户态入口：官方路线是写一个挂在 SpbCx（Simple Peripheral Bus）框架下的 KMDF 小驱动，应用再经驱动自定的 IOCTL 访问。GPIO 在桌面 Windows 上同样没有官方通道，WinRT 的 \seqsplit{\texttt{Windows.Devices.Gpio}} 只在 IoT 版本（如树莓派的 Windows 10 IoT Core）开放。
+
+\section{跨平台三方库示例：libserialport}\label{sec:libserialport}
+
+差异是客观存在的，工程上的答案是\textbf{把差异下沉到一层有人维护的库里}。libserialport（sigrok 项目的产物）是一个极简示例：同一段 C 代码、同一组函数名，在 Linux 与 Windows 上都能编译运行；库内部用条件编译分叉——Linux 走 termios，Windows 走 \seqsplit{\texttt{CreateFile}}、\seqsplit{\texttt{SetCommState}}、\seqsplit{\texttt{WaitCommEvent}}——调用者完全看不见：
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+#include <libserialport.h>
+
+struct sp_port *port;
+sp_get_port_by_name("/dev/ttyUSB0", &port); /* Windows 写 "COM3" */
+sp_open(port, SP_MODE_READ_WRITE);
+sp_set_baudrate(port, 115200);
+sp_set_flow_control(port, SP_FLOWCONTROL_NONE);
+
+unsigned char cmd[1] = {0x54};        /* 发一个命令字节 */
+sp_blocking_write(port, cmd, 1, 100);
+unsigned char buf[4];
+sp_blocking_read(port, buf, 4, 100);  /* 超时 100 ms */
+sp_close(port);
+sp_free_port(port);
+\end{lstlisting}
+
+同思路的库还有一族：libusb 把 udev 与 WinUSB 的差异下沉进库内（USB）；libftdi 在 libusb 之上再封装 FTDI 协议；MRAA 统一 GPIO、I2C、SPI、UART 四类引脚（以嵌入式 Linux 为主）；libiio 面向 ADC、DAC 一类模拟前端。选哪一个，取决于你的总线与目标平台矩阵。
+
+\begin{tcolorbox}[bestpractice={选入口前先问三个问题}]
+一问目标平台：只跑嵌入式 Linux，就直接用原生四件套（\texttt{/dev/i2c-N}、spidev、termios、libgpiod），依赖最少、文档最全。二问交付形态：桌面 Windows 与 Linux 都要跑，就包一层 libserialport 或 libusb，不要自己维护两套 \texttt{\#ifdef}。三问总线在 Windows 上有没有用户态通道：I2C 与 SPI 没有，要么自带一个 SpbCx 驱动交付，要么改硬件路线走 USB 转 I2C、USB 转串口桥接芯片——后者往往更便宜，也更少签名麻烦。
+\end{tcolorbox}
+
+% ===================================================================
+\chapter{CUDA 核函数}\label{ch:cuda}
+% ===================================================================
+
+从本章起转向"把计算搬到设备上"。GPU 的编程模型与 CPU 截然不同：它不是少数强核，而是成千上万个弱核以 SIMT 方式锁步执行。
+
+\section{SIMT 执行模型}\label{sec:simt}
+
+CUDA 把一次核函数（kernel）启动组织为三级：grid $\rightarrow$ block $\rightarrow$ thread。
+
+\begin{itemize}[nosep]
+  \item \textbf{thread}：最小执行单元，有自己的寄存器与私有局部变量。
+  \item \textbf{block}：一组 thread，被调度到同一个 SM（流多处理器）上，可通过 \texttt{\_\_shared\_\_} 内存协作、用 \Fn{\_\_syncthreads} 同步。block 大小上限通常 1024。
+  \item \textbf{grid}：所有 block 的集合，block 之间在核函数内\textbf{不能}同步（除 cooperative groups 的特例）。
+  \item \textbf{warp}：硬件实际调度单位，32 个 thread 锁步执行同一指令。warp 内分支会导致两条路径串行（branch divergence）。
+\end{itemize}
+
+\begin{tcolorbox}[guideline={写 kernel 的心智模型}]
+把自己想象成\textbf{一个 thread}：用 \texttt{threadIdx}/\texttt{blockIdx}/\texttt{blockDim} 算出"我是谁、该处理哪个数据"，只写自己那份。并行性来自硬件同时跑成千上万个这样的"你"。
+\end{tcolorbox}
+
+\section{第一个核函数：向量加}\label{sec:vecadd}
+
+\cudalabel
+\begin{lstlisting}[style=cudastyle]
+__global__ void vec_add(const float *a, const float *b, float *c, int n) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;   // 全局线程号
+    if (i < n) {
+        c[i] = a[i] + b[i];
+    }
+}
+
+void launch(const float *da, const float *db, float *dc, int n) {
+    int threads = 256;
+    int blocks  = (n + threads - 1) / threads;
+    vec_add<<<blocks, threads>>>(da, db, dc, n);     // grid, block 配置
+    cudaDeviceSynchronize();
+}
+\end{lstlisting}
+
+\texttt{<<<blocks, threads>>>} 是核函数启动语法：左边是 grid 维度，右边是 block 维度。\texttt{\_\_global\_\_} 表示"在设备上执行、由主机调用"。
+
+\section{内存层级}\label{sec:cuda-mem}
+
+CUDA 的内存层级决定了性能：
+
+\begin{longtable}{p{2.8cm}p{3.4cm}p{3.4cm}p{4.6cm}}
+\toprule
+\textbf{内存} & \textbf{作用域} & \textbf{生命周期} & \textbf{特点} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{内存} & \textbf{作用域} & \textbf{生命周期} & \textbf{特点} \\
+\midrule
+\endhead
+register   & thread & thread & 最快，溢出则落到 local \\
+shared     & block  & block  & 手动管理，需防 bank conflict \\
+constant   & 全 grid & 核函数 & 只读，广播优化 \\
+global     & 全设备 & 应用   & 容量大，靠 L2/合并访问提速 \\
+local      & thread & thread & register 溢出后的私存，实为 global \\
+\bottomrule
+\end{longtable}
+
+\subsection{合并访问（coalescing）}
+
+global 内存以 32/64/128 字节事务传输。一个 warp 的 32 个 thread 若访问\textbf{连续}地址（如 \texttt{c[i]} 中 i 连续），可合并为一次事务；若步长为 2 或随机，则拆成多次事务，带宽骤降。写 kernel 的第一原则就是让相邻 thread 访问相邻地址。
+
+\subsection{shared 内存与 bank conflict}
+
+\texttt{\_\_shared\_\_} 是 block 内协作的高速暂存。它被分成 32 个 bank；同一 warp 内多个 thread 访问同一 bank 的不同地址会串行（bank conflict）。经典优化：矩阵转置时给 shared 块加一列 padding 错开 bank。
+
+\cudalabel
+\begin{lstlisting}[style=cudastyle]
+__global__ void transpose(const float *in, float *out, int w, int h) {
+    __shared__ float tile[32][33];        // +1 padding 避免 bank conflict
+    int x = blockIdx.x * 32 + threadIdx.x;
+    int y = blockIdx.y * 32 + threadIdx.y;
+    if (x < w && y < h) tile[threadIdx.y][threadIdx.x] = in[y * w + x];
+    __syncthreads();                       // 等全 block 填完
+    int nx = blockIdx.y * 32 + threadIdx.x;
+    int ny = blockIdx.x * 32 + threadIdx.y;
+    if (nx < h && ny < w) out[nx * h + ny] = tile[threadIdx.x][threadIdx.y];
+}
+\end{lstlisting}
+
+\section{同步与 warp 原语}\label{sec:cuda-sync}
+
+\begin{itemize}[nosep]
+  \item \Fn{\_\_syncthreads}：block 内所有 thread 屏障。注意不能在分支里让部分 thread 调用（未定义）。
+  \item \Fn{\_\_threadfence}：保证本 thread 之前的写对其他 thread 可见（设备内）。
+  \item warp 原语：\Fn{\_\_shfl\_down\_sync}（warp 内寄存器洗牌，做归约无需 shared）、\Fn{\_\_ballot\_sync}（收集谓词位图）、\Fn{\_\_any\_sync}/\Fn{\_\_all\_sync}。
+  \item 原子：\Fn{atomicAdd} 等，用于直方图、计数；竞争大时改用 warp 归约 + 少量原子。
+\end{itemize}
+
+\cudalabel
+\begin{lstlisting}[style=cudastyle]
+__global__ void block_reduce(const float *in, float *out, int n) {
+    __shared__ float smem[256];
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    float v = (i < n) ? in[i] : 0.0f;
+    // warp 内洗牌归约
+    for (int off = 16; off > 0; off >>= 1)
+        v += __shfl_down_sync(0xffffffff, v, off);
+    if ((threadIdx.x & 31) == 0) smem[threadIdx.x >> 5] = v;
+    __syncthreads();
+    if (threadIdx.x < 8) {                      // 第一个 warp 归约各 warp 结果
+        v = smem[threadIdx.x];
+        for (int off = 4; off > 0; off >>= 1)
+            v += __shfl_down_sync(0xff, v, off);
+        if (threadIdx.x == 0) atomicAdd(out, v);
+    }
+}
+\end{lstlisting}
+
+\section{occupancy 与调优}\label{sec:occupancy}
+
+occupancy = 活跃 warp 数 / SM 最大 warp 数。影响它的因素：每 thread 寄存器数、shared 用量、block 大小。寄存器或 shared 用得太多，SM 上能并发的 block 就少，延迟隐藏能力下降。调优手段：\texttt{\_\_launch\_bounds\_\_} 限制寄存器、调整 block 大小、用 \texttt{nsight compute} 看 occupancy 与内存吞吐。
+
+% ===================================================================
+\chapter{CUDA 主机—设备内存与流}\label{ch:cuda-memflow}
+% ===================================================================
+
+\section{显式拷贝与 pinned 内存}\label{sec:cuda-copy}
+
+默认 global 内存在设备侧，主机用 \Fn{cudaMalloc} 分配、\Fn{cudaMemcpy} 拷贝。主机侧若用普通 \texttt{malloc} 内存做拷贝源，驱动要先把它拷到一块内部暂存（因为普通页可能被换出/移动），带宽减半。改用 \Fn{cudaMallocHost}（pinned/page-locked）内存可直接 DMA，带宽接近 PCIe 上限。
+
+\cudalabel
+\begin{lstlisting}[style=cudastyle]
+float *h_pin, *d;
+cudaMallocHost(&h_pin, n * sizeof(float));   // pinned，可被设备 DMA
+cudaMalloc(&d, n * sizeof(float));
+cudaMemcpy(d, h_pin, n * sizeof(float), cudaMemcpyHostToDevice);
+\end{lstlisting}
+
+\section{统一内存（managed）}\label{sec:cuda-managed}
+
+\Fn{cudaMallocManaged} 分配一块主机与设备共用同一指针的内存，运行时按需迁移页（page migration）。编程最简单，但频繁跨端访问会触发页错误与迁移，性能不可预测。适合原型与不规则访问；性能敏感的热点仍应显式拷贝或 pinned。
+
+\section{流与并发}\label{sec:cuda-streams}
+
+默认所有操作进同一条流、串行执行。创建多条 \texttt{cudaStream\_t} 可让拷贝与计算重叠：
+
+\cudalabel
+\begin{lstlisting}[style=cudastyle]
+cudaStream_t s1, s2;
+cudaStreamCreate(&s1); cudaStreamCreate(&s2);
+// 流1: 拷下一块;  流2: 算当前块  -> 重叠
+cudaMemcpyAsync(d_next, h_next, bytes, cudaMemcpyHostToDevice, s1);
+kernel<<<grid, block, 0, s2>>>(d_cur);
+cudaEventRecord(ev, s2);
+cudaStreamWaitEvent(s1, ev, 0);   // 流1 等流2 的核函数完成
+\end{lstlisting}
+
+关键：异步 API（\Fn{cudaMemcpyAsync}）+ pinned 内存 + 多流，三者齐备才能真正重叠。用普通内存调 \Fn{cudaMemcpyAsync} 会退化为同步。
+
+\section{多 GPU 与 peer access}\label{sec:cuda-peer}
+
+多卡时，\Fn{cudaDeviceCanAccessPeer} 查询两卡能否直接互访（NVLink/PCIe P2P），\Fn{cudaDeviceEnablePeerAccess} 开启后，一张卡可直接读写另一张卡的 global 内存，避免绕主机。NVLink 带宽远高于 PCIe，是多卡训练互联的关键。
+
+% ===================================================================
+\chapter{SYCL / oneAPI}\label{ch:sycl}
+% ===================================================================
+
+CUDA 绑定 NVIDIA 硬件。SYCL 是 Khronos 的开放标准，单一 C++ 源码可编译到 GPU（Intel/AMD/NVIDIA）、CPU、FPGA。oneAPI 是 Intel 在 SYCL 之上的工具链与库集合。
+
+\section{设备抽象：queue 与 selector}\label{sec:sycl-queue}
+
+SYCL 的核心是 \texttt{queue}：把命令提交到某个设备。用 selector 选择设备类型：
+
+\sycllabel
+\begin{lstlisting}[style=syclstyle]
+#include <sycl/sycl.hpp>
+namespace sycl = sycl;
+
+int main() {
+    sycl::queue q(sycl::gpu_selector_v);   // 选 GPU；也可 cpu_selector_v / default
+    sycl::device dev = q.get_device();
+    // 打印设备名
+    return 0;
+}
+\end{lstlisting}
+
+\section{提交核函数}\label{sec:sycl-kernel}
+
+SYCL 有三种提交粒度：
+
+\sycllabel
+\begin{lstlisting}[style=syclstyle]
+q.submit([&](sycl::handler &h) {
+    h.parallel_for(n, [=](sycl::id<1> i) {   // 数据并行：每个 work-item 一个 i
+        c[i] = a[i] + b[i];
+    });
+});
+q.wait();
+\end{lstlisting}
+
+\begin{itemize}[nosep]
+  \item \texttt{single\_task}：整个核函数一个 work-item。
+  \item \texttt{parallel\_for(range)}：扁平数据并行，对应 CUDA 的"一维 grid"。
+  \item \seqsplit{\texttt{parallel\_for(nd\_range)}}：显式分组，work-group 相当于 CUDA 的 block。可用 \seqsplit{\texttt{local\_accessor}} 与 \seqsplit{\Fn{group\_barrier}} 做组内协作，对应 CUDA 的 shared 加 \seqsplit{\Fn{\_\_syncthreads}}。
+\end{itemize}
+
+\section{数据管理：buffer/accessor 与 USM}\label{sec:sycl-data}
+
+两种数据模型：
+
+\begin{itemize}[nosep]
+  \item \textbf{buffer + accessor}：声明式。创建 \texttt{buffer} 包装主机数据，在核函数里通过 \texttt{accessor} 访问；运行时自动决定何时在主机与设备间搬数据（依赖分析）。析构 buffer 时数据回写主机。
+  \item \textbf{USM}（Unified Shared Memory）：命令式。\Fn{malloc\_shared}、\Fn{malloc\_device}、\Fn{malloc\_host} 拿裸指针，\Fn{q.memcpy} 手动搬。更接近 CUDA 心智模型。
+\end{itemize}
+
+\sycllabel
+\begin{lstlisting}[style=syclstyle]
+// USM 风格
+float *d = sycl::malloc_shared<float>(n, q);   // 主机设备共用指针
+q.parallel_for(n, [=](sycl::id<1> i) { d[i[0]] *= 2.0f; }).wait();
+sycl::free(d, q);
+\end{lstlisting}
+
+\section{与 CUDA 的概念映射}\label{sec:sycl-map}
+
+\begin{longtable}{p{4.4cm}p{4.4cm}p{5.6cm}}
+\toprule
+\textbf{CUDA} & \textbf{SYCL} & \textbf{说明} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{CUDA} & \textbf{SYCL} & \textbf{说明} \\
+\midrule
+\endhead
+\texttt{\_\_global\_\_} kernel & \texttt{parallel\_for} lambda & 设备代码入口 \\
+block / threadIdx & work-group / \texttt{local\_id} & 组内协作单位 \\
+grid / blockIdx & nd\_range / \texttt{group\_id} & 组间索引 \\
+\texttt{\_\_shared\_\_} & \texttt{local\_accessor} & 组内高速暂存 \\
+\Fn{\_\_syncthreads} & \Fn{group\_barrier} & 组内屏障 \\
+\texttt{cudaStream} & \texttt{queue} + in-order/ooo & 命令流 \\
+managed memory & \texttt{malloc\_shared} (USM) & 统一指针 \\
+\texttt{cudaMemcpy} & \texttt{q.memcpy} / buffer & 主机设备搬移 \\
+\bottomrule
+\end{longtable}
+
+\begin{tcolorbox}[compare={CUDA vs SYCL 取舍}]
+\begin{itemize}[nosep]
+  \item CUDA：生态与库最全（cuBLAS/cuDNN/Thrust）、调优工具成熟、但锁 NVIDIA。
+  \item SYCL：跨厂商、标准 C++、buffer 模型可做自动依赖分析；但生态库与调优工具弱于 CUDA，某些 NVIDIA 专属特性（warp 原语、Tensor Core）需扩展或回退。
+  \item 迁移策略：核心 kernel 用 SYCL 写可移植层，热点用 CUDA/HIP 特化。
+\end{itemize}
+\end{tcolorbox}
+
+% ===================================================================
+\chapter{NPU 与异构推理}\label{ch:npu}
+% ===================================================================
+
+NPU（神经网络处理器）与 GPU 目标相同（加速矩阵/卷积运算）但架构哲学不同：GPU 用海量通用 SIMT 核换灵活性，NPU 用专用 MAC 阵列 + 大片上 SRAM 换能效比。
+
+\section{架构差异}\label{sec:npu-arch}
+
+\begin{itemize}[nosep]
+  \item \textbf{MAC 阵列/脉动阵列}：NPU 的核心是密集的乘累加单元阵列，数据流式穿过阵列，一次时钟完成一整块乘加。
+  \item \textbf{片上 SRAM 驻留}：权重与激活尽量留在片上 SRAM，减少对外部 DRAM 的访问——NPU 性能瓶颈几乎总是"搬数"而非"算"。
+  \item \textbf{tile 切分}：编译器把大矩阵切成适配 SRAM 的 tile，规划 DMA 搬入/计算/搬出的流水线。
+  \item \textbf{低精度}：INT8/INT4/FP8 是 NPU 的主战场，靠量化换吞吐与能效。
+\end{itemize}
+
+\begin{tcolorbox}[guideline={NPU 编程的重心是"数据流"而非"线程"}]
+写 GPU kernel 你想的是"每个 thread 算什么"；写 NPU 算子你想的是"权重和激活如何在片上 SRAM 与 MAC 阵列之间流动、如何切 tile、如何流水"。NPU 的自定义算子开发本质是数据流调度问题。
+\end{tcolorbox}
+
+\section{推理栈}\label{sec:npu-stack}
+
+应用层很少直接写 NPU 核函数，而是通过推理栈：模型（ONNX/PyTorch）$\rightarrow$ 编译器/运行时（OpenVINO、TensorRT、CoreML、DirectML、各厂商 NPU SDK）$\rightarrow$ NPU 驱动。这些栈负责算子融合、量化、tile 切分与调度。自定义算子（custom op/核）只在栈未覆盖的算子上才需要，用厂商 SDK 提供的核编写接口（如 Ascend C、TensorRT plugin）。
+
+\section{GPU 还是 NPU}\label{sec:gpu-vs-npu}
+
+\begin{longtable}{p{3.0cm}p{5.6cm}p{5.6cm}}
+\toprule
+\textbf{维度} & \textbf{GPU} & \textbf{NPU} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{维度} & \textbf{GPU} & \textbf{NPU} \\
+\midrule
+\endhead
+灵活性   & 高（通用 SIMT，任意 kernel） & 低（擅长规整张量算子） \\
+能效比   & 中                          & 高（专用 MAC + 低精度） \\
+编程模型 & CUDA/SYCL，手写 kernel      & 推理栈 + 少量自定义算子 \\
+典型场景 & 训练、科研、图形、通用并行  & 端侧/边缘推理、低功耗 \\
+\bottomrule
+\end{longtable}
+
+% ===================================================================
+\chapter{交汇与最佳实践}\label{ch:converge}
+% ===================================================================
+
+\section{同一条主线：可见性与有序性}\label{sec:converge-core}
+
+回看全书，硬件访问与核函数编程反复出现同一对问题：
+
+\begin{enumerate}[nosep]
+  \item \textbf{可见性}：我写的数据，对方（设备/其他 thread/其他 warp）何时能看到？
+  \item \textbf{有序性}：我写的多次操作，对方以什么顺序看到？
+\end{enumerate}
+
+MMIO 用 \kw{volatile} + UC/WC 策略 + 屏障回答；DMA 用发布模式（先数据后 flags）+ \Fn{wmb} 回答；CUDA 用 \Fn{\_\_threadfence} + \Fn{\_\_syncthreads} + 合并访问回答；SYCL 用 \Fn{group\_barrier} 与 accessor 依赖回答。工具不同，问题相同。
+
+\begin{tcolorbox}[guideline={一张清单检查所有共享}]
+每当主机与设备、或设备内多 thread 共享内存时，逐条检查：(1) 共享指针是否 \kw{volatile} 或 atomic？(2) 发布/消费是否有屏障或同步点？(3) 缓存策略（UC/WC/coherent）是否匹配访问模式？(4) 弱序平台上是否漏了 DMA sync？
+\end{tcolorbox}
+
+\section{性能清单}\label{sec:perf-checklist}
+
+\begin{itemize}[nosep]
+  \item MMIO：控制寄存器用 UC，帧缓冲用 WC；doorbell 前插写屏障；状态轮询用 \kw{volatile}。
+  \item DMA：描述符环用 coherent，大数据用 streaming；批量提交减少 doorbell 次数；高负载考虑轮询或 NAPI。
+  \item 总线：I2C 选对速率档与地址；SPI 选对 mode；bit-bang 注意时序与屏障。
+  \item CUDA：合并访问第一；shared 防 bank conflict；warp 归约减少原子；pinned + 多流重叠拷贝与计算；看 occupancy。
+  \item SYCL：优先 buffer 让运行时做依赖分析；热点用 USM 手动控制；nd\_range 对齐 work-group 到硬件。
+  \item NPU：先量化再优化；让权重驻留片上；用推理栈的融合，别手写低效算子。
+\end{itemize}
+
+\section{结语}\label{ch9-conclusion}
+
+硬件访问与加速器编程看似两个领域，实则共享"地址空间、缓存一致性、可见性、有序性"这一组底层概念。掌握 MMIO/DMA/总线，你就理解了设备如何与 CPU 对话；掌握 CUDA/SYCL/NPU，你就理解了如何把计算交给成千上万个执行单元。两者合起来，才是"让软件真正驱动硅片"的完整图景。
+
+\appendix
+
+% ===================================================================
+\chapter{全链示例：仿传感器从驱动到应用}\label{app:sensor-chain}
+% ===================================================================
+
+本附录把前九章的概念拼成一条完整但不求能跑的骨架链。主角是一颗虚构的温度传感器，代号 TEMP0。它挂在 I2C 总线上，地址为 \texttt{0x48}；寄存器 \texttt{0x00} 与 \texttt{0x01} 分别返回温度的高字节与低字节，固定读回 25.60 摄氏度。下面在 Linux、Android、Windows 三个平台上各走一遍全链，链分三层：驱动、HAL（若系统需要）、应用接口。所有代码只保留接口形状：不处理错误，不做真实功能。
+
+\section{三条链一览}
+
+\begin{longtable}{p{2.6cm}p{3.9cm}p{3.9cm}p{3.9cm}}
+\toprule
+\textbf{层} & \textbf{Linux} & \textbf{Android} & \textbf{Windows} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{层} & \textbf{Linux} & \textbf{Android} & \textbf{Windows} \\
+\midrule
+\endhead
+驱动 & 内核 i2c 客户端驱动 & 同左（Android 内核即 Linux） & KMDF 驱动（可挂 SpbCx） \\
+中间层 & 无：sysfs 即接口 & 必须有：AIDL HAL 加 SensorService & 可选：传感器类扩展加 WinRT \\
+应用接口 & 读 sysfs 文件 & SensorManager（Java） & DeviceIoControl 或 WinRT \\
+接口定义者 & 内核 ABI（hwmon 约定） & aidl 契约文件 & 驱动自定 IOCTL 或 WinRT 契约 \\
+\bottomrule
+\end{longtable}
+
+最值得看的是中间那一行：HAL 是否存在，取决于系统是否允许应用直接碰硬件。Linux 的答案是"允许"——sysfs 与 hwmon 本身就是稳定的应用接口，无需再垫一层。Android 的答案是"不允许"——应用跑在沙箱里，框架强制传感器流量经过 HAL。Windows 居中：直连 IOCTL 完全合法；但若想进入官方传感器栈、让 UWP 应用以 WinRT 方式取数，就要补一个类扩展，其角色与 Android 的 HAL 等价。
+
+\section{Linux：驱动、sysfs、应用}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+/* 内核模块骨架: 把 TEMP0 注册成 hwmon 设备 */
+static int temp0_read(struct device *dev, enum hwmon_sensor_types t,
+                      u32 attr, long *val)
+{
+    *val = 25600;              /* 毫度: 25.600 C, 固定假值 */
+    return 0;
+}
+
+static int temp0_probe(struct i2c_client *c)
+{
+    /* 注册后 sysfs 自动生成 temp1_input 等文件 */
+    hwmon_device_register_with_info(&c->dev, "temp0",
+                                    c, &temp0_chip, NULL);
+    return 0;
+}
+\end{lstlisting}
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+/* 应用: 不需要权限, 不需要头文件, 读一个文件 */
+FILE *f = fopen("/sys/class/hwmon/hwmon0/temp1_input", "r");
+long millideg = 0;
+fscanf(f, "%ld", &millideg);   /* 25600 */
+fclose(f);
+\end{lstlisting}
+
+注意这条链的形状：驱动只负责把"读一个数"的能力注册进 hwmon 子系统；sysfs 把能力变成文件；应用把硬件当普通文件读。中间没有 HAL——内核 ABI（hwmon 的毫度约定）本身就是契约，且被承诺长期稳定。
+
+\section{Android：驱动、AIDL HAL、SensorManager}
+
+Android 直接复用上一节的 Linux 内核驱动（内核就是 Linux），但应用读不到 sysfs：沙箱禁止。系统要求在中间插入 HAL，今天的标准形状是 AIDL 契约加一个 native 服务进程：
+
+\aidllabel
+\begin{lstlisting}[style=javastyle]
+// ITempSensor.aidl —— 契约文件, 骨架只留一个方法
+interface ITempSensor {
+    float readTempC();         // 单位: 摄氏度
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// HAL 服务骨架: 读 sysfs, 经 binder 回答框架
+binder::Status TempSensorHal::readTempC(float *out) {
+    long md = ReadSysfs("/sys/class/hwmon/hwmon0/temp1_input");
+    *out = md / 1000.0f;       // 毫度转度
+    return binder::Status::ok();
+}
+// main(): 注册进 servicemanager, 等 SensorService 来连
+\end{lstlisting}
+
+\javalabel
+\begin{lstlisting}[style=javastyle]
+// 应用: 看不见设备节点, 只看见框架 API
+SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+Sensor s = sm.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE);
+sm.registerListener(listener, s, SensorManager.SENSOR_DELAY_NORMAL);
+// onSensorChanged(e): e.values[0] == 25.6f
+\end{lstlisting}
+
+这条链的中间其实是两跳：第一跳在 HAL 进程与 SensorService 之间，走 binder，契约是 \texttt{.aidl} 文件；第二跳在 SensorService 与应用之间，走框架 API。应用开发者不知道底下是 I2C，也不知道 HAL 存在——这正是"系统需要 HAL"的代价与回报：代价是多一层进程与一份接口，回报是应用接口跨设备、跨 Android 版本稳定。
+
+\section{Windows：KMDF 驱动、可选中间层、应用}
+
+Windows 最直接的链没有中间层：KMDF 驱动暴露一个 IOCTL，应用直连。
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+/* KMDF 骨架: 回答 IOCTL_TEMP_READ, 返回固定假值 */
+void EvtIoControl(WDFQUEUE q, WDFREQUEST r, size_t outlen,
+                  size_t inlen, ULONG code)
+{
+    if (code == IOCTL_TEMP_READ && outlen >= 4) {
+        float *out;
+        WdfRequestRetrieveOutputBuffer(r, 4, &out, NULL);
+        *out = 25.6f;
+        WdfRequestCompleteWithInformation(r, STATUS_SUCCESS, 4);
+        return;
+    }
+    WdfRequestComplete(r, STATUS_INVALID_PARAMETER);
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// 应用: CreateFile 加 DeviceIoControl, 无中间层
+HANDLE h = CreateFileW(L"\\\\.\\TEMP0", GENERIC_READ,
+                       0, NULL, OPEN_EXISTING, 0, NULL);
+float t = 0.0f; DWORD got = 0;
+DeviceIoControl(h, IOCTL_TEMP_READ, NULL, 0, &t, 4, &got, NULL);
+CloseHandle(h);                // t == 25.6f
+\end{lstlisting}
+
+若想让传感器进入官方栈、被 UWP 应用经 \seqsplit{\texttt{Windows.Devices.Sensors}} 取到，则要在驱动之上再写一个传感器类扩展（UMDF），把你的 IOCTL 翻译成传感器类的标准契约。这一层的角色与 Android 的 HAL 完全同构，区别只在于它是可选的：直连 IOCTL 在 Windows 上是完全合法的工程选择，而在 Android 上直连设备节点则根本不被允许。
+
+\section{三条链的回看}
+
+\begin{tcolorbox}[compare={三条链，同一副骨架}]
+剥掉名字，三条链做的是同样三件事：驱动把总线事务变成"一个可读的数"；中间层（若存在）把这个数变成系统认可的契约（sysfs 文件、AIDL 接口、WinRT 契约）；应用以该平台最普通的 API 取数（读文件、SensorManager、\seqsplit{\texttt{DeviceIoControl}}）。换到一个新平台时，先回答一个问题就够了——这个系统允许应用直接碰设备节点吗？答案决定你要不要写中间那一层。
+\end{tcolorbox}
+
+% ===================================================================
+\chapter{核函数算子到 PyTorch 绑定}\label{app:torch-bind}
+% ===================================================================
+
+核函数的归宿不一定是 C++ 主机程序。在深度学习栈里，自定义算子最常见的消费者是 PyTorch。本附录用一个最小的 SAXPY 算子（$z = a \cdot x + y$）走通最短全链：CUDA 核函数、C++ 绑定层、Python 调用。同样只是骨架：不写 autograd，不写 backward。
+
+\section{CUDA 核函数层}
+
+\cudalabel
+\begin{lstlisting}[style=cudastyle]
+// kern.cu: 核函数 + 主机侧 launcher
+__global__ void saxpy_kernel(const float *x, const float *y,
+                             float *z, float a, int n)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) z[i] = a * x[i] + y[i];
+}
+
+void saxpy_launch(const float *x, const float *y, float *z,
+                  float a, int n)
+{
+    int t = 256;
+    saxpy_kernel<<<(n + t - 1) / t, t>>>(x, y, z, a, n);
+}
+\end{lstlisting}
+
+这一层的分工就是第~5~章的形状：核函数管并行计算，launcher 管 grid 尺寸。唯一的约定是 launcher 必须是普通主机函数、可被纯 C++ 调用——这决定了下一层绑定完全不需要看见 CUDA 语法。
+
+\section{绑定层：TORCH\_LIBRARY}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// bind.cpp: 检查参数 + 注册进 torch 算子表
+#include <torch/extension.h>
+void saxpy_launch(const float*, const float*, float*, float, int);
+
+torch::Tensor saxpy(torch::Tensor x, torch::Tensor y, double a) {
+    TORCH_CHECK(x.is_cuda() && y.is_cuda(), "expect CUDA tensors");
+    TORCH_CHECK(x.sizes() == y.sizes(), "shape mismatch");
+    auto z = torch::empty_like(x);
+    saxpy_launch(x.data_ptr<float>(), y.data_ptr<float>(),
+                 z.data_ptr<float>(), (float)a, (int)x.numel());
+    return z;
+}
+
+TORCH_LIBRARY(myops, m) {
+    m.def("saxpy(Tensor x, Tensor y, float a) -> Tensor", saxpy);
+}
+\end{lstlisting}
+
+绑定层做三件事：检查参数（设备、形状），从 Tensor 取裸指针交给 launcher，再用 schema 字符串把函数注册进 torch 的算子表。\texttt{TORCH\_LIBRARY} 是静态注册：共享库一旦被加载，算子就出现在 \seqsplit{\texttt{torch.ops.myops}} 命名空间下，与内建算子同等待遇。
+
+\section{Python 侧：编译与调用}
+
+\pylabel
+\begin{lstlisting}[style=pystyle]
+# use.py: JIT 编译两个源文件, 然后按算子名调用
+import torch
+from torch.utils.cpp_extension import load
+
+load(name="myops", sources=["bind.cpp", "kern.cu"], verbose=False)
+
+x = torch.randn(1 << 20, device="cuda")
+y = torch.randn_like(x)
+z = torch.ops.myops.saxpy(x, y, 2.0)
+torch.testing.assert_close(z, 2.0 * x + y)
+\end{lstlisting}
+
+\seqsplit{\texttt{cpp\_extension.load}} 会在幕后调用 nvcc 与主机编译器（首次慢、之后走缓存）；产品化则改用 setup.py 或 CMake 打成 wheel。调用点 \seqsplit{\texttt{torch.ops.myops.saxpy}} 与内建算子形状一致：可以进 \seqsplit{\texttt{torch.jit.script}}、可以拼进更大的计算图；需要梯度时再包一层 \seqsplit{\texttt{torch.autograd.Function}} 补 backward——那是另一个话题，超出本附录范围。
+
+\begin{tcolorbox}[note={OS 差异在这一链里被谁吸收}]
+注意这条链与附录~A 的不对称：这里 Unix 与 Windows 的差异被 PyTorch 本身与 \seqsplit{\texttt{cpp\_extension}}（它知道去哪找 nvcc、该传哪些编译标志）两层吸收，核函数与绑定代码在两个系统上逐字相同。这正是第~\ref{sec:dma-irq-os}~节的结论在算子世界的回声——核函数世界以"跨平台"为默认，设备访问世界以"区分平台"为默认；选栈，就是在选谁来替你承担差异。
+\end{tcolorbox}
+
+\end{document}

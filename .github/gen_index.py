@@ -70,6 +70,21 @@ PROJECTS = [
     ("ModularBuild",  "modular_build.pdf",
      "C++ 模块化构建",
      "Modules vs Headers 对比、BMI 编译模型、优势详解、Clang/LSP/三方库三大成熟度困局、CMake FILE_SET CXX_MODULES 实战与渐进迁移路径。"),
+    ("CCompat",       "c_cpp_compat.pdf",
+     "C++ 与 C 的不兼容性",
+     "VLA / 柔性数组成员 / 复合字面量 / union 非活跃成员 UB 等差异详解，MSVC·GCC·Clang·Apple Clang 实测对比，以及 C23 与 C++ 同步进展（bool/nullptr/typeof/constexpr/attributes）。"),
+    ("TemplateParams","template_parameters.pdf",
+     "C++20 非类型模板参数扩展",
+     "从整型白名单到浮点、结构化类、具名指针、TString 编译期字符串：P0732R2 / P1907R1 详解，数学/DSP/物理单位/序列化/具名参数实战，GCC·Clang·MSVC 支持矩阵与陷阱清单。"),
+    ("History",       "c_cpp_history.pdf",
+     "C/C++ 历史与 ISO/IEC 治理模式",
+     "从 Multics 到 C23、从 C with Classes 到 C++26 的完整时间线，ISO/IEC JTC1/SC22 WG14/WG21 治理结构、提案与投票流程详解，以及去中心化治理相较中心化（Java/Oracle）与准中心化（C#/.NET Foundation）模式的优势与代价的客观对比。"),
+    ("AsmEmbed",      "asm_embedding.pdf",
+     "汇编嵌入与 volatile 的真实用途",
+     "GCC/Clang asm volatile 三大保证与操作数约束、MSVC __asm/intrinsics 隐式 volatile 语义、MMIO/信号/setjmp 共享变量、FFI 边界为何不需要 volatile，以及 C/C++·C#·Java·Rust 四种 volatile 语义横向对比。"),
+    ("HWKernels",     "hw_kernels.pdf",
+     "硬件访问与 GPU/NPU 核函数",
+     "MMIO 与 PIO 分层、PCIe BAR/配置空间/mmap、DMA 一致性与描述符环、中断/MSI-X/轮询、I2C·SPI·UART·GPIO 低速总线；CUDA SIMT/内存层级/流与事件、SYCL oneAPI queue/nd_range/buffer-accessor 与 USM、NPU MAC 阵列与 tile 编程。除核函数外各章区分 Unix 与 Windows 两套 API（含裸机/Unix/Windows 直接访问物理地址三路对比与 libserialport 跨平台库示例），附录给出仿传感器驱动-HAL-应用三平台全链与 CUDA 算子到 PyTorch 绑定示例。"),
 ]
 
 HTML_TEMPLATE = """\

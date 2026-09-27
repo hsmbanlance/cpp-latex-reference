@@ -1,0 +1,1223 @@
+% !TEX program = xelatex
+% C++ 与 C 的不兼容性：从 VLA 到 C23 同步
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ===== 页面 =====
+\usepackage[margin=2.5cm]{geometry}
+
+% ===== 字体 =====
+\usepackage{fontspec}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}
+  {\setmonofont{Consolas}}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+
+% ===== 颜色 =====
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{cppheadbg}{HTML}{2E4057}
+\definecolor{cheadbg}{HTML}{B36B00}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+\definecolor{bashheadbg}{HTML}{4EAA25}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ===== listings =====
+\usepackage{listings}
+
+% ---- C++ ----
+\lstdefinestyle{cppstyle}{%
+  language=C++,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    override,final,noexcept,constexpr,consteval,constinit,
+    decltype,auto,concept,requires,co_await,co_yield,co_return,
+    nullptr,sizeof...,static_assert,thread_local,alignas,alignof,
+    namespace,using,template,typename,virtual,explicit,friend,
+    mutable,volatile,register,extern,inline,
+    module,import,export,
+    std,string,vector,map,unordered_map,set,unordered_set,
+    unique_ptr,shared_ptr,weak_ptr,optional,variant,any,
+    tuple,pair,array,span,string_view,
+    cin,cout,cerr,endl,
+    move,forward,swap,make_unique,make_shared,
+    begin,end,size,empty,push_back,emplace_back
+  },
+  deletekeywords={int,char,float,double,bool,void,long,short,unsigned,signed},
+  emph={%
+    int,char,float,double,bool,void,long,short,unsigned,signed,
+    int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,
+    size_t,ptrdiff_t,intptr_t,uintptr_t,wchar_t
+  },
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- C ----
+\lstdefinestyle{cstyle}{%
+  language=C,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cheadbg}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    _Bool,_Complex,_Imaginary,_Atomic,_Alignas,_Alignof,_Generic,_Noreturn,_Static_assert,_Thread_local,
+    bool,true,false,nullptr,typeof,typeof_unqual,
+    restrict,inline,register,auto,extern,static,const,volatile,signed,unsigned,
+    struct,union,enum,typedef,sizeof,void,char,short,int,long,float,double,
+    int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,size_t,ptrdiff_t,
+    alignas,alignof,static_assert,thread_local,constexpr,
+    _Pragma
+  },
+  emph={int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,size_t},
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- CMake ----
+\lstdefinestyle{cmakestyle}{%
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=2,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    cmake_minimum_required,project,add_library,add_executable,%
+    target_sources,target_link_libraries,target_include_directories,%
+    target_compile_features,target_compile_options,target_compile_definitions,%
+    find_package,include,set,option,if,else,elseif,endif,%
+    foreach,endforeach,function,endfunction,macro,endmacro,%
+    CMAKE_C_STANDARD,CMAKE_C_STANDARD_REQUIRED,CMAKE_C_EXTENSIONS,%
+    CMAKE_CXX_STANDARD,CMAKE_CXX_STANDARD_REQUIRED,CMAKE_CXX_EXTENSIONS,%
+    CMAKE_BUILD_TYPE,CMAKE_CURRENT_SOURCE_DIR,%
+    SHARED,STATIC,INTERFACE,PUBLIC,PRIVATE,%
+    install,export,configure_package_config_file,%
+    BUILD_INTERFACE,INSTALL_INTERFACE
+  },
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Shell ----
+\lstdefinestyle{bashstyle}{%
+  basicstyle=\small\ttfamily,numbers=none,
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{bashheadbg}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={cl,clang,clang++,gcc,g++,cmake,ninja,make,msbuild,pwsh,bash,
+                clang-cl,gcc-13,clang-19,-std=c99,-std=c11,-std=c17,-std=c2x,
+                -std=c++11,-std=c++14,-std=c++17,-std=c++20,-std=c++23,
+                -Wvla,-Wpedantic,-Wvla-extension,-fstrict-aliasing,-fno-strict-aliasing,
+                -Wunion-punning,-std=gnu11,-std=gnu++17},
+  escapeinside={(*@}{@*)}
+}
+
+\lstset{style=cppstyle}
+
+% ===== tcolorbox =====
+\usepackage[most]{tcolorbox}
+
+% ===== 代码标签 =====
+\newcommand{\cpplabel}{%
+  \tcbox[on line,colback=cppheadbg,colframe=cppheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{C++}}
+
+\newcommand{\clabel}{%
+  \tcbox[on line,colback=cheadbg,colframe=cheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{C}}
+
+\newcommand{\shelllabel}{%
+  \tcbox[on line,colback=bashheadbg,colframe=bashheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{Shell}}
+
+% ===== tcolorbox 提示框 =====
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compilerbox}[1][]{
+  enhanced,breakable,
+  colback=gray!5!white,colframe=gray!70!black,
+  fonttitle=\bfseries,title=编译器实测,#1,
+  boxed title style={colback=gray!70!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ===== 章节标题 =====
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{float}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ===== 超链接 =====
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={hsmbanlance},
+  pdftitle={C++ 与 C 的不兼容性参考},
+}
+
+% ===== 自定义命令 =====
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\cstd}[1]{C#1}
+\newcommand{\kw}[1]{\texttt{#1}}
+\newcommand{\seqkw}[1]{\seqsplit{\texttt{#1}}}
+
+% ====================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C++ 与 C 的不兼容性\par}
+\vspace{1cm}
+{\LARGE 从 VLA、union 非活跃成员到 C23 同步\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+% ====================================================================
+\part{不兼容性总览}
+% ====================================================================
+
+\chapter{为何"C 是 C++ 的真子集"是个迷思}
+
+\section{历史与现状}
+
+很多教科书在介绍 \cpp{} 时都会说"C 是 \cpp{} 的子集"，意思是任何合法的 C 程序都可以原样作为 \cpp{} 程序编译。这个说法在 1985 年 \textit{C with Classes} 时代大体成立，但在 C89 之后逐渐失真，到了 C99、C11、C23 时代则完全是误导。今天的事实是：C 和 \cpp{} 是两门有共同祖先、但已分化数十年的不同语言，二者共享了大约 80\% 的语法骨架，却在语义细节、关键字、库布局、对象模型上各自演化。
+
+\begin{compare}
+\textbf{时间线对比}
+
+C 一侧：K\&R C (1978) $\to$ C89/C90 $\to$ C99 $\to$ C11 $\to$ C17（仅修复缺陷）$\to$ C23（2024 年发布，引入 \kw{bool}、\kw{nullptr}、\kw{typeof} 等）。
+
+\cpp{} 一侧：C++98 $\to$ C++03 $\to$ C++11（分水岭）$\to$ C++14 $\to$ C++17 $\to$ C++20（Concepts、Ranges、Coroutines）$\to$ C++23 $\to$ C++26（进行中，含反射）。
+
+C23 与 C++23 同期推进，是 30 年来两个委员会第一次有意识地"协同"，但仍未消除根本差异。
+\end{compare}
+
+\section{为何不兼容}
+
+C 和 \cpp{} 不能互相包含，根因有四：
+
+\begin{enumerate}
+  \item \textbf{类型系统语义差异}。C 是"弱类型 + 隐式转换"语言，几乎所有指针都能互相赋值；\cpp{} 引入了类、引用、重载、模板，类型规则严密得多。例如 \kw{void*} 在 C 中可隐式转换为任意 \kw{T*}，在 \cpp{} 中必须显式 \kw{static\_cast}。
+  \item \textbf{关键字爆炸}。\cpp{} 新增 \kw{class}、\kw{template}、\kw{new}、\kw{delete}、\kw{operator}、\kw{typename}、\kw{virtual}、\kw{this}、\kw{namespace}、\kw{try}、\kw{catch}、\kw{throw}、\kw{public}、\kw{private}、\kw{protected}、\kw{friend}、\kw{mutable}、\kw{explicit}、\kw{constexpr}、\kw{decltype}、\kw{auto}（语义改写）等几十个关键字；C23 又把 \kw{bool}、\kw{true}、\kw{false}、\kw{nullptr}、\kw{typeof}、\kw{constexpr} 拉进 C。一段老 C 代码中如果某变量叫 \kw{class} 或 \kw{template}，到 \cpp{} 里直接编译失败；一段新 C23 代码里如果某变量叫 \kw{bool}，到旧 C17 编译器里又会因为不是宏而失败。
+  \item \textbf{对象生命周期模型不同}。\cpp{} 有构造、析构、RAII、移动语义；C 没有。这导致 \kw{union} 在两边行为分裂（详见第 5 章），也导致结构体里的 \kw{const} 成员在 C 中可以赋值在 \cpp{} 中不行。
+  \item \textbf{链接模型不同}。\cpp{} 有 name mangling 以支持重载；C 没有。两者互调必须用 \kw{extern "C"} 显式标注，否则链接器找不到符号。
+\end{enumerate}
+
+\section{本参考的组织}
+
+接下来的章节按以下脉络组织：第二部分逐一介绍 C 中存在而 \cpp{} 不支持的"可选特性"或"语义差异"，重点是 VLA、柔性数组成员、复合字面量、\kw{union} 非活跃成员读取；第三部分聚焦各编译器（MSVC、GNU GCC、Clang、Apple Clang）对这些差异的实际容忍度与扩展；第四部分梳理 C23 与 \cpp{} 的同步进展，包括已经同步、部分同步、永远无法同步三类。
+
+% ====================================================================
+\part{C 中存在但 C++ 不支持的特性}
+% ====================================================================
+
+\chapter{变长数组 VLA：C 的可选特性，C++ 的禁词}
+
+\section{什么是 VLA}
+
+变长数组（Variable Length Array）是数组长度在运行时才能确定的栈上数组。C99 把 VLA 列为强制特性，C11 改为"可选"，C23 又退回强制（仅对一维情形），但所有主流实现都支持。语法很直接：
+
+\clabel{}
+\begin{lstlisting}[style=cstyle]
+#include <stdio.h>
+int sum(int n) {
+    int buf[n];              // VLA: 长度运行时确定
+    for (int i = 0; i < n; ++i) buf[i] = i * i;
+    int s = 0;
+    for (int i = 0; i < n; ++i) s += buf[i];
+    return s;                // buf 在函数返回时自动释放
+}
+\end{lstlisting}
+
+VLA 分配在栈上，离开作用域立即释放，没有 \kw{malloc}/\kw{free} 的负担，性能也比 \kw{alloca} 更安全（编译器知道大小，可以检查栈溢出）。
+
+\section{C++ 中的处境}
+
+\cpp{} 从 C++98 到 C++26，\textbf{从未把 VLA 纳入标准}。原因有三：
+
+\begin{enumerate}
+  \item VLA 与 \cpp{} 的对象模型冲突：数组元素若是非平凡类型（有构造/析构），运行期决定数量会让"构造失败时回滚"变得复杂。
+  \item C++98 委员会曾考虑 \kw{std::dynarray}（N3662），C++14 时几乎进入标准，但因发现"分配失败行为"和"栈/堆选择"无法达成共识，C++17 撤回。
+  \item \cpp{} 已有 \kw{std::vector}、\kw{std::unique\_ptr<T[]>}、\kw{alloca}（非标准但普遍可用）等替代。
+\end{enumerate}
+
+\cpplabel{}
+\begin{lstlisting}
+#include <vector>
+#include <memory>
+
+int sum(int n) {
+    std::vector<int> buf(n);          // 堆分配，最通用
+    // 或：auto buf = std::make_unique<int[]>(n);
+    int s = 0;
+    for (int i = 0; i < n; ++i) s += i * i;
+    return s;
+}
+\end{lstlisting}
+
+C++23 引入的 \kw{std::mdspan} 可以表达"运行期形状的多维视图"，但它本身不拥有存储，仍需要一个 \kw{vector} 或栈缓冲做后端。
+
+\section{编译器实测}
+
+\begin{compilerbox}
+\textbf{同一段代码用 \cpp{} 编译器编译时的反应}
+\end{compilerbox}
+
+\clabel{} 一段含 VLA 的代码，分别用四种编译器以 \cpp{} 模式编译：
+\begin{lstlisting}[style=cstyle]
+void f(int n) { int buf[n]; buf[0] = n; }
+\end{lstlisting}
+
+\shelllabel{}
+\begin{lstlisting}[style=bashstyle]
+# MSVC (cl.exe)
+cl /std:c++17 /W4 /c vla.cpp
+# vla.cpp(1): error C2131: expression did not evaluate to a constant
+# → MSVC 始终拒绝 VLA（C 和 C++ 模式都拒绝），无扩展开关
+
+# GNU GCC 13
+g++ -std=c++17 -Wall -Wextra -c vla.cpp
+# warning: ISO C++ forbids variable length array 'buf' [-Wvla]
+# → 编译通过，仅警告；-Werror=vla 可强制拒绝
+
+# Clang 19 / Apple Clang 16
+clang++ -std=c++17 -Wall -Wextra -c vla.cpp
+# warning: variable length arrays in C++ are a C++23 extension [-Wc++23-extensions]
+# → 同样编译通过；Clang 把 VLA 作为 GNU 扩展接受
+# Apple Clang 行为与上游一致，但版本号不同步（Apple Clang 16 ≈ LLVM 18）
+\end{lstlisting}
+
+\begin{warning}
+GCC 和 Clang 在 \cpp{} 模式下接受 VLA 是 \textbf{GNU 扩展}，不是标准行为。开启 \kw{-pedantic-errors} 或 \kw{-Werror=vla} 后立即报错。MSVC 是唯一一家在所有模式下都拒绝 VLA 的主流编译器，连 C 模式都拒绝（MSVC 的 C 编译器始终落后于 C99 标准，VLA 直到 VS2019 16.8 才作为 \kw{/std:c11} 的部分支持引入，且仅在 C 模式生效）。
+\end{warning}
+
+\section{移植建议}
+
+把 C 代码移植到 \cpp{} 时，VLA 的处理优先级：
+
+\begin{enumerate}
+  \item 若元素是 \kw{int}、\kw{double} 等 POD 且大小可控（$< 4$~KB），换成 \kw{std::array<int, N>} + 编译期常量；若大小确实需要运行时决定，用 \kw{alloca} 或定长栈缓冲 + 长度校验。
+  \item 否则一律换成 \kw{std::vector<T>}，性能差距通常 $<10\%$，安全性提升巨大。
+  \item 嵌入式或裸机环境，可以保留 \kw{alloca} 但必须显式检查栈深度。
+  \item 数值代码（如 BLAS、矩阵分解）可考虑 C++23 的 \seqkw{std::mdspan}，配合栈上 \seqkw{std::array} 做后端，得到多维视图语义而不牺牲分配策略。
+\end{enumerate}
+
+% --------------------------------------------------------------------
+
+\chapter{柔性数组成员 FAM：C99 标准，C++ 永远的扩展}
+
+\section{C 中的定义}
+
+柔性数组成员（Flexible Array Member，FAM）是结构体最后一个数组成员，长度在分配时决定。C99 引入，语法是空方括号：
+
+\clabel{}
+\begin{lstlisting}[style=cstyle]
+#include <stdlib.h>
+#include <string.h>
+
+struct Packet {
+    uint16_t len;
+    uint16_t type;
+    char     payload[];     // FAM: C99 标准
+};
+
+struct Packet* make_packet(uint16_t type, const char* data, size_t n) {
+    struct Packet* p = malloc(sizeof(struct Packet) + n);
+    p->len  = n;
+    p->type = type;
+    memcpy(p->payload, data, n);
+    return p;
+}
+\end{lstlisting}
+
+FAM 不占用 \kw{sizeof(struct Packet)}（只算对齐填充），分配时手动加上需要的字节数。这是网络协议、文件格式、内核驱动里最常用的"变长结构体"实现方式。
+
+\section{C++ 中的处境}
+
+\cpp{} 标准从未接受 FAM。原因和 VLA 类似：元素若是非平凡类型，构造/析构无法正确进行；\kw{sizeof} 的语义会被破坏。
+
+\cpplabel{}
+\begin{lstlisting}
+struct Packet {
+    uint16_t len;
+    uint16_t type;
+    char     payload[];     // error: a flexible array member is not allowed
+};
+\end{lstlisting}
+
+\cpp{} 的替代方案：
+\begin{itemize}
+  \item \kw{std::vector<char> payload;} —— 把数据搬到堆上，但失去了"单次分配"的优势。
+  \item \kw{std::unique\_ptr<char[]>} + 显式长度 —— 同样需要两次分配（控制块 + 数据）。
+  \item C++20 \kw{std::span<char>} 视图 —— 不拥有存储，需要外部缓冲。
+  \item 手写 \kw{operator new} 重载，分配 \kw{sizeof(Packet) + n}，再用 \kw{std::launder} 和 \kw{std::construct\_at} 在尾部构造数组 —— 标准合法但繁琐。
+\end{itemize}
+
+\section{编译器实测}
+
+\begin{compilerbox}
+\textbf{同一段 FAM 代码用 \cpp{} 编译器编译}
+\end{compilerbox}
+
+\shelllabel{}
+\begin{lstlisting}[style=bashstyle]
+# MSVC (cl.exe)
+cl /std:c++17 /W4 /c fam.cpp
+# error C2229: array of size 0 is invalid
+# → 但 MSVC 接受 C 风格 struct S { int n; int a[1]; }（"老式 FAM"），
+#   并以零长数组 int a[0] 作为 Microsoft 扩展（C 和 C++ 都接受）
+
+# GNU GCC 13
+g++ -std=c++17 -Wall -c fam.cpp
+# warning: flexible array members are not allowed in a union
+# warning: ISO C++ forbids zero-size array 'payload' [-Wpedantic]
+# → 默认接受，-pedantic-errors 拒绝
+
+# Clang 19 / Apple Clang 16
+clang++ -std=c++17 -Wall -c fam.cpp
+# error: field has incomplete type 'char []'
+# → 比 GCC 严格；但接受 char payload[0]（GNU 扩展），
+#   -Wgnu-zero-variadic-macro-arguments / -Wc99-designator 可控制
+
+# 推荐：MSVC 用 [1]，GCC/Clang 用 [0] 扩展，或统一改用 std::vector
+\end{lstlisting}
+
+\begin{note}
+Clang 在 \cpp{} 模式下默认拒绝 FAM，但接受 \kw{char payload[0]}（GNU 零长数组扩展）；GCC 同时接受两者；MSVC 在 C 和 \cpp{} 模式下都接受 \kw{char payload[1]}（结构体填充技巧）和 \kw{char payload[0]}（Microsoft 扩展）。跨编译器代码常用宏：
+
+\cpplabel{}
+\begin{lstlisting}
+#ifdef __cplusplus
+  #define FAM_SIZE 0     // GCC/Clang/MSVC C++ 扩展
+#else
+  #define FAM_SIZE       // C99 FAM: 留空方括号
+#endif
+struct Packet { uint16_t len; char payload[FAM_SIZE]; };
+\end{lstlisting}
+\end{note}
+
+% --------------------------------------------------------------------
+
+\chapter{复合字面量与指定初始化器}
+
+\section{复合字面量}
+
+C99 引入复合字面量（compound literal），可以在表达式中创建匿名对象：
+
+\clabel{}
+\begin{lstlisting}[style=cstyle]
+struct Point { int x, y; };
+
+void draw(struct Point p);
+
+void f(void) {
+    draw((struct Point){ .x = 1, .y = 2 });   // 复合字面量 + 指定初始化器
+    int arr[] = (int[]){ 1, 2, 3, 4 };        // 匿名数组
+}
+\end{lstlisting}
+
+复合字面量是一个\textbf{左值}，可以取地址、修改；其生命周期延续到所在块结束。
+
+\section{C++ 中的处境}
+
+\cpp{} 没有复合字面量语法，但通过临时对象 + 默认成员初始化器可以达到类似效果：
+
+\cpplabel{}
+\begin{lstlisting}
+struct Point { int x, y; };
+
+void draw(Point p);
+
+void f() {
+    draw(Point{1, 2});            // 聚合初始化临时对象
+    draw(Point{.x = 1, .y = 2});  // C++20 起支持指定初始化器（顺序受限）
+    int arr[] = {1, 2, 3, 4};     // 数组初始化语法相同
+}
+\end{lstlisting}
+
+C++20 引入了指定初始化器，但比 C 限制更多：
+\begin{itemize}
+  \item 必须按声明顺序出现（C 允许任意顺序）。
+  \item 不能跳过成员（C 允许，跳过的成员零初始化）。
+  \item 不能用于数组的下标指定（C 中 \kw{int a[10] = {[3] = 1};} 合法，\cpp{} 不合法）。
+  \item 不能与位置初始化混用。
+\end{itemize}
+
+\section{编译器实测}
+
+\shelllabel{}
+\begin{lstlisting}[style=bashstyle]
+# MSVC: C 模式支持复合字面量（VS2019+）；C++ 模式拒绝
+cl /std:c11 /c compound.c       # OK
+cl /std:c++20 /c compound.cpp   # error C4576: a parenthesized type ...
+
+# GCC: C 模式默认支持；C++ 模式作为 GNU 扩展接受（-Wpedantic 警告）
+g++ -std=c++20 compound.cpp     # warning: ISO C++ forbids compound literals
+
+# Clang/Apple Clang: 同 GCC，C++ 模式接受为扩展
+
+# 指定初始化器（C++20）
+g++ -std=c++20 -Wall desig.cpp  # OK（顺序正确）
+cl /std:c++20 desig.cpp         # OK（VS2019 16.6+）
+clang++ -std=c++20 desig.cpp    # OK（Clang 10+，Apple Clang 12+）
+\end{lstlisting}
+
+\begin{warning}
+GCC 和 Clang 在 \cpp{} 模式下接受复合字面量是 GNU 扩展。在 C 模式下编译的代码若使用了 C99 复合字面量，无法直接通过 \kw{g++} 编译为 \cpp{}；要么改用 \kw{\{\}} 初始化，要么显式 \kw{extern "C"} 包装并独立编译为 C。
+\end{warning}
+
+% --------------------------------------------------------------------
+
+\chapter{union 非活跃成员：C++ 的 UB，C 的常规操作}
+
+\section{问题描述}
+
+\kw{union} 在 C 和 \cpp{} 中是同名异物的两个概念。C 把 \kw{union} 看作"一段共享内存 + 多种解读方式"，所有成员同时"存在"；\cpp{} 把 \kw{union} 看作"一个对象，活跃成员只能是一个"，访问非活跃成员是未定义行为（UB）。
+
+\clabel{} 这段 C 代码在所有 C 编译器上工作良好：
+\begin{lstlisting}[style=cstyle]
+#include <stdio.h>
+#include <stdint.h>
+
+union Pun {
+    uint32_t u;
+    uint8_t  b[4];
+    float    f;
+};
+
+int main(void) {
+    union Pun p = { .u = 0x3F800000 };   // 通过 u 写入
+    printf("%f\n", p.f);                // 通过 f 读取 —— C 中是"实现定义"，实际所有编译器返回 1.0
+    printf("%02X %02X %02X %02X\n",     // 通过 b 读取 —— 同样合法
+           p.b[0], p.b[1], p.b[2], p.b[3]);
+    return 0;
+}
+\end{lstlisting}
+
+C99/C11/C23 把这种行为称为 \textit{type punning}（类型双关），属于实现定义但所有主流编译器都明确支持（GCC 文档、Clang 文档、MSVC 文档都承诺）。
+
+\section{C++ 中为何是 UB}
+
+\cpplabel{} 同样代码作为 \cpp{}：
+\begin{lstlisting}
+#include <cstdio>
+#include <cstdint>
+
+union Pun {
+    uint32_t u;
+    uint8_t  b[4];
+    float    f;
+};
+
+int main() {
+    Pun p{};
+    p.u = 0x3F800000;            // 写入 u，u 成为"活跃成员"
+    std::printf("%f\n", p.f);    // 读取 f —— UB!（活跃成员是 u，不是 f）
+}
+\end{lstlisting}
+
+\cpp{} 标准 [class.union.general]/1 规定：在任何时刻，\kw{union} 对象中\textbf{至多一个非静态成员}是"活跃的"（active）。读写非活跃成员的行为：
+\begin{itemize}
+  \item C++17 及以前：直接 UB（[class.union]/1）。
+  \item C++20 起：写入非活跃成员被合法化（隐式开始其生命周期），但读取非活跃成员仍是 UB。
+  \item C++23 起：可以通过 \kw{std::start\_lifetime\_as<T>(p)} 显式改变活跃成员类型，这是读取"另一面"的标准合法路径。
+\end{itemize}
+
+UB 的实际后果：在 \kw{-O2 -fstrict-aliasing} 下，GCC/Clang 可能基于"活跃成员唯一"的假设做激进优化，把对非活跃成员的读取重排或删除，导致看似随机的错误。
+
+\section{编译器实测}
+
+\shelllabel{}
+\begin{lstlisting}[style=bashstyle]
+# GCC 13
+g++ -std=c++17 -O2 -fstrict-aliasing -Wall -c pun.cpp
+# 默认无警告（GCC 不主动检测 union 非活跃读取）
+# -Wstrict-aliasing=2 才会提示
+# → 实际行为：与 C 一致（GCC 明确把 union type punning 作为 C++ 扩展支持，
+#   见 GCC manual "C++ Dialect Options" 中 -fno-strict-aliasing 段）
+
+# Clang 19 / Apple Clang 16
+clang++ -std=c++17 -O2 -Wall -c pun.cpp
+# warning: reading object of type 'float' through 'uint32_t' is undefined
+#   (仅在 -Wunion-punning 或 clang-tidy 启用时)
+# → 实际行为：与 C 一致；Clang 文档承诺 union type punning 在 -fno-strict-aliasing 下安全
+
+# MSVC
+cl /std:c++17 /O2 /W4 /c pun.cpp
+# 无警告
+# → MSVC 一直允许，且其文档明确说"implementation-defined behavior 在 MSVC 中定义为 type punning"
+# MSVC 默认不开启 strict aliasing 优化（与 GCC/Clang -O2 默认开启不同）
+
+# 真正会出问题的场景：把 union type punning 与 inline、模板、constexpr 结合，
+# 或开启 -fstrict-aliasing -O3 后用 GCC 编译；此时建议改用 std::memcpy 或 std::bit_cast。
+\end{lstlisting}
+
+\section{现代 C++ 的合法替代}
+
+\cpplabel{} C++20 \kw{std::bit\_cast}：
+\begin{lstlisting}
+#include <bit>
+#include <cstdint>
+#include <cstdio>
+
+int main() {
+    uint32_t u = 0x3F800000;
+    float f = std::bit_cast<float>(u);    // C++20 起合法、constexpr 友好
+    std::printf("%f\n", f);                // 1.000000
+}
+\end{lstlisting}
+
+\cpplabel{} C++17 \kw{std::variant} + \kw{std::visit}：
+\begin{lstlisting}
+#include <variant>
+#include <cstdint>
+
+using Pun = std::variant<uint32_t, std::array<uint8_t,4>, float>;
+
+Pun p{ uint32_t{0x3F800000} };
+// 访问时 std::get<T>(p) 会检查活跃类型，类型错抛 std::bad_variant_access
+\end{lstlisting}
+
+\cpplabel{} C++23 \kw{std::start\_lifetime\_as}：
+\begin{lstlisting}
+#include <memory>
+#include <cstdint>
+
+alignas(uint32_t) std::byte raw[4];
+auto* u = new (raw) uint32_t{0x3F800000};    // 显式构造 uint32_t
+auto* f = std::start_lifetime_as<float>(u);  // 改变活跃类型为 float
+std::printf("%f\n", *f);                      // 合法读取
+\end{lstlisting}
+
+\cpplabel{} 古老但永远合法的 \kw{memcpy}：
+\begin{lstlisting}
+uint32_t u = 0x3F800000;
+float f;
+std::memcpy(&f, &u, sizeof(f));   // 所有标准、所有编译器都合法
+\end{lstlisting}
+
+\begin{bestpractice}
+\cpp{} 中需要做类型双关时，优先级：
+\begin{enumerate}
+  \item \kw{std::bit\_cast<T>(x)}（C++20，编译期可用，零开销）。
+  \item \kw{std::memcpy}（C++98 起一直合法，编译器都会优化成一条 mov 指令）。
+  \item \kw{std::variant}（需要运行时类型分派时）。
+  \item \kw{union} 仅在以下三种情况使用：(a) 性能关键路径且能接受 UB 风险；(b) 与 C 接口对齐的 ABI 结构；(c) \kw{constexpr} 上下文且 C++20 之前。
+\end{enumerate}
+\end{bestpractice}
+
+% --------------------------------------------------------------------
+
+\chapter{其他细微但常见的不兼容点}
+
+\section{const 全局变量的链接性}
+
+\clabel{} C 中 \kw{const} 全局变量默认是\textbf{外部链接}：
+\begin{lstlisting}[style=cstyle]
+/* a.c */
+const int LIMIT = 100;
+/* b.c */
+extern const int LIMIT;     // 必须 extern，且能链接成功
+\end{lstlisting}
+
+\cpplabel{} \cpp{} 中 \kw{const} 全局变量默认是\textbf{内部链接}（每个翻译单元一份副本）：
+\begin{lstlisting}
+// a.cpp
+const int LIMIT = 100;       // 等价于 static const int LIMIT = 100;
+// b.cpp
+extern const int LIMIT;      // 链接错误！找不到符号
+// 修复：a.cpp 中显式 extern const int LIMIT = 100;
+\end{lstlisting}
+
+\section{字符字面量的类型}
+
+\clabel{} C 中 \kw{'a'} 的类型是 \kw{int}，\kw{sizeof('a') == 4}：
+\begin{lstlisting}[style=cstyle]
+printf("%zu\n", sizeof('a'));   // 输出 4（在 32/64 位 int 平台上）
+\end{lstlisting}
+
+\cpplabel{} \cpp{} 中 \kw{'a'} 的类型是 \kw{char}，\kw{sizeof('a') == 1}：
+\begin{lstlisting}
+std::cout << sizeof('a');        // 输出 1
+\end{lstlisting}
+
+这影响重载决议、模板参数推导、宏展开后的类型。
+
+\section{空结构体大小}
+
+\clabel{} C 标准不允许零大小结构体（GCC/Clang/MSVC 作为扩展给 0 字节）；\cpp{} 标准保证至少 1 字节：
+\begin{lstlisting}[style=cstyle]
+struct Empty {};                  // C: 非法（编译器扩展给 0）
+                                  // C++: 合法，sizeof(Empty) == 1
+\end{lstlisting}
+
+\section{f() 与 f(void)}
+
+\clabel{} C 中 \kw{int f();} 表示\textbf{参数未指定}（可接受任意数量参数），\kw{int f(void);} 才表示无参数。C23 把二者统一为"无参数"。
+
+\cpplabel{} \cpp{} 中 \kw{int f();} 和 \kw{int f();} 始终等价于 \kw{int f(void);}。把老 C 代码移植到 \cpp{} 时，省略 \kw{void} 不会改变行为，但反过来——\cpp{} 代码移到 C 编译器时，若编译器仍是 C17 及之前，\kw{int f();} 会变成"未指定参数"，可能导致调用时实参不被检查。
+
+\section{字符串字面量到 char* 的隐式转换}
+
+\clabel{} C 中 \kw{char* p = "hello";} 一直合法（C99 起标注 deprecated，但编译器都接受）：
+\begin{lstlisting}[style=cstyle]
+char* p = "hello";   // C: 合法（警告 -Wwrite-strings）
+p[0] = 'H';          // 运行时崩溃（修改字符串常量段）
+\end{lstlisting}
+
+\cpplabel{} \cpp{} 中 C++03 已废弃，C++11 起 ill-formed：
+\begin{lstlisting}
+char* p = "hello";   // C++11 起：error: ISO C++11 forbids conversion ...
+const char* p = "hello";   // 正确写法
+\end{lstlisting}
+
+\section{数组作为函数参数的"衰退"}
+
+C 和 \cpp{} 都把数组参数衰退为指针，但 \cpp{} 多了引用语法可以保留维度：
+
+\cpplabel{}
+\begin{lstlisting}
+void f(int (&arr)[10]);   // C++ 专属：引用绑定到精确长度为 10 的数组
+void g(int* arr, size_t n);  // C 风格：指针 + 长度
+template <size_t N> void h(int (&arr)[N]);   // C++ 模板：编译期得到 N
+\end{lstlisting}
+
+\section{register 关键字}
+
+\clabel{} C99/C11/C17 保留 \kw{register}（已无实际作用，仅禁止取地址）；C23 删除。
+
+\cpplabel{} \cpp{}17 起删除 \kw{register}，使用即编译错误。
+
+% ====================================================================
+\part{编译器视角下的不兼容}
+% ====================================================================
+
+\chapter{四大编译器对 C/C++ 差异的处理}
+
+\section{MSVC：保守且独立}
+
+Microsoft Visual C++（\kw{cl.exe}）长期以来以"自成一体"著称：
+\begin{itemize}
+  \item \textbf{C 标准支持落后}。直到 VS2019 16.8（2020 年 11 月）才引入 \kw{/std:c11} 和 \kw{/std:c17}，且仍是部分支持。VLA、C99 复合字面量、\kw{\_Generic}、\kw{\_Static\_assert} 长期缺失或行为偏差。VS2022 17.x 起 \kw{\_Generic} 才完整。
+  \item \textbf{C++ 标准跟进积极}。VS2015 起 \seqkw{/std:c++14}、\seqkw{/std:c++17}、\seqkw{/std:c++20}、\seqkw{/std:c++23} 逐步完整；\seqkw{/std:c++latest} 通常包含进行中的提案。
+  \item \textbf{不接受 GNU 扩展}。VLA 在 \cpp{} 模式下始终拒绝；零长数组接受作为 Microsoft 扩展但不保证未来兼容。
+  \item \textbf{strict aliasing 默认关闭}。MSVC 不做基于类型的别名优化，因此 union type punning 在 \kw{/O2} 下也安全。
+  \item \textbf{name mangling 与 Itanium ABI 不兼容}。MSVC 用自己的 mangling 方案，与 GCC/Clang 在 Linux/macOS 上的 Itanium ABI 不同；跨平台库通常需要 \kw{extern "C"} 包装公共接口。
+\end{itemize}
+
+\section{GNU GCC：宽容且扩展丰富}
+
+GCC 是事实上的"参考实现"：
+\begin{itemize}
+  \item \textbf{C 标准支持完整}。\kw{-std=c99/c11/c17/c2x}（GCC 14 起改名 \kw{-std=c23}）全部可用；VLA、FAM、复合字面量、\kw{\_Generic} 全支持。
+  \item \textbf{C++ 标准跟进激进}。\kw{-std=c++20}、\kw{-std=c++23}、\kw{-std=c++2c}（草案）可用；Concepts、Ranges、Coroutines 完整。
+  \item \textbf{GNU 扩展极多}。零长数组、语句表达式 \kw{(\{ ... \})}、\kw{typeof}、case ranges \kw{case '0' ... '9':}、\kw{\_\_attribute\_\_}、嵌套函数等。这些在 \kw{-std=gnu++17}（默认）下接受，\kw{-std=c++17 -pedantic} 下警告。
+  \item \textbf{\cpp{} 模式下容忍 VLA 和 FAM}（GNU 扩展），但 \kw{-pedantic} 会提示。
+  \item \textbf{strict aliasing 默认开启}。\kw{-O2} 起做基于类型的别名分析；union type punning 是 GCC 文档明确支持的例外，但跨非 union 的指针双关需用 \kw{-fno-strict-aliasing} 或 \kw{memcpy}。
+\end{itemize}
+
+\section{Clang：严格但兼容}
+
+Clang/LLVM 在标准合规性上比 GCC 更严格：
+\begin{itemize}
+  \item \textbf{C 标准支持完整}，与 GCC 对齐；C23 支持比 GCC 更早（Clang 9 起 \kw{-std=c2x}）。
+  \item \textbf{C++ 标准跟进与 GCC 并行}；C++20 在 Clang 14 基本完整，C++23 在 Clang 18 接近完整。
+  \item \textbf{GNU 扩展接受但更挑剔}。零长数组、\kw{typeof}、语句表达式都支持；但 \cpp{} 模式下 FAM 默认拒绝（必须 \kw{char a[0]}），且 \kw{-Wc99-designator}、\kw{-Wc++23-extensions} 等诊断比 GCC 更细。
+  \item \textbf{诊断信息质量业界领先}。模板错误、Concepts 不匹配、\kw{constexpr} 失败时的提示比 GCC 易读得多。
+  \item \textbf{strict aliasing 默认开启}，与 GCC 一致；union type punning 由文档承诺支持，必要时可用 \seqkw{-fno-strict-aliasing} 关闭别名优化。
+  \item \textbf{ABI 与 GCC 兼容}（Itanium ABI on Linux/macOS，MS ABI on Windows when using clang-cl）。
+\end{itemize}
+
+\section{Apple Clang：版本不同步的 Clang}
+
+Apple Clang 是 macOS/iOS 系统自带的 Clang 变体，由 Apple 维护：
+\begin{itemize}
+  \item \textbf{版本号与上游 LLVM 不一致}。例如 Apple clang 16.0.0 实际上对应 LLVM 18.x，而非 LLVM 16。可通过 \seqkw{clang~--version} 查看完整字符串，或在 Xcode 维基条目中查映射表。
+  \item \textbf{C++ 标准库是 libc++}，与 Linux 上的 libstdc++ 不同；某些边界行为存在差异，例如 \seqkw{std::filesystem} 的错误码、\seqkw{std::regex} 的 locale 处理。
+  \item \textbf{不支持 \kw{-stdlib=libstdc++}}。Apple 在 macOS 10.15 起移除 libstdc++，只能用 libc++。
+  \item \textbf{对 GNU 扩展的支持与上游 Clang 一致}，但 Apple 偶尔会回植补丁；遇到上游修复但 Apple Clang 未跟进的 bug 时，可 \kw{brew install llvm} 装上游 Clang。
+  \item \textbf{默认架构是 arm64}（Apple Silicon），x86\_64 需用 \seqkw{-arch~x86\_64} 或更长的 \seqkw{-target} 三元组进行交叉编译。
+\end{itemize}
+
+\section{跨编译器特性支持矩阵}
+
+下表汇总关键差异点在四大编译器上的支持情况：
+
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}p{4.0cm} p{2.0cm} p{2.0cm} p{2.0cm} p{2.0cm}@{}}
+\toprule
+\textbf{特性} & \textbf{MSVC} & \textbf{GCC} & \textbf{Clang} & \textbf{Apple Clang} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{特性} & \textbf{MSVC} & \textbf{GCC} & \textbf{Clang} & \textbf{Apple Clang} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+VLA (C 模式) & 部分（VS2019+） & 是 & 是 & 是 \\
+VLA (C++ 模式，扩展) & 否 & 是 & 是 & 是 \\
+柔性数组成员 \kw{[]} (C 模式) & 否（用 \kw{[1]}） & 是 & 是 & 是 \\
+柔性数组成员 (C++ 模式) & 仅 \kw{[0]} & 仅 \kw{[0]} & 仅 \kw{[0]} & 仅 \kw{[0]} \\
+复合字面量 (C 模式) & VS2019+ & 是 & 是 & 是 \\
+复合字面量 (C++ 模式) & 否 & 是（扩展） & 是（扩展） & 是（扩展） \\
+\kw{\_Generic} & VS2022 17.x+ & 是 & 是 & 是 \\
+union type punning (UB 风险) & 安全 & 安全（扩展） & 安全（扩展） & 安全（扩展） \\
+strict aliasing 优化 & 关 & 开（-O2） & 开（-O2） & 开（-O2） \\
+\kw{typeof} (C23/C++) & 否 & 是 & 是 & 是 \\
+\kw{constexpr} (C23) & 否 & GCC 14+ & Clang 19+ & Xcode 16+ \\
+\kw{nullptr} (C23) & 否 & GCC 14+ & Clang 19+ & Xcode 16+ \\
+\kw{bool}/\kw{true}/\kw{false} (C23) & 否 & GCC 14+ & Clang 19+ & Xcode 16+ \\
+\kw{[[nodiscard]]} 属性 & 是 & 是 & 是 & 是 \\
+Itanium ABI & 否 & 是 & 是 & 是 \\
+MS ABI & 是 & 否 & clang-cl 是 & 否 \\
+\end{longtable}
+\normalsize
+
+% ====================================================================
+\part{C23 与 C++ 的同步进展}
+% ====================================================================
+
+\chapter{C23 中向 C++ 看齐的特性}
+
+C23 是 C 语言自 C11 以来最大的一次更新，其中相当一部分变更是"把 \cpp{} 中早已成熟的特性反向引入 C"。WG14（C 委员会）和 WG21（C++ 委员会）从 2018 年起建立了非正式的协调机制，目标是让 C 和 \cpp{} 在共享语法子集上尽量一致，减少跨语言移植摩擦。
+
+\section{bool / true / false 成为关键字}
+
+\clabel{} C99/C11/C17：\kw{bool}、\kw{true}、\kw{false} 是 \kw{<stdbool.h>} 中的宏，可以 \kw{\#undef}。
+
+C23：三者成为真正的关键字，\kw{<stdbool.h>} 仍存在但为空壳（兼容旧代码）。同时 \kw{\_Bool} 保留为底层类型名，但 \kw{bool} 不再是它的宏别名。
+
+\cpplabel{} \cpp{} 一直有 \kw{bool}、\kw{true}、\kw{false} 关键字（C++98 起）。
+
+\textbf{影响}：旧 C 代码中若有变量名为 \kw{bool} 或 \kw{true}，C23 编译会报错；\cpp{} 代码中本来就不能用，所以这一变化让两边对齐。
+
+\section{nullptr 关键字}
+
+\clabel{} C23 引入 \kw{nullptr} 关键字，类型是 \kw{nullptr\_t}，与 \kw{NULL} 宏（通常展开为 \kw{((void*)0)} 或 \kw{0}）并存。\kw{<stddef.h>} 新增 \kw{nullptr\_t} 类型。
+
+\cpplabel{} \cpp{}11 起有 \kw{nullptr}，类型 \kw{std::nullptr\_t}。
+
+\textbf{差异}：C23 的 \kw{nullptr\_t} 在 \kw{<stddef.h>} 中，\cpp{} 的在 \kw{<cstddef>} 中；C23 中 \kw{nullptr\_t} 是基本类型，\cpp{} 中是 \kw{decltype(nullptr)} 的 typedef。
+
+\section{typeof / typeof\_unqual}
+
+\clabel{} C23 引入 \kw{typeof} 和 \kw{typeof\_unqual}，把 GCC 扩展标准化。\kw{typeof} 保留所有限定符（\kw{const}、\kw{volatile}），\kw{typeof\_unqual} 剥离限定符。
+
+\cpplabel{} \cpp{} 有 \kw{decltype}（C++11 起），语义类似但更细：\kw{decltype(x)} 对左值返回引用类型，\kw{typeof} 不会。
+
+\section{constexpr 限定符}
+
+\clabel{} C23 引入 \kw{constexpr}，但语义远比 \cpp{} 弱：仅允许修饰\textbf{对象}（变量），保证该对象在编译期初始化；不允许修饰函数。\kw{constexpr} 对象自动隐含 \kw{const}。
+
+\cpplabel{} \cpp{} 的 \kw{constexpr} 既能修饰变量也能修饰函数，且支持 \kw{constexpr} 控制流（C++14 起允许循环）、\kw{consteval}（C++20 强制编译期）、\kw{constinit}（C++20 保证静态初始化）。
+
+\textbf{影响}：跨语言头文件中用 \kw{constexpr} 修饰变量是安全的，修饰函数则只能 \cpp{}。
+
+\section{属性 (attributes)}
+
+C23 把 \cpp{} 风格的 \kw{[[...]]} 属性引入 C，与 C++11/14/17/20 逐步对齐：
+
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}p{4.5cm} p{2.5cm} p{2.5cm} p{4.0cm}@{}}
+\toprule
+\textbf{属性} & \textbf{C 引入版本} & \textbf{C++ 引入版本} & \textbf{备注} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{属性} & \textbf{C 引入版本} & \textbf{C++ 引入版本} & \textbf{备注} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\kw{[[noreturn]]} & C23 & C++11 & 函数不返回 \\
+\kw{[[deprecated]]} & C23 & C++14 & 废弃警告 \\
+\kw{[[fallthrough]]} & C23 & C++17 & switch 故意贯穿 \\
+\kw{[[maybe\_unused]]} & C23 & C++17 & 抑制未使用警告 \\
+\kw{[[nodiscard]]} & C23 & C++17（C++20 增强） & 返回值不应忽略 \\
+\seqkw{[[likely]]} 与 \seqkw{[[unlikely]]} & C23 & C++20 & 分支预测提示 \\
+\end{longtable}
+\normalsize
+
+\section{二进制字面量与数字分隔符}
+
+\clabel{} C23 引入 \kw{0b1010} 二进制字面量（\cpp{}14 已有），以及数字分隔符 \kw{'}（如 \kw{1'000'000}）。
+
+\section{alignas / alignof / thread\_local / static\_assert}
+
+C23 把 C11 的 \kw{\_Alignas}、\kw{\_Alignof}、\kw{\_Thread\_local}、\kw{\_Static\_assert} 分别加上不带下划线的别名 \kw{alignas}、\kw{alignof}、\kw{thread\_local}、\kw{static\_assert}，与 \cpp{}11 对齐。\kw{<stdalign.h>}、\kw{<threads.h>}、\kw{<assert.h>} 仍提供宏，但已是冗余。
+
+\section{auto 类型推导（受限）}
+
+C23 引入 \kw{auto} 关键字用于变量声明，从初始化表达式推导类型：
+
+\clabel{}
+\begin{lstlisting}[style=cstyle]
+auto x = 3.14;          // x 推导为 double
+auto p = &x;            // p 推导为 double*
+\end{lstlisting}
+
+但 C23 的 \kw{auto} 比 \cpp{} 弱很多：不支持函数返回类型推导、不支持模板参数推导、不支持 \kw{decltype(auto)}、不支持结构化绑定。
+
+\section{移除项}
+
+C23 同时移除了一些老特性，与 \cpp{} 拉齐：
+\begin{itemize}
+  \item \textbf{K\&R 风格函数定义}（\kw{int f(a, b) int a; char b; \{ ... \}}）：C23 起 ill-formed。
+  \item \textbf{隐式 int}（\kw{f() \{ \}} 返回 int）：C99 已警告，C23 起 ill-formed。
+  \item \textbf{隐式函数声明}（调用未声明的函数自动声明返回 int）：C99 警告，C23 ill-formed。
+  \item \textbf{空参数列表 \kw{f()} 表示"未指定参数"}：C23 改为等价于 \kw{f(void)}。
+\end{itemize}
+
+% --------------------------------------------------------------------
+
+\chapter{C23 与 C++ 仍未同步的特性}
+
+\section{C++ 有但 C 永远不会有}
+
+\begin{itemize}
+  \item \textbf{类与对象模型}：\kw{class}、\kw{struct} 含成员函数、构造/析构、继承、多态、虚函数表、运算符重载、模板、Concepts、Ranges、Coroutines、Modules、Lambda、闭包、\kw{constexpr} 函数（C23 仍不支持）。
+  \item \textbf{异常}：\kw{try}/\kw{catch}/\kw{throw}、\kw{noexcept} 规格、栈展开。
+  \item \textbf{引用}：\kw{T\&}、右值引用 \kw{T\&\&}、移动语义。
+  \item \textbf{命名空间}：\kw{namespace}、内联命名空间、匿名命名空间。
+  \item \textbf{RAII}：智能指针、\kw{std::lock\_guard} 等资源管理模式。
+  \item \textbf{标准库容器与算法}：\kw{std::vector}、\kw{std::map}、\kw{std::sort}、\kw{std::ranges::*}。
+\end{itemize}
+
+\section{C 有但 C++ 仍没有}
+
+\begin{itemize}
+  \item \textbf{VLA}（如前述，C++23 \kw{std::mdspan} 是部分替代，但不拥有存储）。
+  \item \textbf{柔性数组成员}（FAM）。
+  \item \textbf{复合字面量}（\kw{(T)\{...\}} 语法）。
+  \item \textbf{\kw{\_Generic} 选择表达式}（C++ 用模板特化或 \kw{if constexpr} 替代）。
+  \item \textbf{\kw{restrict} 指针限定符}（C99；\cpp{} 没有标准对应，GCC/Clang 提供 \kw{\_\_restrict} 扩展，MSVC 提供 \kw{\_\_restrict} 但语义略不同）。
+  \item \textbf{\kw{\_Atomic} 类型限定符}（C11；\cpp{} 用 \kw{std::atomic<T>} 类模板替代，语义更丰富但语法不同）。
+  \item \textbf{\kw{\_Complex} 复数}（C99；\cpp{} 用 \kw{std::complex<T>} 替代，但 ABI 不兼容——C 的 \kw{double complex} 是结构体，\cpp{} 的是类）。
+\end{itemize}
+
+\section{C23 与 C++23 的"近亲"特性差异}
+
+某些特性两边都有但语义不完全一致：
+
+\begin{itemize}
+  \item \textbf{\kw{constexpr}}：C23 只能修饰对象，C++ 能修饰对象和函数。
+  \item \textbf{\kw{auto}}：C23 只用于变量推导，C++ 还可用于函数返回类型、模板参数、结构化绑定。
+  \item \textbf{\kw{nullptr}}：C23 的 \kw{nullptr\_t} 是基本类型，C++ 的是 \kw{decltype(nullptr)}。
+  \item \textbf{\kw{[[nodiscard]]}}：C23 不支持参数和返回值，C++20 起支持。
+  \item \textbf{属性命名空间}：C23 不支持 \kw{[[vendor::attr]]}，C++ 支持。
+\end{itemize}
+
+\section{C 委员会在讨论但 C++ 已有的提案}
+
+\begin{itemize}
+  \item \textbf{模式匹配}（N3372 等）：C++26 已纳入，C2y 仍在讨论。
+  \item \textbf{defer/finally}：\cpp{} 用 RAII 解决，C 委员会在考虑 \kw{\_Defer} 关键字。
+  \item \textbf{泛型容器}：\cpp{} 用模板，C 委员会讨论宏方案。
+  \item \textbf{模块}：\cpp{}20 引入 Modules，C2y 仍在早期讨论。
+\end{itemize}
+
+% ====================================================================
+\part{实战：写跨 C/C++ 的共享头文件}
+% ====================================================================
+
+\chapter{双语头文件的工程实践}
+
+\section{基本骨架}
+
+\cpplabel{} 一份能同时被 C 和 \cpp{} 包含的头文件：
+
+\begin{lstlisting}
+/* mylib.h — 跨 C99/C11/C17/C23 与 C++11/14/17/20/23 */
+#ifndef MYLIB_H
+#define MYLIB_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <stdint.h>
+#include <stddef.h>
+
+/* 属性兼容宏 */
+#if defined(__cplusplus) && __cplusplus >= 201703L
+  #define MYLIB_NODISCARD [[nodiscard]]
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
+  #define MYLIB_NODISCARD [[nodiscard]]
+#elif defined(__GNUC__) || defined(__clang__)
+  #define MYLIB_NODISCARD __attribute__((warn_unused_result))
+#elif defined(_MSC_VER)
+  #define MYLIB_NODISCARD _Check_return_
+#else
+  #define MYLIB_NODISCARD
+#endif
+
+/* 导出符号 */
+#ifdef _WIN32
+  #ifdef MYLIB_BUILDING
+    #define MYLIB_API __declspec(dllexport)
+  #else
+    #define MYLIB_API __declspec(dllimport)
+  #endif
+#else
+  #define MYLIB_API __attribute__((visibility("default")))
+#endif
+
+MYLIB_NODISCARD MYLIB_API int32_t mylib_add(int32_t a, int32_t b);
+MYLIB_API void mylib_init(void);
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif
+
+#endif  /* MYLIB_H */
+\end{lstlisting}
+
+\section{禁止使用的语法}
+
+跨语言头文件中应避免：
+\begin{itemize}
+  \item VLA、FAM、复合字面量（除非用宏隔离，只在 C 模式下展开）。
+  \item \cpp{} 专属：\kw{class}、\kw{template}、\kw{namespace}、\kw{operator} 重载、引用、异常、\kw{constexpr} 函数。
+  \item C23 专属：\kw{typeof}、\kw{auto} 推导、\kw{[[...]]} 属性（除非用宏隔离）。
+  \item \kw{bool}/\kw{true}/\kw{false}：在 C17 及以前需要 \kw{<stdbool.h>}，C23 起内建。安全做法是 \kw{\#include <stdbool.h>} 始终带上。
+  \item \kw{nullptr}：C23/C++11 起内建，旧 C 模式要用 \kw{NULL}。
+\end{itemize}
+
+\section{条件编译策略}
+
+\begin{lstlisting}
+/* 根据 __STDC_VERSION__ 和 __cplusplus 选择语法 */
+#if defined(__cplusplus)
+  /* C++ 路径：可用 std::vector、模板、RAII */
+  #ifdef __cpp_lib_bit_cast
+    #include <bit>
+    #define MYLIB_BITCAST(T, x) std::bit_cast<T>(x)
+  #else
+    #define MYLIB_BITCAST(T, x) []{ T r; std::memcpy(&r, &x, sizeof(r)); return r; }()
+  #endif
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
+  /* C23 路径 */
+  #define MYLIB_BITCAST(T, x) (*(T*)&(x))   /* 仍需谨慎，C 中 union 双关更安全 */
+#else
+  /* C11/C17 路径 */
+  #define MYLIB_BITCAST(T, x) mylib_bitcast_impl(&(x), sizeof(T))
+  void* mylib_bitcast_impl(const void*, size_t);
+#endif
+\end{lstlisting}
+
+\section{构建系统配合}
+
+CMake 中区分 C 和 \cpp{} 源文件，并对每个语言设置标准：
+
+\begin{lstlisting}[style=cmakestyle]
+cmake_minimum_required(VERSION 3.20)
+project(mylib C CXX)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)        # 禁用 GNU 扩展，确保可移植
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_library(mylib SHARED mylib.c mylib_cxx.cpp)
+target_compile_definitions(mylib PRIVATE MYLIB_BUILDING)
+target_include_directories(mylib PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+\end{lstlisting}
+
+\begin{bestpractice}
+跨 C/\cpp{} 项目的核心原则：
+\begin{enumerate}
+  \item \textbf{公共 API 用纯 C}，避免 name mangling 和 ABI 不兼容。
+  \item \textbf{实现可以用 \cpp{}}，但导出符号必须 \kw{extern "C"} 包装。
+  \item \textbf{结构体里避免 FAM、VLA}，改用"长度字段 + 指针"或"句柄模式"。
+  \item \textbf{错误处理用返回码}，不要用异常（C 接不住 \cpp{} 异常，反之也不行）。
+  \item \textbf{资源管理用 \kw{init}/\kw{destroy} 配对函数}，封装 \cpp{} 端的 RAII。
+  \item \textbf{CI 必须同时跑 C 和 \cpp{} 编译}，且至少覆盖 MSVC + GCC + Clang 三套。
+\end{enumerate}
+\end{bestpractice}
+
+% ====================================================================
+\part{附录}
+% ====================================================================
+
+\chapter{快速参考表}
+
+\section{C/C++ 不兼容点速查}
+
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}p{4.5cm} p{5.0cm} p{5.0cm}@{}}
+\toprule
+\textbf{特性} & \textbf{C 行为} & \textbf{C++ 行为} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{特性} & \textbf{C 行为} & \textbf{C++ 行为} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+变长数组 VLA & C99/C23 必需，C11/C17 可选 & 从未支持；GCC/Clang 扩展接受 \\
+柔性数组成员 FAM & C99 起标准 & 不支持；用 \kw{[0]} 或 \kw{[1]} 扩展 \\
+复合字面量 & C99 起标准 & 不支持；用聚合初始化 \\
+union 非活跃成员读取 & 实现定义，普遍接受 & UB；C++20 起写入合法 \\
+\kw{const} 全局变量链接 & 外部链接 & 内部链接 \\
+字符字面量类型 & \kw{int} & \kw{char} \\
+空结构体大小 & 非法（扩展给 0） & 至少 1 字节 \\
+\kw{f()} 声明 & C23 前：参数未指定；C23 起：等价 \kw{(void)} & 始终等价 \kw{(void)} \\
+字符串字面量到 \kw{char*} & 合法（deprecated） & C++11 起 ill-formed \\
+\kw{register} 关键字 & C23 删除 & C++17 删除 \\
+\kw{restrict} & C99 起标准 & 无标准对应；用 \kw{\_\_restrict} 扩展 \\
+\kw{\_Generic} & C11 起标准 & 无；用模板特化 \\
+\kw{\_Atomic} 限定符 & C11 起标准 & 无；用 \kw{std::atomic<T>} \\
+\kw{bool}/\kw{true}/\kw{false} & C23 起关键字 & 一直关键字 \\
+\kw{nullptr} & C23 起关键字 & C++11 起关键字 \\
+\kw{typeof} & C23 起标准 & 无；用 \kw{decltype} \\
+\kw{constexpr} & C23 起，仅对象 & C++11 起，对象+函数 \\
+\kw{auto} 推导 & C23 起，仅变量 & C++11 起，含函数返回/模板 \\
+\kw{[[attributes]]} & C23 起 6 个 & C++11 起持续扩展 \\
+二进制字面量 \kw{0b} & C23 起 & C++14 起 \\
+数字分隔符 \kw{'} & C23 起 & C++14 起 \\
+\kw{alignas}/\kw{alignof} & C23 起（C11 为 \kw{\_Alignas}） & C++11 起 \\
+\kw{thread\_local} & C23 起（C11 为 \kw{\_Thread\_local}） & C++11 起 \\
+\kw{static\_assert} & C23 起（C11 为 \kw{\_Static\_assert}） & C++11 起 \\
+\end{longtable}
+\normalsize
+
+\section{编译器命令速查}
+
+\shelllabel{}
+\begin{lstlisting}[style=bashstyle]
+# C 标准选择
+gcc    -std=c99 / c11 / c17 / c2x / c23 (GCC 14+)
+clang  -std=c99 / c11 / c17 / c2x / c23
+cl     /std:c11 / /std:c17          (VS2019+)
+
+# C++ 标准选择
+g++    -std=c++11 / c++14 / c++17 / c++20 / c++23 / c++2c
+clang++ -std=c++11 / c++14 / c++17 / c++20 / c++23 / c++2c
+cl     /std:c++14 / c++17 / c++20 / c++latest
+
+# GNU 扩展（默认）
+gcc    -std=gnu11 / gnu17 / gnu2x
+g++    -std=gnu++17 / gnu++20 / gnu++23
+
+# 严格模式（拒绝 GNU 扩展）
+gcc    -std=c17 -pedantic-errors
+g++    -std=c++17 -pedantic-errors
+
+# 关闭 strict aliasing 优化（让 union type punning 更安全）
+gcc    -fno-strict-aliasing
+clang  -fno-strict-aliasing
+cl     (默认就关闭)
+
+# VLA 警告
+gcc    -Wvla
+clang  -Wvla-extension / -Wc++23-extensions
+\end{lstlisting}
+
+\end{document}

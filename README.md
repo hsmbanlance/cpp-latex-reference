@@ -1,6 +1,6 @@
 # C/C++ LaTeX 参考手册合集
 
-本仓库包含 **20 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
+本仓库包含 **25 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
 
 ## 目录结构
 
@@ -68,8 +68,23 @@ C、C++/
 ├── UI Framework/                 # C++ GUI 框架：MFC / WinUI 3 / wxWidgets / Qt / UE
 │   ├── ui_framework.tex
 │   └── build.ps1
-└── ModularBuild/                 # C++ 模块化构建：Modules vs Headers / Clang / LSP / 三方库 / CMake 实战
-    ├── modular_build.tex
+├── ModularBuild/                 # C++ 模块化构建：Modules vs Headers / Clang / LSP / 三方库 / CMake 实战
+│   ├── modular_build.tex
+│   └── build.ps1
+├── C and Cpp Compat/             # C++ 与 C 的不兼容性：VLA / FAM / union UB / 编译器对比 / C23 同步
+│   ├── c_cpp_compat.tex
+│   └── build.ps1
+├── Template Parameters/          # C++20 非类型模板参数扩展：浮点 / 结构化类 / TString / 具名指针
+│   ├── template_parameters.tex
+│   └── build.ps1
+├── Lang History/                 # C/C++ 历史与 ISO/IEC 治理模式：从 Multics 到 C++26、三种治理模式对比
+│   ├── c_cpp_history.tex
+│   └── build.ps1
+├── Asm Embedding/                # 汇编嵌入与 volatile 的真实用途：asm volatile / MSVC intrinsics / 跨语言对比
+│   ├── asm_embedding.tex
+│   └── build.ps1
+└── HW Access and Kernels/        # 硬件访问与 GPU/NPU 核函数：MMIO/PCIe/DMA/中断、I2C·SPI·UART、CUDA/SYCL/NPU
+    ├── hw_kernels.tex
     └── build.ps1
 ```
 
@@ -92,7 +107,7 @@ C、C++/
 ### 编译
 
 ```powershell
-# 编译全部 20 个项目（每个 2 pass + TOC 修复）
+# 编译全部 25 个项目（每个 2 pass + TOC 修复）
 .\workflow.ps1 build-all
 
 # 编译单个项目
@@ -129,7 +144,7 @@ C、C++/
 .\workflow.ps1 list
 ```
 
-显示全部 20 个项目名及其对应的文件夹路径。
+显示全部 25 个项目名及其对应的文件夹路径。
 
 ### 打开 PDF
 
@@ -163,6 +178,11 @@ C、C++/
 | UnitTest | Unit Testing | 单元测试：框架对比、Android/iOS、UE/U++、测试边界、依赖注入、Mock 与覆盖率 |
 | UIFwk | UI Framework | GUI 框架：MFC / WinUI 3 (C++/WinRT) / wxWidgets / Qt / UE 对比与迁移 |
 | ModularBuild | ModularBuild | 模块化构建：Modules vs Headers / BMI / Clang·LSP·三方库困局 / CMake 实战与渐进迁移 |
+| CCompat | C and Cpp Compat | C++ 与 C 不兼容性：VLA / FAM / union 非活跃成员 UB / 编译器矩阵 / C23 同步 |
+| TemplateParams | Template Parameters | C++20 NTTP 扩展：浮点 / 结构化类 / TString / 具名指针 / 数学·DSP·序列化实战 |
+| History | Lang History | C/C++ 历史与 ISO/IEC 治理：从 Multics 到 C++26 时间线 / WG14·WG21 提案投票流程 / 去中心化 vs 中心化 vs 准中心化客观对比 |
+| AsmEmbed | Asm Embedding | 汇编嵌入与 volatile 真实用途：asm volatile / MSVC intrinsics / MMIO·信号·setjmp / FFI 边界 / 四语言 volatile 对比 |
+| HWKernels | HW Access and Kernels | 硬件访问与 GPU/NPU 核函数：MMIO/PCIe BAR/DMA 一致性/中断与 MSI-X、I2C·SPI·UART·GPIO、CUDA SIMT·内存层级·流、SYCL oneAPI queue/nd_range/USM、NPU MAC 阵列与 tile；除核函数外区分 Unix/Windows API（含三平台物理地址对比与 libserialport 示例），附录含传感器驱动-HAL-应用全链与 CUDA 算子-PyTorch 绑定 |
 
 ## 统一格式规范
 

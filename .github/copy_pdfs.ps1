@@ -33,6 +33,11 @@ $projects = @(
     @{ dir = 'NewDelete';                       job = 'new_delete' }
     @{ dir = 'UI Framework';                    job = 'ui_framework' }
     @{ dir = 'ModularBuild';                    job = 'modular_build' }
+    @{ dir = 'C and Cpp Compat';                job = 'c_cpp_compat' }
+    @{ dir = 'Template Parameters';             job = 'template_parameters' }
+    @{ dir = 'Lang History';                    job = 'c_cpp_history' }
+    @{ dir = 'Asm Embedding';                   job = 'asm_embedding' }
+    @{ dir = 'HW Access and Kernels';           job = 'hw_kernels' }
 )
 
 $copied = 0

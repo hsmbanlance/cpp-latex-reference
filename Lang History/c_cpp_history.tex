@@ -1,0 +1,2102 @@
+% !TEX program = xelatex
+% C/C++ 历史与 ISO/IEC 治理模式
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ===== 页面 =====
+\usepackage[margin=2.5cm]{geometry}
+
+% ===== 字体 =====
+\usepackage{fontspec}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}
+  {\setmonofont{Consolas}}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+
+% ===== 颜色 =====
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{cppheadbg}{HTML}{2E4057}
+\definecolor{cheadbg}{HTML}{B36B00}
+\definecolor{govheadbg}{HTML}{1F4E79}
+\definecolor{yearheadbg}{HTML}{8B4513}
+\definecolor{csharptype}{HTML}{006400}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ===== listings =====
+\usepackage{listings}
+
+% ---- C++ ----
+\lstdefinestyle{cppstyle}{%
+  language=C++,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    override,final,noexcept,constexpr,consteval,constinit,
+    decltype,auto,concept,requires,co_await,co_yield,co_return,
+    nullptr,sizeof...,static_assert,thread_local,alignas,alignof,
+    namespace,using,template,typename,virtual,explicit,friend,
+    mutable,volatile,register,extern,inline,
+    module,import,export,
+    std,string,vector,array,map,unordered_map,set,unordered_set,
+    unique_ptr,shared_ptr,weak_ptr,optional,variant,any,
+    tuple,pair,span,string_view,
+    cin,cout,cerr,endl,print,println,
+    move,forward,swap,make_unique,make_shared,
+    begin,end,size,empty,push_back,emplace_back,
+    is_same_v,integral_constant,
+    chrono,literal,operator
+  },
+  deletekeywords={int,char,float,double,bool,void,long,short,unsigned,signed},
+  emph={%
+    int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,
+    size_t,ptrdiff_t,intptr_t,uintptr_t,wchar_t,char8_t
+  },
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- C ----
+\lstdefinestyle{cstyle}{%
+  language=C,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cheadbg}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    _Bool,_Complex,_Imaginary,_Atomic,_Alignas,_Alignof,_Generic,_Noreturn,_Static_assert,_Thread_local,
+    bool,true,false,nullptr,typeof,typeof_unqual,
+    restrict,inline,register,auto,extern,static,const,volatile,signed,unsigned,
+    struct,union,enum,typedef,sizeof,void,char,short,int,long,float,double,
+    int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,size_t,ptrdiff_t,
+    alignas,alignof,static_assert,thread_local,constexpr,
+    _Pragma
+  },
+  emph={int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,size_t},
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+\lstset{style=cppstyle}
+
+% ===== tcolorbox =====
+\usepackage[most]{tcolorbox}
+
+% ===== 代码标签 =====
+\newcommand{\cpplabel}{%
+  \tcbox[on line,colback=cppheadbg,colframe=cppheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{C++}}
+
+\newcommand{\clabel}{%
+  \tcbox[on line,colback=cheadbg,colframe=cheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{C}}
+
+\newcommand{\cppxxlabel}[1]{%
+  \tcbox[on line,colback=cppheadbg,colframe=cppheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{#1}}
+
+\newcommand{\govlabel}{%
+  \tcbox[on line,colback=govheadbg,colframe=govheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{治理}}
+
+\newcommand{\yearlabel}[1]{%
+  \tcbox[on line,colback=yearheadbg,colframe=yearheadbg,
+    boxrule=0pt,arc=1pt,left=3pt,right=3pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{#1}}
+
+% ===== tcolorbox 提示框 =====
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{stdbox}[1][]{
+  enhanced,breakable,
+  colback=gray!5!white,colframe=gray!70!black,
+  fonttitle=\bfseries,title=标准条款,#1,
+  boxed title style={colback=gray!70!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{govbox}[1][]{
+  enhanced,breakable,
+  colback=cyan!5!white,colframe=cyan!60!black,
+  fonttitle=\bfseries,title=治理观察,#1,
+  boxed title style={colback=cyan!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{historybox}[1][]{
+  enhanced,breakable,
+  colback=brown!5!white,colframe=brown!60!black,
+  fonttitle=\bfseries,title=历史快照,#1,
+  boxed title style={colback=brown!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{timelinebox}[1][]{
+  enhanced,breakable,
+  colback=gray!3!white,colframe=gray!60!black,
+  fonttitle=\bfseries,title=时间线,#1,
+  boxed title style={colback=gray!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.6mm,
+}
+
+% ===== 章节标题 =====
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{float}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ===== 超链接 =====
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={hsmbanlance},
+  pdftitle={C/C++ 历史与 ISO/IEC 治理模式},
+}
+
+% ===== 自定义命令 =====
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\kw}[1]{\texttt{#1}}
+\newcommand{\seqkw}[1]{\seqsplit{\texttt{#1}}}
+\newcommand{\paper}[1]{\texttt{#1}}
+\newcommand{\yrlbl}[1]{\yearlabel{#1}}
+
+% ====================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C/C++ 历史与 ISO/IEC 治理模式\par}
+\vspace{1cm}
+{\LARGE 从 Bell Labs 到 ISO 委员会：去中心化标准化的优势与代价\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+% ====================================================================
+\part{C 语言的诞生与标准化}
+% ====================================================================
+
+\chapter{C 的前史：从 Multics 到 UNIX}
+
+\section{时代背景：1960 年代的分时系统}
+
+\yrlbl{1965} 1960 年代中期，麻省理工学院（MIT）、贝尔实验室（Bell Labs）与通用电气（GE）联合启动了 \textbf{Multics} 项目——一个雄心勃勃的分时操作系统，目标是让一台大型机同时为数百名用户提供交互式计算服务。Multics 的设计文档由 Fernando Corbató 等人起草，采用当时最先进的 PL/I 语言实现，运行在 GE-645 主机上。
+
+\yrlbl{1969} 然而 Multics 的复杂度迅速失控。PL/I 编译器迟迟不能稳定，硬件资源紧张，项目进度严重落后。1969 年，Bell Labs 决定退出 Multics 项目。退出之后，Ken Thompson、Dennis Ritchie 与 Doug McIlroy 等几位原 Multics 团队成员，仍然怀念那种\textbf{多用户、多任务、文件系统统一}的工作模式，但他们手上只剩一台几乎被废弃的 \textbf{PDP-7} 小型机。
+
+\begin{historybox}
+\textbf{Multics 的遗产}
+
+虽然 Multics 项目本身在商业上不算成功（直到 1975 年才有第一个商用部署，2000 年才被彻底退役），但它对操作系统设计的影响极其深远。Multics 引入的概念包括：分层文件系统、进程作为基本执行单元、动态链接、安全环（security rings）、shell 作为命令行接口。所有这些概念都通过 UNIX 流传至今。C 语言的诞生与 Multics 项目的失败直接相关——没有 Multics 的复杂度教训，就没有 UNIX 的极简哲学，也就没有为 UNIX 而生的 C。
+\end{historybox}
+
+\section{BCPL、B 语言与"New B"}
+
+\yrlbl{1967} 在 Multics 之前，剑桥大学的 Martin Richards 于 1967 年设计了 \textbf{BCPL}（Basic Combined Programming Language），这是一种为系统编程设计的语言。BCPL 的核心特征是\textbf{无类型}——所有数据都被当作机器字（machine word）处理，由程序员自己负责解释。这种设计极大简化了编译器实现，让 BCPL 能够快速移植到不同机器。
+
+\yrlbl{1969} Ken Thompson 在 PDP-7 上工作时，需要一个比汇编更易移植、但比 BCPL 更紧凑的语言。他在 BCPL 的基础上做了删减，去掉了不需要的部分（比如复杂的 I/O 库），发明了 \textbf{B 语言}。B 是一种解释执行的无类型语言，所有值都视为 16 位的字。Thompson 用 B 重写了 PDP-7 上的部分系统工具，包括早期版本的 UNIX 内核。
+
+\yrlbl{1970} 但 B 的无类型设计在 PDP-11 上遇到了麻烦。PDP-11 引入了\textbf{字节寻址}（byte-addressable memory）和新的数据类型（如 \kw{char}），B 无法自然表达。Dennis Ritchie 接手扩展 B，加入类型概念和结构体（\kw{struct}），称为 \textbf{New B}（NB）。New B 是 C 的直接前身。
+
+\clabel\ \begin{lstlisting}[style=cstyle]
+/* B 语言示例：所有变量都是机器字，无类型 */
+main() {
+    auto a, b, c;
+    a = 1; b = 2;
+    c = a + b;     /* c 是 3，但解释为整数还是指针由上下文决定 */
+    print(c);
+}
+
+/* New B / 早期 C 示例：引入了类型 */
+int main() {
+    int a, b, c;
+    char ch;
+    a = 1; b = 2;
+    c = a + b;     /* 明确是整数加法 */
+    ch = 'A';      /* 明确是字符 */
+    return 0;
+}
+\end{lstlisting}
+
+\section{C 语言的诞生：1972-1973}
+
+\yrlbl{1972} Ritchie 在 New B 的基础上继续演进，加入了完整的类型系统、结构体（\kw{struct}）、联合（\kw{union}）、指针算术与自增/自减运算符。这门新语言最初被称为"New B"或"C"，1972 年前后正式定名为 \textbf{C}——只是 B 的下一个字母，没有任何特殊含义。
+
+\yrlbl{1973} 关键的一年。Ritchie 用 C 重写了 B 编译器，Thompson 与 Ritchie 用 C 重写了 UNIX 内核的大部分代码。在此之前，操作系统几乎都是用汇编写的——每个硬件平台都需要重写一遍。用 C 写操作系统意味着\textbf{只要 C 编译器能移植到新机器，整个操作系统就能跟着移植}。这是软件史上第一次大规模验证"高级语言写系统软件"的可行性。
+
+\begin{guideline}
+\textbf{C 的核心设计哲学（1973 年确立）}
+
+(1) \textbf{贴近硬件}：C 提供指针、位运算、直接的内存布局控制，但通过类型系统提供最低限度的安全检查。
+
+(2) \textbf{小而精}：C 的关键字仅 32 个（C89），没有内置的字符串、I/O、容器、面向对象——这些都靠标准库或程序员自己实现。
+
+(3) \textbf{可移植}：编译器只需为每个目标机器实现一次，所有 C 程序随之可移植。这与"操作系统用汇编写、每个机器重写一次"的传统模式形成鲜明对比。
+
+(4) \textbf{信任程序员}：C 不做运行期边界检查、不做空指针检查、不做整数溢出检查。程序员被认为有能力管理自己的内存与类型。
+\end{guideline}
+
+\yrlbl{1973} 1973 年，Ritchie 与 Thompson 在 ACM 杂志上发表了《The UNIX Time-Sharing System》——UNIX 的第一篇公开论文。论文中提到了实现语言是"一种新的、尚未广泛使用的语言 C"，这是 C 第一次出现在公开文献中。
+
+\section{早期移植与扩散（1974-1978）}
+
+\yrlbl{1974} UNIX 第四版（V4）发布，是第一个用 C 写的 UNIX 版本。Bell Labs 内部的 PDP-11 团队开始使用。
+
+\yrlbl{1975} UNIX V6 发布，附带完整源代码（以极低的许可费给大学使用）。加州大学伯克利分校（UC Berkeley）的学生开始在此基础上做扩展，逐渐演变为 \textbf{BSD}（Berkeley Software Distribution）。
+
+\yrlbl{1977} Ritchie 完成了 C 编译器的第一个真正的\textbf{跨架构移植}：把 C 编译到 Interdata 8/32——一种与 PDP-11 完全不同的非 DEC 机器。这次移植暴露了 C 早期定义中关于整数大小、字节序、对齐的模糊地带，促使 Ritchie 开始考虑写一份正式的语言参考。
+
+\yrlbl{1978} 同年，C 编译器已经移植到 IBM System/370、Honeywell 6000、Interdata 8/32、VAX-11 等多种机器。Bell Labs 内部已有数十个项目使用 C，外部用户也在增长。C 不再是"Bell Labs 的内部语言"，而是一个事实上的多平台系统编程语言。
+
+\begin{timelinebox}
+\textbf{C 语言诞生时间线（1967-1978）}
+
+\yrlbl{1967} BCPL 由 Martin Richards 在剑桥设计。
+
+\yrlbl{1969} Bell Labs 退出 Multics；Ken Thompson 在 PDP-7 上发明 B 语言。
+
+\yrlbl{1970} Dennis Ritchie 扩展 B 为 New B（NB），加入类型概念。
+
+\yrlbl{1971} UNIX 第一版手册（PDP-11）发布，使用汇编+B 实现。
+
+\yrlbl{1972} Ritchie 在 NB 基础上完成 C 语言的雏形。
+
+\yrlbl{1973} C 重写 UNIX 内核，证明"高级语言写 OS"可行。
+
+\yrlbl{1974} UNIX V4 发布，C 实现版本首次内部使用。
+
+\yrlbl{1975} UNIX V6 源代码对大学开放，BSD 项目萌芽。
+
+\yrlbl{1977} Ritchie 完成 C 编译器到 Interdata 8/32 的跨架构移植。
+
+\yrlbl{1978} 《The C Programming Language》（K\&R）出版，C 成为事实标准。
+\end{timelinebox}
+
+\chapter{K\&R C：事实标准的形成（1978-1989）}
+
+\section{《The C Programming Language》}
+
+\yrlbl{1978} Brian Kernighan（贝尔实验室的作家、UNIX 文档的主要作者之一）与 Dennis Ritchie 合著的 \textbf{《The C Programming Language}》由 Prentice-Hall 出版。这本书后来被简称为 \textbf{K\&R}（Kernighan \& Ritchie），成为 C 程序员的圣经。
+
+K\&R 的影响力不仅在于教学，更在于它\textbf{事实上定义了 C 的语法和语义}。在 1989 年 ANSI C 标准发布之前的十年里，K\&R 第一版几乎就是 C 语言规范——任何 C 编译器都以 K\&R 的描述为基准，任何关于 C 行为的争议都以 K\&R 的文字为依据。
+
+\begin{historybox}
+\textbf{K\&R 的"Hello, World"}
+
+K\&R 第一版第二章的第一个例子是：
+
+\clabel\ \begin{lstlisting}[style=cstyle, numbers=none]
+#include <stdio.h>
+
+main()
+{
+    printf("hello, world\n");
+}
+\end{lstlisting}
+
+注意几点：(1) \kw{main} 没有返回类型——在 K\&R C 中省略返回类型默认是 \kw{int}；(2) \kw{main} 没有参数列表——K\&R C 允许无原型函数声明；(3) \kw{printf} 不需要 \texttt{<stdio.h>} 的强制包含——只是约定。这三个"省略"在 ANSI C 中都被收紧：返回类型必须显式声明，函数必须有原型，\kw{printf} 必须包含 \texttt{<stdio.h>}。
+
+"Hello, World" 本身并不是 K\&R 发明的——它来自 Kernighan 早年的 BCPL 教程。但通过 K\&R，它成为几乎所有编程教材的开篇约定。
+\end{historybox}
+
+\section{K\&R C 的语言特征}
+
+K\&R C（即 1978-1989 年间事实上的 C）与现代 C（ANSI C / ISO C）有几处显著差异：
+
+\begin{itemize}
+  \item \textbf{函数原型缺失}：K\&R C 的函数声明只指定函数名，不指定参数类型。\kw{int f();} 表示"f 是一个返回 \kw{int} 的函数"，参数类型完全未指定——调用方传什么参数编译器都不报错。
+  \item \textbf{默认 \kw{int}}：变量或函数没有显式类型时，默认为 \kw{int}。\kw{main()} 等价于 \kw{int main()}，\kw{f()} 等价于 \kw{int f()}。
+  \item \textbf{\kw{register} 关键字}：提示编译器把变量放在 CPU 寄存器里。现代编译器普遍忽略这个提示。
+  \item \textbf{无 \kw{const}}：K\&R 第一版没有 \kw{const} 关键字（虽然 Ritchie 在 1979 年的一个内部备忘录中提到过这个想法）。
+  \item \textbf{无 \kw{void}}：早期 K\&R C 没有 \kw{void} 类型——函数要么返回 \kw{int}，要么不返回任何值（写法仍是 \kw{int f()}，但调用方忽略返回值）。\kw{void} 是在 K\&R 第一版后期和第二版中逐步加入的。
+  \item \textbf{无 \kw{enum}}：枚举类型在 K\&R 第一版中没有，是后来扩展的。
+\end{itemize}
+
+\clabel\ \begin{lstlisting}[style=cstyle]
+/* K&R 风格的函数定义（"old-style"） */
+int max(a, b, c)
+int a, b;       /* 参数类型在函数体外声明 */
+char c;
+{
+    int m = a > b ? a : b;
+    return m > c ? m : c;
+}
+
+/* ANSI C 风格的函数原型（C++ 引入，C89 采纳） */
+int max(int a, int b, char c);
+\end{lstlisting}
+
+\section{UNIX 生态的扩张}
+
+\yrlbl{1979} UNIX V7 发布，是第一个"可移植"的 UNIX 版本。Bell Labs 把 V7 源代码授权给大学与商业机构，催生了大量分支：
+
+\begin{itemize}
+  \item \textbf{BSD}（Berkeley Software Distribution，1977-1995）：加州大学伯克利分校开发，加入了 TCP/IP 协议栈、\kw{vi} 编辑器、csh shell。BSD 是后来 FreeBSD、NetBSD、OpenBSD、macOS（Darwin）的祖先。
+  \item \textbf{System III / System V}（1982-）：AT\&T 商业化的 UNIX 分支，与 BSD 形成"两个 UNIX"的局面。
+  \item \textbf{Xenix}（1980-1989）：Microsoft 授权的 UNIX 版本，运行在 Intel 8086/8088 上。是早期 PC 上最常见的 UNIX。
+  \item \textbf{SunOS}（1982-）：Sun Microsystems 基于 BSD 开发，后来演变为 Solaris。
+  \item \textbf{HP-UX}、\textbf{AIX}、\textbf{Ultrix}、\textbf{IRIX}：各硬件厂商的 UNIX 变体。
+\end{itemize}
+
+每一个 UNIX 变体都需要 C 编译器。Bell Labs 把 V7 的 C 编译器源代码也一并授权，于是各厂商纷纷基于这份源代码做自己的扩展——这是 C 语言"方言化"问题的开端。不同 UNIX 上的 C 在细节上各有差异：结构体对齐、整数大小、字节序、库函数名称都不完全一致。
+
+\yrlbl{1983} 这种碎片化让"可移植 C 程序"成为一个理论概念而非实践。开发者抱怨"在 BSD 上能编译，在 System V 上就出错"。一些机构开始尝试写"portability guides"，但都不够权威。\textbf{C 语言需要一个正式标准}——这个共识在 1983 年前后形成。
+
+\section{C 的"方言战争"与标准化的需求}
+
+\yrlbl{1982-1985} 这一时期 C 的几个主要方言：
+
+\begin{itemize}
+  \item \textbf{K\&R C}：贝尔实验室的"原版"，最保守。
+  \item \textbf{BSD C}：加入了 \kw{const}、\kw{volatile}、\kw{signed}、函数原型（受 C++ 影响）。
+  \item \textbf{System V C}：与 BSD 类似但略有不同。
+  \item \textbf{Microsoft C}（MS-C，1983-）：运行在 MS-DOS 与 Xenix 上，加入了大量 Microsoft 特有的扩展（\kw{\_far}、\kw{\_near}、\kw{\_pascal} 等内存模型修饰符）。
+  \item \textbf{Borland Turbo C}（1987-）：加入了内联汇编等扩展。
+\end{itemize}
+
+方言之间的不兼容性已经严重到影响实际开发。一个跨平台 C 程序需要写大量 \kw{\#ifdef} 来处理差异。这正是 1983 年 ANSI 决定立项 C 标准的直接动因。
+
+\begin{compare}
+\textbf{K\&R C 与 ANSI C 的核心差异}
+
+\kw{K\&R C}（1978-1989，事实标准）：函数声明可以无原型；返回类型默认 \kw{int}；无 \kw{const}、\kw{volatile}、\kw{signed} 关键字；无 \kw{void*}（用 \kw{char*} 替代）；无函数指针的标准转换规则；无标准库（只有约定俗成的函数名）。
+
+\kw{ANSI C}（1989）：函数原型强制（来自 C++）；返回类型必须显式；新增 \kw{const}、\kw{volatile}、\kw{signed}、\kw{void*}；标准化所有库函数（\texttt{<stdio.h>}、\texttt{<stdlib.h>}、\texttt{<string.h>} 等 15 个头文件）；引入"严格符合"（strictly conforming）与"符合"（conforming）的区分。
+
+差异的影响：K\&R C 程序大多能在 ANSI C 编译器上运行（编译器默认开启宽松模式），但 ANSI C 的\kw{const}、函数原型、\kw{void*} 等改进让程序更安全、更易维护。
+\end{compare}
+
+\chapter{ANSI X3J11 与 C89/C90：第一个国际标准}
+
+\section{X3J11 委员会的成立}
+
+\yrlbl{1983} 美国国家标准学会（ANSI，American National Standards Institute）成立了 \textbf{X3J11 委员会}，专门为 C 语言制定一个正式的美国国家标准。X3J11 的命名规则来自 ANSI 的项目编号系统——X3 是"信息技术"大类，J11 是 C 语言项目。
+
+X3J11 的组成非常多元，体现了"利益相关方共同参与"的原则：
+
+\begin{itemize}
+  \item 编译器厂商：AT\&T、Microsoft、Borland、MetaWare、Mark Williams Company、Lattice 等。
+  \item 用户代表：IBM、Apple、Sun、HP、DEC、Boeing、AT\&T Bell Labs。
+  \item 学术界：多位大学教授。
+  \item 独立顾问：包括 Kernighan 与 Ritchie 本人（虽然他们的角色是咨询而非投票）。
+  \item 政府代表：NIST（美国国家标准与技术研究院）、DoD（美国国防部，他们要求 C 满足 MIL-STD 等政府标准）。
+\end{itemize}
+
+\yrlbl{1983-1988} X3J11 委员会花了五年多时间起草标准。这段时间委员会成员通过邮件列表、定期会议、提案投票来推进工作。这种"邮件 + 会议 + 投票"的工作模式后来被 ISO/IEC 委员会继承，成为现代编程语言标准化的标准范式。
+
+\section{X3J11 的关键设计决策}
+
+X3J11 在五年中做出的关键决策：
+
+\begin{enumerate}
+  \item \textbf{采纳 C++ 的函数原型}：函数声明必须指定参数类型，旧式 K\&R 函数定义虽然保留兼容，但新代码必须用原型。这是 C 标准化最重要的语义改进。
+  \item \textbf{采纳 \kw{const} 与 \kw{volatile}}：从 C++ 借鉴的关键字，让程序员能表达"只读"与"硬件相关"的意图。
+  \item \textbf{引入 \kw{void*} 作为通用指针}：K\&R C 用 \kw{char*} 充当通用指针，但类型不安全。ANSI C 引入 \kw{void*}，并定义所有对象指针都能隐式转换为 \kw{void*} 而不丢失信息。
+  \item \textbf{标准化整个 C 运行时库}：15 个标准头文件（\texttt{<stdio.h>}、\texttt{<stdlib.h>}、\texttt{<string.h>}、\texttt{<math.h>} 等），约 150 个函数。每个函数的签名、行为、错误码都被严格定义。
+  \item \textbf{定义"实现定义行为"（implementation-defined）}：标准明确划分了哪些行为是"标准要求的"、哪些是"实现定义的"（编译器必须文档化）、哪些是"未指定的"（unspecified）、哪些是"未定义行为"（UB）。这套分类后来成为所有 C/C++ 标准文档的基础。
+  \item \textbf{拒绝面向对象扩展}：当时 C++ 已经存在，但 X3J11 明确拒绝把 class、继承等概念纳入 C 标准。这个决策让 C 保持了"小语言"的定位，与 C++ 形成清晰的分工。
+  \item \textbf{保留向后兼容性}：所有合法的 K\&R C 程序都应该是合法的 ANSI C 程序（除了一些边缘情况）。这个原则贯穿后续所有 C 标准。
+\end{enumerate}
+
+\section{C89 与 C90：从 ANSI 到 ISO}
+
+\yrlbl{1989} X3J11 完成标准草案，ANSI 正式发布 \textbf{ANSI X3.159-1989}，俗称 \textbf{C89} 或 \textbf{ANSI C}。这是 C 的第一个正式标准。
+
+\yrlbl{1990} ISO/IEC JTC1/SC22 几乎原封不动地采纳了 ANSI X3.159-1989，发布为 \textbf{ISO/IEC 9899:1990}，俗称 \textbf{C90}。两份标准在技术内容上完全相同，仅在编辑格式与少量措辞上有差异。从此"C89"与"C90"成为同一标准的两个名称——美国称 C89，国际称 C90。
+
+\begin{stdbox}
+\textbf{ISO/IEC 9899:1990 的标准结构}
+
+标准分为若干条款（clause），每个条款编号是后续 C 标准都遵循的：
+
+\kw{1} 范围（Scope）；\kw{2} 术语定义（Definitions）；\kw{3} 概念（Concepts）；\kw{4} 符合性（Conformance）；\kw{5} 环境（Environment）；\kw{6} 语言（Language）；\kw{7} 标准库（Standard Library）；\kw{8} 移植性考虑（Portability）。
+
+其中条款 \kw{6} 是语言核心规范，按词法、语法、语义、约束子条款组织。这种"语法 + 约束 + 语义 + 示例"的四段式结构沿用至今。
+\end{stdbox}
+
+\yrlbl{1994-1996} ISO 发布了 \textbf{Amendment 1}（ISO/IEC 9899 AMD1:1995），加入了一些国际化支持（多字节字符、宽字符库 \texttt{<wchar.h>}、\texttt{<wctype.h>}）和小幅修订。这份修订与 C90 合并后通常称为 \textbf{C95} 或 \textbf{C90/Amd1}。
+
+\section{从 C90 到 C99：现代化}
+
+\yrlbl{1999} 在 C90 发布将近十年之后，ISO 终于发布了重大更新版本 \textbf{ISO/IEC 9899:1999}，俗称 \textbf{C99}。C99 的更新内容反映了一个十年间编译器实践与用户需求的积累：
+
+\begin{itemize}
+  \item \textbf{\kw{//} 单行注释}：从 C++ 借来，C90 不允许。
+  \item \textbf{变量声明位置自由化}：C90 要求所有变量必须在块的开头声明，C99 允许在块的任意位置声明。
+  \item \textbf{\kw{inline} 关键字}：标准化了各编译器都有的内联提示。
+  \item \textbf{变长数组（VLA，Variable-Length Array）}：\kw{int a[n];} 其中 \kw{n} 是运行期变量。这是 C99 最具争议的特性，C11 把它降级为"可选"。
+  \item \textbf{复合字面量（compound literals）}：\kw{(int[])\{1,2,3\}}，允许在表达式中创建匿名数组。
+  \item \textbf{指定初始化器（designated initializers）}：\kw{struct Point p = \{.x = 1, .y = 2\};}。
+  \item \textbf{\kw{long long} 类型}：64 位整数，至少 64 位宽。
+  \item \textbf{\kw{\_Bool} 类型}：标准布尔类型（在 \texttt{<stdbool.h>} 中提供 \kw{bool} 宏）。
+  \item \textbf{\kw{\_Complex} 与 \kw{\_Imaginary}}：复数与虚数支持（在 \texttt{<complex.h>} 中）。
+  \item \textbf{\kw{restrict} 指针限定符}：告诉编译器该指针是访问其指向对象的唯一方式，便于优化。
+  \item \textbf{\kw{<stdint.h>} 与 \kw{<inttypes.h>}}：精确宽度的整数类型（\kw{int32\_t}、\kw{uint64\_t} 等）与格式化宏。
+  \item \textbf{\kw{<tgmath.h>}}：泛型数学宏，根据参数类型自动选择 \kw{sin}、\kw{sinf}、\kw{sinl}。
+  \item \textbf{灵活的数组成员（FAM，Flexible Array Member）}：\kw{struct S \{ int n; int data[]; \};} 允许结构体最后一个成员是"零长数组"，与后续分配配合实现变长记录。
+  \item \textbf{\kw{<wchar.h>} 增强}：宽字符 I/O、转换函数。
+\end{itemize}
+
+\clabel\ \begin{lstlisting}[style=cstyle]
+/* C99 新特性示例 */
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+// 单行注释（C99 新增）
+struct Point { int x, y; };
+
+int main(void) {
+    // 变量声明在任意位置（C99 新增）
+    int n = 5;
+
+    // VLA（C99 新增）
+    int dynamic_array[n];
+
+    // 复合字面量（C99 新增）
+    struct Point p1 = (struct Point){ .x = 1, .y = 2 };
+
+    // C99 整数类型
+    int32_t i32 = INT32_MAX;
+    uint64_t u64 = UINT64_C(18446744073709551615);
+
+    // C99 bool
+    bool flag = true;
+
+    printf("%d %jd %ju %d\n", p1.x, (intmax_t)i32, (uintmax_t)u64, flag);
+    return 0;
+}
+\end{lstlisting}
+
+\section{C99 的采用困境}
+
+C99 标准虽然技术上很完整，但实际采用却比预期慢得多。这反映了\textbf{去中心化标准化的一个根本特点}：标准本身只是文档，要让它真正发挥作用，必须依赖编译器实现与库支持。
+
+\begin{itemize}
+  \item \textbf{GCC}：到 GCC 4.5（2010）才完整支持 C99，包括 VLA 与 FAM。
+  \item \textbf{Clang}：从一开始就完整支持 C99（除少量边缘特性）。
+  \item \textbf{Microsoft Visual C++}（MSVC）：长期不支持 C99。MSVC 2013 才开始支持 \texttt{<stdint.h>}，MSVC 2015 才支持 \kw{\_Bool}，VLA 至今不支持。
+  \item \textbf{嵌入式编译器}（IAR、Keil、ARM Compiler）：支持程度参差不齐，许多旧版本只支持 C90。
+\end{itemize}
+
+MSVC 的 C99 支持滞后影响最大。Microsoft 长期把精力投入 C++，C 编译器只是 C++ 编译器的子集——MSVC 的 \kw{cl.exe} 编译 \kw{.c} 文件时使用一个非常老的 C 前端。这种"编译器厂商选择性实现"的现象，正是后面要讨论的\textbf{去中心化治理缺点}的一个具体体现：ISO 发布了标准，但没有任何机制强迫编译器实现。
+
+\chapter{C11 → C23：现代化的延续}
+
+\section{C11：并发与原子}
+
+\yrlbl{2011} ISO/IEC 9899:2011，俗称 \textbf{C11}（最初命名为 C1X，X 是占位符）。C11 的最大特性是把并发与原子操作引入标准 C：
+
+\begin{itemize}
+  \item \textbf{\kw{\_Atomic} 类型限定符}：原子操作语义，标准头文件 \seqkw{<stdatomic.h>} 提供完整接口；与 C++11 的 \seqkw{std::atomic} 共享同一个内存模型。
+  \item \textbf{\kw{\_Thread\_local} 存储类}：线程局部存储（TLS），\texttt{<threads.h>} 提供完整线程库（\kw{thrd\_create}、\kw{mtx\_lock}、\kw{cnd\_wait} 等）。
+  \item \textbf{\kw{\_Generic} 选择器}：编译期类型分发，类似 C++ 的函数重载。
+  \item \textbf{\kw{\_Static\_assert} 与 \kw{\_Alignas} / \kw{\_Alignof}}：从 C++ 借来的编译期断言与对齐控制。
+  \item \textbf{\kw{\_Noreturn} 函数限定符}：标记永不返回的函数（如 \kw{exit}）。
+  \item \textbf{边界检查接口}：Annex K 定义了一组 \seqkw{\_s} 后缀的安全版函数，如 \seqkw{strcpy\_s} 与 \seqkw{sprintf\_s}，但实现极少，C23 已建议废弃。
+  \item \textbf{匿名结构体/联合成员}：\kw{struct \{ union \{ int i; float f; \}; \};} 允许内部 union 没有名字。
+  \item \textbf{VLA 降级为可选}：C99 把 VLA 列为强制特性，但实际编译器（特别是 MSVC）支持差，C11 把 VLA 改为"可选实现"。
+  \item \textbf{\kw{<uchar.h>}}：UTF-16（\kw{char16\_t}）与 UTF-32（\kw{char32\_t}）支持。
+\end{itemize}
+
+\clabel\ \begin{lstlisting}[style=cstyle]
+/* C11 示例：原子操作与泛型选择器 */
+#include <stdatomic.h>
+#include <stdio.h>
+#include <threads.h>
+
+_Atomic int counter = 0;
+
+int increment(void* arg) {
+    (void)arg;
+    for (int i = 0; i < 1000; ++i) {
+        atomic_fetch_add(&counter, 1);  /* 原子递增 */
+    }
+    return 0;
+}
+
+/* _Generic：编译期类型分发 */
+#define print_value(x) _Generic((x), \
+    int:    printf("%d\n", x),       \
+    double: printf("%f\n", x),       \
+    char*:  printf("%s\n", x),       \
+    default: printf("unknown\n"))
+
+int main(void) {
+    thrd_t t1, t2;
+    thrd_create(&t1, increment, NULL);
+    thrd_create(&t2, increment, NULL);
+    thrd_join(t1, NULL);
+    thrd_join(t2, NULL);
+
+    print_value(42);          /* 走 int 分支 */
+    print_value(3.14);        /* 走 double 分支 */
+    print_value("hello");     /* 走 char* 分支 */
+
+    printf("counter = %d\n", atomic_load(&counter));
+    return 0;
+}
+\end{lstlisting}
+
+\section{C17：纯修订版}
+
+\yrlbl{2018} ISO/IEC 9899:2018，俗称 \textbf{C17}（也叫 C18）。C17 没有引入任何新特性——它只是 C11 的\textbf{缺陷修订版}（defect report fixes）。这种"零特性修订"在 C 历史上是第一次，体现了委员会对稳定性的重视。
+
+\section{C23：与 C++ 的同步}
+
+\yrlbl{2024} ISO/IEC 9899:2024，俗称 \textbf{C23}（也叫 C2X）。C23 是 C11 之后最重要的更新，引入了一系列与 C++ 同步的特性：
+
+\begin{itemize}
+  \item \textbf{\kw{bool}、\kw{true}、\kw{false} 成为关键字}：C99 通过 \texttt{<stdbool.h>} 提供宏，C23 直接成为语言内置（与 C++23 同步）。
+  \item \textbf{\kw{nullptr} 关键字}：与 C++11 的 \kw{nullptr} 一致，是类型安全的空指针常量。
+  \item \textbf{\kw{typeof} 与 \kw{typeof\_unqual}}：类型推导（GCC 长期作为扩展提供，C23 标准化）。
+  \item \textbf{\kw{constexpr}}：编译期常量表达式（与 C++ 同名同义）。
+  \item \textbf{属性语法 \kw{[[...]]}}：与 C++11 的 \kw{[[...]]} 一致，C23 采纳 \kw{[[deprecated]]}、\kw{[[fallthrough]]}、\kw{[[maybe\_unused]]}、\kw{[[nodiscard]]}、\kw{[[noreturn]]} 等。
+  \item \textbf{\kw{auto} 关键字语义变化}：C 早期的 \kw{auto} 表示"自动存储期"（即局部变量，默认就是），C23 把 \kw{auto} 重定义为类型推导（与 C++ 一致），原"自动存储期"语义被取消。
+  \item \textbf{二进制字面量 \kw{0b1010}}：与 C++14 同步。
+  \item \textbf{\kw{\_Decimal32} / \kw{\_Decimal64} / \kw{\_Decimal128}}：十进制浮点（IEC 60559 标准），用于金融计算。
+  \item \textbf{\kw{<stdbit.h>}}：位操作工具（\kw{stdc\_count\_ones}、\kw{stdc\_leading\_zeros} 等）。
+  \item \textbf{\kw{<stdckdint.h>}}：溢出检查的算术运算（\kw{ckd\_add}、\kw{ckd\_sub}、\kw{ckd\_mul}）。
+  \item \textbf{函数定义中可省略 \kw{void} 参数}：\kw{int main() \{\}} 现在等价于 \kw{int main(void) \{\}}（与 C++ 一致）。
+  \item \textbf{移除若干废弃特性}：\kw{gets()} 函数（早已被认为不安全）、\kw{<tgmath.h>} 部分宏、Annex K 的"\_s"接口被标记为废弃。
+  \item \textbf{预定义宏 \seqkw{\_\_STDC\_VERSION\_\_} = \seqkw{202311L}}。
+\end{itemize}
+
+\clabel\ \begin{lstlisting}[style=cstyle]
+/* C23 示例：与 C++ 同步的关键字 */
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {                     /* 等价于 int main(void) */
+    bool flag = true;            /* bool 是关键字（C23） */
+    int* p = nullptr;            /* nullptr 是关键字（C23） */
+
+    /* auto 类型推导（C23） */
+    auto x = 3.14;               /* x 是 double */
+    auto y = 42;                 /* y 是 int */
+
+    /* typeof 类型推导（C23） */
+    typeof(x) z = x * 2;         /* z 是 double */
+
+    /* constexpr 编译期常量（C23） */
+    constexpr int N = 10;
+
+    /* 属性语法（C23） */
+    [[maybe_unused]] int unused_var = 0;
+    [[deprecated("use new_func instead")]] void old_func(void);
+
+    /* 二进制字面量（C23） */
+    int mask = 0b1010;
+
+    printf("%d %g %d %d\n", flag, x, y, mask);
+    return 0;
+}
+\end{lstlisting}
+
+\begin{compare}
+\textbf{C 与 C++ 的同步：C23 案例}
+
+C23 是历史上第一次 C 标准明显向 C++ "看齐"：\kw{bool}、\kw{nullptr}、\kw{constexpr}、\kw{[[...]]} 属性、\kw{auto} 类型推导、\kw{typeof} 都直接来自 C++。
+
+但同步并非完全——C23 没有引入 C++ 的类、模板、引用、运算符重载、命名空间、异常等核心特性。C 委员会（WG14）与 C++ 委员会（WG21）保持着"协作但独立"的关系：WG21 的某些提案（如 \kw{<bit>}、\kw{<source\_location>}）会先在 WG14 讨论是否有 C 版本；反之 C23 的 \kw{typeof} 也影响了 C++23 的 \kw{typeof}（虽然 C++ 已经有 \kw{decltype}）。
+
+这种"两个独立委员会、同一组织、定期沟通"的模式是 ISO/IEC SC22 治理结构的特征之一，后面会详细讨论。
+\end{compare}
+
+% ====================================================================
+\part{C++ 的诞生与标准化}
+% ====================================================================
+
+\chapter{C with Classes：1979-1983}
+
+\section{Stroustrup 的 Simula 经验}
+
+\yrlbl{1975} Bjarne Stroustrup 是丹麦人，在剑桥大学（University of Cambridge）取得博士学位。他的博士研究是分布式系统的模拟，使用了挪威开发的 \textbf{Simula 67}——第一门面向对象语言。Simula 的 \kw{class} 与继承机制让 Stroustrup 印象深刻，能在语言层面清晰表达"模拟实体之间的关系"。
+
+但 Simula 的实现太慢——Simula 编译生成的代码效率不足以处理大规模模拟。Stroustrup 的博士论文不得不退回用 BCPL/C 来写关键部分，丢失了 Simula 的语义优雅。
+
+\yrlbl{1979} Stroustrup 回到 Bell Labs，加入了 Thompson 与 Ritchie 的 UNIX 团队。他面临一个具体问题：UNIX 内核的分布式模拟需要同时具备 Simula 的类组织能力和 C 的执行效率。于是他启动了"\textbf{C with Classes}"项目——在 C 的基础上加入 Simula 风格的类机制。
+
+\begin{historybox}
+\textbf{为什么选 C 作为基础}
+
+Stroustrup 后来解释过这个决策的几条原因：
+
+(1) \textbf{性能}：C 是为系统编程设计的，没有运行期开销。
+
+(2) \textbf{可移植性}：C 已经被移植到十几种机器上，C with Classes 也能跟着移植。
+
+(3) \textbf{灵活性}：C 信任程序员，允许做"危险"的操作（指针算术、类型转换），这正适合系统编程。
+
+(4) \textbf{与 UNIX 共生}：C 是 UNIX 的语言，Bell Labs 的所有系统软件都是 C 写的，C with Classes 可以直接集成。
+
+(5) \textbf{没有更好的选择}：当时 BCPL 已经过时，Pascal 不适合系统编程（没有指针算术、没有底层访问），Algol 68 太复杂，Ada 还没出现。
+
+这个决策的代价是：C with Classes 必须保留 C 的全部"危险特性"，包括无边界检查的数组、隐式类型转换、宏等。后来 C++ 一直被批评为"过于复杂"，根源就在这里。
+\end{historybox}
+
+\section{Cfront 与第一批特性}
+
+\yrlbl{1979-1983} Stroustrup 实现了一个名为 \textbf{Cfront}（"C front"，意为"C 的前端"）的预处理器，把 C with Classes 的源码\textbf{翻译}成普通 C 代码，再用 C 编译器编译。这种"翻译到 C"的策略让 Cfront 能快速移植到任何有 C 编译器的平台。
+
+C with Classes 的初版特性：
+
+\begin{itemize}
+  \item \textbf{\kw{class} 关键字}：封装数据与函数。
+  \item \textbf{构造函数与析构函数}：自动初始化与清理。
+  \item \textbf{继承（public/private）}：单继承，支持访问控制。
+  \item \textbf{成员函数与访问修饰符}：\kw{public}、\kw{private}（\kw{protected} 后来加入）。
+  \item \textbf{强类型检查}：相比 K\&R C，函数声明强制原型。
+  \item \textbf{函数原型}：直接借用了 Stroustrup 之前在 Simula 中学到的概念，并影响 ANSI C 委员会采纳。
+\end{itemize}
+
+\cpplabel\ \begin{lstlisting}
+/* C with Classes 风格代码（1980 年前后） */
+class Stack {
+    int data[100];
+    int top;
+public:
+    Stack() { top = 0; }
+    void push(int x) { data[top++] = x; }
+    int pop() { return data[--top]; }
+};
+
+class BoundedStack : Stack {     /* 继承（早期语法，无冒号） */
+    int max_size;
+public:
+    void push(int x) {
+        if (top < max_size) Stack::push(x);
+    }
+};
+\end{lstlisting}
+
+\section{命名与第一批用户}
+
+\yrlbl{1983} C with Classes 在 Bell Labs 内部已有约 50 名用户，分布在操作系统、网络协议、数据库等多个项目。Stroustrup 决定给这门语言一个更短、更"市场友好"的名字。候选包括"New C"、"C+++"、"C83"等，最终选定 \textbf{C++}——意为"C 的下一个版本"，与 C 的命名传统一致（B → C 也是按字母顺序）。
+
+\yrlbl{1983} 同年，C++ 加入了若干关键特性：
+
+\begin{itemize}
+  \item \textbf{虚函数（virtual functions）}：支持运行期多态，这是面向对象的核心机制。
+  \item \textbf{运算符重载}：\kw{operator+}、\kw{operator=} 等，让自定义类型能像内置类型一样使用。
+  \item \textbf{引用（references）}：\kw{int\& r = x;}，避免显式指针的语法噪音。
+  \item \textbf{\kw{const}}：与 C 的 \kw{const} 兼容，但语义更严格（C++ 的 \kw{const} 默认有内部链接性，C 默认有外部链接性）。
+\end{itemize}
+
+虚函数的加入标志着 C++ 从"带类的 C"真正变成了"面向对象语言"。在此之前，C++ 的多态只能通过函数指针手动实现。
+
+\chapter{CFront 与 C++ 的商业化：1983-1989}
+
+\section{AT\&T 发布 CFront 1.0}
+
+\yrlbl{1985} AT\&T（Bell Labs 的母公司）正式向公众发布 \textbf{CFront 1.0}——C++ 的第一个商业编译器。同时 Stroustrup 出版了 \textbf{《The C++ Programming Language}》第一版（俗称 TC++PL）。这两件事标志着 C++ 从 Bell Labs 内部工具变成了公开语言。
+
+CFront 1.0 的实现策略：
+
+\begin{itemize}
+  \item 把 C++ 源码翻译为 C 源码，然后用任何符合 K\&R C 的编译器编译。
+  \item 翻译过程包括：类 → 结构体 + 函数；虚函数 → 虚函数表（vtable）；运算符重载 → 命名函数。
+  \item 这种策略让 CFront 能快速移植——只需要目标平台有 C 编译器，CFront 就能工作。
+\end{itemize}
+
+CFront 的源码以"非独家许可"的方式授权给数十家公司。1985-1990 年间，市场上出现了大量基于 CFront 的 C++ 编译器：Microsoft C++ 1.0、Borland Turbo C++、Zortech C++、Symantec C++ 等。
+
+\section{TC++PL 与 ARM}
+
+\yrlbl{1985} TC++PL 第一版出版，迅速成为 C++ 程序员的标准参考。这本书与 K\&R 类似，事实上定义了 C++ 的语言规范——在 1998 年 ISO C++ 发布之前，TC++PL 是 C++ 行为的权威说明。
+
+\yrlbl{1990} Margaret Ellis 与 Stroustrup 合著的 \textbf{《The Annotated C++ Reference Manual}》（俗称 \textbf{ARM}，Annotated Reference Manual）出版。ARM 详细描述了 C++ 2.1 版本的语法、语义、约束，并为每个规则附上"为什么这样设计"的注释。ARM 后来成为 ANSI/ISO C++ 委员会的起点参考文档。
+
+\section{1989 年的关键提案：模板与异常}
+
+\yrlbl{1989} Stroustrup 在 USENIX C++ 大会上提交了一份里程碑式的提案 \textbf{《Parameterized Types for C++}》，提议给 C++ 加入\textbf{模板}（templates）——一种编译期泛型机制。这份提案引发了长达两年的讨论：
+
+\begin{itemize}
+  \item 模板的核心想法是\textbf{编译期代码生成}：写一份代码，编译器为不同类型生成多份。
+  \item 反对意见：模板会大幅膨胀编译产物（"code bloat"），让二进制变大、编译变慢。
+  \item 支持意见：没有模板就无法实现类型安全的容器。考虑 \seqkw{vector<int>}：它和 \seqkw{vector<double>} 必须各自生成独立代码，无法共用一份实现。
+\end{itemize}
+
+\yrlbl{1990} 模板被 C++ 2.0 接受。同年加入的还有\textbf{异常处理}（\kw{try}、\kw{catch}、\kw{throw}）与\textbf{运行期类型识别}（RTTI，\kw{dynamic\_cast}、\kw{typeid}）。这三个特性——模板、异常、RTTI——共同构成了 C++ "现代风格"的基础。
+
+C++ 2.0 的其他关键特性：
+
+\begin{itemize}
+  \item \textbf{多重继承}（multiple inheritance）：允许一个类继承自多个基类。
+  \item \textbf{抽象类}（abstract classes）与\textbf{纯虚函数}（\kw{virtual ... = 0}）。
+  \item \textbf{\kw{protected} 访问修饰符}。
+  \item \textbf{成员指针}（pointer to member）。
+  \item \textbf{命名空间}（namespace）的早期形式。
+\end{itemize}
+
+\cpplabel\ \begin{lstlisting}
+/* C++ 2.0 风格（1989-1991）：模板 + 异常 + 多重继承 */
+template <class T>           /* 早期模板语法用 class，不用 typename */
+class Vector {
+    T* data;
+    int size;
+public:
+    Vector(int n) : data(new T[n]), size(n) {}
+    ~Vector() { delete[] data; }
+    T& operator[](int i) {
+        if (i < 0 || i >= size) throw "out of range";   /* 异常 */
+        return data[i];
+    }
+};
+
+class Shape {
+public:
+    virtual void draw() = 0;        /* 纯虚函数 */
+};
+
+class Drawable {
+public:
+    virtual bool canDraw() { return true; }
+};
+
+class Circle : public Shape, public Drawable {  /* 多重继承 */
+public:
+    void draw() override { /* ... */ }
+};
+\end{lstlisting}
+
+\section{编译器市场的爆发}
+
+\yrlbl{1985-1991} C++ 商业化期间，市场上涌现了多家 C++ 编译器：
+
+\begin{itemize}
+  \item \textbf{Microsoft C/C++}（1985-）：MS-DOS、Windows 平台的主流编译器。
+  \item \textbf{Borland Turbo C++}（1990-）：以快速编译、集成 IDE、低价著称，对 PC 编程教学影响巨大。
+  \item \textbf{Zortech C++}（1988-）：第一家发布"原生 C++ 编译器"（不通过 CFront 翻译到 C）的厂商。
+  \item \textbf{Symantec C++}（1989-）：收购 Zortech 后改名。
+  \item \textbf{Sun C++}（1988-）：SPARC/Solaris 平台。
+  \item \textbf{HP aC++}（1990-）：HP-UX 平台。
+  \item \textbf{IBM C++/System}（1991-）：AIX、OS/2 平台。
+\end{itemize}
+
+不同编译器之间的差异比 C 时代更严重——C++ 没有事实标准，每家公司都按自己对 ARM 的理解实现。同一个 C++ 程序在 Microsoft、Borland、Sun 上行为不同是常态。这种碎片化是 ANSI/ISO 立项 C++ 标准化的直接动因。
+
+\chapter{C++98 / C++03：第一次国际标准}
+
+\section{ANSI/ISO C++ 委员会成立}
+
+\yrlbl{1991} ANSI 成立了 \textbf{X3J16 委员会}（C 是 X3J11，C++ 是 X3J16），负责 C++ 标准化。
+
+\yrlbl{1993} ISO/IEC JTC1/SC22 成立了 \textbf{WG21}（Working Group 21），专门负责 C++ 国际标准。WG21 与 X3J16 合并工作——同一组人、同一个会议、同一份邮件列表，但产出两份标准（ANSI 与 ISO）。这种"ANSI/ISO 联合委员会"模式后来被许多编程语言效仿。
+
+WG21 的工作量极大：
+
+\begin{itemize}
+  \item 需要把 ARM 中模糊的语言定义转为精确的标准措辞。
+  \item 需要协调编译器厂商之间已经存在的实现差异。
+  \item 需要设计一个\textbf{标准库}——C++ 之前没有官方标准库，只有 AT\&T 的 \kw{libg++}、各厂商各自的库。
+\end{itemize}
+
+\section{STL 的纳入}
+
+\yrlbl{1994} Alexander Stepanov（HP 实验室）与 Meng Lee 提出了 \textbf{STL}（Standard Template Library，标准模板库）的设计。STL 的核心思想：
+
+\begin{itemize}
+  \item \textbf{容器}（containers）：\kw{vector}、\kw{list}、\kw{deque}、\kw{map}、\kw{set} 等。
+  \item \textbf{迭代器}（iterators）：统一的访问接口，让算法不依赖具体容器。
+  \item \textbf{算法}（algorithms）：\kw{sort}、\kw{find}、\kw{copy}、\kw{transform} 等通用算法。
+  \item \textbf{函数对象}（functors）与\textbf{适配器}（adaptors）：可组合的函数式编程工具。
+  \item \textbf{分配器}（allocators）：抽象内存分配策略。
+\end{itemize}
+
+STL 是 C++ 模板编程的集大成者——它证明了"通用容器 + 通用算法 + 通用迭代器"可以用模板优雅实现，没有性能损失。
+
+\yrlbl{1994} WG21 投票决定把 STL 纳入 C++ 标准库。这是 C++ 标准化过程中最大的单一决策——它让标准库从一个"基础工具集合"变成了一个"通用编程范式"。
+
+\section{C++98 发布}
+
+\yrlbl{1998} ISO/IEC 14882:1998 发布，俗称 \textbf{C++98}。这是 C++ 的第一个国际标准，也是当时\textbf{最大的编程语言标准}——800 多页，远超 C90（约 200 页）。
+
+C++98 的关键内容：
+
+\begin{itemize}
+  \item \textbf{语言核心}：基于 ARM，但加入了若干新特性与澄清：
+    \begin{itemize}
+      \item \kw{typename} 关键字（用于模板中区分类型与变量）。
+      \item \kw{bool} 类型（独立于 \kw{int}）。
+      \item \kw{explicit} 构造函数（防止隐式转换）。
+      \item \kw{mutable} 成员（在 \kw{const} 方法中可修改）。
+      \item \kw{static\_cast}、\kw{dynamic\_cast}、\kw{const\_cast}、\kw{reinterpret\_cast}（四种命名的转换运算符，替代 C 风格的强制转换）。
+      \item \kw{true} 与 \kw{false} 字面量。
+      \item 模板特化（template specialization）。
+      \item 命名空间（namespace）正式标准化。
+    \end{itemize}
+  \item \textbf{标准库}：以 STL 为核心，加入了 I/O 流（\texttt{<iostream>}）、字符串（\texttt{<string>}）、数值（\texttt{<complex>}、\texttt{<valarray>}）、本地化（\texttt{<locale>}）、异常（\texttt{<exception>}、\texttt{<stdexcept>}）、诊断（\texttt{<cassert>}）、C 运行时兼容（\texttt{<cstdio>} 等）。
+  \item \textbf{没有线程库}：C++98 标准库不包含线程支持，依赖 POSIX 或平台特定 API。这个缺失直到 C++11 才补上。
+\end{itemize}
+
+\section{C++03：技术勘误版}
+
+\yrlbl{2003} ISO/IEC 14882:2003，俗称 \textbf{C++03}。与 C17 类似，C++03 是 C++98 的\textbf{缺陷修订版}（Technical Corrigendum 1），没有引入新特性。主要修复了 C++98 标准文本中约 200 处歧义、错误描述与不一致。
+
+C++98/C++03 通常合称为 \textbf{C++98/03}，代表"C++11 之前的传统 C++"。
+
+\section{委员会休眠期与 C++0x 项目}
+
+\yrlbl{2003-2011} C++03 发布后，WG21 进入了一段相对缓慢的时期。委员会开始规划下一个重大版本——\textbf{C++0x}（x 是占位符，原本预期 200X 年发布，最终拖到 2011）。
+
+C++0x 项目期间，委员会做了大量准备工作：
+
+\begin{itemize}
+  \item 收集编译器实现中的常见问题（Defect Reports）。
+  \item 讨论语言演化方向（向后兼容 vs 新特性）。
+  \item 评估各类提案的影响范围。
+  \item 与编译器厂商协调实验性实现。
+\end{itemize}
+
+这段"休眠期"也暴露了去中心化标准化的一个特点：\textbf{没有外部压力时，委员会容易陷入冗长讨论}。C++0x 期间有大量提案被反复讨论数年，最终因共识不足被否决（如 Concepts 第一版、Garbage Collection 支持、Modules 早期版本）。这种"慢"既是优点（避免草率决策）也是缺点（无法快速响应社区需求）。
+
+\chapter{现代 C++：从 C++11 到 C++26}
+
+\section{C++11：一门新语言}
+
+\yrlbl{2011} ISO/IEC 14882:2011 发布，俗称 \textbf{C++11}（也叫 C++0x）。这是 C++ 历史上最大的一次更新，Stroustrup 称之为"\textbf{一门新语言}"——如此多的新特性让 C++11 与 C++98 看起来像两种语言。
+
+C++11 的核心特性按类别归纳：
+
+\begin{itemize}
+  \item \textbf{移动语义与右值引用}：\kw{int\&\& r} 与 \kw{std::move}，解决长期困扰 C++ 的"复制开销"问题。让 \kw{std::vector} 等容器在重新分配时能"移动"而非"复制"。
+  \item \textbf{\kw{auto} 类型推导}：\kw{auto x = expr;} 让编译器推导类型，减少冗长声明。
+  \item \textbf{\kw{decltype}}：获取表达式的类型，用于模板元编程。
+  \item \textbf{Lambda 表达式}：\kw{[](int x) \{ return x * 2; \}}，闭包函数。
+  \item \textbf{\kw{nullptr}}：类型安全的空指针，替代 \kw{NULL} 与字面量 \kw{0}。
+  \item \textbf{智能指针}：\kw{std::unique\_ptr}、\kw{std::shared\_ptr}、\kw{std::weak\_ptr}，引入 RAII 风格的内存管理。
+  \item \textbf{\kw{constexpr}}：编译期函数与对象，让 C++ 能做编译期计算。
+  \item \textbf{\kw{enum class}}：强类型枚举，避免传统 \kw{enum} 的隐式转换问题。
+  \item \textbf{范围 \kw{for}}：\kw{for (auto\& x : container)}。
+  \item \textbf{变参模板}：\kw{template<typename... Args>}，支持任意数量模板参数。
+  \item \textbf{初始化列表}：\kw{std::vector<int> v = \{1, 2, 3\};}，\kw{std::initializer\_list}。
+  \item \textbf{委托构造、继承构造、\kw{override} / \kw{final}}。
+  \item \textbf{\kw{noexcept}}：异常规范，让编译器优化无异常路径。
+  \item \textbf{\kw{static\_assert}}：编译期断言。
+  \item \textbf{\kw{thread\_local}}：线程局部存储。
+  \item \textbf{标准库新增}：\texttt{<thread>}、\texttt{<mutex>}、\texttt{<atomic>}、\texttt{<future>}、\texttt{<condition\_variable>}（首次有线程支持）、\texttt{<chrono>}（时间库）、\texttt{<tuple>}、\texttt{<array>}、\texttt{<unordered\_map>}、\texttt{<unordered\_set>}、\texttt{<random>}、\texttt{<regex>}、\texttt{<system\_error>}。
+\end{itemize}
+
+\cppxxlabel{C++11}\ \begin{lstlisting}
+/* C++11 风格代码示例 */
+#include <vector>
+#include <memory>
+#include <thread>
+#include <mutex>
+#include <chrono>
+#include <algorithm>
+
+std::mutex m;
+std::vector<int> shared_data;
+
+void worker(int id) {
+    auto data = std::make_unique<int>(id * 10);   // 智能指针 + auto
+    std::lock_guard<std::mutex> lock(m);          // RAII 锁
+    shared_data.push_back(*data);                 // 移动语义自动启用
+}
+
+int main() {
+    std::vector<std::thread> threads;
+    for (int i = 0; i < 4; ++i) {
+        threads.emplace_back(worker, i);          // emplace + lambda 风格
+    }
+    for (auto& t : threads) t.join();             // 范围 for
+
+    // Lambda + STL 算法
+    std::sort(shared_data.begin(), shared_data.end(),
+              [](int a, int b) { return a > b; });
+
+    // constexpr 编译期计算
+    constexpr int squared = [](int x) constexpr { return x * x; }(5);
+    static_assert(squared == 25, "compile-time check");
+
+    // chrono 时间库
+    auto start = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::steady_clock::now() - start;
+    return 0;
+}
+\end{lstlisting}
+
+\section{C++14：小修订}
+
+\yrlbl{2014} ISO/IEC 14882:2014，俗称 \textbf{C++14}。C++14 是 C++11 的小修订版，主要新增：
+
+\begin{itemize}
+  \item \textbf{泛型 lambda}：\kw{[](auto x) \{ return x * 2; \}}，lambda 参数可用 \kw{auto}。
+  \item \textbf{函数返回类型推导}：\kw{auto f() \{ return 42; \}}，函数返回类型可用 \kw{auto} 或 \kw{decltype(auto)}。
+  \item \textbf{变量模板}：\kw{template<typename T> constexpr T pi = T(3.14159);}。
+  \item \textbf{放松的 \kw{constexpr}}：C++11 的 \kw{constexpr} 函数只能有一条返回语句，C++14 允许循环、分支、局部变量。
+  \item \textbf{二进制字面量}：\kw{0b1010}。
+  \item \textbf{数字分隔符}：\kw{1'000'000}。
+  \item \textbf{\kw{std::make\_unique}}：补齐 C++11 的 \kw{make\_shared} 缺失。
+  \item \textbf{\kw{[[deprecated]]} 属性}：标记废弃接口。
+\end{itemize}
+
+\section{C++17：实用主义更新}
+
+\yrlbl{2017} ISO/IEC 14882:2017，俗称 \textbf{C++17}。C++17 是"实用主义"的更新，引入了大量日常编程便利特性：
+
+\begin{itemize}
+  \item \textbf{结构化绑定}：\kw{auto [x, y, z] = tuple;}，解构 tuple、pair、struct、array。
+  \item \textbf{\kw{if constexpr}}：编译期分支，让模板代码更清晰。
+  \item \textbf{\kw{if}/\kw{switch} 初始化语句}：\kw{if (auto it = m.find(k); it != m.end()) \{...\}}。
+  \item \textbf{折叠表达式}：\kw{(args + ...)}，简化变参模板。
+  \item \textbf{类模板参数推导}（CTAD）：\kw{std::pair p(1, 2.0);} 不需要写 \kw{<int, double>}。
+  \item \textbf{内联变量}：\kw{inline int x = 0;} 可以在头文件中定义而不引起多重定义错误。
+  \item \textbf{嵌套命名空间}：\kw{namespace A::B::C \{\}}。
+  \item \textbf{\kw{[[nodiscard]]}、\kw{[[maybe\_unused]]}、\kw{[[fallthrough]]} 属性}。
+  \item \textbf{标准库新增}：
+    \begin{itemize}
+      \item \kw{std::optional}、\kw{std::variant}、\kw{std::any}（"vocabulary types"）。
+      \item \kw{std::string\_view}（非拥有的字符串视图）。
+      \item \kw{std::filesystem}（文件系统库，从 Boost.Filesystem 移植）。
+      \item \kw{std::invoke}、\kw{std::apply}。
+      \item 并行算法：\kw{std::execution::par}、\kw{std::execution::seq}（执行策略）。
+    \end{itemize}
+  \item \textbf{移除}：\kw{std::auto\_ptr}（被 \kw{unique\_ptr} 替代）、\kw{std::random\_shuffle}、\kw{throw()} 动态异常规范（被 \kw{noexcept} 替代）、三元运算符注册字符（\kw{??=} 等）。
+\end{itemize}
+
+\cppxxlabel{C++17}\ \begin{lstlisting}
+/* C++17 风格代码示例 */
+#include <optional>
+#include <variant>
+#include <string_view>
+#include <filesystem>
+#include <vector>
+#include <map>
+
+struct Point { int x, y; };
+
+std::optional<int> find_value(const std::map<std::string, int>& m,
+                              std::string_view key) {
+    if (auto it = m.find(std::string(key)); it != m.end()) {
+        return it->second;            // 返回 optional
+    }
+    return std::nullopt;
+}
+
+template <typename T>
+constexpr T square(T x) {
+    if constexpr (std::is_integral_v<T>) {     // 编译期分支
+        return x * x;
+    } else {
+        return x * x;
+    }
+}
+
+int main() {
+    std::map<std::string, int> ages{{"Alice", 30}, {"Bob", 25}};
+
+    // 结构化绑定 + optional
+    if (auto age = find_value(ages, "Alice")) {
+        std::cout << "Alice is " << *age << "\n";
+    }
+
+    // 结构化绑定遍历 map
+    for (const auto& [name, age] : ages) {
+        std::cout << name << ": " << age << "\n";
+    }
+
+    // filesystem
+    namespace fs = std::filesystem;
+    for (const auto& entry : fs::directory_iterator(".")) {
+        std::cout << entry.path() << "\n";
+    }
+
+    // variant
+    std::variant<int, double, std::string> v = "hello";
+    std::visit([](auto&& arg) { std::cout << arg << "\n"; }, v);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{C++20：另一次革命}
+
+\yrlbl{2020} ISO/IEC 14882:2020，俗称 \textbf{C++20}。C++20 是 C++11 之后最大的一次更新，引入了四项"重型特性"，被合称为\textbf{C++20 四巨头}：
+
+\begin{itemize}
+  \item \textbf{Concepts}（概念）：\kw{template<typename T> requires Sortable<T>}，对模板参数的具名约束，替代 SFINAE 技巧。
+  \item \textbf{Ranges}（范围）：\kw{views::filter}、\kw{views::transform}、\kw{views::take}，可组合的惰性视图，重塑 STL 算法。
+  \item \textbf{Coroutines}（协程）：\kw{co\_await}、\kw{co\_yield}、\kw{co\_return}，语言层面的协程支持。
+  \item \textbf{Modules}（模块）：\kw{import}、\kw{export}，替代头文件，编译模型根本变化。
+\end{itemize}
+
+C++20 的其他重要特性：
+
+\begin{itemize}
+  \item \textbf{Lambda 改进}：可捕获 \kw{*this}，支持模板参数。
+  \item \textbf{\kw{consteval}}：强制编译期求值的函数（"立即函数"）。
+  \item \textbf{\kw{constinit}}：强制静态变量编译期初始化。
+  \item \textbf{三路比较 \kw{<=>}}：宇宙飞船运算符，一次性定义全部比较。
+  \item \textbf{\kw{std::span}}：非拥有的连续序列视图。
+  \item \textbf{\kw{std::format}}：类型安全的格式化（来自 Python/Rust 风格）。
+  \item \textbf{\kw{std::jthread}}：自动 join 的线程。
+  \item \textbf{\kw{std::stop\_token}}：协作式线程取消。
+  \item \textbf{\kw{std::atomic} 增强}：\kw{atomic<shared\_ptr>}、\kw{atomic\_ref}、\kw{wait/notify}。
+  \item \textbf{\kw{std::bit\_cast}}：类型双关（type punning）的标准方式。
+  \item \textbf{\kw{<numbers>} 头文件}：\kw{std::numbers::pi} 等数学常量。
+  \item \textbf{\kw{<source\_location>}}：替代 \kw{\_\_FILE\_\_}、\kw{\_\_LINE\_\_}。
+  \item \textbf{\kw{<syncstream>}}：线程安全的输出流。
+  \item \textbf{\kw{[[likely]]} / \kw{[[unlikely]]} 属性}：分支预测提示。
+  \item \textbf{\kw{[[no\_unique\_address]]}}：空成员优化。
+  \item \textbf{指定初始化器}：\kw{Point p\{.x = 1, .y = 2\};}（与 C99 同步）。
+  \item \textbf{基于范围的 \kw{for} 改进}：\kw{for (init; auto\& x : container)}。
+  \item \textbf{\kw{char8\_t} 类型}：UTF-8 字符的独立类型。
+\end{itemize}
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+/* C++20 风格代码示例 */
+#include <concepts>
+#include <ranges>
+#include <vector>
+#include <format>
+#include <coroutine>
+
+// Concepts：约束模板参数
+template <typename T>
+concept Numeric = std::integral<T> || std::floating_point<T>;
+
+template <Numeric T>
+T add(T a, T b) { return a + b; }
+
+// Ranges：可组合视图
+void process(const std::vector<int>& data) {
+    auto view = data
+        | std::views::filter([](int x) { return x % 2 == 0; })
+        | std::views::transform([](int x) { return x * x; })
+        | std::views::take(5);
+
+    for (int x : view) {
+        std::print("{}\n", x);    // C++23 的 std::print
+    }
+}
+
+// 三路比较
+struct Version {
+    int major, minor, patch;
+    auto operator<=>(const Version&) const = default;
+};
+
+// Coroutines（生成器风格）
+struct Generator {
+    struct promise_type { /* ... */ };
+    // 简化示意，完整实现需要 promise_type 与 iterator
+};
+
+Generator sequence() {
+    for (int i = 0; i < 10; ++i) {
+        co_yield i * i;
+    }
+}
+
+int main() {
+    auto result = add(1, 2);            // OK：int 满足 Numeric
+    // auto bad = add(std::string("a"), std::string("b"));  // 编译错误
+
+    Version v1{1, 2, 3}, v2{1, 3, 0};
+    bool less = v1 < v2;                // 自动从 <=> 生成 < <= > >= == !=
+
+    std::vector<int> data{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    process(data);
+
+    return 0;
+}
+\end{lstlisting}
+
+\section{C++23：完善与同步}
+
+\yrlbl{2023} ISO/IEC 14882:2023 发布，俗称 \textbf{C++23}。C++23 是 C++20 之后的完善版本，引入若干重要特性：
+
+\begin{itemize}
+  \item \textbf{\kw{std::print} 与 \kw{std::println}}：格式化输出（来自 \kw{std::format}）。
+  \item \textbf{\kw{std::mdspan}}：多维数组视图（科学计算）。
+  \item \textbf{\kw{std::expected<T, E>}}：错误处理的替代方案。
+  \item \textbf{\kw{std::flat\_map}、\kw{std::flat\_set}}：基于排序数组的关联容器。
+  \item \textbf{\kw{std::generator}}：协程生成器的标准实现。
+  \item \textbf{\kw{std::stacktrace}}：栈追踪。
+  \item \textbf{\kw{if consteval}}：编译期分支判断。
+  \item \textbf{\kw{static operator()} 与 \kw{static operator[]}}：无捕获 lambda 优化。
+  \item \textbf{\kw{deducing this}（P0847R7）}：成员函数的 \kw{this} 参数显式化，统一处理 const/非 const/左值/右值。
+  \item \textbf{\kw{std::to\_underlying}}：枚举转底层类型。
+  \item \textbf{多维下标 \kw{operator[]}}：\kw{a[i, j, k]}。
+  \item \textbf{\kw{<stdbit.h>}}：位操作工具。
+  \item \textbf{\kw{<latch>}、\kw{<barrier>}、\kw{<semaphore>}}：并发原语补全。
+  \item \textbf{\kw{std::atomic<T>::wait} / \kw{notify}}：原子等待。
+  \item \textbf{\kw{<span>} 增强}：\kw{std::subspan}。
+  \item \textbf{移除}：\kw{std::experimental::} 命名空间下的部分组件。
+\end{itemize}
+
+\section{C++26：未来方向}
+
+\yrlbl{2026} C++26 预计在 2026 年发布（截至本手册撰写时仍在制定中）。已经"基本确定"进入 C++26 的特性：
+
+\begin{itemize}
+  \item \textbf{Static Reflection}（静态反射，P2996）：编译期获取类型信息（成员名、类型、属性等）。这是 C++ 社区讨论了 15 年以上的特性，终于在 C++26 中通过。
+  \item \textbf{Contracts}（契约，P2900）：函数前置/后置条件、断言。语法：\kw{void f(int x) [[pre: x > 0]] [[post r: r >= 0]];}。
+  \item \textbf{Networking}（\texttt{<net>}、\texttt{<async>}）：异步 I/O、socket、执行器。基于 Boost.Asio 的设计。
+  \item \textbf{\kw{std::execution}}：通用执行框架（"senders/receivers"）。
+  \item \textbf{\kw{std::inplace\_vector}}：固定容量、堆栈分配的动态大小容器。
+  \item \textbf{Pack indexing}：\kw{Args...[0]}，直接访问变参包中的特定参数。
+  \item \textbf{\kw{constexpr} 异常}：编译期函数可以抛出与捕获异常。
+  \item \textbf{\kw{<linear\_algebra>}}：基础线性代数库（提案中）。
+  \item \textbf{Safety Profiles}（仍在讨论）：编译器辅助的安全检查（如边界、生命周期）。
+\end{itemize}
+
+C++26 的工作量与争议性都很大。Static Reflection 与 Contracts 各自经历了多版提案、数百页讨论、多次投票否决后重新设计。这是 ISO/IEC 治理流程的典型表现：\textbf{重大特性的通过往往需要 5-10 年的迭代}。
+
+\begin{timelinebox}
+\textbf{C++ 标准化时间线（1979-2026）}
+
+\yrlbl{1979} Stroustrup 在 Bell Labs 启动"C with Classes"项目。
+
+\yrlbl{1983} 语言定名为 C++，加入虚函数、运算符重载、引用。
+
+\yrlbl{1985} AT\&T 发布 CFront 1.0，TC++PL 第一版出版。
+
+\yrlbl{1989} 模板提案，C++ 2.0 加入异常、RTTI、多重继承、抽象类。
+
+\yrlbl{1990} ARM（Annotated C++ Reference Manual）出版。
+
+\yrlbl{1991} ANSI X3J16 委员会成立。
+
+\yrlbl{1993} ISO/IEC WG21 委员会成立，与 X3J16 联合工作。
+
+\yrlbl{1994} STL 被投票纳入标准库。
+
+\yrlbl{1998} ISO/IEC 14882:1998（C++98）发布。
+
+\yrlbl{2003} ISO/IEC 14882:2003（C++03，技术勘误）发布。
+
+\yrlbl{2003-2011} "C++0x 休眠期"，委员会缓慢推进设计讨论。
+
+\yrlbl{2011} ISO/IEC 14882:2011（C++11）发布——"一门新语言"。
+
+\yrlbl{2014} ISO/IEC 14882:2014（C++14）发布。
+
+\yrlbl{2017} ISO/IEC 14882:2017（C++17）发布。
+
+\yrlbl{2020} ISO/IEC 14882:2020（C++20）发布——"C++20 是新的 C++11"。
+
+\yrlbl{2023} ISO/IEC 14882:2023（C++23）发布。
+
+\yrlbl{2026} C++26 预计发布（Reflection、Contracts、Networking）。
+\end{timelinebox}
+
+% ====================================================================
+\part{ISO/IEC 治理结构}
+% ====================================================================
+
+\chapter{ISO/IEC SC22 与 WG14/WG21}
+
+\section{ISO 与 IEC 简介}
+
+\govlabel\ \textbf{ISO}（International Organization for Standardization，国际标准化组织）成立于 1947 年，总部设在日内瓦。其成员是\textbf{各国国家标准机构}（National Body，NB），如美国的 ANSI、英国的 BSI、德国的 DIN、法国的 AFNOR、日本的 JISC、中国的 SAC（国家标准化管理委员会）。ISO 不直接接受公司或个人会员——任何想参与 ISO 工作的实体都必须通过本国 NB。
+
+\textbf{IEC}（International Electrotechnical Commission，国际电工委员会）成立于 1906 年，负责电气与电子领域的标准。信息技术（IT）领域同时涉及 ISO 与 IEC 的范畴，因此 1987 年成立了 \textbf{ISO/IEC JTC1}（Joint Technical Committee 1，联合技术委员会 1），统一管理 IT 标准。
+
+\textbf{ISO/IEC JTC1} 下设多个 \textbf{SC}（Sub-Committee，分技术委员会），其中：
+
+\begin{itemize}
+  \item \textbf{SC22}：编程语言、环境及其软件接口（Programming languages, their environments and system software interfaces）。C、C++、Ada、Fortran、POSIX 等都归 SC22 管理。
+  \item \textbf{SC32}：数据管理与交换（Data management and interchange）。SQL 归 SC32 管理。
+  \item \textbf{SC29}：音频、图像、多媒体与超媒体信息编码。JPEG、MPEG 归 SC29 管理。
+  \item \textbf{SC27}：信息安全、网络安全与隐私保护。
+  \item \textbf{SC38}：云计算与分布式计算平台。
+  \item \textbf{SC41}：物联网（IoT）与数字孪生。
+  \item \textbf{SC42}：人工智能。
+\end{itemize}
+
+\textbf{SC22} 下设多个 \textbf{WG}（Working Group，工作组），按语言/标准划分：
+
+\begin{itemize}
+  \item \textbf{WG14}：C 语言（Programming language C），负责 ISO/IEC 9899。
+  \item \textbf{WG21}：C++ 语言（Programming language C++），负责 ISO/IEC 14882。
+  \item \textbf{WG5}：Fortran。
+  \item \textbf{WG9}：Ada。
+  \item \textbf{WG11}：POSIX（与 IEEE 1003 联合）。
+  \item \textbf{WG15}：Ada 运行环境。
+  \item \textbf{WG4}：COBOL（已休眠）。
+  \item \textbf{WG20}：CJK 字符集国际化（与 Unicode 协调）。
+\end{itemize}
+
+C 与 C++ 标准由 WG14 与 WG21 分别负责，但两组同属 SC22，每年至少有一次联合会议（通常是夏季会议），讨论 C/C++ 之间的接口一致性问题。
+
+\section{国家成员体（National Body，NB）的角色}
+
+ISO/IEC 的所有正式参与都通过\textbf{国家成员体}进行。每个 ISO 成员国（约 170 个）有且仅有一个 NB，由该国国家标准机构担任。NB 在 ISO/IEC 中有两种身份：
+
+\begin{itemize}
+  \item \textbf{P 成员}（Participating member，参与成员）：有义务参与技术工作、对草案投票、可派出代表参加 WG 会议、可提交提案。WG14 与 WG21 的 P 成员通常包括：美国（ANSI/INCITS）、英国（BSI）、德国（DIN）、法国（AFNOR）、加拿大（SCC）、日本（JISC）、中国（SAC）、韩国（KATS）、瑞士（SNV）、荷兰（NEN）、北欧诸国等。
+  \item \textbf{O 成员}（Observer member，观察员）：可获取标准草案、可观察会议进展，但\textbf{不投票}、不强制参与。
+\end{itemize}
+
+P 成员的投票是标准通过的关键。每份标准草案在 CD、DIS、FDIS 三个阶段都需要 P 成员投票，达到规定的多数才能进入下一阶段。
+
+\section{NB 如何组织内部参与}
+
+每个 NB 在自己国家内部组织"参与机制"。模式因国家而异：
+
+\begin{itemize}
+  \item \textbf{美国 ANSI/INCITS}：通过 INCITS（InterNational Committee for Information Technology Standards）下的技术委员会组织。WG14 与 WG21 的美国代表由 \textbf{INCITS PL22.11}（C）与 \textbf{PL22.16}（C++）委员会选出。任何美国组织（公司、大学、个人）都可以加入这些委员会，付费成为成员后获得投票权与提案权。
+  \item \textbf{英国 BSI}：通过 IST/5（C）与 IST/5/-/1（C++）等小组组织。
+  \item \textbf{德国 DIN}：通过 NIA-01-37 等小组组织。
+  \item \textbf{日本 JISC}：通过 JIS X 3010（C）与 JIS X 3014（C++）的对应委员会组织。
+  \item \textbf{中国 SAC}：通过 SAC/TC28（信息技术标准化技术委员会）下属的语言分组组织。
+\end{itemize}
+
+\begin{govbox}
+\textbf{治理观察：国家代表与公司利益的张力}
+
+ISO 的设计原则是"国家代表国家利益"，但现实中：
+
+(1) WG21 美国代表团（PL22.16）的成员绝大多数来自美国公司——Microsoft、Google、Apple、Facebook、IBM、Intel、NVIDIA、Bloomberg 等。他们的投票立场往往反映雇主的技术偏好，而不是抽象的"美国国家利益"。
+
+(2) 同一公司在多个 NB 中都有代表（Microsoft 在 ANSI、BSI、DIN 都有派员），可以协调投票立场。
+
+(3) 个人也可以加入 ANSI/INCITS 委员会获得投票权——这是 ISO 体系相对开放的一面。WG21 中有相当比例的"独立专家"，他们以个人身份参与，不代表任何公司。
+
+这种"国家代表 + 公司利益 + 独立专家"的混合模式，使得 ISO 治理结构既不完全去中心化（公司利益仍然存在），也不中心化（没有任何单一公司能控制投票）。
+\end{govbox}
+
+\section{WG14 与 WG21 的规模与组成}
+
+\textbf{WG14}（C）相对较小：
+
+\begin{itemize}
+  \item P 成员约 15-20 个国家。
+  \item 每次现场会议约 30-50 名代表。
+  \item 主席（Convener）历史上长期由 David Keaton 担任，目前由 Jean Heyd Meneide 等共同主持。
+  \item 工作节奏：每年 2-3 次会议，每次 1 周。
+\end{itemize}
+
+\textbf{WG21}（C++）规模较大：
+
+\begin{itemize}
+  \item P 成员约 20-25 个国家。
+  \item 每次现场会议约 100-200 名代表。
+  \item 主席（Convener）历史上由 Bill Gibbons、Tom Plum 等担任，目前是 Thomas Köppe（Google）。
+  \item 工作节奏：每年 3 次会议（冬季 2 月、夏季 6-7 月、秋季 11 月），每次 1 周；外加每周的远程电话会议（telecons）。
+  \item WG21 内部细分为多个子小组（CWG、LWG、EWG、LEWG、SG），各自有自己的邮件列表与会议时段。
+\end{itemize}
+
+\chapter{提案、投票与标准发布流程}
+
+\section{提案的来源与提交}
+
+任何 WG21 P 成员（包括公司代表、国家代表、独立专家）都可以提交\textbf{提案}（proposal）。提案以\textbf{编号文档}的形式发布在 WG21 官方网站 \seqsplit{open-std.org/jtc1/sc22/wg21/docs/papers/}：
+
+\begin{itemize}
+  \item \textbf{N 编号}：早期文档（N1000-N5000），如 \paper{N3225}（移动语义）、\paper{N2668}（lambda）。
+  \item \textbf{P 编号}：2014 年起的新编号系统，\paper{P0732R2}（结构化 NTTP）、\paper{P1907R1}（浮点 NTTP）、\paper{P2996}（反射）。R 后数字是修订版本号（R0 初版，R1 第一修订...）。
+  \item \textbf{WG21 内部文档}：CWG/LWG 的 issues list、reflectors 邮件等。
+\end{itemize}
+
+提案的标准结构：
+
+\begin{enumerate}
+  \item \textbf{动机}（Motivation）：为什么需要这个特性。
+  \item \textbf{设计}（Proposal/Wording）：具体的语法与语义。
+  \item \textbf{影响}（Impact）：对现有代码、编译器、标准库的影响。
+  \item \textbf{实现}（Implementation Experience）：哪些编译器/库已经实现，性能与正确性数据。
+  \item \textbf{替代方案}（Alternatives Considered）：讨论被否决的设计。
+  \item \textbf{规范文本}（Proposed Wording）：直接插入标准草案的精确措辞。
+\end{enumerate}
+
+WG21 对"实现经验"的要求越来越高。一个未经任何编译器实现的提案，几乎不可能通过——委员会要求至少 2-3 个主流编译器（GCC、Clang、MSVC）有实验性实现，并能展示真实代码的运行效果。
+
+\section{讨论与共识形成}
+
+提案提交后经历以下讨论流程：
+
+\begin{enumerate}
+  \item \textbf{邮件列表（reflector）讨论}：提案作者发到 WG21 reflector（isocpp.org 的 std-proposals 邮件列表），社区成员评论、提问、批评。这一步可能持续数月。
+  \item \textbf{EWG/LEWG 早期评审}：根据提案性质，由 \textbf{EWG}（Evolution Working Group，语言演化）或 \textbf{LEWG}（Library Evolution Working Group，库演化）评审。评审重点：方向是否正确、设计是否合理、是否值得继续投入。
+  \item \textbf{CWG/LWG 措辞评审}：方向通过后，由 \textbf{CWG}（Core Working Group，语言核心）或 \textbf{LWG}（Library Working Group，库）做精确措辞评审。这一步极其细致，会逐字逐句推敲标准文本。
+  \item \textbf{Straw Poll}（不记名民意调查）：在评审过程中，主席会发起 straw poll，让代表表达倾向。Straw poll 不具约束力，但能反映共识强度。常见的 straw poll 形式："支持进入下一阶段的人数？反对？弃权？"
+  \item \textbf{Plenary 投票}：提案在 CWG/LWG 完成后，提交到 WG21 全体会议（plenary）正式投票。投票方式：举手或电子投票，P 成员代表按国家集体投票（每个国家一票，由代表团团长决定立场）。
+\end{enumerate}
+
+\begin{govbox}
+\textbf{治理观察：共识 vs 多数决}
+
+WG21 的工作文化强调"\textbf{共识决策}"（consensus），而不是简单多数决。理想流程是：
+
+(1) 提案经过多轮讨论，作者根据反馈修订。
+
+(2) Straw poll 显示明显支持（如 80\%+）时，提案进入下一阶段。
+
+(3) 如果有强烈反对（哪怕只有少数人），提案会被退回继续修改，而不是强行投票。
+
+(4) 最终在 plenary 投票时，几乎不会出现 51:49 这种胶着——因为前面已经形成了广泛共识。
+
+这种"慢但稳"的决策模式有得有失：
+\begin{itemize}
+  \item \textbf{好处}：避免草率决策，保证标准的技术质量；让少数派意见被认真对待。
+  \item \textbf{坏处}：进程极慢，一个有争议的特性可能讨论 5-10 年；某些"明显好"的提案因少数人反对而被拖延。
+\end{itemize}
+\end{govbox}
+
+\section{NB 投票与标准阶段}
+
+提案通过 plenary 投票后，进入\textbf{标准发布流程}。ISO 把标准从草案到正式发布分为若干阶段，每个阶段都有正式的 NB 投票：
+
+\begin{enumerate}
+  \item \textbf{NWIP}（New Work Item Proposal，新工作项目提案）：决定启动一项新标准。投票门槛：5 个 P 成员同意 + 多数 P 成员赞成。
+  \item \textbf{WD}（Working Draft，工作草案）：委员会内部草稿，可能有多版。WD 阶段不进行 NB 投票，只在 WG 内部讨论。
+  \item \textbf{CD}（Committee Draft，委员会草案）：第一次正式 NB 投票。所有 P 成员对 CD 内容投票（赞成/反对/弃权），同时提交 comments。投票期通常 2-3 个月。如果有重大反对意见，CD 会被修订并重新投票（CD2、CD3...）。
+  \item \textbf{DIS}（Draft International Standard，国际标准草案）：第二次 NB 投票，向所有 ISO 成员（包括 O 成员）开放。投票期 5 个月。通过门槛：\textbf{2/3 以上 P 成员赞成} + \textbf{3/4 以上总票数赞成}（含 O 成员）。
+  \item \textbf{FDIS}（Final Draft International Standard，国际标准最终草案）：最后一次 NB 投票。投票期 2 个月。通过门槛：\textbf{2/3 以上 P 成员赞成} + \textbf{3/4 以上总票数赞成}。FDIS 阶段不允许实质性修改，只能做编辑性修订。
+  \item \textbf{IS}（International Standard，国际标准）：正式发布。ISO/IEC 联合签署，标准编号确定（如 ISO/IEC 14882:2020）。
+\end{enumerate}
+
+\begin{timelinebox}
+\textbf{C++20 的发布流程（实例）}
+
+\yrlbl{2018-03} Jacksonville 会议：C++20 进入 CD 阶段。
+
+\yrlbl{2019-07} Cologne 会议：CD2 投票，进入 DIS 阶段。
+
+\yrlbl{2019-07 至 2019-12} DIS 投票期，所有 ISO 成员可投票。
+
+\yrlbl{2020-02} Prague 会议：DIS 投票通过，进入 FDIS 阶段。
+
+\yrlbl{2020-09} FDIS 投票结束，赞成票 22:0（无反对）。
+
+\yrlbl{2020-12-15} ISO/IEC 14882:2020 正式发布。
+
+整个流程耗时约 30 个月，符合 ISO 标准发布的典型时间。
+\end{timelinebox}
+
+\section{缺陷报告（Defect Report, DR）}
+
+标准发布后，使用者会发现规范中的歧义、矛盾、错误。这些问题通过\textbf{缺陷报告}（DR）流程处理：
+
+\begin{enumerate}
+  \item 任何人（不限于 P 成员）都可以向 CWG/LWG 提交 issue。
+  \item 工作组评审 issue，分类为：NAD（Not A Defect，非缺陷）、CD3（延期到下版）、TC1（纳入下次技术勘误）、Defect（确认是缺陷，立即修正）。
+  \item 确认的缺陷被纳入"标准修订"——通过 Technical Corrigendum（TC，技术勘误）发布。TC 不需要完整的 DIS/FDIS 流程，只需 WG 投票通过即可。
+  \item 缺陷修正后的标准会标注修订版本，如 ISO/IEC 14882:2017/Cor 1:2018。
+\end{enumerate}
+
+DR 流程让标准能持续维护。C++ 标准自 C++98 以来已经处理了数千个 DR——这个数字反映了"用自然语言精确描述编程语言语义"的固有难度。
+
+\chapter{WG21 的内部结构与文化}
+
+\section{子工作组的划分}
+
+WG21 内部按主题划分为多个子组，每个子组有自己的主席、邮件列表、会议时段：
+
+\begin{itemize}
+  \item \textbf{CWG}（Core Working Group，核心语言工作组）：处理语言核心问题——语法、语义、类型系统、模板、表达式、声明。主席历史上由 Richard Smith（Google，Clang 维护者）担任。CWG 维护"core issues list"，约 300+ 个开放 issue。
+  \item \textbf{LWG}（Library Working Group，库工作组）：处理标准库问题——容器、算法、I/O、字符串、迭代器、分配器等。维护"library issues list"。
+  \item \textbf{EWG}（Evolution Working Group，演化工作组）：处理新特性的设计方向——讨论提案是否值得纳入、设计是否合理。EWG 的产出是"方向决定"，不写标准文本。
+  \item \textbf{LEWG}（Library Evolution Working Group，库演化工作组）：与 EWG 平行，但聚焦库的设计方向。
+  \item \textbf{SG}（Study Group，研究组）：针对特定主题的研究组，每个 SG 有专门的领域：
+    \begin{itemize}
+      \item SG1：并发（Concurrency）。
+      \item SG2：模块（Modules）。
+      \item SG3：编译期计算（Compile-time / constexpr）。
+      \item SG4：安全（Safety，包括边界、生命周期）。
+      \item SG5：交易内存（Transactional Memory，已休眠）。
+      \item SG6：数值计算（Numerics）。
+      \item SG7：反射（Reflection）。
+      \item SG8：网络（Networking）。
+      \item SG9：范围（Ranges）。
+      \item SG10：源代码能力探测（Source code capabilities，\kw{\_\_has\_feature} 等）。
+      \item SG12：未定义行为（Undefined Behavior）。
+      \item SG13：源代码安全（Source code security，已并入 SG4）。
+      \item SG14：低延迟（Low Latency，游戏、HFT、嵌入式）。
+      \item SG15：工具链（Tool Dependence，模块、构建系统）。
+      \item SG16：Unicode。
+      \item SG17：模式与方言（Patterns and dialects）。
+      \item SG18：词法（Lexing）。
+      \item SG19：机器学习（Machine Learning）。
+      \item SG20：教育（Education）。
+      \item SG21：契约（Contracts）。
+      \item SG22：C/C++ 协调（C/C++ Liaison，与 WG14 联合）。
+      \item SG23：安全规范（Safety specification）。
+    \end{itemize}
+\end{itemize}
+
+\section{会议结构与节奏}
+
+WG21 每年召开 3 次正式会议（春季 2 月、夏季 6-7 月、秋季 11 月），每次约 1 周，由不同国家轮办：
+
+\begin{itemize}
+  \item \textbf{周一到周五}：每天 9:00-17:00 工作。上午通常是各 SG/CWG/LWG/EWG/LEWG 的并行会议；下午有 plenary（全体会议）。
+  \item \textbf{并行会议}：同一时段有多个小组开会，代表选择自己感兴趣的小组参加。比如 CWG 在 Room A 讨论 issue，EWG 在 Room B 评审提案，SG14 在 Room C 讨论低延迟特性。
+  \item \textbf{Plenary 投票}：通常在周三与周五，所有代表集中投票当天评审过的提案。
+  \item \textbf{晚餐与社交}：会议期间的非正式交流对共识形成非常重要——很多争议是在晚餐桌上解决的。
+\end{itemize}
+
+疫情之后，WG21 引入了\textbf{混合模式}（线下 + 线上）与\textbf{远程会议}（telecons）：
+
+\begin{itemize}
+  \item 每周 1-2 次 telecons，每次 2-3 小时，专门讨论某一类提案。
+  \item 现场会议规模略减（部分代表远程参加）。
+  \item Zoom/Slack 成为主要协作工具。
+\end{itemize}
+
+\section{委员会文化的特征}
+
+WG21 的工作文化有几个鲜明特征：
+
+\begin{itemize}
+  \item \textbf{技术驱动}：讨论以技术论据为主，不太看"谁的级别高"。一位独立专家如果有充分的技术论据，可以与大公司代表平等讨论。
+  \item \textbf{邮件优先}：所有重要讨论都发生在 reflector 上，现场会议主要是确认邮件中已经形成的共识。"没在邮件上讨论过的提案，会议上不会通过"是惯例。
+  \item \textbf{措辞精确}：CWG/LWG 对标准文本的措辞要求极高——每个词、每个标点都被反复推敲。这是因为标准文本将来要作为编译器实现的依据，任何歧义都会引发争议。
+  \item \textbf{向后兼容至上}：C++ 标准委员会有一条铁律——"不破坏现有代码"。任何会让现有合法 C++ 程序变非法或不行为变化的提案，几乎必然被否决。
+  \item \textbf{实现验证}：纯理论提案不会通过，必须有编译器实现作为验证。
+  \item \textbf{透明度}：所有提案文档、会议纪要、投票结果都公开发布在 open-std.org，任何人可查阅。
+\end{itemize}
+
+\begin{govbox}
+\textbf{治理观察：委员会与编译器厂商的共生关系}
+
+WG21 的成员大量来自编译器厂商：
+
+\begin{itemize}
+  \item \textbf{GCC}：Jason Merrill、Jonathan Wakely、Patrick Palka 等长期参与。
+  \item \textbf{Clang/LLVM}：Richard Smith（CWG 主席）、Hubert Tong、Aaron Ballman 等。
+  \item \textbf{MSVC}：Stephan T. Lavavej（STL 维护者）、Steve Downey 等。
+  \item \textbf{Intel}：Anthony Williams（曾长期参与并发设计）。
+  \item \textbf{IBM}、\textbf{Edison Design Group}（CFront 后继者）等。
+\end{itemize}
+
+这种"标准制定者 = 编译器实现者"的双重身份带来一个有趣的现象：委员会本身不生产编译器，但几乎所有标准实现都来自委员会成员所在的厂商。提案在通过前往往已经在 GCC/Clang/MSVC 中实现——这种"先实现再标准化"的模式让标准与现实保持一致。
+
+但反面是：委员会没有自己控制的"参考实现"。如果某家公司退出（比如 Microsoft 关闭 MSVC），委员会无法强制其他厂商接手——这与 W3C、ECMA 等组织拥有 reference implementation 的模式不同。
+\end{govbox}
+
+% ====================================================================
+\part{治理模式对比与客观陈述}
+% ====================================================================
+
+\chapter{三种治理模式：中心化、准中心化、去中心化}
+
+\section{模式定义}
+
+主流编程语言的标准/规范治理大致可分三类：
+
+\begin{enumerate}
+  \item \textbf{中心化治理}（Centralized governance）：语言规范与商标由\textbf{单一公司}（或单一个人）完全控制。公司单方面决定语言演化方向，规范文档可以不经任何外部投票发布。社区参与通常是咨询性的，没有否决权。
+
+  \item \textbf{准中心化治理}（Quasi-centralized governance）：语言规范\textbf{名义上}归属一个开放组织（基金会、标准组织），但实际上由\textbf{单一公司主导}——公司控制了组织的多数投票权、商标、参考实现、生态基础设施。其他公司可参与讨论，但很难推翻主导公司的决定。
+
+  \item \textbf{去中心化治理}（Decentralized governance）：语言规范由\textbf{多方独立组织共同参与}的标准机构（如 ISO/IEC、IEEE、Ecma）制定。决策需要多国/多公司共识，任何单一实体都不能控制结果。商标通常归属标准机构本身，而非任何公司。
+\end{enumerate}
+
+\section{代表性语言分类}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+\textbf{语言} & \textbf{治理模式} & \textbf{说明} \\
+\midrule
+Java & 中心化 & 商标与规范由 Oracle 控制，OpenJDK 是参考实现但 Oracle 决定发布。 \\
+Kotlin & 中心化 & JetBrains 主导，Kotlin Foundation 名义上拥有商标但实际由 JetBrains 控制。 \\
+Swift & 中心化（演化中） & Apple 主导；2018 开源后成立 Swift Core Team，但 Apple 仍占多数席位。 \\
+Rust & 准中心化 & Rust Foundation 拥有商标，Mozilla 是创始成员；Rust Core Team 由原 Mozilla 团队成员主导。 \\
+Go & 准中心化 & Go 由 Google 设计、开发、决策；Go Team 是 Google 内部组织，外部贡献者无投票权。 \\
+C\# & 准中心化 & Microsoft 主导设计，ECMA-334 标准化，.NET Foundation 托管生态；Microsoft 仍是 .NET Foundation 最大成员。 \\
+TypeScript & 准中心化 & Microsoft 完全控制，未通过任何标准组织。 \\
+Python & 准中心化 & PSF 持有商标，2018 年前 Guido van Rossum 任 BDFL，之后改为 Steering Council（5 人，PSF 选举）。 \\
+C & 去中心化 & ISO/IEC JTC1/SC22/WG14 制定，无单一公司控制。 \\
+C++ & 去中心化 & ISO/IEC JTC1/SC22/WG21 制定，无单一公司控制。 \\
+SQL & 去中心化 & ISO/IEC JTC1/SC32 制定。 \\
+POSIX & 去中心化 & IEEE 1003 / ISO/IEC 9945 联合制定。 \\
+ECMAScript & 去中心化 & Ecma International TC39 制定（Ecma 是欧洲标准组织，模式接近 ISO）。 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{关键判断维度}
+
+判断治理模式可以从以下维度入手：
+
+\begin{itemize}
+  \item \textbf{商标持有者}：语言名称与 logo 归谁所有？（如"Java"商标归 Oracle，"C++"无任何公司拥有，"JavaScript"商标归 Oracle 但 ECMA 持有 ECMAScript 规范）
+  \item \textbf{规范制定者}：谁有权发布新版本的规范？需要哪些步骤？
+  \item \textbf{参考实现}：是否有官方实现？谁维护？源代码许可证是什么？
+  \item \textbf{投票权分配}：谁有投票权？是按公司、按国家、按个人？是否需要多数同意？
+  \item \textbf{外部参与门槛}：第三方（公司、个人）能否参与？需要什么资格？费用多少？
+  \item \textbf{决策透明度}：会议、提案、投票记录是否公开？
+  \item \textbf{退出机制}：如果主导者放弃项目，规范会怎样？
+\end{itemize}
+
+\begin{govbox}
+\textbf{治理观察：模式不是非黑即白}
+
+实际的治理模式往往是混合的：
+
+\begin{itemize}
+  \item \textbf{Java}：商标与规范决策中心化（Oracle），但 OpenJDK 是开源项目，社区贡献通过 JEP（JDK Enhancement Proposal）流程，部分外部参与者能影响设计。
+  \item \textbf{C++}：规范决策去中心化（ISO/IEC），但实现严重依赖少数厂商（GCC、Clang、MSVC），如果这三家都拒绝实现某个特性，该特性等同于不存在。
+  \item \textbf{Python}：商标归 PSF（基金会），技术上由 Steering Council 决策，但实际生态由少数大公司（Google、Meta、Microsoft）资助。
+\end{itemize}
+
+判断治理模式时应看\textbf{决策权}与\textbf{商标控制权}，而不是开源协议或参与形式。
+\end{govbox}
+
+\chapter{去中心化治理的优势：客观陈述}
+
+\section{优势一：不受单一公司决策影响}
+
+去中心化模式最根本的优势：\textbf{规范的演化方向不由任何一家公司单方面决定}。这与中心化模式形成对比。
+
+\subsection{Java 商标战与 Oracle 的决策权}
+
+\yrlbl{2010} Oracle 收购 Sun Microsystems，获得 Java 商标与 OpenJDK 控制权。收购后 Oracle 做出一系列单方面决定：
+
+\begin{itemize}
+  \item \yrlbl{2010-2017} Java 发布节奏由 Oracle 决定，长期保持"3-4 年一个大版本"的缓慢节奏，与社区期望不符。
+  \item \yrlbl{2017} Oracle 改变 Java SE 的许可证，对企业生产使用收费。这一决定完全由 Oracle 单方面做出，没有任何外部投票。
+  \item \yrlbl{2010-2016} Oracle 与 Google 就 Android 使用 Java API 进行长达 6 年的诉讼（最终上诉至美国最高法院）。Oracle 的诉讼策略反映其商标控制权，但这一法律纠纷对整个 Java 生态产生深远影响。
+  \item \yrlbl{2014} Oracle 起诉 Google 案的一审判决期间，Java Community Process（JCP）的多个执行委员会成员公开表达对 Oracle 决策方式的不满，但 JCP 没有权力推翻 Oracle 的决定。
+\end{itemize}
+
+\yrlbl{2017} Oracle 宣布将 Java SE 转为 6 个月发布周期。这一转变受到社区欢迎，但\textbf{转变的决定权依然在 Oracle 手中}——社区无法主动推动这一变化，只能等待 Oracle 自己想通。
+
+\subsection{C/C++ 没有"Oracle 时刻"}
+
+对比之下，C/C++ 历史中没有出现任何一家公司能单方面改变标准走向的时刻。即使 Microsoft、Google、Apple 这些大公司在 WG21 中有大量代表，他们也必须：
+
+\begin{itemize}
+  \item 通过提案流程（提交 paper、邮件讨论、EWG/CWG 评审）。
+  \item 在 straw poll 中获得多数支持。
+  \item 在 NB 投票中获得 2/3 + 3/4 的多数。
+\end{itemize}
+
+如果某家公司试图推动一个对其有利但对生态有害的提案，其他 NB 与独立专家会反对，提案大概率被否决。这种"互相制衡"的结构是去中心化治理的核心特征。
+
+\section{优势二：不受单一基金会政策影响}
+
+准中心化模式下，语言名义上归基金会管理，但基金会政策可能被主导公司改变。
+
+\subsection{.NET Foundation 与 C\#}
+
+\yrlbl{2014} Microsoft 与外部合作伙伴共同创立 \textbf{.NET Foundation}，托管 .NET 生态（包括 C\#、Roslyn 编译器、ASP.NET、Entity Framework 等）。基金会董事会初期由 Microsoft 主导。
+
+\yrlbl{2018} .NET Foundation 进行治理改革，引入"开放董事会选举"，让社区成员能投票选举部分董事。这一改革被宣传为"去 Microsoft 化"。
+
+\yrlbl{2021} .NET Foundation 的董事会选举引发争议：当选董事中有几位是 Microsoft 员工或长期合作伙伴。社区批评选举过程被 Microsoft 影响力主导。最终部分董事辞职，基金会重新调整治理结构。
+
+\yrlbl{2023-2024} .NET Foundation 经历了多轮管理层变动、预算缩减、项目退出。基金会的政策变化直接影响 C\# 生态（如某些项目的维护状态、社区资助计划）。但 C\# 语言本身的设计决策仍在 Microsoft 内部完成（C\# 设计团队是 Microsoft 部门），.NET Foundation 不直接参与语言设计。
+
+\subsection{Rust Foundation 与 Mozilla}
+
+\yrlbl{2020} Mozilla 大规模裁员，解散了 Rust 团队的大部分成员。Rust 项目的未来一度受到质疑。
+
+\yrlbl{2021} Rust Foundation 成立，由 Mozilla、AWS、Google、Huawei、Microsoft 五家创始白金会员资助。Rust 商标与基础设施移交基金会。
+
+\yrlbl{2021-至今} Rust Foundation 的董事会包含白金会员代表与项目代表（Rust Core Team 派出的代表）。但白金会员（5 家大公司）在董事会中占多数，理论上能影响基金会决策。Rust 语言设计仍由 Rust Core Team 决定（不受基金会控制），但\textbf{项目基础设施、商标、预算}由基金会管理。
+
+\subsection{C/C++ 没有"基金会风险"}
+
+C/C++ 标准由 ISO/IEC 直接管理。ISO/IEC 不是基金会，而是一个由 170 个国家成员体组成的国际条约组织。任何一家公司、一个国家都无法单方面退出 ISO 并影响 C/C++ 标准——即使所有大公司集体退出 WG21，标准本身依然存在（ISO/IEC 14882 是已发布的国际标准）。
+
+\section{优势三：历史延续性与跨国法律地位}
+
+ISO/IEC 标准具有以下特性：
+
+\begin{itemize}
+  \item \textbf{已发布的标准永久有效}。ISO/IEC 9899:1990（C90）虽然已被 C99/C11/C17/C23 取代，但作为历史标准依然可获取、可引用。
+  \item \textbf{标准本身是国际法律实体}。在政府采购、国际合同、行业标准引用中，"符合 ISO/IEC 14882"具有法律效力，远超过"符合 Microsoft C\# 语言规范"。
+  \item \textbf{标准文档可被任何国家采纳为本国标准}。中国的 GB/T 15273（C）、GB/T 18092（C++）就是直接采纳 ISO/IEC 9899/14882。
+  \item \textbf{标准修订不需要重启组织}。即使 ISO 解散（不太可能），已发布的标准文本仍是历史记录。
+\end{itemize}
+
+\section{优势四：技术中立性}
+
+去中心化治理要求决策必须考虑多方利益，这天然带来\textbf{技术中立性}：
+
+\begin{itemize}
+  \item 标准不会偏向任何特定平台（Windows、Linux、macOS）、特定硬件（x86、ARM）、特定厂商（Microsoft、Google、Apple）。
+  \item 标准不会要求特定专利（ISO 有专利政策，要求专利持有人提供 RAND 许可，否则提案被否决）。
+  \item 标准不会强制使用特定第三方库或服务。
+\end{itemize}
+
+例如 C++ 标准库的 \kw{std::filesystem} 必须在 Windows、Linux、macOS 上行为一致；C 标准的 \kw{<threads.h>} 必须能与 pthreads、Win32 threads、C11 原生线程都兼容实现。这种"跨平台中立"是任何一家公司主导的标准很难做到的（Microsoft 的 C\# 规范早期就有不少 Windows 特定假设）。
+
+\section{优势五：退出风险低}
+
+如果某家公司退出 ISO/IEC 工作（不再派代表、不再付费），影响有限：
+
+\begin{itemize}
+  \item 标准本身继续存在与演化。
+  \item 其他公司与国家代表填补空缺。
+  \item 该公司原有的提案、邮件讨论、issue 报告依然是公开记录。
+\end{itemize}
+
+历史上 AT\&T 退出 Bell Labs 的 C/C++ 工作、Sun Microsystems 被收购后的 Java 团队变动，都没有让标准本身受到致命打击。这种"反脆弱性"是去中心化治理的核心优势。
+
+\begin{govbox}
+\textbf{治理观察：去中心化优势的边界}
+
+上述优势的\textbf{前提}是"标准已被广泛采纳"。如果一个 ISO 标准没有实现、没有用户，那么"不受单一公司控制"的优势就毫无意义——因为没有公司在乎这个标准。
+
+C/C++ 之所以能享受去中心化治理的优势，是因为它们已经有 35+ 年的实现历史、巨大的用户基数、深厚的生态系统。一个新启动的语言选择 ISO 治理，可能反而会因为流程缓慢、缺乏厂商支持而失败。
+\end{govbox}
+
+\chapter{去中心化治理的代价：客观陈述}
+
+\section{代价一：委员会不生产编译器}
+
+这是去中心化治理最显著的代价。WG14/WG21 自身不维护任何编译器——\textbf{所有 C/C++ 编译器都由委员会成员所在的公司或志愿者实现}：
+
+\begin{itemize}
+  \item \textbf{GCC}：由 Free Software Foundation（FSF）维护，主要贡献者来自 Red Hat、Apple、SUSE、ARM 等。
+  \item \textbf{Clang/LLVM}：由 LLVM Foundation 维护，主要贡献者来自 Apple、Google、Microsoft、Intel、AMD、ARM 等。
+  \item \textbf{MSVC}：由 Microsoft 维护，闭源（部分组件开源），仅支持 Windows 平台。
+  \item \textbf{ICC/ICX}（Intel）：基于 Clang 的 Intel 编译器。
+  \item \textbf{其他}：Oracle Solaris Studio、IBM XL、Cray、PGI/NVIDIA HPC 等专有编译器。
+\end{itemize}
+
+\subsection{委员会与编译器厂商的协作模式}
+
+WG21 不维护任何"参考实现"。这与 W3C 维护参考浏览器、Ecma 维护参考 JavaScript 引擎的模式不同。WG21 依赖\textbf{编译器厂商的实验性实现}来验证提案：
+
+\begin{enumerate}
+  \item 提案作者（通常也是某编译器厂商的工程师）实现一个原型。
+  \item 原型被合并到主编译器的实验分支（如 Clang 的 \kw{-fexperimental-library}、GCC 的 \kw{-std=c++2b}）。
+  \item 用户在真实代码中测试，反馈问题。
+  \item 提案根据反馈修订，再次评审。
+  \item 标准通过后，编译器实现转为正式支持。
+\end{enumerate}
+
+这种"标准依赖实现验证"的模式有得有失：
+
+\begin{itemize}
+  \item \textbf{好处}：标准不会脱离实际，每个特性都经过编译器与用户的检验。
+  \item \textbf{坏处}：如果某家公司不愿投入资源实现，标准就会推迟。例如 \seqkw{std::thread} 在 MSVC 上迟到了好几年；C++17 的 \seqkw{std::filesystem} 在 GCC 与 Clang 上各自有不同的实验性命名空间；C++20 的 Modules 至今在三大编译器上的实现仍不完整。
+\end{itemize}
+
+\subsection{没有一致性测试套件}
+
+ISO/IEC 不维护任何"一致性测试套件"（conformance test suite）。判断一个 C/C++ 编译器是否"符合标准"完全依赖：
+
+\begin{itemize}
+  \item 编译器厂商的自我声明（"我们支持 C++17"）。
+  \item 第三方测试套件（如 Perennial 的 C 一致性测试、Plum Hall Validation Suite，这些都是商业产品）。
+  \item 开源测试项目（如 csmith 用于发现 C 编译器 bug、cxxopts 用于测试 C++ 标准库一致性）。
+  \item cppreference 与 godbolt 等社区资源。
+\end{itemize}
+
+对比之下，W3C 为 HTML/CSS 维护官方一致性测试套件（web-platform-tests），Ecma 为 ECMAScript 维护 test262，Java 有 TCK（Technology Compatibility Kit，由 Oracle 控制）。ISO/IEC 没有类似的官方机制——这反映了 ISO 的角色定位是"标准制定者"而非"实现监督者"。
+
+\section{代价二：进程缓慢}
+
+去中心化决策流程的代价是\textbf{极慢}。
+
+\subsection{标准周期}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{@{}l l l X@{}}
+\toprule
+\textbf{标准} & \textbf{上一版} & \textbf{本版} & \textbf{间隔} \\
+\midrule
+C90 → C99 & 1990 & 1999 & 9 年 \\
+C99 → C11 & 1999 & 2011 & 12 年 \\
+C11 → C17 & 2011 & 2018 & 7 年（仅修订）\\
+C17 → C23 & 2018 & 2024 & 6 年 \\
+C++98 → C++03 & 1998 & 2003 & 5 年（仅修订）\\
+C++03 → C++11 & 2003 & 2011 & 8 年 \\
+C++11 → C++14 & 2011 & 2014 & 3 年 \\
+C++14 → C++17 & 2014 & 2017 & 3 年 \\
+C++17 → C++20 & 2017 & 2020 & 3 年 \\
+C++20 → C++23 & 2020 & 2023 & 3 年 \\
+C++23 → C++26 & 2023 & 2026（预计） & 3 年 \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+C++ 自 C++11 之后稳定在"3 年一版"的节奏，这已经是 ISO 体系下相对快的速度。对比 SQL 标准（约 5-8 年一版）、Ada（约 10 年一版）、POSIX（约 15 年一版），C++ 是 SC22 中迭代最快的标准之一。
+
+\subsection{单个提案的周期}
+
+单个特性的提案周期通常更长：
+
+\begin{itemize}
+  \item \textbf{Concepts}：首次提案 2003 年（C++0x 项目），C++20 才通过，历时 \textbf{17 年}。期间被否决并重新设计两次。
+  \item \textbf{Modules}：首次提案 2005 年，C++20 通过，历时 \textbf{15 年}。
+  \item \textbf{Coroutines}：首次提案 2004 年，C++20 通过，历时 \textbf{16 年}。
+  \item \textbf{Static Reflection}：首次提案 2008 年，C++26 预计通过，历时 \textbf{18 年}。
+  \item \textbf{Contracts}：首次提案 2003 年，C++26 预计通过，历时 \textbf{23 年}。
+  \item \textbf{Ranges}：首次提案 2012 年，C++20 通过，历时 \textbf{8 年}。
+  \item \textbf{\kw{std::format}}：首次提案 2017 年，C++20 通过，历时 \textbf{3 年}（相对快）。
+\end{itemize}
+
+这种"5-15 年的提案周期"对快速演化的领域（如 ML、Web）是难以接受的。Rust、Swift、Kotlin 等语言能以"年度发布"的节奏演化，正是因为它们不需要 ISO 流程。
+
+\subsection{进程缓慢的具体表现}
+
+提案被拖延的常见原因：
+
+\begin{itemize}
+  \item 设计争议：不同公司/专家有根本性分歧（如 Concepts 的"约束语法"经过 5+ 版重新设计）。
+  \item 实现验证不足：没有足够多的编译器原型，无法证明特性可行。
+  \item 措辞复杂性：CWG/LWG 对标准文本逐字推敲，一个 issue 可能讨论 1-2 年。
+  \item 兼容性问题：发现提案会破坏现有代码，必须重新设计。
+  \item 优先级冲突：委员会精力有限，提案被排队等待。
+\end{itemize}
+
+\section{代价三：投票政治化}
+
+虽然 ISO/IEC 设计上是"国家代表国家利益"，实际运作中投票往往反映\textbf{公司与组织利益}：
+
+\begin{itemize}
+  \item 美国代表团（PL22.16）的成员主要是 Microsoft、Google、Apple、Meta、NVIDIA、Bloomberg、IBM 的员工，他们的投票立场往往与雇主的技术战略一致。
+  \item 同一公司在多个 NB 中派员（如 Microsoft 在 ANSI、BSI、DIN 都有代表），可在不同投票中协调立场。
+  \item 中小公司与独立专家的参与门槛较高：参加 ANSI 委员会需要年费（数千美元），现场会议差旅费高（每年 3 次国际旅行）。
+\end{itemize}
+
+这种"政治化"在重大设计决策上表现明显：
+
+\begin{itemize}
+  \item \yrlbl{2012} Concepts 第一版（"C++0x Concepts"）被否决——Microsoft 与 IBM 反对，Google 与 Facebook 支持。否决后 Concepts 重新设计为更简单的"C++20 Concepts"。
+  \item \yrlbl{2018} Modules 设计争议：MSVC 团队、Apple Clang 团队、GCC 团队对 BMI（Binary Module Interface）格式有根本性分歧，最终标准只规定接口语义、不规定文件格式。
+  \item \yrlbl{2020} Reflection 提案 P2996 在 EWG 评审中经历多次修订，作者团队（Bloomberg、Google、JetBrains）与反对者（部分 Clang 维护者）的辩论持续 3 年。
+\end{itemize}
+
+\section{代价四：标准文档收费}
+
+ISO/IEC 标准的\textbf{正式文档是收费出版物}：
+
+\begin{itemize}
+  \item ISO/IEC 9899:2018（C17）：约 \textbf{218 瑞士法郎}（约 240 美元）一份 PDF。
+  \item ISO/IEC 14882:2020（C++20）：约 \textbf{238 瑞士法郎}（约 260 美元）一份 PDF，1756 页。
+  \item ISO/IEC 14882:2024（C++23）：约 \textbf{238 瑞士法郎}，1700+ 页。
+  \item 每个版本单独销售，旧版本不免费提供。
+\end{itemize}
+
+ISO 的商业模式依赖标准销售收入。这与"开源精神"形成鲜明对比——Rust 规范、ECMAScript 规范、HTML 规范都免费提供。
+
+\subsection{替代获取途径}
+
+社区找到了几种免费获取 C++ 标准内容的方式：
+
+\begin{itemize}
+  \item \textbf{WG21 公开的工作草案}：open-std.org 上发布的 N4860（C++20 FDIS）、N4950（C++23 FDIS）等草案与正式标准在技术内容上完全相同，仅排版有差异。免费下载。
+  \item \textbf{cppreference.com}：社区维护的 C++ 参考站点，按标准条目组织内容，免费且持续更新。
+  \item \textbf{C++ Core Guidelines}：Stroustrup 与 Sutter 维护的"非官方但权威"的指南，免费。
+\end{itemize}
+
+这种"标准收费但实际免费可获取"的状况让 ISO 的商业模式略显尴尬——大多数实际用户不会购买官方文档，而是依赖工作草案与社区资源。
+
+\section{代价五：国际组织的固有缺点}
+
+ISO/IEC 作为国际条约组织，有一些固有缺点：
+
+\subsection{官僚与流程冗长}
+
+\begin{itemize}
+  \item 标准发布流程必须经过 NWIP → WD → CD → DIS → FDIS → IS 六个阶段，每阶段都有固定时长（DIS 5 个月、FDIS 2 个月），无法压缩。
+  \item 即使所有 P 成员都同意，也不能跳过任何阶段。
+  \item ISO 秘书处的行政流程（编号、出版、翻译）需要额外时间。
+\end{itemize}
+
+\subsection{地域不平衡}
+
+\begin{itemize}
+  \item WG21 的活跃代表绝大多数来自北美与欧洲。亚洲（除日本外）、非洲、南美的参与度较低。
+  \item 现场会议主要在欧美举办，亚洲代表参会成本高。
+  \item 邮件讨论以英语为主，非英语母语者参与门槛高。
+\end{itemize}
+
+\subsection{主权代表 vs 技术专家的张力}
+
+\begin{itemize}
+  \item ISO 投票以"国家"为单位——一个国家一票。但每个国家代表团内部立场可能分歧（如美国代表团里 Microsoft 代表与 Google 代表立场不同），需要内部协调后再投出"美国一票"。
+  \item 这种协调过程让技术决策受国家政治影响。例如某些标准在 DIS 投票时被某个国家整体反对（不是技术原因，而是政策原因）。
+\end{itemize}
+
+\subsection{无法强制执行}
+
+\begin{itemize}
+  \item ISO 不能要求任何公司实现标准。如果所有编译器厂商都不实现某个特性，该特性等同于不存在。
+  \item ISO 不能审查编译器是否符合标准。"符合 ISO/IEC 14882"完全是厂商自我声明。
+  \item ISO 不能阻止"标准分裂"——如果某家公司发布一个不兼容的扩展，ISO 无法干预。
+\end{itemize}
+
+\section{代价六："设计 by 委员会"风险}
+
+委员会决策的固有缺点：\textbf{妥协产物可能不如单一设计师的设计清晰}。
+
+\subsection{C++ 复杂度的争议}
+
+C++ 标准文档已达 \textbf{1700+ 页}，远超 C（约 500 页）。这反映了 C++ 的特性数量与设计复杂度。常见批评：
+
+\begin{itemize}
+  \item 同一问题有多种解决方式（如智能指针有 \kw{unique\_ptr}、\kw{shared\_ptr}、\kw{weak\_ptr}，再加上传统裸指针）。
+  \item 历史包袱重（如 \kw{std::auto\_ptr} 在 C++11 被废弃但保留到 C++17）。
+  \item 概念之间的交互复杂（如模板、Concepts、SFINAE 之间的关系）。
+\end{itemize}
+
+部分批评者认为这是"设计 by 委员会"的必然结果——每个新特性都需要找到与现有特性的兼容方式，导致设计妥协。但支持者认为这种"渐进演化"恰恰保证了向后兼容与生态稳定。
+
+\subsection{对比：单一设计师的语言}
+
+\begin{itemize}
+  \item \textbf{Go}：由 Robert Griesemer、Rob Pike、Ken Thompson 三人设计，Go Team（Google 内部）决定演化方向。Go 1.0 发布以来核心语法几乎没变（直到 Go 1.18 加入 Generics）。设计极其简洁。
+  \item \textbf{Rust}：由 Graydon Hoare 个人发起，早期设计由 Graydon 与 Mozilla 团队完成，后续由 Rust Core Team 决定方向。Rust 的设计在"安全性"与"零开销抽象"之间保持高度一致。
+  \item \textbf{Swift}：由 Chris Lattner 主导设计，Swift Core Team 决定演化。Swift 的设计在"现代性"与"易学性"之间相对一致。
+  \item \textbf{Kotlin}：由 JetBrains 设计，JetBrains 完全控制演化方向。Kotlin 的设计简洁、聚焦实用性。
+\end{itemize}
+
+这些语言的演化速度都比 C++ 快得多，设计也更有"统一感"。但它们的代价是：演化方向高度依赖单一组织（Google、Mozilla/Rust Foundation、Apple、JetBrains）的战略决策。
+
+\chapter{横向对比与客观陈述}
+
+\section{多维度对比表}
+
+\begin{center}
+\scriptsize
+\begin{tabularx}{\textwidth}{@{}p{2.2cm} p{2.6cm} p{2.6cm} p{2.6cm} p{2.6cm}@{}}
+\toprule
+\textbf{维度} & \textbf{中心化（Java/Oracle）} & \textbf{准中心化（C\#/.NET Foundation）} & \textbf{去中心化（C++/ISO/IEC）} & \textbf{单一个人主导} \\
+\midrule
+决策速度 & 快（公司单方面决定） & 中（公司主导，需协调生态） & 慢（多方共识，3 年周期） & 极快（个人决定） \\
+\addlinespace
+技术中立性 & 低（受公司战略影响） & 中（公司主导但有外部参与） & 高（多方互相制衡） & 低（受个人偏好影响） \\
+\addlinespace
+历史延续性 & 中（依赖公司存活） & 中（依赖基金会与公司） & 高（标准永久存在） & 低（个人退出即结束） \\
+\addlinespace
+实现保障 & 高（公司提供参考实现） & 高（公司主导实现） & 中（依赖厂商投入） & 低（无组织保障） \\
+\addlinespace
+用户控制权 & 低（用户无法投票） & 中（社区有部分参与） & 高（通过 NB 投票） & 极低（用户无影响） \\
+\addlinespace
+退出风险 & 高（公司可单方面放弃） & 中（基金会与公司双重依赖） & 低（标准独立存在） & 极高（个人即一切） \\
+\addlinespace
+商标控制 & 公司持有 & 基金会持有但公司主导 & ISO/IEC 持有 & 个人持有 \\
+\addlinespace
+文档获取 & 公司免费提供 & 公司免费提供 & ISO 收费但工作草案免费 & 个人决定 \\
+\addlinespace
+一致性测试 & 公司提供 TCK & 公司提供测试 & 无官方套件 & 无 \\
+\addlinespace
+设计一致性 & 高（公司战略一致） & 中（公司主导） & 中（委员会妥协） & 高（个人风格统一） \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{各模式的代表性争议}
+
+\subsection{Java：Oracle 时代的争议}
+
+\begin{itemize}
+  \item \yrlbl{2010-2016} Oracle vs Google 关于 Android 使用 Java API 的诉讼，最终上诉至美国最高法院（\yrlbl{2021} 判决 Google 胜诉，认定 API 使用属于 fair use）。
+  \item \yrlbl{2017} Oracle 改变 Java SE 商业许可，对企业生产使用收费。社区分裂：部分用户转向 OpenJDK 发行版（AdoptOpenJDK、Corretto、Zulu）。
+  \item \yrlbl{2019} Oracle 宣布 Java SE 8 的商业支持到期，企业必须升级到 Java SE 11+ 或迁移到 OpenJDK。这一决定推动大量企业迁移。
+  \item \yrlbl{2020-至今} Java 发布节奏改为 6 个月一版（Oracle 单方面决定），社区对新版本质量与稳定性的批评增加。
+\end{itemize}
+
+\subsection{C\#/.NET Foundation：治理改革的反复}
+
+\begin{itemize}
+  \item \yrlbl{2014} Microsoft 创立 .NET Foundation，宣传"开放治理"。
+  \item \yrlbl{2018} .NET Foundation 引入"开放董事会选举"，但实际选举结果仍被 Microsoft 影响力主导。
+  \item \yrlbl{2021} 董事会选举争议，部分当选董事辞职，基金会重新调整治理。
+  \item \yrlbl{2023-2024} 基金会预算缩减，多个项目退出，社区对基金会作用产生质疑。
+  \item 整个过程中，C\# 语言设计仍由 Microsoft 内部 C\# 设计团队决定，.NET Foundation 不直接参与语言设计。
+\end{itemize}
+
+\subsection{Python：从 BDFL 到 Steering Council}
+
+\begin{itemize}
+  \item \yrlbl{1991-2018} Guido van Rossum 任 BDFL（Benevolent Dictator For Life，仁慈的终身独裁者），拥有最终决策权。这种"单一个人主导"模式让 Python 演化保持设计一致性，但也存在单点失效风险。
+  \item \yrlbl{2018} Guido 因 PEP 572（赋值表达式 \kw{:=}）争议辞去 BDFL 职务。
+  \item \yrlbl{2018-2019} Python 社区经过 PEP 8001-8016 系列提案讨论，最终选择"Steering Council"模式（5 人委员会，PSF 选举，2 年任期）。
+  \item \yrlbl{2019-至今} Steering Council 模式下，Python 演化速度略有放缓，但避免了 BDFL 模式的单点风险。
+\end{itemize}
+
+\subsection{Rust：Mozilla 解散团队后的转折}
+
+\begin{itemize}
+  \item \yrlbl{2010-2020} Rust 由 Mozilla 资助开发，Rust Core Team 多数成员是 Mozilla 员工。
+  \item \yrlbl{2020-08} Mozilla 大规模裁员，解散 Rust 团队大部分成员。Rust 项目未来受到质疑。
+  \item \yrlbl{2021-02} Rust Foundation 成立，5 家白金会员（Mozilla、AWS、Google、Huawei、Microsoft）资助。商标与基础设施移交基金会。
+  \item \yrlbl{2021-至今} Rust 演化未受 Mozilla 裁员影响，但治理结构从"准中心化（Mozilla 主导）"转为"准中心化（Rust Foundation 多方平衡）"。
+\end{itemize}
+
+\subsection{Swift：从 Apple 独家到核心团队的演化}
+
+\begin{itemize}
+  \item \yrlbl{2010-2014} Swift 由 Chris Lattner 主导在 Apple 内部秘密开发。
+  \item \yrlbl{2014-06} WWDC 公开 Swift。
+  \item \yrlbl{2015-12} Swift 开源，许可证 Apache 2.0。
+  \item \yrlbl{2017} Swift.org 引入"Core Team"与"Evolution Process"，外部贡献者可通过 SE（Swift Evolution）提案参与设计。但 Core Team 多数成员仍是 Apple 员工。
+  \item \yrlbl{2018} Chris Lattner 离开 Apple 加入 SiFive，后又加入 Google、Tesla、SiFive。Swift 的设计方向不再由单一设计师主导。
+  \item \yrlbl{2020-至今} Swift 演化由 Swift Core Team 与 Evolution Workgroup 决定，Apple 仍是主导力量但不再是唯一决策者。
+\end{itemize}
+
+\section{客观陈述：哪种模式"更优"？}
+
+本手册的立场是：\textbf{不评判哪种治理模式"更优"}——除非是\textbf{纯单个个人主导}的模式（如 BDFL）。
+
+\subsection{为什么不下结论}
+
+不同治理模式适合不同场景，没有绝对的优劣：
+
+\begin{itemize}
+  \item \textbf{快速演化的领域}（如 Web 前端、机器学习）适合中心化或准中心化模式。React、TensorFlow、PyTorch 的快速迭代依赖单一组织主导。
+  \item \textbf{长期稳定的基础设施}（如操作系统接口、嵌入式语言）适合去中心化模式。POSIX、C、C++ 数十年不变的特性是去中心化治理的成果。
+  \item \textbf{商业战略产品}（如 Java、C\#、Swift）适合中心化模式，公司能根据市场需求快速调整。
+  \item \textbf{多方利益相关}（如 SQL、HTTP、ECMAScript）适合去中心化模式，避免任何一家独大。
+\end{itemize}
+
+\subsection{唯一的例外：纯单个个人主导}
+
+本手册唯一明确的判断是：\textbf{纯单个个人主导}的治理模式具有公认的\textbf{单点失效风险}：
+
+\begin{itemize}
+  \item \textbf{Python BDFL 时代}：Guido 一旦健康出问题、辞职、去世，整个语言失去最终决策者。这种风险在 \yrlbl{2018} Guido 辞职时成为现实，迫使社区紧急设计新的治理结构。
+  \item \textbf{Linux}：Linus Torvalds 个人拥有最终决策权，git 仓库的 maintainer 链条最终汇聚到他一人。Linus 的健康、性格、决策风格直接影响整个项目。社区曾多次讨论"Linus 之后"的问题，但没有正式答案。
+  \item \textbf{Perl}：Larry Wall 个人主导设计，Perl 6（后改名 Raku）的长期开发延期与 Larry 的健康状况直接相关。
+  \item \textbf{Ruby}：Matz（Yukihiro Matsumoto）拥有"最终决定权"，但实际通过 Ruby Association 与核心开发者团队运作。
+\end{itemize}
+
+这些案例的共同点：\textbf{一旦个人无法继续，整个语言的演化方向就失去锚点}。社区要么紧急重组治理（Python），要么陷入长期停滞（Perl 6），要么依赖个人长期投入（Linux）。
+
+相比之下，组织主导的治理（无论中心化、准中心化、去中心化）都有"组织延续性"——即使个别领导者更替，组织本身仍能运作。这是为什么本手册认为"纯单个个人主导"是公认劣势的模式。
+
+\section{C/C++ 选择的合理性}
+
+回到 C/C++ 的具体情境：
+
+\begin{itemize}
+  \item \textbf{C 与 C++ 是基础设施级语言}。它们运行在操作系统、嵌入式设备、数据库、浏览器、游戏引擎、金融系统等关键领域。这些场景要求\textbf{稳定性}远超过\textbf{演化速度}。
+  \item \textbf{多家公司同时投入实现}。GCC（FSF/Red Hat）、Clang（Apple/Google/Microsoft）、MSVC（Microsoft）、ICC（Intel）都在持续投入。没有任何一家公司能"接管"标准——这天然适合去中心化治理。
+  \item \textbf{用户基数巨大且分散}。从嵌入式开发者到游戏工程师到金融量化分析师，C/C++ 用户横跨无数领域。任何单一公司都无法代表所有用户利益。
+  \item \textbf{历史包袱深}。35+ 年的代码必须继续工作，向后兼容是铁律。这种约束让"快速演化"成为不可能，去中心化的"慢"反而成为优势。
+\end{itemize}
+
+对 C/C++ 来说，ISO/IEC 治理模式不是"最理想的选择"，而是"与生态现状最匹配的选择"。如果 C++ 在 1985 年选择由 AT\&T 独家控制，今天可能像 Java 一样面临 Oracle 收购后的争议；如果 C++ 选择由 Stroustrup 个人主导（像 BDFL），那么 2000 年代 Stroustrup 退休时可能像 Python 一样面临治理重组危机。
+
+\section{未来展望}
+
+C/C++ 标准治理的未来趋势：
+
+\begin{itemize}
+  \item \textbf{加速演化}：自 C++11 之后，C++ 稳定在 3 年一版的节奏，是 ISO 体系下相对快的速度。WG21 在保持流程的前提下努力提高效率（如使用 GitHub、Slack、Zoom 替代部分邮件）。
+  \item \textbf{Safety 议题}：美国政府（CISA、NSA、白宫）近年多次发布"内存安全语言"倡议，将 C/C++ 列为"不安全"语言。这给 WG21 带来压力，需要在标准层面增加安全特性（如 Bounds Safety、Lifetime Safety）。SG4 与 SG23 正在讨论这些方向。
+  \item \textbf{Reflection 与 Contracts}：C++26 的两项重磅特性将改变 C++ 编程范式。这些特性的通过过程体现了去中心化治理的"长期投入、最终共识"模式。
+  \item \textbf{C 与 C++ 的协调}：WG14 与 WG21 通过 SG22 加强协调。C23 引入的 \kw{bool}、\kw{nullptr}、\kw{constexpr}、\kw{[[...]]} 等都与 C++ 同步。
+  \item \textbf{与其他标准组织的合作}：与 IEEE（POSIX）、Ecma（ECMAScript）、W3C（Web）等组织在共享议题上协作（如 Unicode、网络、并发）。
+\end{itemize}
+
+\begin{govbox}
+\textbf{治理观察：去中心化模式的边界条件}
+
+本手册最后强调：去中心化治理的优势\textbf{只在特定条件下成立}：
+
+(1) 标准必须已被广泛采纳，有真实的用户与实现。
+
+(2) 必须有足够多的独立厂商参与（避免被某一两家垄断话语权）。
+
+(3) 演化速度必须与场景匹配（基础设施语言可以慢，应用语言不行）。
+
+(4) 必须有多方利益相关方互相制衡。
+
+如果一个新语言选择 ISO/IEC 治理但缺乏这些条件，反而会因为流程缓慢、缺乏厂商支持而失败。Ada 的部分历史教训即在于此——Ada 标准化时美国政府是主要推动者，但商业化不足，最终市场份额被 C/C++ 取代。
+
+C/C++ 的去中心化治理不是"放之四海皆准的最佳实践"，而是"与其生态现状匹配的一种选择"。
+\end{govbox}
+
+\end{document}
+

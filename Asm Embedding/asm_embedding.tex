@@ -1,0 +1,1304 @@
+% !TEX program = xelatex
+% 汇编嵌入与 volatile 修饰符
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ===== 页面 =====
+\usepackage[margin=2.5cm]{geometry}
+
+% ===== 字体 =====
+\usepackage{fontspec}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}
+  {\setmonofont{Consolas}}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+
+% ===== 颜色 =====
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{cppheadbg}{HTML}{2E4057}
+\definecolor{cheadbg}{HTML}{34495E}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+\definecolor{csharpheadbg}{HTML}{68217A}
+\definecolor{javaheadbg}{HTML}{1565C0}
+\definecolor{javakeyword}{HTML}{A020F0}
+\definecolor{javatype}{HTML}{005A9C}
+\definecolor{rustkeyword}{HTML}{CE4257}
+\definecolor{rusttype}{HTML}{B7410E}
+\definecolor{rustheadbg}{HTML}{B7410E}
+\definecolor{asmheadbg}{HTML}{6B2D5C}
+\definecolor{asmkeyword}{HTML}{B22222}
+\definecolor{asmreg}{HTML}{005A9C}
+\definecolor{bashkw}{HTML}{1A1AFF}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ===== listings =====
+\usepackage{listings}
+
+% ---- C ----
+\lstdefinestyle{cstyle}{%
+  language=C,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={%
+    size_t,ptrdiff_t,int8_t,int16_t,int32_t,int64_t,
+    uint8_t,uint16_t,uint32_t,uint64_t,uintptr_t,intptr_t,
+    sig_atomic_t,NULL,void,printf,memcpy,memset
+  },
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- C++ ----
+\lstdefinestyle{cppstyle}{%
+  language=C++,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    override,final,noexcept,constexpr,consteval,constinit,
+    decltype,auto,concept,requires,co_await,co_yield,co_return,
+    nullptr,sizeof...,static_assert,thread_local,alignas,alignof,
+    namespace,using,template,typename,virtual,explicit,friend,
+    mutable,volatile,register,extern,inline,
+    atomic,memory_order,memory_order_relaxed,memory_order_acquire,
+    memory_order_release,memory_order_seq_cst
+  },
+  deletekeywords={int,char,float,double,bool,void,long,short,unsigned,signed},
+  emph={%
+    int,char,float,double,bool,void,long,short,unsigned,signed,
+    int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,
+    size_t,ptrdiff_t,intptr_t,uintptr_t,
+    std,string,vector,atomic,thread
+  },
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- C\# ----
+\lstdefinelanguage{CSharp}{%
+  morekeywords={%
+    abstract,as,base,bool,break,byte,case,catch,char,checked,class,const,
+    continue,decimal,default,delegate,do,double,else,enum,event,explicit,
+    extern,false,finally,fixed,float,for,foreach,goto,if,implicit,in,
+    int,interface,internal,is,lock,long,namespace,new,null,object,operator,
+    out,override,params,private,protected,public,readonly,ref,return,sbyte,
+    sealed,short,sizeof,stackalloc,static,string,struct,switch,this,throw,
+    true,try,typeof,uint,ulong,unchecked,unsafe,ushort,using,var,void,
+    volatile,while,async,await,record,required,file,init,nint,nuint
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]'
+}[keywords,comments,strings]
+
+\lstdefinestyle{csharpstyle}{%
+  language=CSharp,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{csharpkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={%
+    int,long,short,byte,float,double,decimal,bool,char,string,void,
+    object,dynamic,var,nint,nuint,IntPtr,
+    Thread,Volatile,Interlocked,MemoryBarrier,
+    DllImport,CallingConvention,UnmanagedType
+  },
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Java ----
+\lstdefinestyle{javastyle}{%
+  language=Java,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{javakeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={record,sealed,permits,var,yield,native,strictfp,transient,volatile,synchronized},
+  emph={int,long,short,byte,float,double,boolean,char,void,String,Object,Thread},
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Rust ----
+\lstdefinestyle{ruststyle}{%
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{rustkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    fn,let,mut,ref,struct,enum,impl,trait,type,mod,use,
+    pub,crate,super,self,Self,const,static,unsafe,extern,
+    move,async,await,dyn,where,loop,match,if,else,for,while,
+    break,continue,return,as,in,box
+  },
+  emph={%
+    i8,i16,i32,i64,i128,isize,u8,u16,u32,u64,u128,usize,
+    f32,f64,bool,char,str,String,Vec,Box,Option,Result,Some,None,Ok,Err,
+    AtomicU32,AtomicUsize,Ordering,Relaxed,Acquire,Release,SeqCst
+  },
+  emphstyle=\color{rusttype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- x86 Assembly ----
+\lstdefinelanguage{x86asm}{%
+  morekeywords={%
+    mov,movzx,movsx,lea,add,sub,imul,mul,idiv,div,inc,dec,neg,
+    and,or,xor,not,shl,shr,sar,rol,ror,
+    push,pop,call,ret,jmp,je,jne,jz,jnz,ja,jb,jae,jbe,jg,jl,jge,jle,
+    cmp,test,
+    rdtsc,cpuid,pause,mfence,lfence,sfence,
+    lock,xchg,xadd,cmpxchg,cmpxchg8b,cmpxchg16b,
+    int,syscall,sysenter,iret,
+    nop,ud2,hlt,cli,sti,
+    movd,movq,movdqa,movdqu,pxor,paddb,paddd
+  },
+  sensitive=false,
+  morecomment=[l]{;},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]'
+}[keywords,comments,strings]
+
+\lstdefinestyle{asmstyle}{%
+  language=x86asm,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{asmkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={%
+    eax,ebx,ecx,edx,esi,edi,ebp,esp,
+    rax,rbx,rcx,rdx,rsi,rdi,rbp,rsp,
+    r8,r9,r10,r11,r12,r13,r14,r15,
+    r8d,r9d,r10d,r11d,r12d,r13d,r14d,r15d,
+    ax,bx,cx,dx,al,bl,cl,dl,ah,bh,ch,dh,
+    cs,ds,es,fs,gs,ss,cr0,cr2,cr3,cr4
+  },
+  emphstyle=\color{asmreg}\bfseries,
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Shell ----
+\lstdefinestyle{bashstyle}{%
+  language=bash,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{bashkw}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={gcc,g++,clang,clang++,cl,objdump,gdb,dumpbin},
+  escapeinside={(*@}{@*)}
+}
+
+\lstset{style=cppstyle}
+
+% ===== tcolorbox =====
+\usepackage[most]{tcolorbox}
+
+\tcbset{
+  guideline/.style={%
+    enhanced,breakable,
+    colback=blue!5!white,colframe=blue!50!black,colbacktitle=blue!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=blue!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  compare/.style={%
+    enhanced,breakable,
+    colback=green!5!white,colframe=green!40!black,colbacktitle=green!40!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=green!40!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  warning/.style={%
+    enhanced,breakable,
+    colback=red!5!white,colframe=red!50!black,colbacktitle=red!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=red!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  note/.style={%
+    enhanced,breakable,
+    colback=yellow!5!white,colframe=orange!50!black,colbacktitle=orange!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=orange!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  },
+  bestpractice/.style={%
+    enhanced,breakable,
+    colback=purple!5!white,colframe=purple!50!black,colbacktitle=purple!50!black,
+    title={#1},fonttitle=\bfseries,
+    boxed title style={size=small,colframe=purple!50!black},
+    attach boxed title to top left={yshift=-2mm,xshift=2mm},
+    arc=2mm,boxrule=0.8mm
+  }
+}
+
+% ===== 语言标签 =====
+\newcommand{\clabel}{%
+  \begin{tcolorbox}[enhanced,colback=cheadbg,colframe=cheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries C}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\cpplabel}{%
+  \begin{tcolorbox}[enhanced,colback=cppheadbg,colframe=cppheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries C++}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\csharplabel}{%
+  \begin{tcolorbox}[enhanced,colback=csharpheadbg,colframe=csharpheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries C\#}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\javalabel}{%
+  \begin{tcolorbox}[enhanced,colback=javaheadbg,colframe=javaheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Java}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\rustlabel}{%
+  \begin{tcolorbox}[enhanced,colback=rustheadbg,colframe=rustheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Rust}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\asmlabel}{%
+  \begin{tcolorbox}[enhanced,colback=asmheadbg,colframe=asmheadbg,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries x86 Assembly}
+  \end{tcolorbox}\vspace{-4pt}}
+
+\newcommand{\bashlabel}{%
+  \begin{tcolorbox}[enhanced,colback=black!80,colframe=black!80,
+    arc=1mm,boxrule=0mm,left=6pt,right=6pt,top=2pt,bottom=2pt,
+    halign=left,oversize]
+    \textcolor{white}{\small\bfseries Shell}
+  \end{tcolorbox}\vspace{-4pt}}
+
+% ===== 自定义命令 =====
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+\newcommand{\kw}[1]{\texttt{#1}}
+\newcommand{\seqkw}[1]{\seqsplit{\texttt{#1}}}
+
+% ===== 章节格式 =====
+\usepackage{titlesec}
+\titleformat{\chapter}[display]{\huge\bfseries\color{algheadbg}}{\chaptertitlename\ \thechapter}{10pt}{\huge}
+\titleformat{\section}{\Large\bfseries\color{blue!70!black}}{\thesection}{8pt}{}
+\titleformat{\subsection}{\large\bfseries\color{blue!60!black}}{\thesubsection}{6pt}{}
+
+% ===== 页眉页脚 =====
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ===== 超链接 =====
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,linkcolor=blue!70!black,urlcolor=blue!60!black,
+  pdftitle={Inline Assembly and the Real Uses of volatile},
+  pdfauthor={Asm Embedding Reference}
+}
+
+% ===== 其他 =====
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{amssymb}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+
+% ===================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\Huge\bfseries\color{algheadbg} 汇编嵌入与 volatile 的真实用途\par}
+\vspace{1cm}
+{\LARGE\color{blue!70!black} GCC/Clang asm volatile \textbullet{} MSVC intrinsics \textbullet{} 跨语言对比\par}
+\vfill
+{\large\color{gray} \today\par}
+\end{titlepage}
+
+\chapter*{前\quad 言}
+\addcontentsline{toc}{chapter}{前言}
+
+\kw{volatile} 在 C 与 \cpp{} 标准里的语义只有一句话：告诉编译器不要优化对该对象的访问。许多教程因此把它归为"几乎没用、还容易误用"的关键字，并推荐用 \texttt{std::atomic} 取代它做线程同步。这个评价对纯 \cpp{} 代码大体成立——在语言内部，\kw{volatile} 既不保证原子性，也不提供内存屏障，确实只剩"防止编译器把变量缓存到寄存器"这一项作用。
+
+但 \kw{volatile} 真正的、不可替代的舞台不在纯 C/\cpp{} 代码里，而在 \textbf{C/C++ 与其他语言的边界}上——尤其是与汇编的边界。当一段代码必须与外部观察者（CPU 指令、硬件寄存器、信号处理函数、\texttt{longjmp} 之后的栈帧、运行时插入的钩子）共享某个存储位置时，编译器的所有"看起来等价"的优化都会破坏正确性。GCC/Clang 的 \texttt{asm volatile}、MSVC 的 \texttt{\_\_asm} 与 \texttt{<intrin.h>}、嵌入式开发里的 MMIO 寄存器、信号处理里的 \texttt{sig\_atomic\_t}——这些场景共同构成 \kw{volatile} 修饰符的"实际有用集合"。
+
+本文从这条线索展开。第~1~章给出 \kw{volatile} 在标准里的精确定义与三类真正有用的场景；第~2~章铺陈内联汇编的基础与 ABI 约束；第~3~章详解 GCC/Clang 的 \texttt{asm volatile}，包括它的三大保证、操作数与约束、\texttt{asm goto} 与实战指令；第~4~章对比 MSVC 的 \texttt{\_\_asm} 块与 intrinsics，解释为何 x64 抛弃了内联汇编以及 intrinsics 如何隐式获得 volatile 语义；第~5~章讨论 C 变量与汇编的共享、全局寄存器变量、\texttt{setjmp}/\texttt{longjmp} 与 \texttt{sig\_atomic\_t} 中 \kw{volatile} 的强制要求；第~6~章把视野推广到嵌入其他高级语言（C\#、Java、Python、Lua、Rust），说明为何 FFI 边界让 \kw{volatile} 失去意义；第~7~章横向对比 C/C++、C\#、Java、Rust 四种语言里同名关键字的真实语义差异；第~8~章给出反模式与最佳实践清单。
+
+\section*{文档约定}
+
+\begin{itemize}[nosep]
+  \item \textcolor{blue!50!black}{\textbf{要点框}}~给出语义层面的关键结论。
+  \item \textcolor{green!40!black}{\textbf{对比框}}~总结不同方案/语言的差异。
+  \item \textcolor{red!50!black}{\textbf{陷阱框}}~提示常见错误与平台兼容性问题。
+  \item \textcolor{orange!50!black}{\textbf{注意框}}~补充标准条款、ABI 细节或工具行为。
+  \item \textcolor{purple!50!black}{\textbf{最佳实践框}}~给出工程上的推荐写法。
+\end{itemize}
+
+% --- TOC 修复（LaTeX 2025-11-01 kernel bug）---
+\makeatletter
+\renewcommand*{\@starttoc}[1]{%
+  \IfFileExists{\jobname-manual.toc}{%
+    \@input{\jobname-manual.toc}%
+  }{}%
+}
+\makeatother
+
+\tableofcontents
+
+\mainmatter
+
+% ===================================================================
+\chapter{volatile 的真实价值}\label{ch:volatile-value}
+% ===================================================================
+
+\kw{volatile} 是 C89/C99/C11/C17/C23 与 \cpp{}98 至今所有版本都保留的类型限定符（type qualifier），与 \kw{const} 同属一类。它的语义在标准里非常窄，但被误解得非常宽。本章先把语义钉死，再列出它真正不可替代的三类用途，最后说明为什么"线程同步"不是其中之一。
+
+\section{标准语义：禁止优化访问}\label{sec:volatile-semantics}
+
+C11 §6.7.3 与 \cpp{}23 [dcl.type.cv] 给出的核心规则可以浓缩为三条：
+
+\begin{enumerate}[nosep]
+  \item 对 \kw{volatile} 对象的每次访问都必须翻译成对存储位置的真实读/写，不能被消除、合并、缓存到寄存器或重排到不可观察的位置。
+  \item 访问顺序在\textbf{单线程内}保持程序顺序；标准未承诺跨线程的内存序，也未承诺原子性。
+  \item 在 \cpp{} 中，对 \kw{volatile} 对象的访问被认为是有副作用的（side effect），因此不会被 \texttt{constexpr} 求值，也不能出现在常量表达式里。
+\end{enumerate}
+
+\begin{tcolorbox}[guideline={一句话总结}]
+\kw{volatile} 是\textbf{写给编译器看的}，不是写给 CPU 看的。它只约束编译器优化器，不发出任何 CPU 指令（没有 \texttt{mfence}、没有 \texttt{lock} 前缀、没有缓存一致性消息），也不阻止 CPU 乱序执行。
+\end{tcolorbox}
+
+下面这段代码演示了 \kw{volatile} 在生成汇编层面的真实效果：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+int plain_flag = 0;
+volatile int vola_flag = 0;
+
+int spin_plain() {
+    while (plain_flag == 0) { /* busy wait */ }
+    return plain_flag;
+}
+
+int spin_volatile() {
+    while (vola_flag == 0) { /* busy wait */ }
+    return vola_flag;
+}
+\end{lstlisting}
+
+GCC \texttt{-O2} 下，\texttt{spin\_plain} 会被优化成：先把 \texttt{plain\_flag} 读入寄存器，发现是 0 就跳到一个无限循环 \texttt{.L2: jmp .L2}——永远读不到外部更新，是死循环。而 \texttt{spin\_volatile} 的循环体每次迭代都会重新发出 \texttt{movl vola\_flag(\%rip), \%eax}，外部任何写入都能被观察到。这是 \kw{volatile} 唯一保证的东西。
+
+\section{"无用"的误解：在纯 C/C++ 内部}\label{sec:volatile-misused}
+
+为什么主流 \cpp{} 教程把 \kw{volatile} 评为"少用甚至避免"？因为在纯语言内部，它解决的两个问题都有更好的工具：
+
+\begin{itemize}[nosep]
+  \item \textbf{线程间共享变量}：\kw{volatile} 不提供原子性，不提供 acquire/release 内存序，不防止 CPU 乱序。应该用 \texttt{std::atomic<T>} 配合 \texttt{memory\_order}。
+  \item \textbf{防止编译器把对象优化掉}：现代 \cpp{} 的 RAII、\seqsplit{\texttt{[[maybe\_unused]]}}、\seqsplit{\texttt{std::atomic\_flag}}、\seqsplit{\texttt{benchmark::DoNotOptimize}} 等机制更精确，不必把整个类型染上 \kw{volatile}。
+\end{itemize}
+
+\begin{tcolorbox}[warning={volatile ≠ atomic}]
+经典反例：\texttt{volatile int counter;} 多线程执行 \texttt{counter++}。该操作展开为 load--modify--store 三条指令，编译器不会合并它们，但两个线程仍可能同时 load 到旧值，导致丢失更新。\kw{volatile} 没有解决任何并发问题，反而让读者误以为已经"线程安全"。这是 \cpp{} Core Guidelines CP.3 与 C.169 明确反对的写法。
+\end{tcolorbox}
+
+所以"纯 C/\cpp{} 中 \kw{volatile} 仅为避免编译器优化变量"这个说法是准确的：它的\textbf{唯一}作用就是把变量从优化器的"可缓存集合"中剔除。在语言内部，这个能力很少是必需的。
+
+\section{三大真实用途}\label{sec:volatile-real-uses}
+
+\kw{volatile} 真正不可替代的场景，都涉及一个共同特征：\textbf{C/\cpp{} 编译器看不见的外部观察者}会读写同一块存储。编译器无法推理这些观察者的行为，只能被告知"这里每次访问都要老实翻译"。三类场景如下。
+
+\subsection{内存映射 I/O}\label{sec:volatile-mmio}
+
+嵌入式与驱动开发中，硬件寄存器被映射到固定物理地址。例如某 UART 的状态寄存器位于 \texttt{0x40011000}：
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+#define UART_SR  (*(volatile uint32_t *)0x40011000u)
+#define UART_DR  (*(volatile uint32_t *)0x40011004u)
+
+void uart_putc(char c) {
+    while ((UART_SR & 0x80u) == 0u) { /* wait TXE */ }
+    UART_DR = (uint32_t)c;
+}
+\end{lstlisting}
+
+如果去掉 \kw{volatile}，编译器会看到 \texttt{UART\_SR} 在循环里被反复读取却没人写，于是把它提升到循环外只读一次——程序在硬件忙时永远卡在死循环里。这里的"外部观察者"是 UART 控制器，它在每次传输完成后自动把状态位置 1，C 编译器对此一无所知。
+
+\subsection{信号处理}\label{sec:volatile-signal}
+
+C 标准 §7.14.1.1 规定：信号处理函数与主流程之间共享的对象，如果类型不是 \texttt{volatile sig\_atomic\_t}（或 C11 起的 \texttt{atomic\_flag}/\texttt{atomic<T>}），行为未定义。原因同样是"外部观察者"：信号可以在任意两条指令之间打断主流程，跳到处理函数里写一个标志，再返回。主流程里的循环若把该标志缓存到寄存器，就永远看不到信号已经发生。
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+#include <signal.h>
+
+static volatile sig_atomic_t got_sigint = 0;
+
+static void on_sigint(int sig) {
+    (void)sig;
+    got_sigint = 1;
+}
+
+int main(void) {
+    signal(SIGINT, on_sigint);
+    while (!got_sigint) {
+        /* long-running work */
+    }
+    return 0;
+}
+\end{lstlisting}
+
+\texttt{sig\_atomic\_t} 保证对该类型的读写在\textbf{单线程}视角下不可分割；\kw{volatile} 保证编译器不缓存。两者缺一不可。
+
+\subsection{嵌入汇编与运行时钩子}\label{sec:volatile-asm}
+
+第三类是本文的主线：当 C/\cpp{} 代码里出现一段汇编（GCC 的 \texttt{asm}、MSVC 的 \texttt{\_\_asm}），或者通过函数指针调用一段运行时插入的代码（JIT、热补丁、调试器钩子），这段外部代码可能读写任何全局/静态变量。编译器对内联汇编的"语义"几乎一无所知，必须被告知：
+
+\begin{itemize}[nosep]
+  \item 这段汇编有副作用，不能删除（即使输出未被使用）。
+  \item 这段汇编不能与其他汇编交换顺序。
+  \item 同一段汇编不能合并/去重，每次出现都要原样发射。
+  \item 汇编里读写的 C 变量必须按真实存储位置访问，不能从寄存器复用旧值。
+\end{itemize}
+
+前三条由 \texttt{asm volatile} 关键字提供（GCC/Clang）；第四条由对应 C 变量上的 \kw{volatile} 限定符提供。第~3、5 章会给出完整的语法与实例。
+
+\begin{tcolorbox}[note={为什么 FFI 调用普通函数不需要 volatile}]
+当 C 代码通过 \texttt{extern} 声明并调用一个真正的外部函数（动态库、静态库、其他翻译单元），编译器\textbf{必须}假定该函数可以读写任何全局变量，因此会自动在调用前后把寄存器里的全局变量回写到内存。这是 ABI 层面的强制约定，不需要程序员手写 \kw{volatile}。只有内联汇编打破了这一约定——它在同一个翻译单元内、却绕过编译器的语义分析。
+\end{tcolorbox}
+
+\section{本章小结}\label{sec:ch1-summary}
+
+\kw{volatile} 在 C/\cpp{} 中的语义只有一个：禁止编译器优化对存储位置的访问。在纯语言内部，这个能力被 \texttt{std::atomic}、RAII 与 ABI 约定大幅替代；但当代码与"编译器看不见的外部观察者"共享存储时——硬件寄存器、信号处理、内联汇编、运行时钩子——它就是不可替代的、且常常是 C 标准强制要求的工具。后面几章将聚焦其中最常见也最容易被误用的一类：与汇编的边界。
+
+% ===================================================================
+\chapter{内联汇编基础}\label{ch:asm-basics}
+% ===================================================================
+
+\section{为什么需要内联汇编}\label{sec:why-asm}
+
+现代编译器的代码生成能力已经非常强，绝大多数情况下手写汇编既不会更快，也不会更短。但仍有四类场景必须使用内联汇编：
+
+\begin{enumerate}[nosep]
+  \item \textbf{CPU 专有指令}：\texttt{rdtsc}、\texttt{cpuid}、\texttt{pause}、\texttt{mfence}、\texttt{crc32}、\texttt{aesni}、\texttt{rdseed} 等。编译器在 C/\cpp{} 里没有对应语法，必须通过 \texttt{asm} 或 intrinsics 触发。
+  \item \textbf{原子/同步原语的底层实现}：标准库里的 \texttt{std::atomic}、\texttt{pthread\_mutex\_lock} 内部都依赖 \texttt{lock cmpxchg} 之类的指令。实现这些库的人需要直接写汇编。
+  \item \textbf{操作系统/启动代码}：内核入口、中断向量、上下文切换、特权指令（\texttt{cli}、\texttt{sti}、\texttt{hlt}、\texttt{wrmsr}）无法用 C 表达。
+  \item \textbf{极致性能调优}：SIMD 自动向量化失败的热点循环、密码学中的常数时间实现（防侧信道）、特定的位旋转模式。
+\end{enumerate}
+
+应用层开发者通常只会接触第 1 类与第 4 类。即便如此，理解汇编与 C 变量的交互方式（第~5 章）依然是阅读 GCC 文档、调试 \texttt{-O2} 异常行为的前提。
+
+\section{两大风格：GCC vs MSVC}\label{sec:two-styles}
+
+x86/x64 平台上，C/\cpp{} 嵌入汇编主要有两套语法，互不兼容：
+
+\begin{longtable}{p{2.2cm}p{5.6cm}p{5.6cm}}
+\toprule
+\textbf{特性} & \textbf{GCC/Clang} & \textbf{MSVC} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{特性} & \textbf{GCC/Clang} & \textbf{MSVC} \\
+\midrule
+\endhead
+关键字              & \texttt{asm} / \texttt{\_\_asm\_\_}              & \texttt{\_\_asm}（仅 x86 32-bit） \\
+AT\&T vs Intel 语法 & 默认 AT\&T，可切 Intel                            & Intel \\
+x64 支持            & 完整                                              & 移除；改用 \texttt{<intrin.h>} \\
+操作数绑定          & 显式约束字符串（\texttt{"=r"}、\texttt{"r"}）       & 隐式：直接写变量名 \\
+副作用标记          & \texttt{asm volatile}                             & \texttt{\_\_asm} 块默认即不可删除 \\
+寄存器破坏声明      & clobber list（\texttt{: "memory", "\%eax"}）       & 编译器自动跟踪 \\
+可移植性            & 跨 Linux/macOS/BSD/嵌入式                         & 仅 Windows \\
+\bottomrule
+\end{longtable}
+
+Clang 同时支持 GCC 风格与 MSVC 风格（在 \texttt{-fms-extensions} 下），但 x64 目标上 \texttt{\_\_asm} 仍被拒绝。MSVC 自 Visual Studio 2005 起在 x64 上彻底移除 \texttt{\_\_asm}，官方推荐 intrinsics + 单独的 \texttt{.asm} 文件（用 MASM 编译）。
+
+\begin{tcolorbox}[note={为什么 MSVC 在 x64 上移除 \_\_asm}]
+x64 调用约定（Microsoft x64 ABI）要求函数前 4 个整型参数走 \texttt{rcx/rdx/r8/r9}、前 4 个浮点参数走 \texttt{xmm0--xmm3}，并有 shadow space、栈对齐到 16 字节等约束。在 \texttt{\_\_asm} 块里手动维护这些约束极易出错；MSVC 团队认为 intrinsics 已经覆盖了所有合理用例，索性移除内联汇编以避免长期维护负担。详见 MSDN 文档 "Inline Assembler Is Not Supported on ARM and x64 Platforms"。
+\end{tcolorbox}
+
+\section{ABI 与寄存器约定速查}\label{sec:abi}
+
+写内联汇编必须了解目标平台的 ABI。下表列出最常见两套：
+
+\begin{longtable}{p{2.4cm}p{5.4cm}p{5.4cm}}
+\toprule
+\textbf{项目} & \textbf{System V AMD64} & \textbf{Microsoft x64} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{项目} & \textbf{System V AMD64} & \textbf{Microsoft x64} \\
+\midrule
+\endhead
+适用平台      & Linux/macOS/BSD                & Windows \\
+整型参数      & rdi, rsi, rdx, rcx, r8, r9     & rcx, rdx, r8, r9 \\
+浮点参数      & xmm0--xmm7                     & xmm0--xmm3 \\
+返回值        & rax (rdx:rax 用于 128 位)      & rax \\
+调用者保留    & rax, rcx, rdx, rsi, rdi, r8--r11, xmm 全部 & 同左 \\
+被调用者保留  & rbx, rbp, r12--r15             & rbx, rbp, rdi, rsi, r12--r15, xmm6--xmm15 \\
+栈对齐        & call 前 rsp $\equiv$ 0 (mod 16) & 同左，且需 32 字节 shadow space \\
+\bottomrule
+\end{longtable}
+
+GCC 的约束字符串把这些 ABI 细节抽象出来：写 \texttt{"r"} 表示"任意通用寄存器"，\texttt{"a"} 表示 \texttt{rax}，\texttt{"memory"} 表示"可能读写任何内存"。第~3 章详述。
+
+% ===================================================================
+\chapter{GCC/Clang 内联汇编}\label{ch:gcc-asm}
+% ===================================================================
+
+GCC 与 Clang 共享同一套内联汇编语法（Clang 在 \texttt{-fasm-blocks} 与 GNU 模式下完全兼容）。它分为两种形式：基本 \texttt{asm} 与扩展 \texttt{asm}。
+
+\section{基本 asm}\label{sec:basic-asm}
+
+最简单的形式：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+asm("nop");
+asm("hlt");
+asm volatile("cli");
+\end{lstlisting}
+
+基本 \texttt{asm} 没有操作数，整段字符串原样插入汇编输出。它通常只用于启动代码或内核里那些"我知道我在做什么"的场合。基本 \texttt{asm} 默认是 \kw{volatile} 的（GCC 文档：basic asm is always treated as volatile），加不加 \kw{volatile} 都不影响。但显式写出来更清晰，也便于将来切换到扩展形式。
+
+\section{扩展 asm：操作数与约束}\label{sec:extended-asm}
+
+扩展形式有四个用 \texttt{:} 分隔的部分：
+
+\begin{center}
+\texttt{asm [volatile] [goto] ( template : outputs : inputs : clobbers [: goto-labels] );}
+\end{center}
+
+\subsection{输出操作数}\label{sec:asm-outputs}
+
+每个输出形如 \texttt{"[asmSymbolicName]constraint"(cvar)}。约束字符串告诉编译器把这个 C 变量绑定到什么样的位置：
+
+\begin{longtable}{p{2.2cm}p{11cm}}
+\toprule
+\textbf{约束} & \textbf{含义} \\
+\midrule
+\texttt{"=r"} & 任意通用寄存器（输出，\texttt{=} 表示只写） \\
+\texttt{"=\&r"} & 任意通用寄存器，且与其他输出不重叠（early-clobber） \\
+\texttt{"=a"} & \texttt{rax}/\texttt{eax}/\texttt{ax}/\texttt{al} \\
+\texttt{"=b"} & \texttt{rbx}/\ldots \\
+\texttt{"=c"} & \texttt{rcx}/\ldots \\
+\texttt{"=d"} & \texttt{rdx}/\ldots \\
+\texttt{"=S"} & \texttt{rsi} \\
+\texttt{"=D"} & \texttt{rdi} \\
+\texttt{"=m"} & 内存操作数 \\
+\texttt{"+r"} & 任意通用寄存器，读写 \\
+\bottomrule
+\end{longtable}
+
+\subsection{输入操作数}\label{sec:asm-inputs}
+
+输入约束与输出类似，但不带 \texttt{=} 前缀。还可以用数字（\texttt{"0"}、\texttt{"1"}）表示"与第 N 个输出共用同一寄存器"。
+
+\subsection{clobber list}\label{sec:asm-clobbers}
+
+clobber 列出汇编片段会破坏（写入但未在 outputs 中声明）的寄存器，以及两个特殊符号：
+
+\begin{itemize}[nosep]
+  \item \texttt{"memory"}：汇编可能读写任何内存。编译器必须在 asm 之前把所有 dirty 全局/局部变量回写到内存，并在 asm 之后重新加载需要的值。这是 \kw{volatile} 在变量层面的"批量替代"，但作用域仅限当前 asm 语句。
+  \item \texttt{"cc"}：汇编修改了标志寄存器（EFLAGS/RFLAGS）。
+\end{itemize}
+
+\subsection{完整示例：rdtsc}\label{sec:asm-rdtsc}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <cstdint>
+
+static inline uint64_t rdtsc() {
+    uint32_t lo, hi;
+    asm volatile (
+        "rdtsc"
+        : "=a"(lo), "=d"(hi)   // outputs: eax -> lo, edx -> hi
+        :                        // no inputs
+        :                        // no extra clobbers (eax/edx already declared)
+    );
+    return ((uint64_t)hi << 32) | lo;
+}
+\end{lstlisting}
+
+\texttt{rdtsc} 把 64 位时间戳计数器拆成 \texttt{edx:eax} 返回，必须用 \texttt{"=a"} 与 \texttt{"=d"} 精确指定寄存器；写 \texttt{"=r"} 会编译失败，因为 \texttt{rdtsc} 的目标寄存器不是任意的。
+
+\kw{volatile} 在这里至关重要：如果调用方写 \texttt{(void)rdtsc();}，没有 \kw{volatile} 的话编译器会发现输出未被使用，进而把整段 asm 删除。\kw{volatile} 保证即便输出被丢弃，指令仍会发射——这对测量代码段执行时间是必需的。
+
+\subsection{cpuid 与 clobber 的必要性}\label{sec:asm-cpuid}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+struct CpuidResult {
+    uint32_t eax, ebx, ecx, edx;
+};
+
+static inline CpuidResult cpuid(uint32_t leaf, uint32_t subleaf) {
+    CpuidResult r;
+    asm volatile (
+        "cpuid"
+        : "=a"(r.eax), "=b"(r.ebx), "=c"(r.ecx), "=d"(r.edx)
+        : "a"(leaf), "c"(subleaf)
+        : // ebx is callee-saved on SysV; gcc handles save/restore automatically
+    );
+    return r;
+}
+\end{lstlisting}
+
+\texttt{cpuid} 会写 \texttt{ebx}，而 \texttt{ebx} 在 System V ABI 里是被调用者保留的。GCC 看到 \texttt{"=b"} 约束后会自动插入 \texttt{push rbx}/\texttt{pop rbx}。这是约束字符串优于"裸写汇编"的关键好处之一：编译器仍然知道寄存器活跃情况。
+
+\section{asm volatile 的三大保证}\label{sec:asm-volatile}
+
+\texttt{asm volatile} 给编译器三条强约束：
+
+\begin{enumerate}[nosep]
+  \item \textbf{不可删除}：即使所有输出未被使用、即使代码看起来不可达，asm 语句必须出现在最终二进制里。
+  \item \textbf{不可移动}：asm 与其他 \kw{volatile} 访问、与其他 \texttt{asm volatile} 之间的相对顺序不能交换。普通 C 语句可以在它周围自由移动（除非有 \texttt{"memory"} clobber）。
+  \item \textbf{不可合并}：两次相同的 \texttt{asm volatile("...")} 不会被去重为一次。
+\end{enumerate}
+
+\begin{tcolorbox}[guideline={何时必须 asm volatile}]
+任何具有\textbf{副作用}且副作用无法通过输出操作数表达的汇编，都必须 \kw{volatile}：写 MSR、发 IPI、刷新 TLB、\texttt{pause}、\texttt{mfence}、\texttt{wfi}（ARM 等待中断）、读硬件随机数（\texttt{rdrand}）、调用陷入内核的指令（\texttt{syscall}、\texttt{int 0x80}）等。反之，纯计算（如 \texttt{popcnt}、\texttt{bswap}）若结果通过 \texttt{"=r"} 输出，则\textbf{不应}加 \kw{volatile}，否则失去常量折叠与公共子表达式消除的机会。
+\end{tcolorbox}
+
+\subsection{反面教材：被优化掉的 pause}\label{sec:asm-pause-bug}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// BAD: 缺少 volatile，整个 spin loop 可能被压平
+while (!ready.load(std::memory_order_acquire)) {
+    asm("pause");
+}
+
+// GOOD
+while (!ready.load(std::memory_order_acquire)) {
+    asm volatile("pause" ::: "memory");
+}
+\end{lstlisting}
+
+\texttt{pause} 没有输出、没有输入，从编译器视角是"空语句"。不加 \kw{volatile}，GCC 在某些版本下会直接把循环里的 \texttt{pause} 删除，导致 spin-wait 占满内存总线、让出 SMT 兄弟核的能力消失，性能急剧下降。
+
+\subsection{memory clobber 与变量 volatile 的关系}\label{sec:asm-memory-clobber}
+
+\texttt{"memory"} clobber 告诉编译器：这段汇编可能读写任何内存。其效果相当于"对当前 asm 语句周围的所有内存访问加上一次性的 \kw{volatile} 语义"。但它\textbf{不}跨语句生效——一个变量如果在多个函数中被反复访问，仍然需要在声明处加 \kw{volatile} 才能保证每次都从内存读。
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+volatile int shared;        // 跨多个 asm/函数共享，必须 volatile
+
+void worker() {
+    for (int i = 0; i < 1000; ++i) {
+        int v = shared;     // 每次循环都重新 load
+        asm volatile("..." :: "r"(v) : "memory");
+    }
+}
+\end{lstlisting}
+
+如果把 \texttt{shared} 改成普通 \texttt{int}，编译器会把它提升到循环外的寄存器里，整个 1000 次迭代都看到同一个值。
+
+\section{asm goto：带控制流的汇编}\label{sec:asm-goto}
+
+GCC 4.5+ 与 Clang 9+ 支持 \texttt{asm goto}，让汇编片段直接跳到 C 标签：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+static inline int atomic_add_unless(int *v, int add, int unless) {
+    int old;
+    asm goto volatile (
+        "movl (%0), %1\n\t"
+        "cmpl %3, %1\n\t"
+        "je %l[equal]\n\t"
+        "addl %2, %1\n\t"
+        "movl %1, (%0)"
+        : "+m"(*v), "=&r"(old)
+        : "r"(add), "r"(unless)
+        : "cc"
+        : equal
+    );
+    return old;
+equal:
+    return unless;
+}
+\end{lstlisting}
+
+\texttt{asm goto} 必须 \kw{volatile}（GCC 强制要求），因为它有控制流副作用。Linux 内核大量使用 \texttt{asm goto} 实现高效的原子操作与原子比较交换。
+
+\section{实战指令清单}\label{sec:asm-recipes}
+
+下表列出最常用的几条 x86 指令及其正确的 \texttt{asm volatile} 写法：
+
+\begin{longtable}{p{2.0cm}p{4.5cm}p{6.7cm}}
+\toprule
+\textbf{指令} & \textbf{用途} & \textbf{asm 模板} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{指令} & \textbf{用途} & \textbf{asm 模板} \\
+\midrule
+\endhead
+\texttt{rdtsc}     & 读时间戳计数器            & \texttt{asm volatile("rdtsc" : "=a"(lo), "=d"(hi))} \\
+\texttt{cpuid}     & 查 CPU 特性               & 见第~\ref{sec:asm-cpuid}~节示例 \\
+\texttt{pause}     & spin-wait 让出 SMT        & \texttt{asm volatile("pause" ::: "memory")} \\
+\texttt{mfence}    & 全屏障                    & \texttt{asm volatile("mfence" ::: "memory")} \\
+\texttt{lfence}    & 读屏障（也序列化指令流）  & \texttt{asm volatile("lfence" ::: "memory")} \\
+\texttt{sfence}    & 写屏障                    & \texttt{asm volatile("sfence" ::: "memory")} \\
+\texttt{lock addl} & 原子加                    & \texttt{asm volatile("lock; addl \%1,\%0" : "+m"(v) : "r"(d) : "cc", "memory")} \\
+\texttt{lock cmpxchg} & 原子 CAS               & 见下方完整示例 \\
+\texttt{rdrand}    & 硬件随机数                & \texttt{asm volatile("rdrand \%0" : "=r"(x) :: "cc")} \\
+\texttt{wbinvd}    & 写回并失效缓存（特权）    & \texttt{asm volatile("wbinvd" ::: "memory")} \\
+\bottomrule
+\end{longtable}
+
+CAS 的完整封装：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+static inline bool cas32(int32_t *ptr, int32_t expected, int32_t desired) {
+    bool ok;
+    asm volatile (
+        "lock; cmpxchgl %[des], %[mem]; sete %[ok]"
+        : [mem] "+m"(*ptr),
+          [ok]  "=q"(ok),
+          [des] "+r"(desired)
+        : "[mem]"(ptr), "a"(expected)
+        : "cc", "memory"
+    );
+    return ok;
+}
+\end{lstlisting}
+
+\texttt{"=q"} 约束表示 \texttt{al/ah/bl/bh/cl/ch/dl/dh} 之一（即 \texttt{sete} 可以写入的低 8 位寄存器）；\texttt{"a"} 把 \texttt{expected} 绑定到 \texttt{eax}，因为 \texttt{cmpxchg} 隐式使用 \texttt{eax} 作比较源；\texttt{"+m"} 表示 \texttt{*ptr} 既被读也被写。
+
+% ===================================================================
+\chapter{MSVC \_\_asm 与 intrinsics}\label{ch:msvc}
+% ===================================================================
+
+\section{x86 32-bit \_\_asm 块}\label{sec:msvc-asm-block}
+
+MSVC 在 x86 32-bit 目标上支持 \texttt{\_\_asm} 块，语法接近裸 MASM：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+int add_two(int a, int b) {
+    __asm {
+        mov eax, a
+        add eax, b
+        // 结果留在 eax，函数返回
+    }
+}
+\end{lstlisting}
+
+\texttt{\_\_asm} 块默认就是不可删除的——MSVC 把所有 \texttt{\_\_asm} 视为有副作用，相当于隐式 \kw{volatile}。但块内引用的 C 局部变量\textbf{不}自动按 \kw{volatile} 处理：如果 \texttt{a} 和 \texttt{b} 在块外还被读取，编译器可能把它们仍放在寄存器里。安全做法是显式声明：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+void worker() {
+    volatile int shared = 0;
+    __asm {
+        mov eax, shared   // 每次访问都从内存 load
+        inc eax
+        mov shared, eax
+    }
+}
+\end{lstlisting}
+
+\section{x64：移除 \_\_asm，改用 intrinsics}\label{sec:msvc-x64}
+
+如 §2.2 所述，MSVC 在 x64 上完全移除 \texttt{\_\_asm}。替代方案是 \texttt{<intrin.h>} 提供的\textbf{编译器内置函数}。它们看起来像普通 C 函数，实际由编译器直接展开为对应指令：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <intrin.h>
+#include <cstdint>
+
+uint64_t tsc = __rdtsc();
+
+int cpuInfo[4];
+__cpuid(cpuInfo, 1);
+
+void spin() {
+    while (!flag.load()) {
+        _mm_pause();   // 等价于 GCC 的 asm("pause")
+    }
+}
+
+void fence() {
+    _mm_mfence();      // 等价于 asm("mfence" ::: "memory")
+    MemoryBarrier();   // Windows SDK 宏，展开为 _mm_mfence 或更强
+}
+
+long old = _InterlockedCompareExchange(&target, desired, expected);
+\end{lstlisting}
+
+\section{intrinsics 的隐式 volatile 语义}\label{sec:intrinsic-volatile}
+
+MSVC 文档明确：所有 \seqsplit{\texttt{\_Interlocked*}}、\texttt{\_mm\_*}（fence/pause/atomic 系列）、\seqsplit{\texttt{\_ReadWriteBarrier}}、\texttt{\_\_rdtsc}、\texttt{\_\_cpuid} 等 intrinsics 都被视为\textbf{有副作用}，编译器不会删除或重排它们，即使返回值未被使用。这等价于 GCC 的 \texttt{asm volatile}。
+
+\begin{tcolorbox}[compare={GCC asm volatile vs MSVC intrinsics}]
+\begin{itemize}[nosep]
+  \item GCC：副作用由程序员通过 \texttt{volatile} 显式标注；漏写就会被优化掉。
+  \item MSVC：副作用由微软在 intrinsic 实现里"内置"；程序员无法关闭，也无需操心。
+  \item 代价：MSVC intrinsics 只覆盖微软想到的指令；新指令（如 \texttt{rdseed}、\texttt{gfni}）必须等 VS 更新。GCC 的 \texttt{asm volatile} 永远可用。
+  \item 可移植性：intrinsics 名字在 GCC/Clang 上也大多兼容（\texttt{\_\_rdtsc}、\texttt{\_mm\_pause}），但 \texttt{\_Interlocked*} 是 MSVC 专有；GCC 对应物是 \texttt{\_\_atomic\_*} 内建函数或 \texttt{std::atomic}。
+\end{itemize}
+\end{tcolorbox}
+
+\section{\_ReadWriteBarrier 与编译器屏障}\label{sec:msvc-barrier}
+
+\texttt{\_ReadWriteBarrier()} 是 MSVC 历史上常用的"纯编译器屏障"——它不发射任何 CPU 指令，只阻止编译器跨它重排内存访问。该 intrinsic 自 VS 2015 起被标记为 deprecated，官方推荐用 \texttt{std::atomic\_thread\_fence} 或 \texttt{MemoryBarrier}。但在维护老代码时仍会遇到。
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+volatile int data;
+volatile int ready;
+
+void producer() {
+    data = 42;
+    _ReadWriteBarrier();   // 编译器屏障：保证 data 写在 ready 写之前
+    ready = 1;
+}
+\end{lstlisting}
+
+注意：这里的 \kw{volatile} 仍然是必需的——它保证 \texttt{data} 与 \texttt{ready} 的访问不被缓存到寄存器。\texttt{\_ReadWriteBarrier} 只解决"重排"问题，不解决"缓存"问题。两者职责不同，必须配合使用。
+
+\section{单独的 .asm 文件：MASM 路径}\label{sec:masm}
+
+如果 intrinsic 不够用（如需要写完整的 SIMD kernel、上下文切换例程），MSVC 的官方做法是把汇编放到独立的 \texttt{.asm} 文件，用 MASM (\texttt{ml64.exe}) 编译，再链接进项目：
+
+\bashlabel
+\begin{lstlisting}[style=bashstyle]
+ml64 /c my_kernel.asm
+link my_obj.obj my_kernel.obj /OUT:app.exe
+\end{lstlisting}
+
+这条路径下，C 与汇编的边界是普通的函数调用——遵守完整 ABI，编译器自动处理寄存器保存与全局变量回写，因此 C 端\textbf{不需要}给被汇编访问的变量加 \kw{volatile}（除非该变量同时被信号处理或硬件访问）。这是与内联汇编最大的区别。
+
+% ===================================================================
+\chapter{C 变量与汇编的交互}\label{ch:c-asm-interact}
+% ===================================================================
+
+第~3、4 章展示了如何把汇编嵌入 C/\cpp{}。本章反向讨论：当汇编与 C 共享变量时，C 端必须做哪些事才能保证正确性。
+
+\section{共享变量必须 volatile}\label{sec:shared-must-volatile}
+
+规则：\textbf{任何在 C 代码与内联汇编之间共享、且会被汇编修改的变量，C 端声明必须带 \kw{volatile}}。
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+// BAD
+static int counter = 0;
+void inc_ten_times() {
+    for (int i = 0; i < 10; ++i) {
+        asm volatile("incl counter" ::: "memory");
+    }
+    printf("%d\n", counter);   // 可能打印 0：编译器把 counter 缓存了
+}
+
+// GOOD
+static volatile int counter = 0;
+void inc_ten_times() {
+    for (int i = 0; i < 10; ++i) {
+        asm volatile("incl counter" ::: "memory");
+    }
+    printf("%d\n", counter);   // 正确打印 10
+}
+\end{lstlisting}
+
+\texttt{"memory"} clobber 只在 asm 语句的\textbf{边界}起作用：它告诉编译器"在这条 asm 前后，重新加载/回写内存"。但 \texttt{counter} 在循环外被读取时，编译器仍然可以认为"自上次 load 之后没有 C 代码写过它"，从而复用寄存器里的旧值。\kw{volatile} 才能强制每次访问都从内存读。
+
+\section{全局寄存器变量}\label{sec:global-register-var}
+
+GCC 扩展允许把全局变量绑定到固定寄存器：
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+register volatile int *sp asm("rsp");   // 全局寄存器变量
+
+void save_stack_pointer() {
+    asm volatile("mov %%rsp, %0" : "=r"(sp));
+}
+\end{lstlisting}
+
+这种用法在内核与运行时（GC、协程库）里偶尔出现。\kw{register} 与 \kw{volatile} 同时修饰时，C 标准把 \kw{volatile} 的语义优先：变量必须每次都从该寄存器读写，不能被进一步缓存到编译器临时变量里。
+
+\begin{tcolorbox}[warning={全局寄存器变量极脆弱}]
+GCC 文档明确：全局寄存器变量不能保证在所有函数中可见——如果某函数被 GCC 决定用该寄存器作其他用途，行为未定义。仅当你完全控制整个二进制（如 freestanding 内核）且熟悉目标 ABI 时才使用。普通应用程序请改用 \texttt{thread\_local} 或显式参数传递。
+\end{tcolorbox}
+
+\section{setjmp/longjmp 与 volatile}\label{sec:setjmp}
+
+C 标准 §7.13.2.1 规定：在 \texttt{setjmp} 与 \texttt{longjmp} 之间，被修改过、又被 \texttt{longjmp} 后代码访问的非 \kw{volatile} 局部变量，其值是\textbf{未定义}的。
+
+\clabel
+\begin{lstlisting}[style=cstyle]
+#include <setjmp.h>
+#include <stdio.h>
+
+static jmp_buf env;
+
+static void trigger() { longjmp(env, 1); }
+
+int main(void) {
+    int plain = 0;
+    volatile int vola = 0;
+
+    if (setjmp(env) == 0) {
+        plain = 42;
+        vola  = 42;
+        trigger();
+    } else {
+        printf("plain=%d vola=%d\n", plain, vola);
+        // plain 可能是 0 也可能是 42（实现相关）
+        // vola 一定是 42
+    }
+    return 0;
+}
+\end{lstlisting}
+
+原因：\texttt{setjmp} 保存的是寄存器与栈快照，但编译器可能把 \texttt{plain} 优化到某个被复用/未保存的寄存器里。\kw{volatile} 强制它留在栈上的固定位置，\texttt{longjmp} 恢复栈帧后还能读到正确值。
+
+这条规则在内核（异常处理）、解释器（错误恢复）、协程库（上下文切换）里反复出现。Linux 内核的 \texttt{BUG\_ON}、Lua 的 \texttt{lua\_error}、PostgreSQL 的 \texttt{PG\_TRY}/\texttt{PG\_CATCH} 都依赖 \texttt{setjmp}/\texttt{longjmp}，相关局部变量必须 \kw{volatile}。
+
+\section{sig\_atomic\_t 与异步信号}\label{sec:sig-atomic}
+
+§1.3.2 已经给出例子。这里补充两点工程细节：
+
+\begin{enumerate}[nosep]
+  \item \texttt{sig\_atomic\_t} 在 glibc 上是 \texttt{int}，在 MSVC 上是 \texttt{char}（即 \texttt{signed char}）。它只保证\textbf{单线程}视角下读写不可分割，不保证跨核可见性。
+  \item C11 起可以用 \texttt{\_Atomic sig\_atomic\_t} 或 \texttt{atomic\_flag} 替代，获得真正的原子语义与内存序。POSIX 也推荐用 \texttt{self-pipe trick} 或 \texttt{signalfd} 把信号转化为 I/O 事件，从根本上避开 \kw{volatile} 的微妙语义。
+\end{enumerate}
+
+% ===================================================================
+\chapter{嵌入其他高级语言}\label{ch:ffi}
+% ===================================================================
+
+第~3--5 章聚焦汇编。本章把视野推广到所有"在 C/\cpp{} 中嵌入其他语言"的场景，并回答一个核心问题：\textbf{为什么这些场景几乎不需要 \kw{volatile}？}
+
+\section{FFI 边界天然防优化}\label{sec:ffi-natural}
+
+当 C 代码通过函数指针或 \texttt{extern} 声明调用一个外部函数（无论该函数是用 Lua、Python、Java、C\# 还是 Rust 写的），编译器必须遵守 ABI 约定：
+
+\begin{itemize}[nosep]
+  \item 调用前把所有 dirty 的全局/静态变量回写到内存（因为被调函数可能读它们）。
+  \item 调用后重新加载需要的变量（因为被调函数可能写它们）。
+  \item 不假设被调函数无副作用，因此不会删除调用。
+\end{itemize}
+
+这正是 \texttt{asm volatile(... ::: "memory")} 想达到的效果，但 ABI 已经免费提供。所以通过\textbf{真正的函数调用}进入其他语言时，C 端不需要 \kw{volatile}。
+
+\begin{tcolorbox}[guideline={内联汇编为何特殊}]
+内联汇编不是函数调用：它在同一个翻译单元内，编译器\textbf{可以}看到它的全部文本，因此默认假设"这段代码只动我声明过的寄存器/内存"。这种"全知"反而成为优化器的负担——它必须被显式告知"我其实看不全"。\kw{volatile} 与 \texttt{"memory"} clobber 就是这个告知机制。
+\end{tcolorbox}
+
+\section{C\# 嵌入 C/C++：P/Invoke}\label{sec:csharp-pinvoke}
+
+C\# 通过 \texttt{DllImport} 调用原生 DLL：
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+using System.Runtime.InteropServices;
+
+class Native {
+    [DllImport("native.dll", CallingConvention = CallingConvention.Cdecl)]
+    public static extern int add(int a, int b);
+
+    [DllImport("native.dll")]
+    public static extern void spin_until(ref int flag);
+}
+
+class Program {
+    static void Main() {
+        Console.WriteLine(Native.add(1, 2));
+    }
+}
+\end{lstlisting}
+
+C\# 端没有 \kw{volatile} 修饰符出现在 P/Invoke 声明里——CLR 在调用前后会自动插入完整的内存屏障（P/Invoke 转换涉及托管/非托管栈切换，本身就是序列化点）。原生侧的 \kw{volatile} 仍然适用于硬件寄存器与信号处理，但与 C\# 调用方无关。
+
+C\# 的 \kw{volatile} 关键字用在\textbf{纯托管}代码里，语义与 C/\cpp{} 完全不同——见第~7 章。
+
+\section{Java 嵌入 C/C++：JNI}\label{sec:java-jni}
+
+Java 通过 \texttt{native} 方法 + JNI 调用 C/\cpp{}：
+
+\javalabel
+\begin{lstlisting}[style=javastyle]
+public class Native {
+    static { System.loadLibrary("native"); }
+    public static native int add(int a, int b);
+}
+\end{lstlisting}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle]
+#include <jni.h>
+#include "Native.h"
+
+JNIEXPORT jint JNICALL Java_Native_add
+  (JNIEnv *env, jclass cls, jint a, jint b) {
+    (void)env; (void)cls;
+    return a + b;
+}
+\end{lstlisting}
+
+JNI 调用经过 JVM 的 native method stub，stub 会处理 GC 安全点、局部引用表、异常状态等。所有 JVM 内部状态对 C 代码都是"不透明"的——C 编译器只能假设 JNI 函数有任意副作用，因此自动遵守 §6.1 的规则。Java 端的 \kw{volatile} 关键字（JSR-133 之后）提供完整的 happens-before 关系，与 C/\cpp{} 的 \kw{volatile} 不是同一回事。
+
+\section{Python 嵌入 C/C++}\label{sec:python-ffi}
+
+Python 调用 C 扩展有三条主流路径：
+
+\begin{itemize}[nosep]
+  \item \textbf{CPython C API}：手写 \texttt{PyMethodDef}、\texttt{PyModuleDef}，编译为 \texttt{.so}/\texttt{.pyd}。
+  \item \textbf{ctypes/cffi}：运行时通过 \texttt{dlopen}/\texttt{LoadLibrary} 加载共享库，按 C ABI 调用。
+  \item \textbf{pybind11}：\cpp{} 模板库，自动生成 CPython C API 胶水代码。
+\end{itemize}
+
+三条路径都通过 C ABI 进入 C/\cpp{}，因此 §6.1 的规则适用。Python 解释器自身用 GIL 序列化字节码执行，Python 层没有 \kw{volatile} 关键字。
+
+\section{Lua 嵌入 C/C++}\label{sec:lua-ffi}
+
+Lua 通过 \texttt{lua\_CFunction}（即 \texttt{int (*)(lua\_State *)}）暴露 C 函数。注册过程是普通的函数指针赋值，调用过程是普通的 C 函数调用。Lua 虚拟机本身用 C 写成，所有 Lua/C 边界都遵守 C ABI——不需要 \kw{volatile}。
+
+\section{Rust 嵌入 C/C++}\label{sec:rust-ffi}
+
+Rust 通过 \texttt{extern "C"} 块声明外部 C 函数：
+
+\rustlabel
+\begin{lstlisting}[style=ruststyle]
+extern "C" {
+    fn add(a: i32, b: i32) -> i32;
+}
+
+fn main() {
+    unsafe { println!("{}", add(1, 2)); }
+}
+\end{lstlisting}
+
+Rust 没有 \kw{volatile} 关键字，但 \texttt{core::ptr::volatile\_read}/\texttt{volatile\_write} 与 \texttt{core::ptr::read\_volatile}/\texttt{write\_volatile} 提供等价语义，主要用于 MMIO 与 FFI 中的特殊场景。日常 Rust 代码用 \texttt{AtomicU32}、\texttt{Ordering} 与 \texttt{UnsafeCell} 表达并发与可变性，几乎不需要 volatile 操作。
+
+\section{本章小结}\label{sec:ffi-summary}
+
+嵌入其他\textbf{高级}语言时，C/\cpp{} 通过函数调用进入对方运行时，ABI 强制编译器在调用边界刷新内存。这条规则让 \kw{volatile} 在 FFI 场景里几乎没用武之地。真正需要 \kw{volatile} 的是嵌入\textbf{汇编}——因为汇编不是函数调用，它在同一翻译单元内，编译器默认认为自己看得到全部副作用。
+
+% ===================================================================
+\chapter{跨语言 volatile 关键字对比}\label{ch:cross-lang}
+% ===================================================================
+
+C/\cpp{}、C\#、Java、Rust 四种语言里都出现了 \kw{volatile}（或等价机制），但语义差异巨大。本章把它们并排比较，避免跨语言迁移时的误用。
+
+\section{C/C++ volatile：仅防优化}\label{sec:cpp-volatile}
+
+已在第~1 章详述。要点重申：
+
+\begin{itemize}[nosep]
+  \item 不保证原子性。
+  \item 不保证内存序（无 acquire/release/seq\_cst）。
+  \item 不发射 CPU 屏障指令。
+  \item 唯一作用：禁止编译器优化访问。
+\end{itemize}
+
+\section{C\# volatile：acquire/release 内存屏障}\label{sec:csharp-volatile}
+
+C\# 标准（ECMA-335 §I.12.6.5）规定：对 \kw{volatile} 字段的读取具有 acquire 语义，写入具有 release 语义。具体效果：
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle]
+class Holder {
+    private volatile bool ready;
+    private int data;
+
+    public void Producer() {
+        data = 42;
+        ready = true;   // release: 之前的写不会重排到此后
+    }
+
+    public int Consumer() {
+        if (!ready) return -1;   // acquire: 之后的读不会重排到此前
+        return data;             // 保证看到 42
+    }
+}
+\end{lstlisting}
+
+\begin{tcolorbox}[compare={C\# volatile vs C++ volatile}]
+\begin{itemize}[nosep]
+  \item C\# \kw{volatile} 同时阻止\textbf{编译器}（JIT）与\textbf{CLR 内存模型}层面的重排，提供单向屏障（acquire on read, release on write）。
+  \item C/\cpp{} \kw{volatile} 只阻止编译器优化，对 CPU 重排无能为力。
+  \item 在 C\# 中，等价于 \cpp{} 里 \seqsplit{\texttt{std::atomic<T>::load}}（acquire 序）的语义恰恰需要 \kw{volatile} 字段；而在 \cpp{} 中必须用 \texttt{std::atomic}，\kw{volatile} 帮不上忙。
+  \item C\# \kw{volatile} 不保证 64 位字段的原子性（在 32 位平台上），需要 \texttt{Interlocked.Read}。C/\cpp{} 中 \texttt{std::atomic<uint64\_t>} 在所有主流平台都是 lock-free。
+\end{itemize}
+\end{tcolorbox}
+
+\section{Java volatile：完整 happens-before}\label{sec:java-volatile}
+
+Java 5（JSR-133）之后，\kw{volatile} 提供：
+
+\begin{itemize}[nosep]
+  \item 对所有字宽（包括 \texttt{long}/\texttt{double}）的原子读写。
+  \item happens-before 关系：对 \kw{volatile} 字段的写，happens-before 任何后续对该字段的读。
+  \item 等价于 \texttt{AtomicInteger} 的 \texttt{get}/\texttt{set}，但不支持 CAS（需要 \texttt{AtomicXxx} 或 VarHandle）。
+\end{itemize}
+
+\javalabel
+\begin{lstlisting}[style=javastyle]
+class Holder {
+    private volatile boolean ready;
+    private int data;
+
+    void produce() { data = 42; ready = true; }
+    int consume()  { return ready ? data : -1; }
+}
+\end{lstlisting}
+
+Java \kw{volatile} 的语义比 C\# 更强（C\# 不保证 64 位原子，Java 保证），但比 C/\cpp{} 的 \texttt{std::atomic<T>} 弱（没有 \texttt{compare\_exchange}、没有显式 \texttt{memory\_order} 选择）。
+
+\section{Rust：无关键字，显式函数}\label{sec:rust-volatile}
+
+Rust 故意没有 \kw{volatile} 关键字。等价能力通过 \texttt{core::ptr} 模块的 \texttt{unsafe} 函数提供：
+
+\rustlabel
+\begin{lstlisting}[style=ruststyle]
+use std::ptr;
+use std::sync::atomic::{AtomicU32, Ordering};
+
+static COUNTER: AtomicU32 = AtomicU32::new(0);
+
+fn bump() {
+    COUNTER.fetch_add(1, Ordering::SeqCst);
+}
+
+unsafe fn mmio_read(addr: *const u32) -> u32 {
+    ptr::read_volatile(addr)
+}
+
+unsafe fn mmio_write(addr: *mut u32, v: u32) {
+    ptr::write_volatile(addr, v);
+}
+\end{lstlisting}
+
+设计哲学：
+
+\begin{itemize}[nosep]
+  \item \texttt{read\_volatile}/\texttt{write\_volatile} 对应 C/\cpp{} \kw{volatile}，用于 MMIO 与 FFI，不保证原子性也不保证内存序。
+  \item \texttt{AtomicXxx} 与 \texttt{Ordering} 对应 C/\cpp{} \texttt{std::atomic}，是并发同步的唯一推荐工具。
+  \item 两者都标记为 \texttt{unsafe}（volatile 操作）或需要显式 \texttt{Ordering} 参数（atomic 操作），让程序员在调用点就意识到语义责任。
+\end{itemize}
+
+\section{四语言对比表}\label{sec:cross-table}
+
+\begin{longtable}{p{2.4cm}p{2.85cm}p{2.85cm}p{2.85cm}p{2.85cm}}
+\toprule
+\textbf{特性} & \textbf{C/C++} & \textbf{C\#} & \textbf{Java} & \textbf{Rust} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{特性} & \textbf{C/C++} & \textbf{C\#} & \textbf{Java} & \textbf{Rust} \\
+\midrule
+\endhead
+关键字                & \kw{volatile}              & \kw{volatile}              & \kw{volatile}              & 无（用函数） \\
+阻止编译器优化        & 是                         & 是                         & 是                         & 是 \\
+阻止 CPU 重排         & 否                         & 单向 acq/rel               & 双向 happens-before        & 否/是（atomic） \\
+保证原子性            & 否                         & 32 位是，64 位看平台       & 是（含 long/double）       & 否/是（atomic） \\
+线程同步推荐          & \seqsplit{\texttt{std::atomic}} & \kw{volatile} 或 Interlocked & \kw{volatile} 或 AtomicXxx & AtomicXxx \\
+MMIO 推荐             & \kw{volatile} 指针         & 不适用                     & 不适用                     & \seqsplit{\texttt{read\_volatile}} \\
+内联汇编              & \texttt{asm volatile}      & 不支持                     & 不支持                     & \texttt{asm!} 宏 \\
+\bottomrule
+\end{longtable}
+
+% ===================================================================
+\chapter{反模式与最佳实践}\label{ch:best-practice}
+% ===================================================================
+
+\section{反模式清单}\label{sec:antipatterns}
+
+\begin{enumerate}[nosep]
+  \item \textbf{用 \kw{volatile} 做线程同步}：见 §1.2。改用 \texttt{std::atomic} 或 \texttt{std::mutex}。
+  \item \textbf{用 \kw{volatile} 修饰整个类}：会让所有成员访问都退化，性能损失大且语义不清。改用 \texttt{std::atomic} 成员或专门的同步包装。
+  \item \textbf{\texttt{asm} 漏写 \kw{volatile}}：有副作用的指令（\texttt{pause}、\texttt{mfence}、写 MSR、\texttt{wfi}）必须 \kw{volatile}。
+  \item \textbf{\texttt{asm volatile} 漏写 \texttt{"memory"} clobber}：当汇编读写未声明的内存时（如直接寻址全局变量），必须加 \texttt{"memory"}，否则编译器不知道要刷新。
+  \item \textbf{共享变量漏写 \kw{volatile}}：见 §5.1。
+  \item \textbf{\texttt{setjmp}/\texttt{longjmp} 之间的局部变量漏写 \kw{volatile}}：见 §5.3，行为未定义。
+  \item \textbf{信号处理函数访问非 \texttt{sig\_atomic\_t} 全局}：见 §5.4，行为未定义。
+  \item \textbf{在 \kw{volatile} 对象上使用 \texttt{const\_cast} 去掉 \kw{volatile}}：通过非 \kw{volatile} 左值修改 \kw{volatile} 对象是未定义行为（C++ [dcl.type.cv]/6）。
+  \item \textbf{把 MSVC \texttt{\_ReadWriteBarrier} 当 CPU 屏障}：它只阻止编译器重排，不阻止 CPU 重排。跨核同步必须用 \texttt{MemoryBarrier} 或 \texttt{std::atomic\_thread\_fence}。
+  \item \textbf{在性能敏感路径滥用 \kw{volatile}}：每次访问都走内存，破坏寄存器分配与指令调度。仅在真正需要时使用。
+\end{enumerate}
+
+\section{最佳实践清单}\label{sec:best-practices}
+
+\begin{enumerate}[nosep]
+  \item \textbf{线程同步}：一律 \texttt{std::atomic<T>} + 显式 \texttt{memory\_order}。
+  \item \textbf{MMIO}：\texttt{volatile uintN\_t *} 指针，配合 \texttt{static\_assert(sizeof(...) == N/8)}。
+  \item \textbf{信号处理}：\texttt{volatile sig\_atomic\_t} 标志，或 C11 \texttt{atomic\_flag}，或 self-pipe。
+  \item \textbf{内联汇编}：有副作用 → \texttt{asm volatile}；读写未声明内存 → 加 \texttt{"memory"} clobber；纯计算 → 不加 \kw{volatile}，让编译器优化。
+  \item \textbf{跨 \texttt{longjmp} 的局部变量}：一律 \kw{volatile}，或重构为堆分配 + RAII。
+  \item \textbf{MSVC x64}：优先 intrinsics；不够用时写独立 \texttt{.asm} 文件；避免 \seqsplit{\texttt{\_ReadWriteBarrier}}，改用 \seqsplit{\texttt{std::atomic\_thread\_fence}}。
+  \item \textbf{代码评审}：看到 \kw{volatile} 立刻问三个问题——(a) 这是 MMIO/信号/汇编共享吗？(b) 如果不是，为什么不用 \texttt{std::atomic}？(c) 如果是，原子性与内存序如何保证？
+  \item \textbf{文档}：在 \kw{volatile} 变量声明处写注释，说明"谁是外部观察者"（哪个硬件寄存器、哪个信号、哪段汇编）。这是未来维护者最需要的信息。
+\end{enumerate}
+
+\section{结语}\label{sec:conclusion}
+
+\kw{volatile} 在 C/\cpp{} 里是一个被严重误用的关键字，但它的"被误用"恰恰来自一个事实：它在语言内部确实没什么用。它真正的舞台在边界上——硬件、信号、汇编、运行时钩子。在这些场景里，它是 C 标准强制要求的、不可替代的、且常常是唯一正确的工具。
+
+理解 \kw{volatile} 的最好方式，是理解"编译器看不见的外部观察者"这个概念。一旦你开始用这个视角看代码，\texttt{asm volatile}、\texttt{"memory"} clobber、\texttt{sig\_atomic\_t}、\texttt{setjmp} 后的 \kw{volatile} 局部变量——所有这些看似零散的规则就会统一成一条：\textbf{当存在编译器无法推理的写入者时，必须告诉编译器"老实访问，不要聪明"}。
+
+\end{document}

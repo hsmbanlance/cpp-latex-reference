@@ -1,0 +1,1340 @@
+% !TEX program = xelatex
+% C++20 非类型模板参数扩展：从整型到结构化类型
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ===== 页面 =====
+\usepackage[margin=2.5cm]{geometry}
+
+% ===== 字体 =====
+\usepackage{fontspec}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}
+  {\setmonofont{Consolas}}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+
+% ===== 颜色 =====
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{cppheadbg}{HTML}{2E4057}
+\definecolor{cpp17bg}{HTML}{7A4FA3}
+\definecolor{cpp20bg}{HTML}{B03A2E}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{csharptype}{HTML}{006400}
+\definecolor{cmheadbg}{HTML}{4EAA25}
+
+% ===== listings =====
+\usepackage{listings}
+
+% ---- C++ ----
+\lstdefinestyle{cppstyle}{%
+  language=C++,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    override,final,noexcept,constexpr,consteval,constinit,
+    decltype,auto,concept,requires,co_await,co_yield,co_return,
+    nullptr,sizeof...,static_assert,thread_local,alignas,alignof,
+    namespace,using,template,typename,virtual,explicit,friend,
+    mutable,volatile,register,extern,inline,
+    module,import,export,
+    std,string,vector,array,map,unordered_map,set,unordered_set,
+    unique_ptr,shared_ptr,weak_ptr,optional,variant,any,
+    tuple,pair,span,string_view,
+    cin,cout,cerr,endl,
+    move,forward,swap,make_unique,make_shared,
+    begin,end,size,empty,push_back,emplace_back,
+    is_same_v,is_constructible_v,integral_constant,
+    chrono,literal,operator
+  },
+  deletekeywords={int,char,float,double,bool,void,long,short,unsigned,signed},
+  emph={%
+    int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,
+    size_t,ptrdiff_t,intptr_t,uintptr_t,wchar_t,char8_t
+  },
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- CMake ----
+\lstdefinestyle{cmakestyle}{%
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=2,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cmheadbg}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    cmake_minimum_required,project,add_library,add_executable,%
+    target_sources,target_link_libraries,target_include_directories,%
+    target_compile_features,target_compile_options,target_compile_definitions,%
+    find_package,include,set,option,if,else,elseif,endif,%
+    foreach,endforeach,function,endfunction,macro,endmacro,%
+    CMAKE_CXX_STANDARD,CMAKE_CXX_STANDARD_REQUIRED,CMAKE_CXX_EXTENSIONS,%
+    CMAKE_BUILD_TYPE,CMAKE_CURRENT_SOURCE_DIR,%
+    SHARED,STATIC,INTERFACE,PUBLIC,PRIVATE,%
+    install,export,configure_package_config_file,%
+    BUILD_INTERFACE,INSTALL_INTERFACE
+  },
+  escapeinside={(*@}{@*)}
+}
+
+\lstset{style=cppstyle}
+
+% ===== tcolorbox =====
+\usepackage[most]{tcolorbox}
+
+% ===== 代码标签 =====
+\newcommand{\cpplabel}{%
+  \tcbox[on line,colback=cppheadbg,colframe=cppheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{C++}}
+
+\newcommand{\cppxxlabel}[1]{%
+  \tcbox[on line,colback=cpp20bg,colframe=cpp20bg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{#1}}
+
+\newcommand{\cmakelabel}{%
+  \tcbox[on line,colback=cmheadbg,colframe=cmheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{CMake}}
+
+% ===== tcolorbox 提示框 =====
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{stdbox}[1][]{
+  enhanced,breakable,
+  colback=gray!5!white,colframe=gray!70!black,
+  fonttitle=\bfseries,title=标准条款,#1,
+  boxed title style={colback=gray!70!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ===== 章节标题 =====
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{float}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ===== 超链接 =====
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={hsmbanlance},
+  pdftitle={C++20 非类型模板参数扩展参考},
+}
+
+% ===== 自定义命令 =====
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\kw}[1]{\texttt{#1}}
+\newcommand{\seqkw}[1]{\seqsplit{\texttt{#1}}}
+
+% ====================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C++20 非类型模板参数扩展\par}
+\vspace{1cm}
+{\LARGE 从整型到浮点、结构化类与具名指针\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+% ====================================================================
+\part{历史与限制}
+% ====================================================================
+
+\chapter{什么是非类型模板参数}
+
+\section{两类模板参数}
+
+模板参数在 \cpp{} 中分两类：\textbf{类型参数}（type template parameter）由 \kw{typename} 或 \kw{class} 引入，传入一个类型；\textbf{非类型模板参数}（non-type template parameter，缩写 NTTP）传入一个\emph{值}——一个编译期可求值的常量。前者是 \cpp{} 模板系统的主体，后者则一直是\textbf{能力被严格限制}的"次等公民"。
+
+\cpplabel\ \begin{lstlisting}
+template <typename T, int N>     // T 是类型参数，N 是 NTTP
+struct FixedArray {
+    T data[N];
+    constexpr std::size_t size() const noexcept { return N; }
+};
+
+FixedArray<double, 16> v;        // 16 是编译期常量，进入类型本身
+static_assert(v.size() == 16);
+\end{lstlisting}
+
+NTTP 的核心特征是\textbf{值参与类型身份}。把 \seqkw{FixedArray<double,16>} 与 \seqkw{FixedArray<double,32>} 写成两个实例化，得到的是互不相关的类型，重载决议、特化、SFINAE 都把它们当作完全不同的实体。这是 NTTP 与运行期参数最本质的区别：后者只是数据，前者是\emph{类型层面的标签}。
+
+\begin{guideline}
+NTTP 的三条不变量：
+
+(1) \textbf{编译期常量}。实参必须在编译期完全确定，不能来自运行期变量。
+
+(2) \textbf{值参与类型}。同一模板用不同的 NTTP 实例化，得到的是不同类型。
+
+(3) \textbf{无运行期开销}。NTTP 在生成的代码里通常被完全消解为字面量，零内存零开销。
+\end{guideline}
+
+\section{为什么需要扩展}
+
+在 \cpp{17} 之前，NTTP 的合法类型被严格限定在一个白名单内：整型、枚举、指针、左值引用、\kw{nullptr\_t}，以及指向成员的指针。这导致很多本来非常自然的\textbf{编译期参数化}需求无法表达：
+
+\begin{itemize}
+  \item 想用 \kw{0.5}、\kw{1.41421} 这样的浮点常数作为模板参数？不行——\kw{template<double D>} 直接被拒。
+  \item 想把 \kw{std::string\_view}、\kw{std::array}、自定义结构体作为 NTTP？不行——只允许整型/指针类。
+  \item 想以"具名常量对象"为参数（例如 \kw{template<const Config\& C>}）？要求被引用对象具有链接性且不能是子对象，限制非常苛刻。
+  \item 想要一个编译期字符串作为字段名（"序列化时按字段名生成 setter"）？只能靠宏或者\textbf{指针到字符数组}的曲折写法。
+\end{itemize}
+
+这些限制让大量本来应当"编译期完成"的工作不得不退化到运行期，或者用复杂的 SFINAE/宏技巧绕开。\cpp{20} 通过两个关键提案——\textbf{P0732R2}（类类型 NTTP）与 \textbf{P1907R1}（浮点 NTTP 与放宽的指针/引用 NTTP）——系统性地解决了这些问题。
+
+\begin{compare}
+\textbf{\cpp{17} 之前 vs \cpp{20} 之后的能力差}
+
+\cpp{17} 之前能写：\kw{template<int N>}、\kw{template<char C>}、\kw{template<auto V>}（仅限白名单类型）、\kw{template<int* P>}（指向静态整型）。
+
+\cpp{20} 新增能写：\kw{template<double D>}、\kw{template<MyStruct S>}（结构化类）、\kw{template<FixedString F>}（编译期字符串）、\kw{template<const Obj\& O>}（指向任意完整对象的引用）。
+
+能力差距：从"白名单整型/指针"扩展到"\textbf{任意结构化字面类型}"，几乎覆盖了所有可以在 \kw{constexpr} 上下文构造的值。
+\end{compare}
+
+\chapter{C++17 之前的硬性限制}
+
+\section{白名单类型}
+
+\cpp{17} 标准（[\texttt{temp.arg.nontype}]）规定 NTTP 的类型必须是以下之一：
+
+\begin{enumerate}
+  \item 整型（包括 \kw{bool}、\kw{char}、\kw{wchar\_t}、\kw{char16\_t}、\kw{char32\_t}、各种 \kw{int}/\kw{unsigned}）。
+  \item 枚举类型。
+  \item 指针类型（指向对象、函数、成员）。
+  \item 左值引用类型。
+  \item \kw{nullptr\_t}。
+  \item \kw{auto} 占位符（\cpp{17} 引入），由实参类型推导，但推导结果仍须落在以上类别。
+\end{enumerate}
+
+\textbf{明确被排除}的有：浮点类型、类类型（即便所有成员都是 \kw{public} 且 \kw{constexpr} 可构造）、\kw{std::string}、\kw{std::string\_view}、\kw{std::array}、任何用户自定义类型。
+
+\cpplabel\ \begin{lstlisting}
+template <int N>          struct A {};   // OK：整型
+template <char C>         struct B {};   // OK：枚举式的字符
+template <MyEnum E>       struct C {};   // OK：枚举
+template <int* P>         struct D {};   // OK：指针（须有链接性）
+template <auto V>         struct E {};   // OK (C++17)：占位符
+
+template <double D>       struct F {};   // 错误 (C++17)：浮点
+template <std::size_t N,
+          std::array<int, N> Arr>
+                          struct G {};   // 错误 (C++17)：类类型
+\end{lstlisting}
+
+\section{指针/引用 NTTP 的额外限制}
+
+\cpp{17} 之前，即便 NTTP 类型是指针，被指向的对象也必须是：
+
+\begin{itemize}
+  \item 具有\textbf{链接性}（外部链接或内部链接，不能是无链接性的局部对象）。
+  \item 是\textbf{完整对象}，不是子对象（不能是数组的某个元素、不能是某个结构体的成员）。
+  \item 类型不含虚函数或虚基类（对指向成员的指针而言）。
+\end{itemize}
+
+\cpplabel\ \begin{lstlisting}
+int  globalInt = 42;
+constexpr int* pGlobal = &globalInt;
+
+template <int* P> struct Wrap {};
+
+Wrap<&globalInt>     w1;   // OK：完整对象、外部链接
+Wrap<pGlobal>        w2;   // OK：等价于 w1
+
+void f() {
+    static int local = 0;
+    Wrap<&local>     w3;   // C++17 起 OK（内部链接的静态对象）
+    int stack = 0;
+    Wrap<&stack>     w4;   // 错误：无链接性
+}
+
+struct S { int member; };
+inline S s{};
+Wrap<&s.member>            // C++17 错误：子对象。C++20 允许
+\end{lstlisting}
+
+\section{为什么浮点被排除}
+
+\cpp{17} 之前禁止浮点 NTTP 的核心理由是\textbf{相等问题}：浮点数有 \kw{NaN}（与自身不等）、有 \kw{+0.0} 与 \kw{-0.0}（位模式不同但相等），而模板实例化需要一个良定义的\emph{等价关系}——两个 NTTP 实参"相等"才视作同一次实例化。委员会担心：
+
+\begin{itemize}
+  \item 不同翻译单元里 \kw{1.0/3.0} 的位模式可能因 FMA 收缩或 \kw{long double} 中间精度而不同，导致 ODR 违反。
+  \item \kw{NaN != NaN} 会破坏"同一实参 $\Rightarrow$ 同一类型"的直觉。
+\end{itemize}
+
+\cpp{20} 的解决方案是要求浮点 NTTP 的相等性按\textbf{位模式}比较（除了 quiet NaN 之间也视作相等），并在标准里明确规定：实现必须在所有翻译单元里对相同的浮点字面量产生相同的位模式。这本质上是把"浮点常量的可移植性"责任压回到了编译器。
+
+\begin{note}
+即便 \cpp{20} 允许 \kw{template<double D>}，也\textbf{不要}写依赖 \kw{D == 0.1 + 0.2} 的代码——这种求值在不同优化级别下可能产生不同位模式，导致 ODR 问题。永远使用十六进制浮点字面量或 \kw{std::bit\_cast} 后的整数来固化位模式。
+\end{note}
+
+\section{类类型为何被排除}
+
+类类型 NTTP 被禁止的根本原因不是技术不可行，而是委员会要求一个明确的\textbf{相等语义}：
+
+\begin{itemize}
+  \item 用户自定义的 \kw{operator==} 可能不一致、可能有副作用，不能用作模板实例化的判定标准。
+  \item 类的内存表示有填充位（padding bits），两个"逻辑相等"的对象可能位模式不同。
+  \item 类可能含有指针成员，指针指向的对象身份不在类自身控制下。
+\end{itemize}
+
+\cpp{20} 的解法是引入"\textbf{结构化类型}（structural type）"概念：要求所有非静态数据成员都是 \kw{public}、非 \kw{mutable}、且自身也是结构化类型；相等性按\textbf{逐成员的位级比较}（忽略填充位），由编译器自动合成的 \kw{operator<=>} 提供。这样既保证了语义良好，又不需要用户实现 \kw{operator==}。
+
+% ====================================================================
+\part{C++20 的扩展能力}
+% ====================================================================
+
+\chapter{浮点数 NTTP}
+
+\section{语法与限制}
+
+\cpp{20}（P1907R1）允许浮点类型直接作为 NTTP：
+
+\cpplabel\ \begin{lstlisting}
+template <double D>
+struct Constant {
+    static constexpr double value = D;
+};
+
+Constant<3.14159>     pi;
+Constant<1.41421356>  sqrt2;
+Constant<-0.0>        negativeZero;
+
+static_assert(pi.value > 3.14 && pi.value < 3.15);
+static_assert(!std::is_same_v<decltype(pi), decltype(sqrt2)>);
+\end{lstlisting}
+
+\kw{float}、\kw{double}、\kw{long double} 都合法。也支持 \kw{auto} 占位符推导：
+
+\cpplabel\ \begin{lstlisting}
+template <auto V>
+struct Tag { static constexpr auto value = V; };
+
+Tag<1.5f>     f;   // V 推导为 float
+Tag<2.5>      d;   // V 推导为 double
+Tag<3>        i;   // V 推导为 int
+static_assert(!std::is_same_v<decltype(f), decltype(d)>);
+\end{lstlisting}
+
+\section{相等性规则}
+
+两个浮点 NTTP 实参视作"相同"当且仅当：
+
+\begin{itemize}
+  \item 它们的\textbf{位模式}完全相同（按 \kw{std::bit\_cast} 到对应整型后比较），或者
+  \item 二者都是 quiet NaN（特殊豁免：\kw{qNaN == qNaN} 在 NTTP 上下文中视为真，与 IEEE-754 的语义有意分歧）。
+\end{itemize}
+
+\kw{+0.0} 与 \kw{-0.0} 位模式不同，因此是\textbf{两个不同的实例化}——这一行为与运行期 \kw{0.0 == -0.0} 为 \kw{true} 不同。
+
+\cpplabel\ \begin{lstlisting}
+template <double D> struct Zero {};
+
+Zero<+0.0>  zp;
+Zero<-0.0>  zn;
+static_assert(!std::is_same_v<decltype(zp), decltype(zn)>);  // 不同类型
+static_assert(+0.0 == -0.0);                                  // 但运行期相等
+\end{lstlisting}
+
+\section{典型用途：数学常量与系数}
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <double Rate>
+struct TaxBracket {
+    static constexpr double rate = Rate;
+    constexpr double apply(double base) const noexcept {
+        return base * (1.0 + Rate);
+    }
+};
+
+TaxBracket<0.13> vat;
+TaxBracket<0.06> service;
+TaxBracket<0.03> smallScale;
+
+constexpr double gross100 = vat.apply(100.0);   // 编译期可求值
+static_assert(gross100 > 112.9 && gross100 < 113.1);
+\end{lstlisting}
+
+\section{定点数 NTTP}
+
+如果担心浮点位模式的可移植性，或者目标平台是 DSP/嵌入式（不支持硬件浮点），可以用\textbf{定点数类}作为结构化 NTTP（详见第 \ref{chap:structural} 章）：
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+struct Fixed16_16 {
+    int32_t raw;
+    constexpr Fixed16_16() : raw(0) {}
+    constexpr explicit Fixed16_16(int32_t r) : raw(r) {}
+    constexpr Fixed16_16(double d)
+        : raw(static_cast<int32_t>(d * 65536.0)) {}
+
+    constexpr double toDouble() const noexcept { return raw / 65536.0; }
+    constexpr auto operator<=>(const Fixed16_16&) const = default;
+};
+
+template <Fixed16_16 Scale>
+struct Scaler {
+    static constexpr double scale = Scale.toDouble();
+    constexpr int32_t operator()(int32_t x) const noexcept {
+        return static_cast<int32_t>((x * Scale.raw) >> 16);
+    }
+};
+
+Scaler<Fixed16_16{1.5}>  s15;
+Scaler<Fixed16_16{0.25}> s025;
+static_assert(s15.scale > 1.49 && s15.scale < 1.51);
+\end{lstlisting}
+
+定点类的所有成员都是 \kw{public} 整型，\kw{operator<=>} 由 \kw{= default} 合成，因此完全满足结构化类型要求。位模式确定，不依赖浮点 ABI，跨编译器跨平台稳定。
+
+\chapter{结构化类类型 NTTP}\label{chap:structural}
+
+\section{结构化类型的定义}
+
+\cpp{20} 引入"结构化类型（structural type）"概念（[\texttt{temp.param}]/6）。一个类型 \kw{T} 是结构化的，当且仅当：
+
+\begin{enumerate}
+  \item \kw{T} 是标量类型（算术、枚举、指针、\kw{nullptr\_t}），或者是左值引用类型；或者
+  \item \kw{T} 是\textbf{字面类类型}（literal class type），并且：
+    \begin{itemize}
+      \item 所有非静态数据成员都是 \kw{public}、非 \kw{mutable}；
+      \item 所有非静态数据成员的类型本身也是结构化类型；
+      \item 所有基类（若有）也是 \kw{public}、非虚继承、且本身是结构化类型；
+      \item \kw{T} 拥有 defaulted 的三向比较 \kw{operator<=>}（或 \kw{operator==}），或者编译器能为其合成。
+    \end{itemize}
+\end{enumerate}
+
+满足以上条件后，编译器才能为 \kw{T} 提供一个\textbf{位级、确定性}的相等关系，用作模板实例化的判定标准。
+
+\section{最小可用示例}
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+struct Point2D {
+    int x;
+    int y;
+    constexpr auto operator<=>(const Point2D&) const = default;
+};
+
+template <Point2D P>
+struct Pixel {
+    static constexpr int x = P.x;
+    static constexpr int y = P.y;
+};
+
+Pixel<Point2D{10, 20}> a;
+Pixel<Point2D{10, 20}> b;
+Pixel<Point2D{30, 40}> c;
+
+static_assert(std::is_same_v<decltype(a), decltype(b)>);   // 同实例化
+static_assert(!std::is_same_v<decltype(a), decltype(c)>);  // 不同
+\end{lstlisting}
+
+注意三点：(1) 成员必须 \kw{public}；(2) \kw{operator<=>} 必须 \kw{= default}（手写的不算）；(3) 不能含虚函数、虚基类、或非结构化成员（如 \kw{std::string}）。
+
+\section{什么类型不结构化}
+
+\cpplabel\ \begin{lstlisting}
+struct Bad1 {
+private:
+    int x;                            // 非 public → 不结构化
+};
+
+struct Bad2 {
+    std::string s;                    // string 有堆内存、不结构化
+};
+
+struct Bad3 {
+    int x;
+    bool operator==(const Bad3&) const { return x == 0; }   // 手写、非 default → 不结构化
+};
+
+struct Bad4 : Bad1 { int y; };        // 基类不结构化 → 派生也不
+
+template <Bad1 V> struct W1 {};       // 错误：Bad1 不结构化
+template <Bad2 V> struct W2 {};       // 错误
+template <Bad3 V> struct W3 {};       // 错误
+\end{lstlisting}
+
+\section{指针与引用 NTTP 的放宽}
+
+\cpp{20} 同时放宽了对\textbf{指针/引用 NTTP} 的限制（P1907R1）：被指向的对象不再要求"完整、非子对象"，只要它在编译期可寻址、有确定的链接性即可。这意味着：
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+struct Config {
+    int retries;
+    int timeoutMs;
+};
+
+inline constexpr Config kDefault{3, 5000};
+inline constexpr Config kFast{1, 1000};
+
+template <const Config& Cfg>
+struct Client {
+    static constexpr int retries   = Cfg.retries;
+    static constexpr int timeoutMs = Cfg.timeoutMs;
+};
+
+Client<kDefault> c1;
+Client<kFast>    c2;
+static_assert(c1.retries == 3 && c2.retries == 1);
+
+// C++20 起，子对象也可以
+struct Holder { Config inner; };
+inline constexpr Holder h{{7, 200}};
+template <const Config& C> struct Wrap {};
+Wrap<h.inner> w;          // C++17 错误（子对象）；C++20 OK
+\end{lstlisting}
+
+这是"\textbf{具名指针 / 具名引用}"模式的核心：把全局常量对象的\emph{身份}作为模板参数，让模板实例直接绑定到那个对象，零拷贝、零间接、完全编译期确定。
+
+\chapter{auto 占位符与类型身份}
+
+\section{auto NTTP 的演化}
+
+\cpp{17} 引入了 \kw{template<auto V>}：实参类型由编译器推导。但推导结果必须落在 \cpp{17} 白名单内（整型/枚举/指针等）。\cpp{20} 之后，\kw{auto} 也可以推导为浮点或结构化类：
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <auto V>
+struct ValueTag {
+    static constexpr auto value = V;
+    using type = decltype(V);
+};
+
+ValueTag<42>           i;   // type = int
+ValueTag<'A'>          c;   // type = char
+ValueTag<3.14>         d;   // type = double (C++20 起)
+ValueTag<&someGlobal>  p;   // type = int*
+ValueTag<Point2D{1,2}> s;   // type = Point2D (C++20 起)
+\end{lstlisting}
+
+\section{不同 NTTP 即不同类型}
+
+NTTP 的本质是\textbf{值参与类型身份}。即便同一个模板，传入不同的 NTTP 实参，得到的是\emph{完全不同}的类型，享有不同的静态成员、不同的内存布局、不同的重载决议结果：
+
+\cpplabel\ \begin{lstlisting}
+template <std::size_t N>
+struct Buffer {
+    std::byte data[N];
+    constexpr std::size_t size() const noexcept { return N; }
+};
+
+Buffer<64>   b64;
+Buffer<128>  b128;
+Buffer<64>   b64Again;
+
+static_assert(std::is_same_v<decltype(b64), decltype(b64Again)>);
+static_assert(!std::is_same_v<decltype(b64), decltype(b128)>);
+static_assert(sizeof(b64)  == 64);
+static_assert(sizeof(b128) == 128);
+
+// 重载按 NTTP 值分派
+template <std::size_t N> void process(Buffer<N>&) { /* 通用 */ }
+template <>              void process(Buffer<64>&) { /* 特化 */ }
+\end{lstlisting}
+
+这一性质是大量编译期 dispatch、零成本抽象、策略模式的基础。\cpp{20} 把可参与"类型身份"的值域从整型扩展到浮点、结构化类、字符串、指针等，意味着\textbf{更多领域概念可以被编码进类型系统}。
+
+\begin{guideline}
+"\textbf{值即类型}"是 NTTP 扩展的最深层意义：
+
+\begin{itemize}
+  \item \kw{TaxBracket<0.13>} 与 \kw{TaxBracket<0.06>} 是两个类型，可以分别特化、分别约束。
+  \item \kw{Field<"name">} 与 \kw{Field<"age">} 是两个类型，重载、tag dispatch 都可用。
+  \item \kw{Matrix<3,3>} 与 \kw{Matrix<4,4>} 是两个类型，编译期就能拒绝错误维度的运算。
+\end{itemize}
+
+NTTP 让"业务语义"从运行期值提升到\textbf{类型层}，编译器可以基于值做静态检查、静态优化、静态分派。
+\end{guideline}
+
+\chapter{结构化类型的边界与陷阱}
+
+\section{填充位与相等性}
+
+结构化类的相等性是按\textbf{逐成员}比较，忽略成员之间的填充位。这是 \kw{operator<=> = default} 在 \cpp{20} 的标准行为。但要注意：
+
+\begin{itemize}
+  \item 含有 \kw{union} 成员的类在 \cpp{20} 不结构化（C++23 起部分实现支持）。
+  \item 含有位域（bit-field）的类在 \cpp{20} 标准里\textbf{不结构化}（P1907R1 明确排除），\cpp{23} 起部分实现允许。
+  \item 含 \kw{mutable} 成员的类不结构化（即便其他成员都满足条件）。
+\end{itemize}
+
+\section{继承的约束}
+
+派生类要结构化，所有基类必须 \kw{public}、非虚、且自身结构化。一个常见的反模式：
+
+\cpplabel\ \begin{lstlisting}
+struct Base { int x; };
+struct Derived : Base { int y; };     // OK：Base 是结构化、public 继承
+
+template <Derived D> struct W {};
+W<Derived{{1}, 2}> w;                  // 嵌套花括号初始化基类部分
+
+struct PrivBase { int z; };
+struct D2 : private PrivBase { int w; };  // 错误：private 继承 → 不结构化
+\end{lstlisting}
+
+\section{引用语义陷阱}
+
+结构化类含指针成员时，"位级相等"会比较\textbf{指针值}而非\textbf{指向对象的内容}：
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+struct View {
+    const int* ptr;
+    constexpr auto operator<=>(const View&) const = default;
+};
+
+inline constexpr int a = 10, b = 10;
+template <View V> struct W {};
+
+W<View{&a}> w1;
+W<View{&b}> w2;
+static_assert(!std::is_same_v<decltype(w1), decltype(w2)>);
+// 即便 *w1.ptr == *w2.ptr == 10，两个实例化也不同
+\end{lstlisting}
+
+这是符合预期的行为：NTTP 比较的是\emph{值}，指针的值就是地址。如果希望"内容相等"，应改用结构化值类型（如 \kw{std::array} 或自定义结构体），而非指针。
+
+% ====================================================================
+\part{实战应用}
+% ====================================================================
+
+\chapter{编译期字符串 TString}
+
+\section{为何需要 TString}
+
+很多场景需要把\textbf{字符串字面量}作为模板参数：序列化的字段名、反射的成员名、SQL 列名、HTTP header 名、日志 tag……\cpp{17} 之前的曲折写法是\kw{template<const char* S>}，但要求 \kw{S} 指向一个有链接性的字符数组，使用极其不便。
+
+\cpp{20} 起，结构化类可以作为 NTTP，于是有了\textbf{TString}（"template string"）惯用法：
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <typename C, std::size_t N>
+struct TString {
+    C     data[N]{};
+    std::size_t len = 0;
+
+    constexpr TString() = default;
+
+    constexpr TString(const C (&s)[N]) : len(N - 1) {
+        for (std::size_t i = 0; i < N; ++i) data[i] = s[i];
+    }
+
+    constexpr std::basic_string_view<C> view() const noexcept {
+        return {data, len};
+    }
+
+    constexpr auto operator<=>(const TString&) const = default;
+};
+
+// 推导指引：让 "hello" 自动匹配为 TString<char, 6>
+template <typename C, std::size_t N>
+TString(const C (&)[N]) -> TString<C, N>;
+\end{lstlisting}
+
+\section{用作 NTTP}
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <TString Name>
+struct Field {
+    static constexpr auto name = Name.view();
+};
+
+Field<TString{"id"}>     fId;
+Field<TString{"name"}>   fName;
+Field<TString{"email"}>  fEmail;
+
+static_assert(fId.name   == "id");
+static_assert(fName.name == "name");
+static_assert(!std::is_same_v<decltype(fId), decltype(fName)>);
+\end{lstlisting}
+
+注意：当前主流编译器\textbf{还不完全支持} \kw{Field<"id">} 这种"裸字符串字面量直接传给结构化 NTTP"的写法（涉及 P1423 提案，C++23 才标准化）。C++20 下必须显式写 \kw{TString\{"id"\}}。
+
+\section{典型应用：序列化字段名}
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <TString Name, typename T>
+struct Member {
+    static constexpr auto name = Name.view();
+    using value_type = T;
+};
+
+struct User {
+    int         id;
+    std::string name;
+    std::string email;
+};
+
+template <typename... Ms>
+struct Serializer {
+    template <typename Obj>
+    static std::string toJson(const Obj& o) {
+        std::string out = "{";
+        bool first = true;
+        ((out += (first ? "" : ",", first = false,
+                  std::string("\"") + std::string(Ms::name)
+                  + "\":\"" + std::to_string(getMember<Ms>(o)) + "\"")), ...);
+        return out + "}";
+    }
+    template <typename M, typename Obj>
+    static auto getMember(const Obj& o);   // 由调用方特化
+};
+
+using UserSer = Serializer<
+    Member<TString{"id"},    int>,
+    Member<TString{"name"},  std::string>,
+    Member<TString{"email"}, std::string>
+>;
+\end{lstlisting}
+
+字段名以\textbf{类型身份}编码进 \kw{UserSer}，编译期就能检测拼写错误、字段缺失，零运行期开销。
+
+\section{宽字符与 UTF-8}
+
+\kw{TString} 模板对字符类型 \kw{C} 是泛化的，因此也支持 \kw{wchar\_t}、\kw{char8\_t}（\cpp{20} 新增）、\kw{char16\_t}、\kw{char32\_t}：
+
+\cpplabel\ \begin{lstlisting}
+TString<wchar_t>  w{L"hello"};      // TString<wchar_t, 6>
+TString<char8_t>  u8{u8"hello"};    // TString<char8_t, 6> (C++20)
+TString<char16_t> u16{u"hello"};    // TString<char16_t, 6>
+\end{lstlisting}
+
+\chapter{具名指针、具名类型、具名参数}
+
+\section{具名指针 NTTP}
+
+\cpp{20} 放宽了指针/引用 NTTP 的限制后，可以把任何编译期可寻址的对象作为"具名"模板参数：
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+struct VTable {
+    void (*init)();
+    void (*tick)(float dt);
+    void (*shutdown)();
+};
+
+inline void nullInit() {}
+inline void nullTick(float) {}
+inline void nullShutdown() {}
+
+inline constexpr VTable kNullTable{nullInit, nullTick, nullShutdown};
+
+template <const VTable& Table>
+struct Engine {
+    static void run() {
+        Table.init();
+        for (int i = 0; i < 60; ++i) Table.tick(1.0f / 60.0f);
+        Table.shutdown();
+    }
+};
+
+Engine<kNullTable> e;       // 直接调用，零间接、零虚函数开销
+\end{lstlisting}
+
+\kw{Engine<kNullTable>} 与 \kw{Engine<kOtherTable>} 是两个完全不同的类型，分别实例化、分别内联、分别优化。这是\textbf{策略模式}的极致形态——策略不再是运行期对象，而是类型本身。
+
+\section{具名类型 NTTP（类型标签）}
+
+虽然"类型"本身是类型参数而非 NTTP，但 \cpp{20} 之后可以用结构化类\emph{封装}类型信息：
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <typename T>
+struct TypeId {
+    using type = T;
+    constexpr auto operator<=>(const TypeId&) const = default;
+};
+
+// 注意：TypeId<T> 不是结构化类型（含模板参数 T，T 可能不结构化）
+// 因此通常改用 enum + NTTP 或字符串名：
+
+enum class TypeName : uint8_t { Int, Float, Double, String, Bool };
+
+template <TypeName N>
+struct TypeTag {
+    static constexpr TypeName name = N;
+};
+
+template <typename... Tags>
+struct Schema {
+    static constexpr std::size_t fieldCount = sizeof...(Tags);
+};
+
+using UserSchema = Schema<
+    TypeTag<TypeName::Int>,
+    TypeTag<TypeName::String>,
+    TypeTag<TypeName::String>
+>;
+static_assert(UserSchema::fieldCount == 3);
+\end{lstlisting}
+
+\section{具名参数模式（Named Parameters）}
+
+\kw{TString} 配合结构化类，可以实现\textbf{编译期具名参数}——既保留位置参数的零开销，又获得具名参数的可读性：
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+struct UseMmap     { bool value; };
+struct BufferSize  { std::size_t value; };
+struct TimeoutMs   { uint32_t value; };
+
+template <UseMmap M = {true},
+          BufferSize B = {64 * 1024},
+          TimeoutMs T = {30000}>
+struct ReaderOptions {
+    static constexpr bool        useMmap    = M.value;
+    static constexpr std::size_t bufferSize = B.value;
+    static constexpr uint32_t    timeoutMs  = T.value;
+};
+
+ReaderOptions<>                                       defaults;
+ReaderOptions<UseMmap{false}>                         noMmap;
+ReaderOptions<UseMmap{true}, BufferSize{1024*1024}>   bigBuf;
+ReaderOptions<TimeoutMs{5000}, BufferSize{8192}>      quickSmall;
+
+static_assert(defaults.useMmap && defaults.bufferSize == 65536);
+static_assert(!noMmap.useMmap);
+static_assert(bigBuf.bufferSize == 1024 * 1024);
+\end{lstlisting}
+
+\section{具名字符串参数}
+
+进一步结合 \kw{TString}，可以让"具名"本身是字符串：
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <TString Key, typename V>
+struct KV {
+    static constexpr auto key = Key.view();
+    using value_type = V;
+    V value;
+};
+
+template <typename... KVs>
+struct Config {
+    std::tuple<KVs...> items;
+};
+
+using AppConfig = Config<
+    KV<TString{"host"},     std::string>,
+    KV<TString{"port"},     uint16_t>,
+    KV<TString{"verbose"},  bool>
+>;
+\end{lstlisting}
+
+这种结构在反射、ORM、配置库（如 \kw{Boost.PFR} 的 \cpp{20} 后继方案）中越来越常见。
+
+\chapter{数学、物理与 DSP 库}
+
+\section{多项式与有理函数}
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <double... Coeffs>
+struct Polynomial {
+    static constexpr std::size_t degree = sizeof...(Coeffs) - 1;
+    static constexpr double coeffs[] = {Coeffs...};
+
+    constexpr double operator()(double x) const noexcept {
+        double r = 0.0;
+        for (std::size_t i = sizeof...(Coeffs); i-- > 0; )
+            r = r * x + coeffs[i];      // Horner
+        return r;
+    }
+};
+
+Polynomial<1.0, 0.0, -2.0>  p;   // x^2 - 2
+constexpr double root2 = p(1.41421356);
+static_assert(root2 > -0.001 && root2 < 0.001);
+\end{lstlisting}
+
+\section{物理单位（极简版）}
+
+虽然 \kw{mp-units}、\kw{Boost.Units} 等成熟库主要用类型参数编码量纲，但 \cpp{20} 之后可以把\textbf{标度因子}也编入 NTTP：
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+struct Scale {
+    int32_t num, den;       // 有理数 num/den
+    constexpr auto operator<=>(const Scale&) const = default;
+};
+
+template <Scale S, typename Unit>
+struct Quantity {
+    double value;
+    static constexpr double scale = static_cast<double>(S.num) / S.den;
+    constexpr double toBase() const noexcept { return value * scale; }
+};
+
+struct Meter {};
+struct Second {};
+
+Quantity<Scale{1, 1},    Meter>  m{1.0};      // 1 米
+Quantity<Scale{1000, 1}, Meter>  km{1.0};     // 1 千米
+Quantity<Scale{1, 100},  Meter>  cm{50.0};    // 50 厘米
+
+static_assert(km.toBase() == 1000.0);
+static_assert(cm.toBase() == 0.5);
+\end{lstlisting}
+
+\section{DSP 滤波器系数}
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <double... B, double... A>
+struct IIR {};     // 需要参数包分组，下面用结构化类替代
+
+struct BiquadCoeffs {
+    double b0, b1, b2, a1, a2;
+    constexpr auto operator<=>(const BiquadCoeffs&) const = default;
+};
+
+template <BiquadCoeffs C>
+struct Biquad {
+    double x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+
+    constexpr double process(double x) noexcept {
+        double y = C.b0 * x + C.b1 * x1 + C.b2 * x2
+                 - C.a1 * y1 - C.a2 * y2;
+        x2 = x1; x1 = x; y2 = y1; y1 = y;
+        return y;
+    }
+};
+
+// 二阶低通，截止 1 kHz @ 48 kHz 采样
+inline constexpr BiquadCoeffs kLowpass1k{
+    0.00043, 0.00086, 0.00043, -1.9112, 0.91498
+};
+
+Biquad<kLowpass1k> filter;
+\end{lstlisting}
+
+滤波器系数固化为\textbf{类型身份}，编译器可以对 \kw{process} 做常量传播、循环展开、SIMD 向量化，性能逼近手写汇编。
+
+\section{数值积分节点}
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <double... Nodes>
+struct GaussLegendre {
+    static constexpr std::size_t order = sizeof...(Nodes);
+    static constexpr double nodes[] = {Nodes...};
+
+    template <typename F>
+    constexpr double integrate(F f, double a, double b) const noexcept {
+        double sum = 0.0;
+        double mid = (a + b) / 2.0, half = (b - a) / 2.0;
+        for (std::size_t i = 0; i < order; ++i)
+            sum += weights[i] * f(mid + half * nodes[i]);
+        return half * sum;
+    }
+    static constexpr double weights[] = {/* 配套权重 */};
+};
+
+GaussLegendre<0.2113248654, 0.7886751346> gl2;   // 2 点 Gauss-Legendre
+\end{lstlisting}
+
+\chapter{编译期容器与查找表}
+
+\section{std::array 作为 NTTP}
+
+\kw{std::array<T, N>} 在 \cpp{20} 起是结构化类型（前提 \kw{T} 也是结构化），可以直接作为 NTTP：
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+#include <array>
+
+template <std::array<int, 4> Coeffs>
+struct FIR4 {
+    constexpr int operator()(int x0, int x1, int x2, int x3) const noexcept {
+        return Coeffs[0] * x0 + Coeffs[1] * x1
+             + Coeffs[2] * x2 + Coeffs[3] * x3;
+    }
+};
+
+FIR4<std::array{1, 2, 3, 4}> f;
+static_assert(f(1, 1, 1, 1) == 10);
+\end{lstlisting}
+
+\section{编译期查找表}
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <std::array<uint16_t, 256> Table>
+struct Crc16 {
+    constexpr uint16_t operator()(std::string_view data) const noexcept {
+        uint16_t crc = 0xFFFF;
+        for (char c : data) {
+            uint8_t idx = static_cast<uint8_t>((crc >> 8) ^ c);
+            crc = (crc << 8) ^ Table[idx];
+        }
+        return crc;
+    }
+};
+
+constexpr std::array<uint16_t, 256> buildCrc16Table() {
+    std::array<uint16_t, 256> t{};
+    for (int i = 0; i < 256; ++i) {
+        uint16_t crc = static_cast<uint16_t>(i << 8);
+        for (int j = 0; j < 8; ++j)
+            crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : (crc << 1);
+        t[i] = crc;
+    }
+    return t;
+}
+
+inline constexpr auto kCrc16Table = buildCrc16Table();
+Crc16<kCrc16Table> crc16;
+constexpr uint16_t v = crc16("123456789");
+static_assert(v == 0x29B1);
+\end{lstlisting}
+
+整个 CRC 表、整个 CRC 计算都是\textbf{编译期常量}，目标代码里只剩查表与异或，零启动开销。
+
+\section{完美哈希与字符串映射}
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <std::array<TString<char, 32>, 4> Keys>
+struct EnumMap {
+    enum class Value : uint8_t { A = 0, B, C, D };
+
+    static constexpr std::optional<Value>
+    lookup(std::string_view s) noexcept {
+        for (std::size_t i = 0; i < Keys.size(); ++i)
+            if (Keys[i].view() == s)
+                return static_cast<Value>(i);
+        return std::nullopt;
+    }
+};
+
+inline constexpr std::array<TString<char, 32>, 4> kCmds{
+    TString{"init"}, TString{"start"},
+    TString{"stop"}, TString{"reset"}
+};
+
+EnumMap<kCmds> cmds;
+static_assert(cmds.lookup("start") == EnumMap<kCmds>::Value::B);
+\end{lstlisting}
+
+\section{编译期矩阵}
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <std::size_t Rows, std::size_t Cols>
+struct Dim {
+    std::size_t r = Rows, c = Cols;
+    constexpr auto operator<=>(const Dim&) const = default;
+};
+
+template <Dim D, typename T = double>
+struct Matrix {
+    T data[D.r * D.c]{};
+    static constexpr std::size_t rows = D.r;
+    static constexpr std::size_t cols = D.c;
+};
+
+Matrix<Dim{3, 3>> m33;
+Matrix<Dim{4, 4>> m44;
+static_assert(sizeof(m33) == 9 * sizeof(double));
+static_assert(!std::is_same_v<decltype(m33), decltype(m44)>);
+\end{lstlisting}
+
+% ====================================================================
+\part{编译器支持与最佳实践}
+% ====================================================================
+
+\chapter{编译器支持矩阵}
+
+\section{特性支持总览}
+
+下表汇总三大编译器对 \cpp{20} NTTP 扩展的支持情况（截至 2026 年初）：
+
+\begin{longtable}{@{}p{4.6cm} p{2.4cm} p{2.4cm} p{2.6cm}@{}}
+\toprule
+\textbf{特性} & \textbf{GCC} & \textbf{Clang} & \textbf{MSVC} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{特性} & \textbf{GCC} & \textbf{Clang} & \textbf{MSVC} \\
+\midrule
+\endhead
+浮点 NTTP（P1907R1）           & 10+    & 12+    & 19.30+ (VS2022 17.0) \\
+\addlinespace
+结构化类 NTTP（P0732R2）       & 10+    & 12+    & 19.30+ \\
+\addlinespace
+放宽的指针/引用 NTTP            & 10+    & 12+    & 19.30+ \\
+\addlinespace
+\kw{auto} NTTP（P0499R2，C++17）& 7+     & 5+     & 19.11+ \\
+\addlinespace
+\kw{std::array} 作为 NTTP       & 10+    & 12+    & 19.30+ \\
+\addlinespace
+\kw{std::string\_view} 作为 NTTP & 不支持 & 不支持 & 不支持 \\
+\addlinespace
+裸字符串字面量直传 TString（P1423）& 实验性 & 实验性 & 不支持 \\
+\addlinespace
+位域成员的结构化类              & C++23  & C++23  & C++23 \\
+\addlinespace
+\kw{union} 成员的结构化类       & C++23  & C++23  & C++23 \\
+\bottomrule
+\end{longtable}
+
+\section{为什么 string\_view 不行}
+
+\kw{std::string\_view} 含 \kw{private} 成员（\kw{const char*} 与 \kw{size\_t}），不满足"所有成员 public"的结构化要求。即便标准库实现愿意改 \kw{public}，\kw{string\_view} 的指针成员也指向\textbf{外部字符数组}，无法保证位级相等性（同一字符串可能在 .rodata 里有多个副本）。
+
+正确做法：使用 \kw{TString<C, N>}（值语义、定长）或 \kw{std::array<char, N>}。
+
+\section{CMake 配置}
+
+\cmakelabel\ \begin{lstlisting}[style=cmakestyle]
+cmake_minimum_required(VERSION 3.20)
+project(nttp_demo LANGUAGES CXX)
+
+add_library(common_options INTERFACE)
+target_compile_features(common_options INTERFACE cxx_std_20)
+
+if(MSVC)
+    target_compile_options(common_options INTERFACE /permissive- /W4 /utf-8)
+else()
+    target_compile_options(common_options INTERFACE -Wall -Wextra -Wpedantic)
+endif()
+
+add_executable(demo main.cpp)
+target_link_libraries(demo PRIVATE common_options)
+\end{lstlisting}
+
+\kw{cxx\_std\_20} 是最低门槛。MSVC 推荐 \kw{/permissive-} 强制符合标准，避免老编译器把不结构化类型也当 NTTP 接受。
+
+\section{特性测试宏}
+
+\cpp{20} 没有为 NTTP 扩展提供专门的特性测试宏。实践中用以下组合检测：
+
+\cpplabel\ \begin{lstlisting}
+#if __cplusplus >= 202002L
+    #define HAS_CPP20_NTTP 1
+#endif
+
+// 进一步实测：尝试编译一个结构化类 NTTP
+#if defined(__cpp_nontype_template_args) && __cpp_nontype_template_args >= 201911L
+    #define HAS_STRUCTURAL_NTTP 1
+#endif
+\end{lstlisting}
+
+\seqkw{\_\_cpp\_nontype\_template\_args} 在 \cpp{20} 标准里值为 \kw{201911L}。但 GCC 10 与 Clang 12 的实际定义并不一致，更可靠的做法是用 SFINAE 探测：
+
+\cpplabel\ \begin{lstlisting}
+namespace detail {
+    struct Probe { int x; constexpr auto operator<=>(const Probe&) const = default; };
+    template <Probe> constexpr bool probe_fn = true;
+}
+template <typename = void>
+constexpr bool has_structural_nttp =
+    requires { detail::probe_fn<detail::Probe{0}>; };
+
+static_assert(has_structural_nttp<>, "需要 C++20 结构化 NTTP 支持");
+\end{lstlisting}
+
+\chapter{最佳实践与陷阱}
+
+\section{最佳实践}
+
+\begin{bestpractice}
+\textbf{(1) 优先值语义结构化类，慎用指针 NTTP}。值语义（如 \kw{TString}、\kw{std::array}、自定义结构体）的相等性确定、跨翻译单元稳定。指针 NTTP 依赖对象身份，链接性/ODR 处理不当容易产生意外行为。
+
+\textbf{(2) 浮点 NTTP 用十六进制字面量固化位模式}。\kw{0.1} 在不同编译器、不同 \kw{-ffp-contract} 设置下可能产生不同位模式。\kw{0x1.999999999999ap-4} 是 IEEE-754 双精度的精确表示，跨平台稳定。
+
+\textbf{(3) 结构化类必须显式 \kw{= default} 三向比较}。手写 \kw{operator==} 不会让它结构化；编译器只信任 defaulted 的版本。
+
+\textbf{(4) 用 \kw{constexpr} 工厂函数生成 NTTP 实参}。比直接写聚合初始化更可读、更易维护：
+
+\begin{lstlisting}
+constexpr BiquadCoeffs makeLowpass(double fc, double fs) { /*...*/ }
+inline constexpr auto kLp1k = makeLowpass(1000.0, 48000.0);
+Biquad<kLp1k> f;
+\end{lstlisting}
+
+\textbf{(5) NTTP 模板配 \kw{static\_assert} 做编译期校验}。维度匹配、系数范围、字符串非空——能在编译期检查的，绝不放到运行期。
+
+\textbf{(6) 用 \kw{auto} NTTP 减少模板参数列表}。当多个 NTTP 类型已知时，\kw{template<auto... Vs>} 比 \kw{template<int A, double B, char C>} 更灵活。
+\end{bestpractice}
+
+\section{陷阱}
+
+\begin{warning}
+\textbf{(1) 填充位与未初始化成员}。结构化类的相等性按\emph{成员}比较，但如果你通过 \kw{reinterpret\_cast} 或 \kw{memcpy} 操作其内存，填充位的随机值会让"相同"的对象在不同运行中表现不同。永远用聚合初始化或 \kw{constexpr} 构造。
+
+\textbf{(2) \kw{std::string\_view}、\kw{std::vector} 等非结构化类型}。它们含堆指针或私有成员，不能作 NTTP。用 \kw{TString} 或 \kw{std::array} 替代。
+
+\textbf{(3) 跨翻译单元的浮点字面量}。即便都写 \kw{0.1}，不同 TU 在不同优化级别下可能产生不同位模式（FMA 收缩、\kw{long double} 中间精度）。链接时会出现"同一个 NTTP 实例化被识别为两个不同类型"的 ODR 违反。统一用 \kw{constexpr} 全局变量固化。
+
+\textbf{(4) \kw{auto} NTTP 推导歧义}。\kw{Tag<0>} 推导为 \kw{int}，\kw{Tag<0u>} 推导为 \kw{unsigned}，二者是\textbf{不同类型}。如果 API 接受多种整型，应在文档里明确。
+
+\textbf{(5) 模板实例爆炸}。每个不同的 NTTP 值都生成一份新代码。\kw{Buffer<N>} 在 \kw{N} 取遍 1..1024 时，编译时间与二进制大小都会爆炸。对常用值做显式特化、对不常用值走运行期 fallback。
+
+\textbf{(6) 调试符号膨胀}。NTTP 实例化的 mangled name 包含完整字面量，调试符号可能非常长。\kw{TString<char, 256>} 的 mangled name 会包含整个字符串的十六进制编码。可用 \kw{-fno-verbose-asm}、\kw{/DEBUG:NATVIS} 等缓解。
+
+\textbf{(7) \kw{operator<=>} 默认生成与继承}。如果结构化类有基类，defaulted \kw{operator<=>} 会比较基类部分；若基类不是结构化，整个派生类也不结构化。
+\end{warning}
+
+\section{何时\emph{不}该用 NTTP 扩展}
+
+\begin{itemize}
+  \item \textbf{值在运行期才知道}。NTTP 必须编译期常量，运行期值只能用普通函数参数。
+  \item \textbf{值的取值空间巨大}。例如把"用户 ID"作 NTTP 会生成无数实例化，编译时间不可接受。
+  \item \textbf{需要类型擦除}。NTTP 实例化后的类型彼此独立，难以放进同一个 \kw{std::vector} 或 \kw{std::function}。如果需要运行期多态，应回到普通类 + 虚函数 / \kw{std::any}。
+  \item \textbf{团队还在 \cpp{17}}。NTTP 扩展是 \cpp{20} 特性，老编译器完全不支持。如果项目必须兼容 \cpp{17}，用 \kw{template<int N>} + 编码技巧（如把浮点 \kw{bit\_cast} 成 \kw{uint64\_t}）退化。
+\end{itemize}
+
+\section{与 Concepts 的协同}
+
+\cpp{20} 的 Concepts 可以与 NTTP 扩展无缝配合，给结构化类 NTTP 加约束：
+
+\cppxxlabel{C++20}\ \begin{lstlisting}
+template <typename T>
+concept Structural2D = requires(T t) {
+    { t.x } -> std::convertible_to<double>;
+    { t.y } -> std::convertible_to<double>;
+    requires std::three_way_comparable<T>;
+};
+
+template <Structural2D P>
+    requires requires { typename std::enable_if_t<true>; }   // 进一步约束
+struct Pixel2 {
+    static constexpr auto x = P.x;
+    static constexpr auto y = P.y;
+};
+
+Pixel2<Point2D{1, 2}> p;       // OK
+// Pixel2<Bad1{...}> p;        // 编译期友好错误：Bad1 不满足 Structural2D
+\end{lstlisting}
+
+Concepts 把"这个 NTTP 实参合法吗"的检查从晦涩的实例化错误提升为\textbf{清晰的概念不满足}诊断，大幅改善开发体验。
+
+\chapter{总结与展望}
+
+\section{核心要点回顾}
+
+\begin{guideline}
+\cpp{20} 把 NTTP 的能力边界从"整型/枚举/指针白名单"扩展到"\textbf{任意结构化字面类型} + 浮点 + 放宽的指针/引用"。这一扩展的本质意义是：
+
+(1) \textbf{值参与类型身份}。每个不同的 NTTP 实参都生成独立的类型，享有独立的静态成员、独立的重载决议、独立的优化路径。
+
+(2) \textbf{业务语义编码进类型系统}。字段名、滤波器系数、税率、维度、策略对象——都可以作为类型的一部分，被编译器静态检查、静态分派、静态优化。
+
+(3) \textbf{零运行期开销}。NTTP 在生成的代码里通常完全消解为字面量，没有间接、没有查表、没有虚函数。
+
+(4) \textbf{结构化类型}是 \cpp{20} 引入的核心概念：所有成员 public、非 mutable、自身结构化、有 defaulted 三向比较。满足这些条件的类才能作为 NTTP。
+
+(5) \textbf{TString 惯用法}让编译期字符串成为一等公民，支撑序列化、反射、ORM、配置等大量场景。
+\end{guideline}
+
+\section{后续提案}
+
+\cpp{23}/\cpp{26} 还在继续放宽 NTTP 的限制：
+
+\begin{itemize}
+  \item \textbf{P1423R3}（C++23）：允许\emph{裸字符串字面量}直接传给结构化 NTTP，即 \kw{Field<"id">} 不再需要显式 \kw{TString\{"id"\}}。GCC 13、Clang 17 部分支持。
+  \item \textbf{P2646R0}（C++23）：允许位域成员的结构化类作 NTTP。
+  \item \textbf{P2505R5}（C++26）：\kw{constexpr} 字符串字面量、\kw{std::string\_view} 的 NTTP 化提案（仍在讨论中）。
+  \item \textbf{P2996R0}（C++26 反射）：与 \kw{static\_reflection} 协同，把成员名作为 NTTP 自动编码。
+\end{itemize}
+
+\section{推荐阅读}
+
+\begin{itemize}
+  \item \textbf{P0732R2} \emph{Class Types in Non-Type Template Parameters} —— Richard Smith、Andrew Sutton。结构化类型的源头提案。
+  \item \textbf{P1907R1} \emph{Relaxing Restrictions on NTTP} —— Corentin Jabot。浮点 NTTP 与放宽的指针/引用 NTTP。
+  \item \textbf{P1423R3} \emph{Char8\_t and NTTP String Literals} —— 让裸字符串字面量直接作 NTTP。
+  \item \emph{C++20 结构化 NTTP 实战} —— \kw{TString} 惯用法的社区讨论（Reddit/r/cpp、CppCon 2020/2021）。
+  \item \emph{mp-units}、\kw{Boost.StaticString}、\kw{HinnantDate} —— 大量使用 NTTP 扩展的真实库。
+\end{itemize}
+
+\section{结语}
+
+NTTP 扩展看似只是一个语法层面的放宽，实际上它把 \cpp{} 模板系统的\textbf{编译期值域}从"整型 + 指针"扩展到了"任意可在 \kw{constexpr} 上下文构造的字面值"。这意味着大量原本只能在运行期处理的概念——字符串名、浮点系数、结构化配置——都可以被提升到类型层，由编译器做静态检查、静态分派、静态优化。
+
+对库作者而言，这是一次重新审视 API 设计的机会：哪些参数其实应当是 NTTP？哪些"策略对象"其实应当是具名指针？哪些运行期分支其实应当是模板特化？把这些从运行期搬到编译期，往往能换来数量级的性能提升与一个数量级的 bug 减少。
+
+对应用开发者而言，理解 NTTP 扩展有助于读懂现代 \cpp{20} 库的实现——从 \kw{std::format} 的格式串、\kw{Boost.PFR} 的反射、到 \kw{mp-units} 的物理量纲，背后都是同一套机制。
+
+\end{document}
