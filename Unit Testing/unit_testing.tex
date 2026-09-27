@@ -2297,6 +2297,197 @@ Boost.DI / Fruit & 容器组装 & 近零（编译期） & 复杂对象图、多�
 再考虑容器。
 \end{bestpractice}
 
+\section{隔离与注入手段的特征对比}
+
+前面把测试隔离的实现散落在 6.2、7.3、7.5 各节：链接期换库、虚接口、
+模板注入、\seqsplit{\texttt{std::function}} 接缝，以及更“动态”的按
+方法名劫持，甚至把测试整体搬出 C++。本节把几种典型方案放在同一张
+桌上比较——介入时机、对被测代码的侵入度、类型安全、运行时开销、
+典型适用场景。
+
+\subsection{链接期隔离：不链接真库，或用 \texttt{--wrap} 重定向}
+
+最古老的隔离手段：让链接器在符号层面把真实现换成测试实现，被测源
+代码一行不改。两种典型做法。
+
+\textbf{整体换库}：测试目标不链接真实库，改链接同签名的 mock 目标
+文件——6.2.2 节已演示过 CMake 写法，常见于裸机固件的 HAL 测试。
+
+\textbf{符号级重定向}：GNU ld 与 lld 提供 \seqsplit{\texttt{--wrap=sym}}，
+把所有对 \texttt{sym} 的未定义引用解析到 \seqsplit{\texttt{\_\_wrap\_sym}}；
+原符号通过 \seqsplit{\texttt{\_\_real\_sym}} 仍可访问，便于“先记录再
+透传”：
+
+\cpplabel
+\begin{lstlisting}
+// fs_read.c：被测代码原样调用 read()，无需任何改动
+#include <unistd.h>
+int parse_config(int fd) {
+    char buf[256];
+    int n = read(fd, buf, sizeof buf);  // 链接到 __wrap_read
+    return n > 0 ? parse(buf, n) : -1;
+}
+
+// fs_fake.c：测试侧提供 __wrap_read，可选择透传到 __real_read
+extern int __real_read(int, void*, size_t);
+static int forced_result = -1;
+int __wrap_read(int fd, void* buf, size_t n) {
+    if (forced_result >= 0) return forced_result;
+    return __real_read(fd, buf, n);
+}
+\end{lstlisting}
+
+\cmakelabel
+\begin{lstlisting}
+target_link_options(unit_tests PRIVATE "LINKER:--wrap=read")
+target_sources(unit_tests PRIVATE fs_read.c fs_fake.c)
+\end{lstlisting}
+
+适用面：裸机固件、HAL、libc 调用、不便重构的遗留 C 代码。代价：
+MSVC 链接器没有等价机制（只能用导入库替换或 Detours 之类的运行时
+挂钩）；对 \texttt{inline} 函数、模板实例、类成员函数、\texttt{static}
+内部链接符号无效；调试时栈帧上多一层 \seqsplit{\texttt{\_\_wrap\_*}}，
+断点容易打错位置。
+
+\subsection{模板 DI 与 CRTP：把多依赖收拢到派生类}
+
+7.3.2 节展示了 \seqsplit{\texttt{template <typename Payment, typename Mailer>}}
+式的多参数注入：依赖一多，模板参数列表迅速膨胀，每个调用点都得重复
+实参。CRTP（Curiously Recurring Template Pattern）换一种切法——基类
+只描述“流程”，把“如何执行”统一收拢到派生类，依赖以普通成员的
+形式住在派生类里：
+
+\cpplabel
+\begin{lstlisting}
+template <typename Derived>
+class OrderServiceBase {
+public:
+    bool placeOrder(const Order& o) {
+        auto* self = static_cast<Derived*>(this);
+        if (!self->charge(o.amount())) return false;
+        self->notify(o.customerEmail());
+        return true;
+    }
+};
+
+class ProdOrderService : public OrderServiceBase<ProdOrderService> {
+    friend class OrderServiceBase<ProdOrderService>;
+    bool charge(double a)               { return pay_.charge(a); }
+    void notify(std::string_view email) { mail_.send(email, "ok"); }
+    PaymentClient pay_;
+    SmtpMailer    mail_;
+};
+
+class FakeOrderService : public OrderServiceBase<FakeOrderService> {
+    friend class OrderServiceBase<FakeOrderService>;
+    bool charge(double)           { ++charges; return true; }
+    void notify(std::string_view) { ++notified; }
+    int charges = 0, notified = 0;
+};
+\end{lstlisting}
+
+CRTP 的好处：\seqsplit{\texttt{self->charge(...)}} 在编译期直接展开，
+没有虚表间接；派生类不必继承任何接口，只需要把方法签名对齐；生产
+与测试共用同一份业务流程代码。代价：基类必须模板化，定义全部搬进
+头文件；派生类类型出现在基类签名里，造成编译期强耦合；不能用基类
+指针异构存放 Prod 与 Fake，调用方往往也得跟着模板化——这也是 CRTP
+不适合跨 DLL 边界的根因。
+
+\subsection{运行时多态：接口、抽象类与 \texttt{std::function}}
+
+7.3.1 与 7.3.3 节已经讨论过两种形态：纯虚接口适合跨模块、跨 DLL
+的长期契约，\seqsplit{\texttt{std::function}} 则适合时钟、随机数、
+单回调这种“轻接缝”。两者的共同点是运行时多态——可以在容器里
+异构存放、可以运行时替换、调试栈清晰；代价是一次间接跳转和接口样板
+代码。对绝大多数业务代码，这仍是首选形态，本节不再重复示例。
+
+\subsection{动态对象 + \texttt{invoke}/\texttt{fake}：按方法名劫持}
+
+某些代码库（Qt 风格的元对象层、脚本绑定层、自研反射容器）把对象
+包装成类型擦除的“AnyObject”：所有调用都走字符串方法名，配合一张
+劫持表，就能在运行时改写任意成员的行为，被测对象的类一行不改：
+
+\cpplabel
+\begin{lstlisting}
+// 假定 AnyObject 内部维护：
+//   1) 真实对象（类型擦除存储）
+//   2) 一张 fake 表：method_name -> (args_matcher, return_value)
+AnyObject a = std::string{"123"};
+
+a.invoke("size", {});          // 3，调用真实 std::string::size()
+
+a.fake("size", {}, 4);          // 注册劫持：忽略实参，总返回 4
+a.invoke("size", {});          // 4，从此被劫持
+
+a.fake("substr", {0, 2}, std::string{"ab"});
+a.invoke("substr", {0, 2});    // "ab"，命中 fake
+a.invoke("substr", {1, 2});    // "bc"，实参不匹配，走真实
+\end{lstlisting}
+
+这种形态的特征：介入时机最晚（纯运行时），被测代码侵入度最低，但
+也最不安全——方法名写错、实参类型对不上，编译器一概不查，往往到
+测试跑起来才暴露；每次 \seqsplit{\texttt{invoke}} 都要做字符串哈希、
+参数装箱与解箱，开销远高于虚函数；调用栈里只剩动态调度框架的内部
+帧，看不出“这次究竟命中了哪条 fake”。适用场景集中在本来就是动态
+调度的项目：反射/元对象层、脚本绑定（Lua/Python 互操作）、被测对象
+的成员集合在运行时才确定。如果项目本身没有这层动态调度，单纯为了
+“方便 mock”引入 AnyObject，得不偿失——前三种手段都更直接。
+
+值得单独强调的是，AnyObject 是 C++ 里唯一能贴近 NSubstitute、
+Mockito 这类“流式打桩”体验的路线：6.7、6.8 节的 \texttt{Returns}、
+\texttt{thenReturn} 与这里的 \texttt{fake} 语义同构——都是对某个
+调用点直接声明返回值或行为，不必预先定义替身类。对长期使用
+Java/C\#、习惯了代理式 mock 的开发者，这层 AnyObject 几乎是把原有
+手感原样搬回 C++ 的唯一途径。代价同样清楚：动态调度库本身得有人
+开发并长期维护，而它恰恰是几种方案里工程量最大的基础设施。
+
+\subsection{把 UT 搬到宿主语言或脚本层}
+
+还有一条常被忽略的路：不在 C++ 里做隔离，而是把单元测试整体搬到
+另一种语言的适配层——经 pybind11、LuaBridge、JNI、.NET Interop 把
+被测 C++ 暴露成宿主对象，测试改用 Python、Lua、JavaScript 或
+Java/C\# 书写。此时隔离与打桩直接复用宿主语言成熟的 mock 生态
+（unittest.mock、jest、Mockito 等），C++ 侧几乎零改动，也天然绕开
+了 C++ 缺少运行时反射的根本限制。
+
+代价是覆盖率与调用关系从此“隔了一层”：gcov、llvm-cov 统计的是
+C++ 二进制，但测试逻辑住在宿主语言里，哪些 C++ 分支被脚本真正
+驱动、哪些边界没覆盖到，工具给不出直接答案，只能由开发人员或
+生成式 AI 结合两侧代码手动判断；跨语言栈帧也让崩溃定位变长。它
+适合“C++ 只做薄内核、逻辑主要在绑定或脚本层”的项目；对纯 C++
+核心逻辑，仍建议在 C++ 内测试。
+
+\subsection{方案横向对比}
+
+{
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{p{2.8cm}p{1.9cm}p{2.0cm}p{1.8cm}p{4.3cm}}
+\toprule
+方案 & 介入时机 & 类型安全 & 运行时开销 & 典型适用场景 \\
+\midrule
+\endfirsthead
+\toprule
+方案 & 介入时机 & 类型安全 & 运行时开销 & 典型适用场景 \\
+\midrule
+\endhead
+不链接真库 / --wrap   & 链接期       & 链接器查符号 & 零        & 裸机、HAL、libc、不便改的遗留 C \\
+模板 DI + CRTP        & 编译期       & 模板实例化   & 零        & 性能热点、头文件库、多依赖收拢 \\
+虚接口 / std::function & 运行时多态  & 编译期签名   & 一次间接  & 通用业务代码、跨模块或跨 DLL \\
+AnyObject + invoke/fake & 运行时按名 & 无           & 哈希+装箱 & 反射、元对象、脚本绑定层 \\
+UT 搬到宿主语言/脚本  & 运行时跨语言 & 宿主语言检查 & 跨语言调用 & 薄 C++ 内核、逻辑在绑定或脚本层 \\
+\bottomrule
+\end{longtable}
+}
+
+\begin{guideline}{选择顺序}
+能在编译期解决就不要拖到运行时：性能热点用模板 DI 与 CRTP；跨模块
+边界用虚接口或 \seqsplit{\texttt{std::function}}；改不动的遗留 C 才
+动用链接期手段；AnyObject 式按名劫持只在项目本身已经是动态调度框架
+时顺势使用；把 UT 搬去宿主语言只适合 C++ 仅做薄内核的项目。越往下
+走，“魔法”越浓，调试与维护成本越高。
+\end{guideline}
+
 % ================================================================
 \chapter{代码覆盖率}
 % ================================================================
