@@ -66,8 +66,8 @@
   language=C++,
   morekeywords={consteval,constinit,requires,concept,co_await,co_return,co_yield,
                 meta,info,reflexpr,define_enum,define_static_array,define_static_function},
-  morecomment=[l][\color{codecmt}\itshape]{//},
-  morecomment=[s][\color{codecmt}\itshape]{/*}{*/},
+  morecomment=[l][\color{cppcomment}\itshape]{//},
+  morecomment=[s][\color{cppcomment}\itshape]{/*}{*/},
 }
 \lstset{style=cppstyle}
 
@@ -129,6 +129,7 @@
 \usepackage{tabularx}
 \usepackage{booktabs}
 \usepackage{longtable}
+\usepackage{float}
 \usepackage{array}
 \usepackage{multirow}
 \usepackage{enumitem}
@@ -171,7 +172,26 @@
 
 % ====================================================================
 \begin{document}
-\maketitle
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C++ 反射机制全景对比\par}
+\vspace{1cm}
+{\LARGE 五大类方案与跨语言对照\par}
+\vspace{0.4cm}
+{\Large 聚合体反射、宏与模板元信息、框架反射、C++26 静态反射\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+\cleardoublepage
 
 % ═══════════════════════════════════════════════
 \section{引言}\label{sec:intro}
@@ -285,7 +305,7 @@ int main() {
   \item 非主流编译器（ICC、NVCC 等）不支持 \texttt{name\_of}，回退为仅索引访问
   \item 嵌套聚合体需要 \texttt{boost::pfr::flatten}
 \end{itemize}
-\end{tcolorbox}
+\end{note}
 
 \subsection{雅兰亭（yalantinglibs）}\label{subsec:ylt}
 
@@ -347,7 +367,7 @@ constexpr auto names = ylt::refl::member_names_v<Point>;
   \item 提供 JSON、XML、Protobuf、MsgPack 等多种序列化后端
   \item 成员名称获取利用了编译期字符串技巧，不是语言内建能力
 \end{itemize}
-\end{tcolorbox}
+\end{note}
 
 \subsection{Boost.PFR vs 雅兰亭对比}
 
@@ -556,7 +576,7 @@ int main() {
   \item X-Macro 方案将声明和元信息合一，但可读性较差
   \item 共同缺点：注册代码冗余，容易与类定义不同步
 \end{itemize}
-\end{tcolorbox}
+\end{note}
 
 % ═══════════════════════════════════════════════
 \section{框架反射：QObject 与 UObject}\label{sec:framework}
@@ -631,7 +651,7 @@ void inspect_player(Player& p) {
   \item Qt6 开始使用 \texttt{moc} 的改进版本，部分元信息在编译期生成
   \item 运行时开销：每个 \texttt{QObject} 实例多一个 \texttt{d\_ptr} 指针，类元信息为全局常量表
 \end{itemize}
-\end{tcolorbox}
+\end{note}
 
 \subsection{Unreal UObject 反射}\label{subsec:ue}
 
@@ -678,7 +698,7 @@ public:
   \item \texttt{UPROPERTY()} 的 specifier（\texttt{Replicated}, \texttt{SaveGame} 等）控制引擎行为
   \item 运行时开销较大：每个 \texttt{UClass} 对象包含完整的属性/函数描述树
 \end{itemize}
-\end{tcolorbox}
+\end{note}
 
 \subsection{QObject vs UObject 对比}
 
@@ -822,7 +842,7 @@ E enum_from_string(std::string_view name) {
   \item 当前仅编译期反射，没有运行时按字符串查找的能力（需自行构建查找表）
   \item 对非聚合体类的私有成员访问仍有争议，P2996 允许反射非静态数据成员
 \end{itemize}
-\end{tcolorbox}
+\end{warning}
 
 \subsection{C++26 反射 vs 现有方案}
 
@@ -908,7 +928,7 @@ std::ostream& operator<<(std::ostream& os, const T& obj) {
   \item \textbf{依赖注入} $\to$ RTTR、QObject（需运行时构造函数反射）
   \item \textbf{测试辅助} $\to$ Boost.PFR（\texttt{to\_tuple} 自动比较）
 \end{itemize}
-\end{tcolorbox}
+\end{note}
 
 % ═══════════════════════════════════════════════
 \section{反射序列化 vs Protobuf / FlatBuffers}\label{sec:proto}
@@ -1006,7 +1026,7 @@ std::cout << rp->name()->c_str();  // "Alice"
 
 \begin{warning}[title={混合使用的常见模式}]
 许多大型项目会同时使用两种技术：内部高性能通信用反射序列化（如雅兰亭的 struct\_pack），跨服务通信用 Protobuf。雅兰亭的 iguana 组件甚至同时提供了反射式 JSON 和 Protobuf 兼容序列化，允许在同一代码库中无缝切换。
-\end{tcolorbox}
+\end{warning}
 
 % ═══════════════════════════════════════════════
 \section{与 Java/C\# 反射的对比}\label{sec:jvm_clr}
@@ -1142,7 +1162,7 @@ C++ 的哲学恰恰相反。标准 C++ 在编译后不保留任何类型名称�
   \item 如果你需要运行时按名查找：使用 RTTR 或自建注册表
   \item 如果你在做新库设计：关注 C++26 反射，它将使大多数手动注册方案过时
 \end{itemize}
-\end{tcolorbox}
+\end{note}
 
 % ═══════════════════════════════════════════════
 \section{综合对比总表}\label{sec:summary}

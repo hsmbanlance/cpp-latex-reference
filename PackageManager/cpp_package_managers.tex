@@ -69,7 +69,7 @@
     target_include_directories,set_target_properties,install,
     add_subdirectory,configure_file,execute_process,
     ExternalProject_Add,CPMAddPackage,cpmaddpackage},
-  morecomment=[l][\color{codecmt}\itshape]{\#},
+  morecomment=[l][\color{cppcomment}\itshape]{\#},
   sensitive=false,
 }
 \lstdefinelanguage{Conan}{
@@ -77,7 +77,7 @@
     build_requires,settings,options,default_options,package_info,
     package,source,build,layout,cmake_layout,CMakeToolchain,CMakeDeps,
     conanfile,validate,configure,generate,package_type},
-  morecomment=[l][\color{codecmt}\itshape]{\#},
+  morecomment=[l][\color{cppcomment}\itshape]{\#},
 }
 \lstdefinelanguage{XMakeLua}{
   morekeywords={add_requires,target,add_packages,set_kind,add_files,
@@ -86,8 +86,8 @@
     add_deps,set_license,add_urls,add_versions,import,
     target_end,package_end,function,end,if,then,else,elseif,
     for,do,while,repeat,until,return,local,and,or,not,true,false,nil},
-  morecomment=[l][\color{codecmt}\itshape]{--},
-  morecomment=[s][\color{codecmt}\itshape]{--[[}{]]},
+  morecomment=[l][\color{cppcomment}\itshape]{--},
+  morecomment=[s][\color{cppcomment}\itshape]{--[[}{]]},
   morestring=[b]",
   morestring=[b]',
   sensitive=true,
@@ -97,7 +97,7 @@
     function,return,in,until,select,break,continue,export,source,
     local,declare,typeset,readonly,shift,exit,exec,eval,set,unset,
     cd,echo,git,cmake,conan,vcpkg,xmake,svn,make,ninja},
-  morecomment=[l][\color{codecmt}\itshape]{\#},
+  morecomment=[l][\color{cppcomment}\itshape]{\#},
   morestring=[b]",
   morestring=[b]',
   sensitive=true,
@@ -162,6 +162,7 @@
 \usepackage{tabularx}
 \usepackage{booktabs}
 \usepackage{longtable}
+\usepackage{float}
 \usepackage{array}
 \usepackage{multirow}
 \usepackage{enumitem}
@@ -204,11 +205,26 @@
 
 % ====================================================================
 \begin{document}
-\maketitle
-\thispagestyle{empty}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C++ 包管理方案对比\par}
+\vspace{1cm}
+{\LARGE 五种方案的机制与四种典型场景\par}
+\vspace{0.4cm}
+{\Large Conan、Vcpkg、CMake FetchContent、XMake 与版本控制内建机制\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
 
 \tableofcontents
-\newpage
+
+\mainmatter
+
+\cleardoublepage
 
 % =====================================================================
 \section{引言}
@@ -230,7 +246,7 @@ C++ 的特殊性在于：编译产物与平台和工具链高度绑定，头文�
   \item \textbf{XMake} --- 基于 Lua 的轻量级构建系统 + 内置包管理器。
   \item \textbf{Git Submodule / SVN Externals} --- 版本控制原生机制，手动管理依赖源码。
 \end{itemize}
-\end{tcolorbox}
+\end{note}
 
 % =====================================================================
 \section{各方案技术机制}
@@ -516,7 +532,7 @@ Vcpkg 使用 \texttt{vcpkg.json} 中的 \texttt{"builtin-baseline"} 字段配合
 \texttt{GIT\_TAG} 精确锁定 commit hash。XMake 的包描述中
 \texttt{add\_versions} 配合哈希值实现版本+完整性校验。
 Git Submodule 天然通过 commit hash 锁定，SVN Externals 通过 \texttt{-r} 修订号锁定。
-\end{tcolorbox}
+\end{note}
 
 % ---------------------------------------------------------------------
 \subsection{构建与集成方式}
@@ -597,7 +613,7 @@ ARM 架构（Linux/Windows）、musl libc 等均不在预编译范围内，
 包含 settings、options 和依赖版本。相同的 \texttt{package\_id} 保证映射到
 相同的二进制产物，但 CCI 不保证用户本地构建的产物与 CCI 预编译包一致——
 这要求完全相同的编译器版本、编译选项和构建环境。
-\end{tcolorbox}
+\end{warning}
 
 CCI 的 CI 使用 GitHub Actions + JFrog 内部自动化，
 每个 PR 提交后自动构建并测试所有支持配置的二进制包，
@@ -643,7 +659,7 @@ Android & arm-neon-android, x64-android, arm64-android \\
 不保证不同版本间的 API 兼容性。
 Lock 文件（\texttt{vcpkg.json} + \texttt{vcpkg-configuration.json}）
 捕获精确版本和哈希，提交到版本控制可确保团队和 CI/CD 的一致性。
-\end{tcolorbox}
+\end{note}
 
 \subsubsection*{XMake xmake-repo}
 
@@ -727,7 +743,7 @@ Vcpkg 不集中提供预编译二进制，但对 15 个 triplet 进行全目录�
 保证了更新一个 port 不会破坏其他任何 port 的编译。
 两者各有侧重：Conan 侧重\textbf{开箱即用的构建速度}，
 Vcpkg 侧重\textbf{包目录整体的编译一致性}。
-\end{tcolorbox}
+\end{note}
 
 % =====================================================================
 \section{场景一：指定平台应用程序/库}
@@ -778,7 +794,7 @@ CPM.cmake 通过本地缓存部分解决了这个问题。
 即使只面向单一平台，也要注意 ABI 兼容性。例如 Conan 的
 \texttt{settings.compiler.libcxx} 在 Linux 上区分 \texttt{libstdc++} 和
 \texttt{libstdc++11}，混用会导致链接错误。建议在 profile 中显式指定所有 settings。
-\end{tcolorbox}
+\end{warning}
 
 % ---------------------------------------------------------------------
 \subsection{指定平台场景推荐}
@@ -877,7 +893,7 @@ FetchContent 无法自动处理这种条件逻辑。
 对于跨平台项目，建议在 CI 中为每个目标平台维护独立的构建矩阵。
 Conan 和 Vcpkg 都可以与 GitHub Actions / GitLab CI 良好集成，
 利用二进制缓存可以显著缩短 CI 构建时间。
-\end{tcolorbox}
+\end{note}
 
 % ---------------------------------------------------------------------
 \subsection{跨平台场景推荐}
@@ -1129,7 +1145,7 @@ Git/SVN    & 最简单：依赖源码随项目分发，Buildroot/Yocto 直接编
 Conan 的 \texttt{settings} 和 Vcpkg 的 triplet 需要正确反映目标系统的 C 库选择。
 使用 musl 时，建议在 Conan profile 的 \texttt{[conf]} 中显式设置
 \texttt{tools.build:cflags} 和 \texttt{tools.build:sharedlinkflags}。
-\end{tcolorbox}
+\end{warning}
 
 % ---------------------------------------------------------------------
 \subsection{编译系统本身：使用原生构建基础设施}
@@ -1159,7 +1175,7 @@ FreeBSD/OpenBSD 基础系统等。在这些场景中，你编译的不是"运行
         优化级别、安全加固选项）都必须全局统一。
         外部包管理器引入的独立编译配置会破坏这种一致性。
 \end{itemize}
-\end{tcolorbox}
+\end{warning}
 
 \subsubsection*{各系统级构建框架的原生机制}
 
@@ -1244,7 +1260,7 @@ cc_library {
 没有任何例外。试图用 Conan/Vcpkg 构建系统组件，
 就像在操作系统的内核编译中引入 npm——
 技术上或许可行，工程上绝对是灾难。
-\end{tcolorbox}
+\end{note}
 
 % ---------------------------------------------------------------------
 \subsection{嵌入式场景推荐}
@@ -1297,12 +1313,12 @@ Git Sub    & 极致控制、与 Buildroot/Yocto 原生集成 & $\star\star\star\
 \end{tabularx}
 \end{table}
 
-\begin{note}[ title={评分说明}]
+\begin{note}[ title={评分说明}, unbreakable]
 评分基于三个维度加权：机制完备性（权重 40\%）、生态成熟度（权重 30\%）、
 学习成本与易用性（权重 30\%）。FetchContent 在系统定制和嵌入式场景得分较高，
 是因为其"无额外抽象层"的特性在这些场景下反而是优势。
 Conan 和 Vcpkg 的综合分最高，反映了它们作为专用包管理器在功能完备性上的领先。
-\end{tcolorbox}
+\end{note}
 
 % ---------------------------------------------------------------------
 \subsection{选型决策树}
@@ -1361,7 +1377,7 @@ Conan 和 Vcpkg 的综合分最高，反映了它们作为专用包管理器在�
 这会导致链接时的符号冲突或 ABI 不一致。建议在 CMakeLists.txt 中统一使用
 \texttt{find\_package} 或 \texttt{FetchContent} 二选一策略，
 并在项目文档中明确记录依赖来源。
-\end{tcolorbox}
+\end{note}
 
 % =====================================================================
 \section{附录：各方案版本与参考资源}

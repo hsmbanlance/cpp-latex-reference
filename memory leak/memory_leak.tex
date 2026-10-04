@@ -196,9 +196,26 @@
 
 % ====================================================================
 \begin{document}
-\maketitle
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C/C++ 内存泄漏\par}
+\vspace{1cm}
+{\LARGE 常见问题、检测与防御\par}
+\vspace{0.4cm}
+{\Large 泄漏模式、ASan / CRT 调试堆 / 分配器追踪与 RAII 防御\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
 \tableofcontents
-\newpage
+
+\mainmatter
+
+\cleardoublepage
 
 % ──────────────────────────────────────────
 \section{引言}
@@ -379,7 +396,7 @@ void leak() {
 }
 \end{lstlisting}
 
-\begin{warning}[关键规则]
+\begin{warning}[title={关键规则}]
 任何可能被继承的基类，其析构函数\textbf{必须}声明为 \texttt{virtual}。
 或者，如果类不打算被继承，使用 \texttt{final} 关键字阻止继承。
 \end{warning}
@@ -527,7 +544,7 @@ void correct_usage() {
 }
 \end{lstlisting}
 
-\begin{warning}[使用前提]
+\begin{warning}[title={使用前提}]
 \texttt{shared\_from\_this()} 要求对象\textbf{已经}被 \texttt{shared\_ptr}
 管理。如果在栈对象或裸 \texttt{new} 的对象上调用，会抛出
 \texttt{std::bad\_weak\_ptr} 异常（C++17 起）。
@@ -590,7 +607,7 @@ void cached_iterator_bug() {
 }
 \end{lstlisting}
 
-\begin{note}[安全实践]
+\begin{note}[title={安全实践}]
 避免在遍历容器的同时修改容器。如果必须在遍历中删除元素，
 使用 erase-remove 惯用法（C++20 可用 \texttt{std::erase\_if}），
 或始终用 \texttt{erase()} 的返回值更新迭代器。
@@ -645,7 +662,7 @@ void race_leak() {
 整数溢出导致的分配大小错误、通过空指针或野指针的间接写入等，
 都可能产生难以复现的泄漏现象。
 
-\begin{warning}[UB 与内存泄漏的隐蔽性]
+\begin{warning}[title={UB 与内存泄漏的隐蔽性}]
 由 UB 引起的内存泄漏通常不会在每次运行时都出现，而是取决于线程调度、
 堆布局等不可控因素。传统的泄漏检测工具（ASan、CRT 调试堆）可能报告
 "有泄漏"但无法精确定位根因——因为真正的 bug 是数据竞争或 UAF，
@@ -973,7 +990,7 @@ std::vector<int, TrackingAllocator<int>> tracked_vec;
 
 \subsection{自定义方案的注意事项}
 
-\begin{warning}[线程安全]
+\begin{warning}[title={线程安全}]
 覆盖全局 \texttt{operator new/delete} 时必须考虑线程安全。
 所有对共享数据结构的访问都需要加锁保护，但锁的争用可能严重影响
 多线程程序的性能。建议使用线程本地存储（\texttt{thread\_local}）
@@ -1004,7 +1021,7 @@ Release可用 & 否            & 否        & 是            & 是           \\
 \end{tabularx}
 \end{table}
 
-\begin{note}[推荐策略]
+\begin{note}[title={推荐策略}]
 在开发和测试阶段同时使用 ASan（Linux/macOS）和 MSVC CRT Debug（Windows），
 并在 Release 构建中集成轻量级的自定义分配器来持续监控生产环境的内存状态。
 这种多层防御策略可以覆盖尽可能多的场景。
@@ -1244,7 +1261,7 @@ public:
 和\textbf{漏报}（未能发现真正的泄漏），且缺乏对项目整体架构和约定的理解。
 因此，AI 的分析结果\textbf{必须由开发者自行确认}，作为辅助手段而非最终判断。
 
-\begin{note}[AI 辅助的最佳实践]
+\begin{note}[title={AI 辅助的最佳实践}]
 将 AI 工具作为代码审查的"第二双眼睛"：先用 AI 对关键代码段进行扫描，
 然后人工验证每一个报告的问题。对于 AI 标记的潜在泄漏，
 结合单元测试和 ASan/Valgrind 等运行时工具进行确认。
@@ -1298,7 +1315,7 @@ C 语言没有析构函数、RAII、智能指针或异常机制。
 
 \subsection{检测工具的固有盲区}
 
-\begin{guideline}[工具局限]
+\begin{guideline}[title={工具局限}]
 所有现有的检测工具都存在盲区：
 ASan 无法检测"仍然可达但逻辑上已废弃"的内存；
 CRT 调试堆只在 Debug 构建中可用；
@@ -1397,7 +1414,7 @@ fn forget_leak() {
 }
 \end{lstlisting}
 
-\begin{guideline}[跨语言的共性]
+\begin{guideline}[title={跨语言的共性}]
 无论是手动管理内存的 C/C++、自动 GC 的 Java/C\#，
 还是所有权系统保护的 Rust，内存泄漏的根源最终都归结为同一类问题：
 程序持有了不再需要的资源的引用，且没有任何机制（语言的或人工的）

@@ -169,9 +169,26 @@
 
 % ====================================================================
 \begin{document}
-\maketitle
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C++ CRTP 与 PImpl 惯用法\par}
+\vspace{1cm}
+{\LARGE 编译期多态与实现隐藏\par}
+\vspace{0.4cm}
+{\Large 静态继承、显式对象参数与二进制兼容\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
 \tableofcontents
-\newpage
+
+\mainmatter
+
+\cleardoublepage
 
 % ══════════════════════════════════════════════════════════════
 \part{CRTP — 奇异递归模板模式}
