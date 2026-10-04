@@ -1,0 +1,4365 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}{\setmonofont{Consolas}}{\setmonofont{DejaVu Sans Mono}}
+
+% ==================== 颜色 ====================
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+% ---- 所有代码块共用的排版（先定义，各语言 style 组合它）----
+\lstdefinestyle{codebase}{
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  escapeinside={(*@}{@*)},
+}
+
+\lstdefinestyle{cppstyle}{
+  style=codebase,
+  language=C++,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,FILE,wchar_t},
+  emphstyle=\color{teal!80!black},
+}
+\lstset{style=cppstyle}
+
+% ---- CUDA / OpenCL 核函数 ----
+\lstdefinestyle{cudastyle}{
+  style=cppstyle,
+  morekeywords={__global__,__device__,__host__,__shared__,__constant__,
+    __managed__,__restrict__,__launch_bounds__,__forceinline__,
+    __grid_constant__,__cluster_dims__,warpSize,cudaError_t,cudaStream_t,
+    cudaEvent_t,cudaMemcpyKind,dim3,cudaSuccess,cudaMalloc,cudaFree,
+    cudaMallocHost,cudaFreeHost,cudaMallocAsync,cudaMemcpy,cudaMemcpyAsync,
+    cudaMemset,cudaDeviceSynchronize,cudaStreamSynchronize,cudaGetLastError,
+    cudaDeviceSetLimit,cudaFuncSetAttribute,cudaEventRecord,cudaEventSynchronize,
+    cooperative_groups,this_thread_block,tiled_partition,
+    cg::reduce,cg::sum,cg::plus,npuLaunchKernel,ACL_MEMCPY_HOST_TO_DEVICE},
+  emph={threadIdx,blockIdx,blockDim,gridDim,__syncthreads,__shfl_down_sync,
+    __shfl_xor_sync,__reduce_add_sync,__ldg,__stcs,__builtin_assume_aligned,
+    atomicAdd,atomicExch,atomicCAS,cub,CUB,Thrust,thrust},
+  emphstyle=\color{orange!70!black}\bfseries,
+}
+
+% ---- Python（pybind11 的调用侧）----
+\lstdefinestyle{pythonstyle}{
+  style=codebase,
+  language=Python,
+  morekeywords={async,await,match,case,yield,from,import,lambda,
+    with,class,def,return,None,True,False,self,raise,try,except,finally,
+    pass,break,continue,global,nonlocal,assert,del,in,is,not,and,or,
+    if,elif,else,for,while},
+  emph={np,torch,F,nn,pa,dataclass,staticmethod,property,
+    int,float,bool,str,bytes,list,dict,tuple,set,type,range,len,print},
+  emphstyle=\color{teal!80!black},
+}
+
+% ---- pyproject.toml / 配置 ----
+\lstdefinestyle{tomlstyle}{
+  style=codebase,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morekeywords={build-system,requires,build-backend,project,name,version,
+    description,dependencies,optional-dependencies,tool,requires-python,
+    dynamic,classifiers,scripts},
+  keywordstyle=\color{cppkeyword}\bfseries,
+}
+
+% ---- Shell ----
+\lstdefinelanguage{ShellLD}{
+  morekeywords={if,then,else,elif,fi,for,in,do,done,while,case,esac,
+    function,return,local,export,source,echo,cd,set,exec,trap,read,
+    printf,test,exit,shift,eval,alias},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[d]',
+}
+\lstdefinestyle{shellstyle}{
+  style=codebase,
+  language=ShellLD,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  emph={curl,git,docker,pip,pip3,python,python3,uv,cmake,ninja,make,
+    nvcc,nvidia-smi,msbuild,dotnet,pwsh,bash,ls,cat,cp,rm,mkdir,touch,
+    grep,find,awk,sed,pytest,mypy,ruff,black,auditwheel,twine,
+    mscl,clang,gcc,g++,ldd,strings,ascend,msprof,ncu,nvprof},
+  emphstyle=\color{teal!80!black}\bfseries,
+}
+
+% ---- CMake ----
+\lstdefinelanguage{CMakeLD}{
+  morekeywords={cmake_minimum_required,project,add_executable,
+    add_library,target_link_libraries,target_include_directories,
+    target_compile_definitions,target_compile_options,set,if,elseif,
+    else,endif,find_package,option,message,install,file,
+    target_sources,add_subdirectory,enable_language,set_target_properties,
+    FetchContent_Declare,FetchContent_MakeAvailable,list,string},
+  sensitive=false,
+  morecomment=[l]{\#},
+  morestring=[b]",
+}
+\lstdefinestyle{cmakestyle}{
+  style=codebase,
+  language=CMakeLD,
+  keywordstyle=\color{cppkeyword}\bfseries,
+}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{float}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+\setlength{\headheight}{14.5pt}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+\emergencystretch=3em
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={C++ Reference},
+  pdftitle={C/C++ 并行算法参考手册：CPU、GPU/NPU 与 pybind11 导出},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+\newcommand{\Opt}[1]{\texttt{-\/-#1}}
+\newcommand{\Bk}{\allowbreak}
+% 执行域：全书用这三个宏统一口径
+\newcommand{\Dom}[1]{\textsf{\bfseries #1}}
+\newcommand{\CPU}{\Dom{CPU}}
+\newcommand{\GPU}{\Dom{GPU}}
+\newcommand{\NPU}{\Dom{NPU}}
+
+% ====================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C/C++ 并行算法参考手册\par}
+\vspace{1cm}
+{\LARGE 算法分解、CPU 与 GPU/NPU 执行域选型、pybind11 导出\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+\cleardoublepage
+
+% ====================================================================
+\part{并行度的来源与执行域选型}
+
+\chapter{并行的三种刻度}
+
+同一份求和代码，可以在四档刻度上被并行化：一条指令之内、一个核之内的若干条流水、一个插槽上的若干核、以及一台机器之外的若干张卡。本章把这四档刻度放在同一张桌面上，用同一个算法把它们串起来，并给出全书反复使用的四个概念工具：延迟与吞吐的分工、Amdahl 与 Gustafson 的适用边界、roofline 直觉，以及粒度、负载不均与同步这三笔税。读完后你应当能对任意一段代码回答两个问题：它的并行度从哪里来，它现在跑在哪一档刻度上、值不值得升档。
+
+需要事先声明边界：本书讲的是\emph{算法}在哪个执行域、按什么数据布局展开，线程、协程、通道这些原语的语义与陷阱不在范围内（那是另一册的主题）。全书用 \CPU、\GPU、\NPU{} 三个标签指代三种执行域，选型章节里它们是被打分的对象，而不是被信仰的教派。
+
+\section{同一份代码的四种刻度}
+
+设有一段长度为 $n$ 的浮点数组，要把它归约为一个标量。这个算法没有数据间的依赖，天然可以任意切分，因此最适合用来展示``刻度''这件事：算法一个字都不改，只是并行的单元在换。
+
+\textbf{第一档：指令级并行（ILP）。} 一个现代核每周期能发射多条指令，但前提是它们互不等待。朴素求和里唯一的依赖是那条累加链：下一条 \Tp{add} 要用上一条的结果，于是宽度为 $1$ 的执行单元被拉成串行。把累加器拆成 $4$ 个独立的槽，依赖图立刻从一条链变成四条平行链，同样的指令数能在更少的周期里流完。这一档的收益完全免费，代价是数值结果的重排。
+
+\textbf{第二档：数据级并行（SIMD）。} 向量单元把一条指令变成对若干通道的同一操作，宽度常见为 $8$ 或 $16$ 个单精度通道（随指令集代次不同）。它要求数据在内存里是连续且对齐的，也就是说这一档的并行度是\emph{布局}买来的，不是循环买来的。让编译器生成向量码的条件通常很苛刻：无别名、无提前退出、归约可重排。
+
+\textbf{第三档：线程级并行（TLP）。} 把区间分给若干硬件线程，每个线程跑一份第一档和第二档的代码，末尾做一次跨线程归约。这一档开始产生真实的开销：线程启动、缓存行的跨核迁移、归约处的栅栏。
+
+\textbf{第四档：进程与设备级并行。} 多个进程各自持有自己的地址空间，或者把整个数组搬到 \GPU、\NPU{} 上，由成千上万个轻量执行单元同时推进。这一档的变化不只是``更多线程''：执行域的内存层次、同步粒度与一致性模型都换了，所以算法的\emph{写法}要换，即便算法的\emph{语义}一个字不变。
+
+表~\ref{tab:ch1-scales} 是四档刻度的对照。
+
+\begin{table}[H]
+\centering
+\caption{四档并行刻度：收益从哪来，代价付在哪}
+\label{tab:ch1-scales}
+\small
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+  >{\raggedright\arraybackslash}p{0.20\textwidth}
+  >{\raggedright\arraybackslash}p{0.28\textwidth}
+  >{\raggedright\arraybackslash}p{0.20\textwidth}@{}}
+\toprule
+刻度 & 并行单元 & 收益来源 & 主要代价 \\
+\midrule
+ILP & 同一条依赖链上的多条指令 &
+  拆分累加器、软化依赖，填满发射宽度 &
+  几乎为零，但收益上限只有几倍 \\
+SIMD & 一条向量指令的多个通道 &
+  连续、对齐、无别名的数据布局 &
+  布局约束、掩码与尾块处理 \\
+TLP & 核与硬件线程 &
+  独立区间的并行推进 &
+  启动开销、伪共享、归约栅栏 \\
+进程与设备级 & 进程、卡、执行域 &
+  工作集分片，吞吐随分片近线性 &
+  数据搬运、异构一致性、调试成本 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{第一档与第二档：串行代码的自然余量}
+
+下面这段是全书后续所有对照的基线。它名义上是串行代码，但已经吃掉了第一档的红利，并且把第二档的可能性保留在结构里（连续访问、每块独立、无分支）。
+
+\begin{lstlisting}[style=cppstyle,caption={串行分块求和：只依赖 ILP 与 SIMD 的自然余量}]
+// 4 路累加器：把唯一的循环携带依赖拆成 4 条独立链
+float sum_block(const float* p, std::size_t len) {
+  float a0 = 0.f, a1 = 0.f, a2 = 0.f, a3 = 0.f;
+  std::size_t i = 0;
+  for (; i + 4 <= len; i += 4) {
+    a0 += p[i];          // 四条链互不等待，可同周期发射
+    a1 += p[i + 1];
+    a2 += p[i + 2];
+    a3 += p[i + 3];
+  }
+  float s = (a0 + a1) + (a2 + a3);   // 归约顺序是人为选定的
+  for (; i < len; ++i) s += p[i];    // 尾块：宽度不足时的退化路径
+  return s;
+}
+\end{lstlisting}
+
+如果编译器没有向量化内层循环，先不要改算法，先查它给了什么理由：别名、非连续访问、还是归约不可重排。工具链层面的做法是把向量化报告打开（\Tp{-fopt-info-vec} 一类开关），``向量化失败''是一条精确诊断，不是一种猜测。至于显式的宽度控制，OpenMP 的 \Tp{\#pragma omp simd} 是最轻量的一档；可移植的显式向量类型（例如还在标准化路线上的 \Tp{std::simd}）支持度随实现不同，本书不作为默认手段。
+
+\subsection{第三档：源码只改两行，收益来源全换}
+
+\begin{lstlisting}[style=cppstyle,caption={同一算法升到线程级：分块仍是同一段串行代码}]
+float sum_parallel(const float* p, std::size_t n, std::size_t blk) {
+  float total = 0.f;
+  // blk 的选取本身就是一次粒度与同步税的折中
+  #pragma omp parallel for schedule(static) reduction(+:total)
+  for (long long b = 0; b < (long long)(n / blk); ++b)
+    total += sum_block(p + (std::size_t)b * blk, blk);
+  return total;
+}
+\end{lstlisting}
+
+源码改动极小，但收益来源完全不同：前两档藏在指令调度与流水里，由硬件免费给你；第三档是运行时真正调动多个核，因此\emph{每次}都要付线程唤醒与归约的代价，只在区间足够长时才回本。还要注意语义代价：\Tp{reduction(+:total)} 改变了浮点相加的顺序，结果最后几位与串行版不同是正常现象，若下游要求逐位可复现，就得把归约树顺序固定下来（本书后文把这类约束称为``确定性预算''）。
+
+\subsection{第四档：算法同构，刻度不同}
+
+\begin{lstlisting}[style=cudastyle,caption={同一算法升到设备级：grid-stride 循环与一次块内归约}]
+__global__ void sum_gridstride(const float* __restrict__ data,
+                               float* __restrict__ out, size_t n) {
+  __shared__ float part[256];
+  size_t stride = (size_t)gridDim.x * blockDim.x;
+  float acc = 0.f;
+  for (size_t i = (size_t)blockIdx.x * blockDim.x + threadIdx.x;
+       i < n; i += stride) acc += __ldg(&data[i]);
+  part[threadIdx.x] = acc;
+  __syncthreads();
+  if (threadIdx.x == 0) {         // 块内收尾，此处为示意写法
+    for (int k = 1; k < (int)blockDim.x; ++k) part[0] += part[k];
+    atomicAdd(out, part[0]);      // 每块只向全局写一次
+  }
+}
+\end{lstlisting}
+
+把这段与前面的串行版逐行对照：分块对应 \Tp{blockIdx}，块内多条累加链对应每线程的 \Tp{acc}，归约对应 \Tp{\_\_syncthreads()} 之后的收尾。变化的是``谁在等待''。串行版里，指令之间靠流水错开；\GPU{} 版里，成千上万个线程同时在飞，一个线程在等内存时它的同伴就在跑，所以那段 ``示意写法'' 的串行收尾在真实内核里必须换成树形归约或 warp 内的 \Fn{\_\_shfl\_down\_sync}——但那是另一章的算法问题，此处的要点只有一个：\textbf{升档改的是执行域，不是算法语义}。
+
+启动这段内核需要哪些开关，与它跑在哪一档刻度直接相关：
+
+\begin{lstlisting}[style=shellstyle,caption={四档刻度各自对应的编译开关}]
+# 第一、二档：优化等级 + 目标指令集 + 向量化报告
+g++ -O3 -march=native -std=c++20 -c sum_cpu.cpp
+g++ -O3 -march=native -c -fopt-info-vec sum_cpu.cpp
+
+# 第三档：再加 OpenMP 运行时（clang 侧通常是 libomp）
+g++ -O3 -march=native -fopenmp -std=c++20 sum_cpu.cpp -o sum_omp
+
+# 第四档：设备码要显式指定架构目标，与所插卡一致
+nvcc -O3 -arch=sm_90 sum_cuda.cu -o sum_cuda
+\end{lstlisting}
+
+\Tp{-march=native} 把向量化宽度交给编译机的 CPU，生成的二进制换机器就可能退化到标量路径；发布产物应改用可移植的目标档名（例如 \Tp{-march=x86-64-v3} 一类），或在运行时按 CPU 特性分派多份实现。\Tp{-arch=sm\_90} 同理：设备码与显卡架构不匹配时，要么退回计算兼容模式，要么干脆加载失败。
+
+\begin{compare}[title={三笔收益、三种代价：把四档刻度排成一条链}]
+\begin{itemize}
+\item ILP 与 SIMD 的收益来自\emph{硬件本来就有的余量}，代价是代码形状要配合（拆依赖、给连续布局），几乎不产生运行时开销。
+\item TLP 的收益来自\emph{额外的核}，代价是运行时才出现的：启动、伪共享、归约栅栏，以及在小规模上必然亏本。
+\item 设备级的收益来自\emph{另一个数量级的吞吐}，代价是数据必须跨越执行域，且内存模型、同步粒度与调试手段全部更换。
+\item 三档可以叠加，但不是一定划算：真正的判据是下一章之后的 roofline 与三笔税，而不是``别人用了我也用''。
+\end{itemize}
+\end{compare}
+
+\section{延迟与吞吐的分工}
+
+\textbf{延迟}是一次访问从发出到结果可用的时间；\textbf{吞吐}是单位时间能完成多少这样的访问。两者的隐藏机制完全不同，这也是理解 \CPU{} 与 \GPU{} 分野的钥匙。
+
+\CPU{} 用``让单条流更快''的办法压延迟：乱序执行把后续指令提前，分支预测猜路，硬件预取器猜测下一条要拉进缓存的行，多级缓存把常用数据推到近处。这些机制都建立在``这条流大概率还要继续跑''的假设上，代价是每核大量面积花在猜中与恢复上。
+
+\GPU{} 反过来：单次访问的延迟并不低（全局显存的访问延迟在数百纳秒量级，通常比 \CPU{} 主存还要高），片上也没有那么激进的重命名窗口与数据预取网络。它的办法是\emph{更多在飞的 warp}：一个调度器每周期从已经就绪的 warp 里挑一个发指令，一个 warp 在等内存时它的槽位立刻被别的 warp 占走。延迟没有被消灭，只是被别的线程的工作覆盖掉了。这种``用并发换延迟''的思路在体系结构文献里叫延迟隐藏（latency hiding），也有人称之为 thread-level multithreading；它决定了 \GPU{} 算法的第一原则：\emph{保住足够多的独立工作}，否则再高的显存带宽也只是一串等待。
+
+由此得到三条实用推论：
+\begin{itemize}
+\item 串行延迟敏感路径（一次只等一个结果）在 \GPU{} 上不会变快，只会更慢，因为它把并发度换成了同步。
+\item \CPU{} 上``再开一个线程''往往只是把一条流变成两条流；\GPU{} 上``再开一个线程''是在为所有流增加可供切换的候选。
+\item 占用率（resident warp 与理论上限之比）是一个吞吐\emph{储备}指标，不是利用率，具体口径见第 2 章。
+\end{itemize}
+
+\section{Amdahl 与 Gustafson：两句话并不互相反驳}
+
+Amdahl 定律针对\emph{固定规模}：设串行部分占总工作量的比例为 $f$，用 $p$ 个执行单元，则加速比
+\[
+S(p)=\frac{1}{f+(1-f)/p},\qquad \lim_{p\rightarrow\infty}S(p)=\frac{1}{f}.
+\]
+它说的是上限，不是预测：只要 $f$ 非零，$1/f$ 就是天花板。Gustafson 定律针对\emph{固定时间}：让问题规模随 $p$ 一起长大，记扩展后仍不能并行的那部分耗时占比为 $s$，则强扩展意义上的有效加速比为
+\[
+S_{\text{scaled}}(p)=s+p(1-s).
+\]
+关键在于两个式子里的 ``串行占比'' 不是同一个量。Amdahl 的 $f$ 是在\emph{某个固定规模}上量到的；Gustafson 的 $s$ 里，规模随处理器数增长，许多原本看似串行的开销（启动、输入解析、单点汇总）会被摊薄，而另一些（真正的顺序依赖、全局同步）会长得更快。所以``Amdahl 说并行没用、Gustafson 说并行万岁''是一种误读：两条定律是同一次测量的两种边界条件。
+
+\begin{warning}[title={用 Amdahl 论证``并行没用''的三种错误前提}]
+\begin{enumerate}
+\item \textbf{把 $f$ 当成硬件常数。} $f$ 是规模、算法与实现的函数。同一份代码在 $10^{4}$ 个元素上量到的串行占比，对 $10^{9}$ 个元素完全不成立：固定开销被摊薄，$f$ 变小。拿小规模的 $f$ 去否定大规模并行，是最常见的一次自我实现预言。
+\item \textbf{把 ``顺序依赖'' 与 ``当前实现里的串行段'' 混为一谈。} 很多所谓串行段只是默认写法：一次归约被写成一条累加链，于是必然串行；换成可结合的树形归约，它立刻成为并行段。Amdahl 里的 $f$ 应当在你\emph{选定算法之后}才去量，而不是在改造之前。
+\item \textbf{把并行部分当成理想线性。} 用 $S(p)=1/(f+(1-f)/p)$ 预测出漂亮的曲线，却忽略三笔税（下一节）。真实曲线往往在某个 $p$ 之后掉头，这不是硬件故障，是模型里少写了减项。
+\end{enumerate}
+\end{warning}
+
+实用建议是把两条定律当作\emph{两次不同的实验设计}：如果你要在既有规模上提速，报 Amdahl 上限并说明 $f$ 是怎么测的；如果你能决定问题规模（训练、仿真、在线批处理），报强扩展与弱扩展两条曲线，并注明哪一条是你要交付的。
+
+\section{roofline 直觉：先问它撞哪堵墙}
+
+roofline 是一个只有两条线的性能模型。设算法的\textbf{算术强度} $\mathrm{AI}$ 为每次从主存搬入的字节所对应的浮点运算次数（单位记作 FLOP per byte），执行域的峰值算力为 $P_{\text{peak}}$，主存带宽为 $BW$，则可达性能
+\[
+P \approx \min\!\big(\mathrm{AI}\times BW,\; P_{\text{peak}}\big).
+\]
+这条折线在 $\mathrm{AI}^{\ast}=P_{\text{peak}}/BW$ 处出现脊点（ridge point）。$\mathrm{AI}<\mathrm{AI}^{\ast}$ 时你在\textbf{带宽墙}下面：性能由搬运决定，加核、加单元都没有用，只能让每字节多做几次运算（融合、分块、复用片上缓存）。$\mathrm{AI}>\mathrm{AI}^{\ast}$ 时你在\textbf{算力墙}下面：性能由发射能力决定，此时优化点变成指令选择与占用率。
+
+具体数字本书不给（不同代次差好几倍，网上抄来的那张表大概率与你的卡不符），但两个\emph{量级}关系值得记牢，它们解释了 \CPU{} 与 \GPU{} 的分工：
+\begin{itemize}
+\item \GPU{} 的峰值算力相对其显存带宽的比值，比 \CPU{} 的对应比值\emph{明显更高}（数倍到一个数量级，取决于把不把矩阵单元算进峰值）。也就是说 \GPU{} 的脊点算术强度更高：同一个算法搬到 \GPU{} 上，要在更高的 $\mathrm{AI}$ 才够得着算力墙。
+\item 结论反过来说就是一条判据：\textbf{低算术强度的算法在 \GPU{} 上照样是带宽受限}，换执行域不会把它变成算力受限。想让它值得搬到 \GPU{}，靠的是把若干算子融成一个内核，让中间结果留在片上，从而人为抬高 $\mathrm{AI}$。
+\end{itemize}
+
+求和这个例子的 $\mathrm{AI}$ 极低（每 $4$ 字节一次加法），因此它在两种执行域上都撞带宽墙。它适合用来讲刻度，不适合用来比大小——本书后面会换成 GEMM、卷积、Softmax 这类 $\mathrm{AI}$ 有明显层次的算法。
+
+\section{三笔税：粒度、负载不均、同步}
+
+升档带来的收益要先扣三笔税才轮到用户。
+
+\textbf{粒度税。} 任务切得越细，可并行度越高，但每个分片都要付一次启动与收尾。分块大小 $\beta$ 的作用就是这个折中：太大则尾部不均衡、小则同步占比上升。经验性的做法是把 ``每线程最少处理多少字节'' 设成阈值，低于它就不开线程——这也是本书所有内核都写成 grid-stride 形式的原因：它把分片数与执行单元数解耦，让你在不动算法的前提下调 $\beta$。
+
+\textbf{负载不均税。} 分片耗时不齐，整个阶段的完成时间由最慢的那片决定。静态均分只在代价均匀时成立；数据相关的工作量（稀疏结构、变长序列、条件分支的深浅）需要动态调度或工作窃取，代价是更频繁的调度与更差的局部性。在 \GPU{} 上这一税还叠加了分支发散：同一执行单元组内的不同路径会被掩码串行化（第 2 章量化地讲）。
+
+\textbf{同步税。} 归约、栅栏、原子、跨执行域拷贝都在把并行度换成顺序等待。它有三个容易被忽略的特征：一是随参与方数量增长（哪怕只是树形归约也有对数级），二是\emph{不在} roofline 的分子里，所以在算力受限区看起来``还有余量''时它依然能把整体拖住；三是跨执行域时最贵，一次主机与设备之间的往返要按微秒量级预算，远大于同域内的栅栏。
+
+三笔税合起来解释了``加速比曲线先升后降''这个所有实测者都会遇到的形状：曲线拐点不是你实现得不好，是三笔税的增长速率终于超过了摊薄收益的速率。
+
+\section{``并行算法''与``并发程序''不是一回事}
+
+这两个词常被混用，但它们关心的对象不同，本书站在``并行算法''这一侧。
+
+\begin{itemize}
+\item \textbf{并行算法关心数据布局与归约结构。} 问题包括：数据以什么顺序被访问（连续、分块、跨步）、每次访问能带多少字节、归约算子是否可结合、单位元是什么、重排之后结果与不重排差多少、算法在给定 $\mathrm{AI}$ 下撞哪堵墙。它的``正确性''除了数值结果还包括\emph{可复现性}这一档。
+\item \textbf{并发程序关心所有权与推进。} 问题包括：这块 buffer 现在归谁、生命周期到哪里结束、队列满了怎么背压、任务怎么取消、锁的获取顺序、内存可见性与事件循环的调度。它的正确性主要是状态机层面的：不重不漏、不毒化、不死锁。
+\end{itemize}
+
+一条实用的分界判据：如果把你的程序里所有``谁先执行''的问题都消掉，剩下那段确定语义的部分就是并行算法问题；剩下那些消不掉的、必须靠所有权与推进顺序才能自洽的部分，就是并发问题。两者当然会在同一段代码里相遇（一个流式管道里的每个阶段既是并发对象又是并行算法），但它们是两类问题：前者靠类型与生命周期约束，后者靠分块、布局与归约结构。本书后文遇到需要原语细节的地方，只标注它属于并发侧，把机制留给专门的分册。
+
+\begin{guideline}[title={本章要点}]
+\begin{enumerate}
+\item 并行度有四档刻度（ILP、SIMD、TLP、进程与设备级）。同一个算法可以在四档上写四遍，语义不变，变的是``谁在等待''与``代价在哪''。
+\item \CPU{} 靠乱序、预测与预取消耗\emph{一条流}的延迟；\GPU{} 靠在飞的大量 warp \emph{平均掉}延迟。前者优化单流，后者必须有独立工作流可切。
+\item Amdahl 管固定规模的上限，Gustafson 管规模随执行单元增长的强扩展；两者的串行占比不是同一个量，不能互相反驳。
+\item 先看算术强度落在脊点哪一侧，再决定优化搬运还是优化发射。换执行域不会改变一个低 $\mathrm{AI}$ 算法的带宽受限本性。
+\item 粒度、负载不均、同步是三笔必须显式预算的税。实测加速比曲线先升后降是常态，不是异常。
+\item 并行算法处理布局与归约，并发程序处理所有权与推进；本书站在前者，遇到后者只做标注。
+\end{enumerate}
+\end{guideline}
+% ====================================================================
+
+% ====================================================================
+\chapter{CPU、GPU 与 NPU 的硬件画像}
+
+上一章把并行分成四档刻度，但刻度只回答``并多少个''；要回答``并在哪''，必须先知道每种执行域把什么事情做便宜了、把什么事情做贵了。本章给出 \CPU、\GPU、\NPU{} 三张画像，并在 2.4 节把它们压成一张对照表。这张表不是装饰：下一章的选型判据是逐行从它读出来的，全书后面的每个算法也都是``先在表上找到自己的行，再决定写法''。
+
+一个方法上的提醒：画像里最容易出错的是把某个具体型号的参数当作物性。本书一律不给具体频率、容量与带宽数字，只讲量级关系与机理，因为代次一换数字就失效，而机理不会。凡是随代次或随实现不同的地方，都会明确标注。
+
+\section{CPU 画像：为一条流的快速推进而设计}
+
+\CPU{} 的设计目标是：让\emph{单条}指令流尽可能快地推进。围绕这个目标，它买下了乱序执行、分支预测、硬件预取、多级缓存与缓存一致性。这些机制每一个都在削减``等待''，代价是每核面积大、频率受限、核数不可能很多。
+
+\subsection{核、SMT 与``逻辑处理器''}
+
+一个物理核包含一到两套完整的状态（寄存器重命名、调度窗口、执行端口），SMT（同时多线程）在\emph{同一核}上维护多套体系结构状态，让两条硬件线程互补地使用执行端口。关键结论是：SMT 给单线程带来的吞吐增益在量级上明显小于二的倍数，因为端口与缓存是共享的；但给\emph{独立工作流}带来的收益接近二的倍数，因为两条线程各自把对方的空闲槽位填上了。这也是为什么同一份代码在``逻辑处理器数''上做静态均分时常常不是最优。
+
+\begin{note}[title={``核数''与``可并行度''不是一回事}]
+\begin{itemize}
+\item \Tp{lscpu} 里的``处理器''数是逻辑处理器，包含 SMT 兄弟线程；真正的独立执行资源要看物理核数与端口共享关系。
+\item \GPU{} 侧没有对应的``核数''概念：可并行度由驻留线程数、寄存器与片上内存配额共同决定，而这些配额是你自己写出来的内核的函数，不是设备的常数。
+\item \NPU{} 侧更少谈``并行度''：并行的单位是算子与数据块，控制流在编译期就展开成了调度。
+\item 实用口径：先问``这个执行域能同时\emph{推进}多少个独立工作单元''，再问``每个单元的分支自由度有多大''。前者是并行度，后者决定你能不能真的造出那么多独立工作。
+\end{itemize}
+\end{note}
+
+\subsection{私有 L1、L2 与共享 L3}
+
+典型 \CPU{} 的层次（容量随代次差别很大，此处只讲职责）：L1 分成指令与数据两块，容量几十 KB 量级，只为一个核服务，命中在几个周期；L2 每私有一份，容量到 MB 量级，是``私有但慢''的兜底层；L3 由片内多个核共享，常按 slice 分布在互连（ring 或 mesh）上，容量数十 MB 量级。再往下是主存，容量可以比 L3 大三个数量级，但访问要经过内存控制器。
+
+对算法而言这三层的差别可以浓缩成一句话：\textbf{\CPU{} 上的层次是硬件管的，你只能通过访问模式去``请求''它合作}。分块（blocking）之所以有效，是因为它把重复访问控制在时间局部性窗口里；而不是因为你指定了某块数据必须进 L2。
+
+\subsection{缓存行、一致性与伪共享}
+
+一致性协议以\textbf{缓存行}为最小单位（x86 与多数 AArch64 实现是 64 字节；个别架构更宽），一次读会把整行搬进本核，一次写要把该行取得独占权。协议（MESI 一类）保证任何时刻一条行至多在一个核处于可写状态，因此\emph{不同行}的并发写互不干扰，而\emph{同一行}的交替写会让该行在核间来回迁移：每一趟迁移都要重新取独占权，这才是``共享计数器变慢''的物理原因，与原子指令本身的开销是两个问题。
+
+于是有了本书在 \CPU{} 侧反复使用的一个写法：让每个线程独占一条缓存行，统计量放在行内，最后再合并。
+
+\begin{lstlisting}[style=cppstyle,caption={按缓存行分片的计数：无原子、无锁、无跨行迁移}]
+#include <cstddef>
+#include <vector>
+
+// 一个计数器独占一条缓存行：不同核写不同行，彼此不打扰
+struct alignas(64) Counter {
+  long long v;
+  Counter() : v(0) {}
+};
+
+long long count_gt127(const unsigned char* d, std::size_t n,
+                      unsigned t) {
+  std::vector<Counter> c(t);   // 元素已按 64 字节对齐，天然分片
+  #pragma omp parallel for schedule(static)
+  for (unsigned k = 0; k < t; ++k) {
+    std::size_t lo = n * k / t, hi = n * (k + 1) / t;
+    long long acc = 0;
+    for (std::size_t i = lo; i < hi; ++i) acc += (d[i] > 127);
+    c[k].v = acc;              // 只有本线程写这一行
+  }
+  long long total = 0;
+  for (unsigned k = 0; k < t; ++k) total += c[k].v;
+  return total;
+}
+\end{lstlisting}
+
+\cpp{17} 提供了 \Tp{std::hardware\Bk\_destructive\Bk\_interference\Bk\_size}（头文件 \Tp{<memory>}）来询问行的``防干扰尺寸''，但主流标准库的实现进度与取值口径不一，本书示例仍写死 64 并注明：在目标平台上应当用这个常量核对一次。还要注意``防干扰尺寸''可能大于实现的自然行宽（宽行加上邻近预取），此时宁可多占一点内存。
+
+\subsection{乱序、分支预测与它们的代价}
+
+乱序执行把后续指令提前到等待期填充，重命名窗口通常在几百条指令量级；分支预测器猜路径，猜错则丢弃投机结果并回到检查点，误预测代价是几十个周期量级。这解释了两条 \CPU{} 侧的算法经验：
+\begin{itemize}
+\item 数据相关的\emph{不可预测}分支是 \CPU{} 的性能杀手；查表、算术化条件（把分支写成无分支的选择）通常比猜更快的路径更稳。
+\item 长依赖链会让乱序窗口空转：这也是第 1 章把累加器拆成四路的原因。
+\end{itemize}
+
+\subsection{NUMA：不是所有内存同样远}
+
+多插槽或多 chiplet 的机器上，主存按节点分组，本节点访问与跨节点访问的延迟和带宽都不同；\Tp{numactl --hardware} 给出的距离矩阵就是这个差别的官方口径。相关的三条实践约束：线程迁移比页面迁移便宜，所以调度器倾向迁线程；分配后的首次触碰（first touch）决定页面落在哪个节点，因此``谁初始化谁受益''；工作集一旦超过共享缓存，NUMA 效应就从噪声变成主导项。
+
+\section{GPU 画像：为大量在飞的独立工作而设计}
+
+\GPU{} 不买``单流快''，买``总量大''。它把面积从预测与重命名挪到了执行单元与线程状态上，然后用切换代替等待。本节以 NVIDIA 的口径描述（SM 与 warp），AMD 的对应单位是 wavefront，宽度不同；本节只讲两类架构共有的量级关系。
+
+\subsection{SM、warp 与发射}
+
+调度单位是自上而下的：设备分为多个 SM（流式多处理器），SM 内分若干分区，每个分区每周期发射一条指令；线程以 32 个为一组（warp）被同一指令驱动。一个 SM 同时驻留多个 warp，某 warp 等待时分区就发别的 warp 的指令。这种``一组线程共享一个程序计数器''的模式通常叫 SIMT：它在语义上是线程、在发射上是 SIMD。
+
+\subsection{配额制的片上资源与占用率}
+
+\GPU{} 的片上资源是按配额分配的，不是``够用''而是``分完''：
+\begin{itemize}
+\item 寄存器堆每个 SM 一大块（常见口径是数万个 32 位寄存器的量级，具体数随架构手册），所有驻留线程瓜分它。内核每线程用 32 个寄存器，驻留线程数就按同样的比例被压下去。
+\item shared memory 每 SM 数十 KB 到两百 KB 量级（随代次不同，部分可与 L1 做 carve-out 分配），同样被驻留的 block 瓜分。
+\item 两者取更紧的那个约束，再除以架构上限，就是\textbf{占用率}（occupancy）：驻留 warp 数与理论最大驻留数之比。
+\end{itemize}
+
+\Tp{\_\_launch\Bk\_bounds\_\_} 是与占用率直接对话的开关：它告诉编译器这个 block 的最大线程数与期望的每 SM 最少 block 数，编译器据此把每线程寄存器用量压到配额里。用错了会适得其反——强行压低寄存器可能换来大量溢出，溢出的``local memory''其实落在片外，见下一小节。
+
+\begin{lstlisting}[style=cudastyle,caption={启动配置：block 形状、grid 推导与 launch bounds}]
+// 每 block 256 线程，并要求一个 SM 至少容下 4 个这样的 block
+__global__ void __launch_bounds__(256, 4) histo_kernel(
+    const unsigned char* __restrict__ data, size_t n,
+    unsigned* bins) {
+  __shared__ unsigned local[256];
+  local[threadIdx.x] = 0u;
+  __syncthreads();
+  size_t stride = (size_t)gridDim.x * blockDim.x;
+  for (size_t i = (size_t)blockIdx.x * blockDim.x + threadIdx.x;
+       i < n; i += stride) atomicAdd(&local[data[i]], 1u);
+  __syncthreads();
+  // 每线程把自己的桶回写一次：全局原子次数 = block 数 x 256
+  atomicAdd(&bins[threadIdx.x], local[threadIdx.x]);
+}
+
+// 主机侧：grid 的大小等于想分给每个线程的工作量的倒数
+void launch(const unsigned char* d, size_t n, unsigned* bins) {
+  dim3 block(256);
+  // 每线程约 8 个元素：太小则同步占比高，太大则单元数不足
+  dim3 grid((n + block.x * 8u - 1u) / (block.x * 8u));
+  histo_kernel<<<grid, block>>>(d, n, bins);
+}
+\end{lstlisting}
+
+\subsection{L2 与显存：带宽很高，延迟并不低}
+
+\GPU{} 的全局内存是 HBM（数据中心型号）或 GDDR（工作站与消费型号），带宽量级通常比 \CPU{} 主存高一个数量级左右，这也是 \GPU{} 值得用的首要原因。但要同时记住两件事：其一，显存访问延迟\emph{不低}，通常高于 \CPU{} 主存，片上没有 \CPU{} 那样密集的缓存层次与激进预取去消灭它；其二，L2 是全设备共享的，容量在 MB 量级，它的命中率取决于你的访问是否合并、是否有复用，而不是你希望它有用。
+
+``带宽高、延迟不低''这两条合起来给出 \GPU{} 算法的核心约束：必须让每个线程一次拿到尽量多连续、对齐、可合并的数据，然后在片上做多次运算。第 1 章的 roofline 脊点更高，说的就是同一件事。
+
+\subsection{分支发散为什么贵}
+
+warp 内若线程走不同路径，两条路径要分别带掩码执行，代价近似为两条路径之和；嵌套分支的代价会沿路径组合累积。这与 \CPU{} 的``猜错就重来''是完全不同的失败模式：\CPU{} 上分支的代价是\emph{不确定性}，\GPU{} 上分支的代价是\emph{确定性地把发射槽浪费掉}。
+
+两点补充：从 Volta 架构起的独立线程调度让 warp 内的控制流在语义上更宽松（不再严格同步推进），但发射资源仍然按掩码分路径消耗，所以``发散很贵''这条结论不变。工程上更常见的做法是让同一个执行单元组内的线程处理\emph{同构}的工作（按类别分桶、把条件外移到分块层面），而不是删掉所有条件。
+
+\subsection{几乎不存在的私有栈}
+
+\GPU{} 上没有 \CPU{} 意义上的每线程调用栈。超出编译期可寻址范围的数组下标、寄存器不够时的溢出、以及超过实现栈预算的局部对象，都会落到所谓 local memory——它\textbf{不在片上}，而是每线程私有的一段全局内存，走的是那条高带宽高延迟的路径。后果是：深递归、变长局部缓冲、以及按运行期下标索引的大数组在 \GPU{} 上都是昂贵的抽象。可行的替代是把``栈''显式搬进算法里（工作列表、迭代式展开、或放进 shared memory 并自己管偏移）。
+
+\subsection{同步粒度：块内、簇内、网格}
+
+\CPU{} 上栅栏可以是全机的；\GPU{} 上同步的自然粒度是 block 内部的一次栅栏（\Fn{\_\_syncthreads\Bk}）。跨 block 的协作只有三条路：全局原子与自旋（易死锁，除非驻留线程覆盖全网格）、kernel 边界（把同步交给调度器，代价是一次启动）、以及从 Hopper 架构起的 thread block cluster，它让同一簇内的若干 block 能互相访问 shared memory 并做簇级同步。写算法时这是决定``哪些归约结构是合法的''的第一约束，本书后面的章节会反复回到它。
+
+\section{NPU 画像：静态图与显式搬移的世界}
+
+\NPU{} 是最容易被另外两域的习惯伤害的执行域。以华为昇腾的达芬奇（Da Vinci）架构为例，它的世界观是：形状在编译期已知，计算由专用单元成批完成，数据搬移由软件（而不是硬件缓存）负责。
+
+\subsection{三类计算单元}
+
+\begin{itemize}
+\item \textbf{Cube 单元}：矩阵乘累加引擎，以固定的矩阵分块为最小吞吐单位（公开资料常给 16 阶一类的粒度，具体形状随代次不同）。它只吃``形状正确''的数据，一次调用就是一小块 $A$ 与 $B$ 的乘累加。
+\item \textbf{Vector 单元}：向量式逐元素运算，负责激活、类型转换、缩放、归约尾段与不规则的小算子。
+\item \textbf{Scalar 单元}：标量部分，做地址计算、循环控制与参数准备。三者靠流水并行，而不是靠``线程''。
+\end{itemize}
+
+所以一个 \NPU{} 内核的骨架长这样：把数据从片外搬进片上、按 Cube 与 Vector 的口味排布、发指令、把结果搬出去，四件事轮流重叠推进。``算力''来自流水不断，而不是来自单元数量。
+
+\subsection{片上 Buffer 与软件管理的搬运}
+
+达芬奇把片上存储做成显式的多级 Buffer：L1 作为统一的中转与复用层，其下为 Cube 准备的输入缓冲（L0A、L0B 这类层级）与累加输出缓冲（L0C）。层级名与容量随代次不同，但职责关系稳定：越靠近计算阵列越小越快，而\textbf{每一级之间都要由软件发起搬运}。于是 \NPU{} 侧的两个核心技巧是``双缓冲''（搬下一块与算这一块重叠）与``在片上完成融合''（激活、残差、归约都在 L1/L0 里做完，不要让中间结果下一趟显存）。
+
+\subsection{CANN 软件栈}
+
+昇腾侧的软件栈（CANN）大致可以按职责切成四层，具体包名与接口随版本演进，本书只按职责描述：
+\begin{enumerate}
+\item 驱动与运行时层：设备、上下文、片外内存、stream 与异步执行的持有者。面向应用的运行时接口通常以 AscendCL 一类名字出现，负责``把算子或模型跑起来''这件事，不负责``算子怎么写''。
+\item 图与编译层：把算子按静态形状与数据类型接成图，做图级调度与算子融合；把上层网络描述离线编译为可加载的设备侧模型，是这一层的产物。这一层的存在意味着\textbf{形状改变可能触发重新编译或换用另一份编译产物}。
+\item 算子库层：矩阵乘、卷积、归一化、Softmax 这类现成算子，含已融合的复合算子。选型时先问``库里有没有''，再问``自己写''。
+\item 算子开发层：Ascend C 一类的算子作者语言，混合主机端与设备端代码，程序员显式声明缓冲区、搬运与三类单元的下发。它的抽象层级比 CUDA kernel 更接近``手写流水''。
+\end{enumerate}
+
+\subsection{静态 shape 的世界观与生态位置}
+
+图的输入形状与数据类型在编译期定形，是 \NPU{} 与另外两个执行域最深的区别。它对算法的影响是具体的：变长序列要补齐到固定桶（浪费算力）或按长度分组（多次编译）；批大小成为编译产物的一部分而不是运行时参数；``先问形状、再问算法''成为默认顺序。在生态里，\NPU{} 通常作为框架的后端扩展接入（例如 PyTorch 2.x 的第三方设备扩展机制下出现的 \Tp{torch.npu} 一类命名空间），这意味着上层看到的仍是张量与算子，而下面的一切调度都在图编译期完成。本书第四部分讨论导出时，会把这一层单独处理。
+
+\section{三域对照表}
+
+表~\ref{tab:ch2-domains} 是本章的交付物，也是下一章选型的输入。它刻意不谈性能数字，只谈``这件事谁做得便宜''。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+  >{\raggedright\arraybackslash}p{0.22\textwidth}
+  >{\raggedright\arraybackslash}p{0.22\textwidth}
+  >{\raggedright\arraybackslash}p{0.22\textwidth}@{}}
+\caption{三种执行域的画像对照：只比职责与量级，不比具体参数}\label{tab:ch2-domains}\\
+\toprule
+维度 & \CPU{} & \GPU{} & \NPU{} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+延迟隐藏手段 &
+  乱序、分支预测、硬件预取与多级缓存，压单条流的等待 &
+  大量在飞 warp 轮转发射，用并发平均掉延迟 &
+  片上 Buffer 间的双缓冲流水，编译期排定调度 \\
+单线程分支自由度 &
+  强：可预测，误预测按几十个周期量级付代价 &
+  弱：同组内不同路径带掩码串行执行，代价确定 &
+  最弱：计算以矩阵、向量整块为最小单位推进 \\
+同步粒度 &
+  缓存行独占、核间原子与栅栏，一致性覆盖全机 &
+  块内栅栏、跨块靠原子或 kernel 边界，簇内共享（新架构）&
+  以算子边界与 stream 为主，片上时序由软件负责 \\
+可编程内存层级 &
+  层次由硬件管理，软件只能安排布局与访问模式 &
+  寄存器、shared、L2、显存四级，其中 shared 一级由程序员显式管理 &
+  寄存器、L1、Cube 输入与累加缓冲、片外存储，几乎全显式 \\
+带宽与容量量级 &
+  主存带宽以每插槽几十到几百 GB 每秒计，容量可达百 GB 级&
+  显存带宽高出约一个数量级，容量受单卡限制，按 GB 计&
+  与同代 \GPU{} 同量级，数据中心型号用 HBM，轻量型号用 LPDDR \\
+一致性与可见性 &
+  硬件缓存一致性，全地址空间对软件可见 &
+  块内强可见，跨块要显式原子与栅栏，L2 承担合并点 &
+  跨卡无硬件一致性概念，靠片间互联与显式通信交换 \\
+调试与工具链 &
+  采样式 profiler、反汇编与向量化报告，工具最成熟 &
+  架构手册加占用率估算器加内核 profiler（如 \Tp{ncu}）&
+  图与算子级 profiler（如 \Tp{msprof}），模型在转换期即定形 \\
+\end{longtable}
+
+配套的读数入口是几条命令；它们给的是``拓扑与容量''，不给``你的内核好不好''。字段名会随发行版与语言环境变化，所以下面统一把 locale 固定成 \Tp{C}。
+
+\begin{lstlisting}[style=shellstyle,caption={三个执行域的最小读数入口}]
+# CPU：型号、逻辑与物理处理器数、各级缓存、NUMA 拓扑
+LANG=C lscpu | grep -E 'Model name|Socket|Core|Thread|Cache|NUMA'
+numactl --hardware        # 每个节点的容量与到其它节点的距离
+
+# GPU：名称、计算能力与显存；SM 数要查设备属性，不要按型号猜
+nvidia-smi --query-gpu=name,compute_cap,memory.total \
+           --format=csv,noheader
+# 显存带宽与 L2 命中要靠内核 profiler，不要信 nvidia-smi 的那一列
+
+# NPU：芯片型号、在位状态与固件版本；列名随驱动与工具版本变化
+npu-smi info
+\end{lstlisting}
+
+\begin{warning}[title={三处最容易被误读的读数}]
+\begin{enumerate}
+\item \textbf{把占用率当成利用率。} 占用率只说明驻留线程数离上限有多远；占用率低仍可能已经打满带宽，占用率高也可能因为发散而一事无成。它解释的是``有没有足够的候选可切换''。
+\item \textbf{把设备管理工具里的利用率列当成算力占用。} \Tp{nvidia-smi} 的 GPU 利用率含义是采样窗口内``有内核在跑的时间占比''，与跑了多少 flop 无关；一个把带宽打满的轻内核与一个空转的重内核都能显示很高。
+\item \textbf{把工具列名当 API。} \Tp{npu-smi} 与各版本 profiler 的输出字段、子命令名随驱动与 CANN 版本变动，跨版本脚本要按``字段职责''而不是字段名匹配；同理，运行时接口的方法名也应以所用版本文档为准，本书不复述这些签名。
+\end{enumerate}
+\end{warning}
+
+\section{这张表怎样决定选型}
+
+下一章把这张表变成打分表，但判据可以先在这里说明白，它们几乎都是从``谁便宜''直接翻译过来的：
+
+\begin{enumerate}
+\item \textbf{算术强度落在脊点哪一侧。} 高算术强度、形状规整的批量计算向 \GPU{}、\NPU{} 倾斜；低算术强度的遍历型算子在哪一域都是带宽受限，换域只换来更高的带宽和一个更难的同步模型。
+\item \textbf{控制流密度。} 分支多且数据相关、每个元素的处理都不像同一件事，\CPU{} 的预测与乱序更划算；能把条件外推到分片层面消除的，才值得送去 SIMT 或矩阵单元。
+\item \textbf{需要的同步粒度。} 算法要靠全机栅栏推进，就留在 \CPU{}；块内可完成就用 \GPU{} 的 shared memory；只有当``同步''意味着算子边界与 stream 顺序时，\NPU{} 的世界观才刚好贴合。
+\item \textbf{形状是否稳定。} 静态形状、批量吞吐、可预编译：\NPU{} 的代价最低、收益最高。形状多变、延迟敏感、需要频繁小步调用：图的编译期定形会变成主要摩擦源。
+\item \textbf{工作集规模与一致性需求。} 需要全地址空间可见的共享结构（图、并发容器）无法整体搬进一个块内私有层级，这类负载留在 \CPU{} 或切成显式的``阶段加边界''流水线。
+\item \textbf{部署与生态约束。} 交付物是 Python 库时，绑定的粗细、GIL 的释放位置与运行时初始化开销属于第四部分；但``这台机器上有没有那张卡''永远是第一票否决项。
+\end{enumerate}
+
+\begin{bestpractice}[title={画像使用规范}]
+\begin{itemize}
+\item 选型前先用三条命令把\emph{本机}的拓扑读一遍，把结果写进项目文档；不要用文章里的参数代替自己机器上的参数。
+\item 任何``换执行域''的提案，先算算术强度并和脊点比较，再估算三笔税（粒度、负载不均、同步）与搬运成本；这四笔加起来才是净收益。
+\item 在 \CPU{} 上把布局改成``连续、分块、每线程独占缓存行''，这一步几乎总是划算的，因为它同时改善 \GPU{} 的合并访问与 \NPU{} 的搬移效率——布局是三域共用的货币。
+\item 涉及架构专有特性（簇、分布式 shared memory、某代矩阵单元的形状）时，写清``从哪个版本或哪个架构起可用''，并为不可用的情况留一条回退路径。
+\item 数字随代次变化，机理不变化：本书的判据都写成机理形式，实施时再补上你自己机器上的数字。
+\end{itemize}
+\end{bestpractice}
+% ====================================================================
+
+% ====================================================================
+% ====================================================================
+\chapter{执行域选型：什么算法该去哪}
+% ====================================================================
+
+前两章把\emph{刻度}（同一件事可以按指令、按数据、按线程并行）和\emph{机器}
+（\CPU{} 擅长隐藏单线程延迟，\GPU{} 与 \NPU{} 靠海量并发换吞吐）摆清楚了。
+这一章把它们合成一个可以当场用的东西：拿到一个算法，怎么决定它在哪个执行域跑。
+
+必须先说清一件事：选型不是选语言，也不是选库，而是\emph{匹配数据形状与硬件
+预算}。同一个算法在不同形状下可以属于不同的域——长度为 8 的归约属于 \CPU{}
+的一次循环，长度为八千万的同一归约属于 \GPU{}。所以下面五把尺子量的都是
+\emph{你这次的数据}，不是算法的名字。
+
+\section{五把尺子}
+
+\begin{compare}[title={判据与它们的读数来源}]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+  >{\raggedright\arraybackslash}p{0.30\textwidth}
+  >{\raggedright\arraybackslash}p{0.34\textwidth}@{}}
+\toprule
+尺子 & 问的是什么 & 读数与分界 \\
+\midrule
+算术强度 & 每搬一字节做几次运算 &
+  用 FLOP 与访存字节之比估计。低于个位数量级是带宽受限，
+  高于百量级是算力受限，中间地带最容易被放错 \\
+分支密度 & 每个元素平均走几条不同路径 &
+  数据相关分支比例超过约一成，SIMT 就开始付串行化的代价 \\
+形状规整度 & 元素数、步长、循环次数是否固定 &
+  静态形状可以让编译器排布片上缓冲与流水；
+  动态形状会退化成反复重配置 \\
+工作集 & 热数据能否常驻在快速存储里 &
+  比片上容量大几个数量级就要考虑分块或换域；
+  比显存小但被反复访问的最适合留在卡上 \\
+串行链长度 & 关键路径上有多少步互相依赖 &
+  链长随规模线性增长的问题（指针追逐、递归下降）
+  加多少线程都救不回来 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+五把尺子里，算术强度与工作集决定\emph{收益上限}，分支密度与形状规整度决定
+\emph{能不能兑现}，串行链长度决定\emph{有没有资格并行}。它们冲突时按这个顺序
+让步：先承认串行链不可并行，再考虑分支与形状，最后才在带宽与算力之间挪位置。
+
+\begin{note}[title={为什么把\Tp{shape}单独算一把尺子}]
+分支是运行期的事，形状是编译期的事。\CPU{} 的分支预测器在运行期把不可预测的
+跳转变成可预测的猜测；加速卡上没有等价的机制，它靠的是\emph{提前}把整条流水
+排好。\GPU{} 至少允许你在启动核函数时改参数，而 \NPU{} 的图编译路线通常要求
+形状在编译期确定，形状一变就要重编译或重配置。所以一个每次调用长度都不同的
+算子，即使算术强度很高，也可能因为形状抖动而整体变慢。
+\end{note}
+
+\section{该上卡的：以 MLA 为例}
+
+张量算子是加速卡最典型的主场。这里用 MLA（multi-head latent attention，
+把注意力的键值投影进低秩隐空间的注意力变体）作为样本，因为它同时满足四条判据，
+而且它的动机本身就是省带宽。
+
+\begin{enumerate}
+  \item \textbf{数据量大且规整}。注意力要处理的是
+        批次、头数、序列长度三维张量，元素数轻易上到千万级，
+        步长与循环次数在一次前向内完全固定。
+  \item \textbf{算术强度高且可分块}。打分与加权求和都是矩阵乘，
+        分块之后乘加次数远多于跨块搬运次数，
+        片上缓冲能吸收绝大部分访存。
+  \item \textbf{瓶颈恰好是卡的强项}。MLA 的出发点是把键值缓存压进低秩隐空间，
+        再靠矩阵吸收把投影折进查询与输出权重，
+        使解码时的读取量不再按头数放大。
+        这是一次\emph{针对带宽}的改写：它把访存需求压下来，
+        但剩下的工作依然是大规整张量上的乘加，
+        所以它更需要高带宽存储与海量并发乘加单元。
+  \item \textbf{并行维度天然存在}。批次、头、查询块三者互不依赖，
+        可以直接摊成线程块网格，不需要任何跨块通信；
+        唯一的归约（softmax 分母）是规则的可结合归约。
+\end{enumerate}
+
+同一家族的成员还有卷积、稠密线性代数、大 batch 的逐元素链、
+梯度归约、排序与扫描的批量版本。它们的共同点不是``是深度学习算子''，
+而是上面四条同时成立。
+
+\begin{warning}[title={上卡不是免费的}]
+把一次调用放上卡，要付出四笔固定成本：核函数启动开销、
+主机与设备之间的往返拷贝、参数与形状的 marshalling、
+以及首次使用的模块加载与图编译。数据量小的时候这四笔会吞掉全部收益，
+表现为``算得很快但整体更慢''。判断标准很朴素：
+\emph{单次有效计算时间是否显著高于这四笔的总和}。
+\end{warning}
+
+\section{该留在 \CPU{} 的：复杂逻辑}
+
+反过来，下面这些工作在加速卡上通常更差，而且差的原因不是``没并行化好''，
+而是硬件模型与问题结构相冲。
+
+\begin{compare}[title={六类\, \CPU{} \,专属的活}]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}
+  >{\raggedright\arraybackslash}p{0.31\textwidth}
+  >{\raggedright\arraybackslash}p{0.29\textwidth}@{}}
+\toprule
+工作 & 结构特征 & 在卡上会怎样 \\
+\midrule
+指针追逐、链表与树 & 下一步地址由上一步结果决定 &
+  访存完全不可预取，串行链锁死吞吐 \\
+图遍历（BFS、最短路） & 前沿稀疏且不规则 &
+  活跃线程占比低，剩下时间在陪跑 \\
+解析与状态机 & 分支密度高、长度不定 &
+  分支发散把并行度摊成串行 \\
+变长打包与分页管理 & 控制流密集、数据量小 &
+  启动开销远大于计算，且难以静态定形 \\
+系统调用、文件与网络 & 需要特权与内核路径 &
+  核函数根本不具备这些能力 \\
+调度、缓存淘汰、内存管理 & 全局串行决策 &
+  需要原子与自旋，收益为负 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+还有一类容易被忽略：\emph{决定别人怎么跑}的代码。批次怎么切、序列怎么打包、
+缓存块怎么分配、什么时候触发重编译——这些决策本身是控制流密集的串行逻辑，
+但它们决定了后面那一大坨张量算子的效率。把决策留在 \CPU{}、将执行交给加速卡，
+是混合系统最常见的分工。
+
+\begin{lstlisting}[style=cppstyle,caption={同一件事的两种放置：小数据上卡是负收益}]
+// 决策类工作：分支密、数据小，留在 CPU 用普通循环
+// 这里没有可并行的规整数据，硬开核函数只会付启动开销
+size_t pack(const std::vector<int>& lens, int* out_offsets) {
+  int acc = 0;
+  for (size_t i = 0; i < lens.size(); ++i) {
+    out_offsets[i] = acc;
+    acc += lens[i];               // 前缀和：串行依赖链
+    if (acc < 0) { /* 溢出兜底：不规则分支 */ }
+  }
+  return static_cast<size_t>(acc);
+}
+\end{lstlisting}
+
+这段打包逻辑在 \CPU{} 上是一趟缓存友好的顺序扫描；把它挪到卡上，
+要么退化成单线程核函数，要么需要一次两趟 scan，
+而两趟 scan 的固定开销对几百个元素来说完全不划算。
+
+\section{决策树}
+
+把五把尺子串成一条可以照着问的链路。每一问都给出``是''与``否''的去向。
+
+\begin{enumerate}[label=问\arabic*：]
+  \item \textbf{有没有现成实现}？\Tp{cuBLAS}、\Tp{CUB}、\Tp{Thrust}、
+        算子库、oneDNN 已经覆盖的形状，直接用；
+        只有覆盖不到的长尾才需要自己写。
+  \item \textbf{关键路径长度是否随规模增长}？是，则先改算法结构
+        （换成可并行的表述、预计算索引、把指针换成下标），
+        否则任何域都救不了。
+  \item \textbf{元素数是否达到万级以上且形状稳定}？否，留在 \CPU{}；
+        是，继续。
+  \item \textbf{数据相关分支是否低于约一成}？否，考虑拆分：
+        把分支密集的部分摘出来留在 \CPU{}，
+        把剩下的规整主体放上卡。
+  \item \textbf{算术强度是否高于本机脊点}？否但带宽需求大，
+        卡上的高带宽存储仍有收益；否且带宽需求也小，回 \CPU{}。
+  \item \textbf{是否要求静态形状}？\NPU{} 的图编译路线通常要求。
+        形状抖动大就考虑 \GPU{} 或 \CPU{}，
+        或者把形状分桶以复用已编译的图。
+  \item \textbf{端到端往返几次}？每多一次主机与设备之间的往返，
+        就把一次启动开销与一段拷贝加进关键路径。
+        往返多于必要次数的设计要重做。
+\end{enumerate}
+
+\begin{lstlisting}[style=pythonstyle,caption={绑定边界也会决定放置：批量过界，不要逐个}]
+import numpy as np
+import parallel_algorithms as pa
+
+def slow(ids):                       # 每个元素一次跨语言调用
+    return [pa.one(int(x)) for x in ids]        # 绑定开销乘以 N
+
+def fast(ids):
+    a = np.ascontiguousarray(ids)               # 一次拷贝或零拷贝视图
+    return pa.batched(a)                        # 一次调用，内部再分域
+\end{lstlisting}
+
+\section{三段式：把一件事拆开}
+
+真实的系统很少整件事属于同一个域。最常见的骨架是三段：
+
+\begin{itemize}
+  \item \textbf{前段（\CPU{}）}：把不规则输入整理成规则张量。
+        变长序列打包、掩码构造、分页块表、去重与分桶、
+        决定这一批用哪个后端与什么形状。
+  \item \textbf{中段（\GPU{} 或 \NPU{}）}：大规整算子。
+        一次进去一批，一次出来一批，中间尽量融合，
+        不要把中间量写回主机内存。
+  \item \textbf{后段（\CPU{}）}：把结果交还给世界。
+        采样与停止判据、变长切分、写缓存、错误恢复与重试。
+\end{itemize}
+
+\begin{compare}[title={同一条流水的三种放置的成本结构}]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.19\textwidth}
+  >{\raggedright\arraybackslash}p{0.27\textwidth}
+  >{\raggedright\arraybackslash}p{0.34\textwidth}@{}}
+\toprule
+方案 & 固定成本 & 适合什么 \\
+\midrule
+全 \CPU{} & 每次调用的线程池唤醒 &
+  数据量小、形状乱、分支多、延迟敏感 \\
+全加速卡 & 启动与往返拷贝 &
+  大且规整、能一次喂饱、前后处理可融合 \\
+三段混合 & 每段各自的启动成本，
+  外加两次边界穿越 & 前处理与后处理是控制流、
+  主体是张量算子（最常见） \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+第 14 章会把这三段真的写成一个库并导出给 Python：前两段分别落在 \cpp{}
+主机代码与核函数里，边界用 pybind11 加零拷贝缝合。
+
+\section{反例集}
+
+\begin{warning}[title={五种放错域的典型姿势}]
+\begin{enumerate}
+  \item \textbf{小算子上卡}。长度为几百的归约，
+        启动开销比计算大两个量级，结果是延迟上升、吞吐不变。
+  \item \textbf{把控制流塞进核函数}。变长边界判断、
+        缓存淘汰逻辑写进核函数，分支发散加上寄存器压力，
+        比 \CPU{} 单线程还慢。
+  \item \textbf{以为并行免费}。\CPU{} 上开满线程做内存受限的循环，
+        抢同一份带宽，线程越多越慢；
+        这不是实现问题，是带宽墙。
+  \item \textbf{形状抖动撞重编译}。动态形状喂给要求静态图的 \NPU{} 路径，
+        每次调用都触发图构建，
+        时间全花在编译上。
+  \item \textbf{在绑定边界上逐个元素过界}。跨语言调用一次的成本
+        远高于一次批量调用，Python 侧循环调用扩展函数
+        会把 C++ 的并行优势全部抵消。
+\end{enumerate}
+\end{warning}
+
+\section{先测再选，并且保留可切换}
+
+选型结论必须能被证据推翻。三件事值得先测：
+
+\begin{itemize}
+  \item \textbf{时间分布}：整条流水里前处理、算子、后处理、拷贝各占多少。
+        优化占比最大的那一段，而不是最难看的那一段。
+  \item \textbf{带宽利用率}：算子实际搬运量与理论最小值之比。
+        差距大说明融合不够或访存不规整，
+        此时换域不如先改数据布局。
+  \item \textbf{并发饱和度}：卡上同时在飞的线程数与占用率。
+        偏低通常是网格切分或依赖串行化问题。
+\end{itemize}
+
+\begin{bestpractice}[title={让放置可以改主意}]
+把``在哪跑''做成实现细节而不是接口的一部分：
+\begin{enumerate}
+  \item 对外 API 只收张量与形状，
+        后端、设备号、流这些是可选参数而不是位置参数。
+  \item 每个算子保留一份 \CPU{} 参考实现，
+        既做无卡环境的兜底，也做数值对拍的基准。
+  \item 边界处只传指针与元数据，
+        用零拷贝协议交接，避免隐式深拷贝。
+  \item 放置决策集中写在一处（一张策略表或一个函数），
+        不要散落在调用点，
+        否则改一次判据要翻遍全库。
+\end{enumerate}
+这样换域的成本只是重新测一遍，而不是重写一遍。
+\end{bestpractice}
+
+\begin{guideline}[title={本章的判断口径}]
+1 量数据不量算法名：同一算法在不同规模与形状下属于不同域。
+2 串行链决定资格，算术强度与工作集决定上限，分支与形状决定能否兑现。
+3 MLA、卷积、稠密线性代数这类大规整张量算子上 \GPU{} 或 \NPU{}，
+  因为它们同时满足数据量大、形状稳定、分支稀少、可分块四条。
+4 指针追逐、解析、打包、调度、系统调用留 \CPU{}，
+  因为它们的价值在控制流而不是吞吐。
+5 混合执行按三段式组织，主机与设备之间的往返次数是首要预算。
+6 用现成实现优先，放置决策集中管理，并始终保留 \CPU{} 参考实现。
+\end{guideline}
+% ====================================================================
+
+% ====================================================================
+\part{CPU 侧的并行算法}
+
+\chapter{任务分解与调度}
+
+CPU 侧第一个决定不是``开几个线程''，而是``把问题切成什么形状''：切法决定关键路径，
+调度机制决定负载不均能否摊平，cut-off 与 chunk 决定这些形状在真实缓存与互连上还剩
+多少收益。线程与协程原语本身（\Tp{std::jthread}、\Tp{std::stop\_token}、stdexec 的
+scheduler 概念）见并发分册，这里只当已经备好的零件。
+
+\section{fork-join 与二叉递归分解}
+
+fork-join 是 CPU 并行结构的底座：任务派生（fork）子任务，再在某个点汇合（join）
+取回结果。分析工具是 work-span 模型：把计算看成有向无环图，$W$ 是全部节点工作量
+之和，$T_\infty$ 是关键路径上的工作量，则 $P$ 个处理器的时间满足 Brent 不等式
+$T_P \le \lceil W/P \rceil + T_\infty$。两个推论：加速比上限是 $W/T_\infty$，
+关键路径太长的分解（例如串行前缀链）多少核都救不回来；而当 $W/P$ 已远大于
+$T_\infty$ 时调度质量才重要，此时该改的是分解形状而不是调度器。
+
+\begin{lstlisting}[style=cppstyle,caption={带 cut-off 的二叉递归分块求和}]
+// 二叉递归分块：叶子串行累加，返回时做 combine
+template <class F>
+double blocked_sum(const double* a, size_t lo, size_t hi,
+                   size_t cut, F add) {
+  if (hi - lo <= cut) {                 // 叶子不再分
+    double s = 0.0;
+    for (size_t i = lo; i < hi; ++i) s += a[i];
+    return s;
+  }
+  size_t mid = lo + (hi - lo) / 2;      // 不用 (lo+hi)/2，防溢出
+  double x = blocked_sum(a, lo, mid, cut, add);
+  double y = blocked_sum(a, mid, hi, cut, add);
+  return add(x, y);                     // join 点
+}
+\end{lstlisting}
+
+两个分支要跑在不同线程上，靠的是``派生并等待''原语：\Tp{tbb::task\_group} 的
+\Fn{run} 配 \Fn{wait}、OpenMP 的 \Tp{omp task} 配 \Tp{taskwait}、stdexec 的
+\Fn{when\_all}。递归树是二叉的，深度约 $\lg(n/\text{cut})$，每层做一次 combine，
+所以 combine 的代价必须与 $n$ 无关：浮点求和是 $O(1)$，合并两个大向量就是 $O(n)$，
+后者该换成多路分解或两趟。叶子还必须写互不相交的内存，否则递归分解退化成争用
+同一个累加单元，收益被缓存行迁移吃掉（第~6 章）。
+
+\section{cut-off：什么时候不再往下分}
+
+派生任务的成本是实打实的：入队、出队，可能再加一次跨核缓存行迁移与一次唤醒。
+记任务成本 $c_s$、单条数据成本 $c_e$、叶子规模 cut，分下去合算的判据是
+\begin{equation*}
+  \text{cut}\cdot c_e \;\gg\; c_s ,
+  \qquad\text{工程上取}\quad
+  \text{cut}\cdot c_e \;\ge\; 20\,c_s .
+\end{equation*}
+系数取 20 而不是 1，因为任务成本与计算成本会同时压在关键路径上，而内存序、分配、
+伪共享这些开销只在细粒度时才显现。定阈流程四步：测串行基线得 $c_e$
+（\Tp{ns/element}），并在线程池真的在跑时测``空任务提交并汇合''得 $c_s$，
+冷启动的数字偏小；令 cut $=20\,c_s/c_e$，再与数据下限取大，即叶子输出至少覆盖
+若干条缓存行，否则相邻叶子必然伪共享；把 cut 按 2 倍扫描覆盖三四个数量级，
+取平台段里较大的那个值——平台可信，尖峰是噪声；最后检查叶子数与线程数之比，
+目标 $4P$ 到 $32P$，恰为 $P$ 时一有不均就退化成串行等待。阈值别写死在源码里，
+让调用方按 $\text{cut}=\max(\text{cut}_{\min},\,n/(4P))$ 现算。
+
+\section{work-stealing 为什么能摊平负载}
+
+双端队列加窃取是这一代任务调度器的核心（Cilk、oneTBB、Java 的 \Tp{ForkJoinPool}
+都是这个形状）：每个 worker 一条 deque，主人从底部按 LIFO 压入弹出（保住最近
+数据的局部性，且底部只有主人访问、无竞争），偷窃者从顶部按 FIFO 取走约一半工作
+（拿较老较大的块，摊薄一次同步的成本）。它能摊平负载靠两个性质：偷走的是
+\emph{整块工作}而不是一个任务，一次成功偷窃消掉一半不均衡；偷窃只在空闲时发生，
+不忙时零开销。于是不均衡的代价被限制在``偷窃次数乘以一次同步成本''，
+而不是``任务数乘以同步成本''。
+
+代价藏在实现细节里。其一，内存序：主人改 \Tp{bottom}、偷窃者 CAS \Tp{top}，
+两边的 acquire 与 release 必须配对，否则偷到的任务看不到 fork 之前写好的数据。
+其二，ABA 的历史包袱：Chase-Lev deque 一度被认为要 double-CAS 才能同时更新两个
+索引，后来的分析表明单字长 CAS 加一个单调递增的版本号（tagged pointer）就够；
+但版本化 CAS 在 x86 上要 \Tp{cmpxchg16b}（编译给 \Tp{-mcx16}，运行期还要确认
+CPU 支持），32 位目标与部分弱序架构没有等价物，只能退回 LL/SC 或加锁，
+这是``无锁代码可移植性差''的典型样本。其三，局部性与 NUMA：两个索引要各自独占
+缓存行，否则主人每压一次任务就和偷窃者抢一行；偷来的任务其数据在别人核上是冷的。
+其四，阻塞型任务偷不动：worker 卡在同步调用里时，它队列里的任务可以被偷，
+但它自己的等待无法摊平。所以 work-stealing 是``计算密集、粒度合适、不阻塞''时
+的正解，不是所有队列的默认答案。
+
+\section{线程池的最小可用实现}
+
+自己写池子通常是为了跨语言边界（导出层要稳定的 C ABI 入口），或者为了背压与
+优先级的控制权。下面是``能用''的下限。
+
+\begin{lstlisting}[style=cppstyle,caption={最小可用线程池：有界队列、优雅关闭、异常传播}]
+struct Task {                            // 优先级大者先出
+  int prio;
+  std::shared_ptr<std::packaged_task<void()>> job;
+  bool operator<(const Task& o) const { return prio < o.prio; }
+};
+
+class Pool {
+ public:
+  Pool(size_t n, size_t cap) : cap_(cap) {
+    for (size_t i = 0; i < n; ++i)
+      workers_.emplace_back([this] { loop(); });
+  }
+  ~Pool() { shutdown(); }                // 停止接单、排空、再 join
+
+  template <class F>
+  std::future<void> submit(int prio, F&& f) {
+    auto job = std::make_shared<std::packaged_task<void()>>(
+        std::forward<F>(f));             // 异常存进共享状态
+    std::future<void> fut = job->get_future();
+    std::unique_lock<std::mutex> lk(mu_);
+    // 队列满则等：这就是背压
+    full_.wait(lk, [&] { return stop_ || q_.size() < cap_; });
+    if (stop_) throw std::runtime_error("pool already stopped");
+    q_.emplace(Task{prio, std::move(job)});
+    cv_.notify_one();
+    return fut;                          // fut.get() 重抛任务里的异常
+  }
+
+  void shutdown() {                      // 置位、唤醒、等队列排空
+    { std::lock_guard<std::mutex> lk(mu_); stop_ = true; }
+    cv_.notify_all();
+    full_.notify_all();
+    for (auto& t : workers_) if (t.joinable()) t.join();
+  }
+
+ private:
+  void loop() {
+    for (;;) {
+      Task t;
+      {
+        std::unique_lock<std::mutex> lk(mu_);
+        cv_.wait(lk, [&] { return stop_ || !q_.empty(); });
+        if (q_.empty()) return;          // 已停止且队列排空
+        t = q_.top(); q_.pop();
+      }
+      (*t.job)();                        // 异常被 packaged_task 接住
+      full_.notify_one();                // 给阻塞中的提交者让位
+    }
+  }
+
+  std::vector<std::thread> workers_;
+  std::priority_queue<Task> q_;
+  std::mutex mu_;
+  std::condition_variable cv_, full_;    // 一把锁、两个等待条件
+  bool stop_ = false;
+  size_t cap_ = 0;
+};
+\end{lstlisting}
+
+四个设计点：队列必须有上界，否则``提交快于执行''时内存单调增长，阻塞提交者比
+丢任务或无限缓存都好；worker 的退出条件是``已停止\emph{且}队列为空''，关闭时
+已提交的任务才会跑完，要``立即取消''就得让任务体自己查取消标志；异常只能靠
+\Tp{packaged\_task} 传，调用方把 \Tp{std::future} 丢掉异常就静默消失（常见排障
+黑洞），未执行的任务其 future 得到 \Tp{std::broken\_promise}；优先级用堆就够，
+但完全按优先级会饿死低优先级任务，实践是``分级加每级 FIFO''或带配额的老化，
+而且优先队列破坏了适合窃取的 FIFO 顺序。worker 数取可用核数而不是两倍核数，
+除非任务里有大量同步 I/O，那种负载更适合协程化而不是堆线程。
+
+\begin{warning}[title={嵌套提交导致的自锁与饥饿死锁}]
+在固定大小线程池里提交任务并\emph{原地等待}它完成，是自锁的经典配方：设池有 $N$
+个 worker，若 $N$ 个父任务各占一个 worker 并阻塞等子任务，而子任务全排在同一个
+有界队列里，就没有线程去执行它们，所有人一起等。这是饥饿死锁而不是竞态，压测时
+可能长期不复现。只有满足下面之一才安全：（一）池会就地帮忙执行队列里的任务
+（work-stealing 池、\Tp{tbb::task\_arena} 的 join 语义）；（二）等待期间先干别的事
+（help-out，或用协程把``等''变成``让出''）；（三）限制嵌套深度，超深后就地串行执行。
+两个互相等待的池（A 池任务提交到 B 池并同步等待）同理：两边都要留有前进线程，
+否则等于把死锁做成跨组件的默认行为。
+\end{warning}
+
+\section{chunk 策略：静态、动态、引导式、自动}
+
+固定分块是并行循环的默认形态，块的大小与切法决定三件事：同步次数、访存局部性、
+抗负载不均的能力。
+\begin{compare}[title={四种 chunk 策略的适用面与开销}]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}
+  >{\raggedright\arraybackslash}p{0.17\textwidth}
+  >{\raggedright\arraybackslash}p{0.19\textwidth}
+  >{\raggedright\arraybackslash}p{0.20\textwidth}@{}}
+\toprule
+策略 & 机制 & 主要开销 & 适用场景 \\
+\midrule
+static & 每线程预先分得连续一段 & 几乎为零（无运行期同步） & 迭代代价均匀、线程数已知；局部性最好 \\
+dynamic & 共享计数器，空闲者领下一块 & 每块一次原子操作，块太小则主导 & 迭代代价不均、线程数临时变化 \\
+guided & 每次领剩余量约 $1/P$，块递减 & 介于两者之间，尾部更平滑 & 不规则循环，又想少一些同步 \\
+auto & 由运行时替你选 & 不可预测，随版本与编译器变 & 不追求可复现性能时 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+OpenMP 用 \Tp{schedule} 子句表达这四种（可带块长），oneTBB 用 partitioner 对象
+表达：\Tp{static\_partitioner} 不递归二分，\Tp{simple\_partitioner} 是动态粒度，
+\Tp{guided\_partitioner} 块随剩余量递减，\Tp{auto\_partitioner} 是默认值，
+\Tp{affinity\_partitioner} 试图把同一段固定给同一线程（但它依赖上一轮划分，
+冷启动无意义）。通用经验规则是块的连续长度比块的数量更值钱：静态分块给每个线程
+地址连续的一段，硬件预取与非临时存储都受益；动态分块把地址交错给不同线程，
+带宽与预取效率通常更差，这个隐性代价常被忽略。OpenMP 5.0 的 \Tp{monotonic} 修饰
+（保证同一线程拿到相邻块）各实现支持度参差，依赖它之前先用
+\Tp{omp\_display\_env} 确认。
+
+\section{oneTBB：任务组、parallel\_for 与图式流水线}
+
+oneTBB（oneAPI 项目下的库，命名空间仍是 \Tp{tbb}）把任务派生、并行循环与数据流图
+都做成了库，可作为本章概念的参考实现：\Tp{tbb::task\_group} 是显式派生与汇合
+（\Fn{run} 提交、\Fn{defer} 只登记不派生、\Fn{wait} 汇合），适合形状不规则的
+任务集；\Tp{tbb::parallel\_for} 配 \Tp{tbb::blocked\_range} 是递归二分，粒度交给
+partitioner，cut-off 这层通常不用你操心。
+\begin{lstlisting}[style=cmakestyle,caption={查找并链接 oneTBB：安装版与 FetchContent 两条路}]
+find_package(TBB CONFIG QUIET)          # 已安装：vcpkg 或系统包
+if(NOT TBB_FOUND)                       # 未安装：随项目拉取
+  include(FetchContent)
+  FetchContent_Declare(tbb
+    GIT_REPOSITORY https://github.com/uxlfoundation/oneTBB.git
+    GIT_TAG v2021.13.0 GIT_SHALLOW TRUE)
+  set(TBB_TEST OFF CACHE BOOL "" FORCE) # 别连它的测试一起建
+  FetchContent_MakeAvailable(tbb)
+endif()
+target_link_libraries(core PUBLIC TBB::tbb)
+\end{lstlisting}
+
+图式流水线是 \Tp{tbb::flow}：节点是带输入输出端口的可执行体，边是消息传递，
+运行期没有全局栅栏。骨架三件事：\Fn{tbb::flow::function\_node} 声明一个阶段，
+其构造第二参数是``该节点允许同时在飞的消息数''，写 1 就是串行阶段，写大数才
+形成流水线，这是吞吐的主要旋钮；\Fn{tbb::flow::make\_edge} 接线，多入端用
+\Fn{tbb::flow::join\_node} 并以 \Fn{input\_port} 取第 $k$ 个入口；
+最后 \Fn{wait\_for\_all} 等图上没有在飞的消息。缓冲与配对要选对节点：
+\Tp{queue\_node} 提供缓冲，\Tp{overwrite\_node} 只保存最新值，\Tp{limiter\_node}
+给一段流水线的并发度封顶；join 的三种缓冲策略里只有 \Tp{tag\_matching}
+表达``按键配对''，默认 \Tp{queueing} 要求两侧按序非空，用 \Tp{overwriting}
+会让慢阶段丢消息。相对 task\_group，图的收益是没有全局栅栏、延迟与吞吐解耦，
+代价是每个消息都要过一遍队列（细粒度时开销明显），而且调试看的是消息轨迹
+而不是调用栈。
+
+\section{任务图、依赖、取消与超时}
+
+表达依赖有三种力度，选错力度比选错库更贵：递归 fork-join 把依赖藏在调用栈里，
+取消只能靠标志位；并行循环假设元素间无依赖（有依赖就该换成第~5 章的 scan）；
+任务图（DAG）把依赖显式建模成边，可按节点取消，代价是每节点一次消息传递与
+调度决策。DAG 的下界由 $W/P$ 与 $T_\infty$ 取大决定，所以顺序永远是先缩短
+关键路径（拆长链、把串行段改写成 scan），再谈增加并行度。运行期跑 DAG 有两种
+做法：拓扑分层（同步点明确，但一层内快慢不齐要互等）与入度计数（节点完成时
+递减后继入度，归零即提交，无栅栏但每边有开销，flow graph 就是这么做的）。
+贪心调度（list scheduling）对任意 DAG 的近似比是 $2-2/P$（Graham 结果），
+对二叉 fork-join 树更紧——这解释了为什么``任务数比线程数多几十倍''通常就够了，
+而求全局最优调度很少值得。
+
+取消必须合作式：运行中的任务不能被安全地从外部掐死，只能请它自己停。
+取消标志（\Tp{std::atomic\_flag} 或 \Tp{std::stop\_token}）由任务体在安全点
+检查，粒度等于你写检查点的位置，\Fn{tbb::task\_group::cancel} 与 \Fn{omp\_cancel}
+是库版本；OpenMP 的取消还要 \Tp{OMP\_CANCELLATION} 打开（多数运行时默认关），
+且只在标注了取消点处生效，问``我停了吗''用 \Fn{omp\_canceled}。超时没有标准
+机制，只能``\Fn{wait\_for} 到期后不再等''，即调用方放弃结果；这不等于任务结束
+——它还在跑、还在写输出缓冲，所以目的地必须按``可能有迟到写''设计（带版本号，
+或用一块一次性缓冲）。正确的形状是外层给 deadline，内层把它转成 stop\_token
+往下传，任务体在循环边界与叶子边界各查一次；被取消的任务不回滚，
+而是把``未产生结果''显式编码进输出。
+
+\begin{bestpractice}[title={分解与调度的落地清单}]
+\begin{itemize}
+  \item 先估 $W$ 与 $T_\infty$：关键路径不降，加线程只是加开销。
+  \item cut-off 以``叶子计算量 $\ge 20$ 倍任务成本''定初值，再用按 2 倍扫描的
+        平台段收尾；阈值走参数不走常量，叶子数目标 $4P$ 到 $32P$，
+        且每个叶子的写区域至少独占一条缓存行。
+  \item 池子四件套：有界队列加背压、排空式关闭、\Tp{packaged\_task} 传异常、
+        优先级配老化规则；绝不在固定线程数的池里原地等待自己提交的任务。
+  \item 代价均匀选 static，不均选 guided 或 dynamic，别把 auto 当成可复现的
+        性能保证。
+\end{itemize}
+\end{bestpractice}
+% ====================================================================
+% ====================================================================
+\chapter{并行循环、归约与执行策略}
+
+循环是 CPU 上最大的一类并行结构：$n$ 个互相独立元素，每个做一次同样的事。
+本章讲三套把``独立''说给机器听的工具——OpenMP 的编译指令、oneTBB 的模板库、
+以及尚未进入标准的 std::execution（参考实现 stdexec），再加 \cpp{17} 的执行策略
+标签。它们的差别不在语法糖，而在于能不能说清依赖、能不能换执行域。
+
+\section{OpenMP：循环级并行的语法密度}
+
+OpenMP 的模型是 workshare：写``这段循环并行做''，队伍大小与分块由运行时决定。
+共享与私有的默认规则是踩坑第一现场：\Tp{parallel} 区域之外声明的变量默认 shared；
+区域之内声明的变量默认 private；\Tp{for} 的循环计数器被隐式设为 private；
+其余一律要写子句。\Tp{private} 只给每线程一个未初始化副本（不带上次值），
+\Tp{firstprivate} 复制初值，\Tp{lastprivate} 把语义上最后一次迭代（按串行顺序的
+末次，不是时间上最后结束的那次）的值带回外层，\Tp{reduction} 才是带单位元的合并。
+
+\begin{lstlisting}[style=cppstyle,caption={OpenMP reduction：正确写法与三种常见错法}]
+// 正确：acc 归约到每线程的私有副本，结束时按 + 合并
+double dot(const float* a, const float* b, int n) {
+  double acc = 0.0;
+#pragma omp parallel for schedule(static) reduction(+:acc)
+  for (int i = 0; i < n; ++i) acc += (double)a[i] * b[i];
+  return acc;
+}
+
+// 错法一：acc 是 shared，多线程读改写同一个 double，数据竞争
+double bad1(const float* a, int n) {
+  double acc = 0.0;
+#pragma omp parallel for
+  for (int i = 0; i < n; ++i) acc += a[i];   // 结果偏小且不可复现
+  return acc;
+}
+
+// 错法二：collapse 要求循环巢是矩形且各层迭代次数与外层无关
+void bad2(int n) {
+#pragma omp parallel for collapse(2)
+  for (int i = 0; i < n; ++i)
+    for (int j = i; j < n; ++j) work(i, j);  // 三角区域，违反约束
+}
+
+// 错法三：nowait 抹掉 for 末尾的隐式栅栏，后面却读别人写的值
+void bad3(double* x, int n) {
+#pragma omp parallel
+  {
+#pragma omp for nowait schedule(static)
+    for (int i = 0; i < n; ++i) x[i] = f(x[i]);
+    // 第二个循环读到的是别的线程还未写的 x
+#pragma omp for nowait schedule(static)
+    for (int i = 0; i < n; ++i) g(x, i);
+  }
+}
+\end{lstlisting}
+
+剩下几件事也值得记牢。\Tp{reduction} 的内置四类运算对自定义类型要求
+``默认构造出来的值就是单位元''，\Tp{max} 与 \Tp{min} 因此很别扭（单位元是
+负无穷与正无穷），通用出路是 OpenMP 5.0 的 \Tp{declare reduction}。
+\Fn{omp\_set\_num\_threads}、\Tp{num\_threads(n)} 子句与环境变量
+\Tp{OMP\_NUM\_THREADS} 三者优先级不同，子句最大；嵌套并行默认是关的
+（max-active-levels 为 1），于是内层 \Tp{parallel} 静默地只有一个线程，
+这比``开不出线程''更难查；旧的 \Tp{OMP\_NESTED} 已被列为过时，
+现在用 \Tp{OMP\_MAX\_ACTIVE\_LEVELS}。OpenMP 队伍与自写池或 TBB arena 同时
+按核数开线程就是两倍超订，两边都要显式收窄。
+\Tp{simd} 子句请求把同一迭代内的元素铺开成向量（可配 \Tp{simdlen}、
+\Tp{aligned}、\Tp{linear}），跨迭代仍需 \Tp{for}；函数级的向量化版本
+用 \Tp{declare simd} 生成。第~7 章说明它为什么经常不生效。
+
+\begin{note}[title={浮点归约结果不确定：这是特性不是 bug}]
+浮点加法不满足结合律，所以``并行归约的结果与串行不同''是数学上的必然，
+不是实现的过错：$n$ 个双精度数的部分和顺序一变，末位就变。库不会、
+也不承诺给出与 \Fn{accumulate} 逐位一致的结果。三种应对按代价排：
+（一）回归测试改成带容差的比较（相对容差按累加长度定），这是必须做的一条；
+（二）要可复现就固定并行度与分块（把线程数写进配置，换机器就重跑基线），
+或者用两阶段归约，先按固定块长做局部和、再串行合并，
+这样结果只取决于块数而不取决于线程调度；
+（三）要``与线程数无关的可复现''就得用确定性归约（pairwise 求和、
+Kahan 补偿，或整数化定点累加），代价是失去一部分向量化收益。
+同一套逻辑适用于顺序敏感的其他并行结果：并行排序的稳定性、
+并行哈希表里元素的枚举顺序，都不要写进对外契约。
+\end{note}
+
+\section{std::execution（stdexec）：把并行写成可组合的发送者}
+
+std::execution 走另一条路：\Tp{sender} 是``尚未开始的工作的描述''，
+\Tp{receiver} 是它的完成回调，完成有三种信号 \Fn{set\_value}、\Fn{set\_error}
+与 \Fn{set\_stopped}（取消是类型化的，这是它与前两者的关键差别），
+\Fn{start} 才真正提交。组合子负责拼：\Fn{then} 接一个纯函数；
+\Fn{let\_value} 与它的两个兄弟 \Fn{let\_error}、\Fn{let\_stopped}
+分别处理三种完成；\Fn{when\_all} 表达``并行的两支都要好''；
+\Fn{transfer} 把后续工作交给另一个调度器；\Fn{starts\_on} 与
+\Fn{continues\_on} 决定这段跑在哪个执行域。调度器是一个概念
+（早期文档里叫 \Tp{PScheduler}，改名后就是 \Tp{scheduler}），
+并行铺开由自由函数 \Tp{execute(scheduler, shape, fun)} 承担，
+stdexec 另外给了 \Fn{bulk} 与它的分块、跨距两个变体。
+\begin{lstlisting}[style=cppstyle,caption={stdexec 骨架：一次并行铺开加一条依赖管道}]
+exec::static_thread_pool pool(8);      // stdexec 自带的最简调度器
+auto sched = pool.get_scheduler();
+// 阶段一：把 n 个元素铺到调度器上（execute 即"并行 for"）
+stdexec::execute(sched, n,
+    [&](std::size_t i) { out[i] = f(in[i]); });
+// 阶段二：sender 表达依赖，值在管道里传，不靠共享变量
+auto snd = stdexec::transfer(sched,
+    stdexec::just(load_a(), load_b())
+  | stdexec::then([](auto a, auto b) {
+        return merge(a, b);
+    }));
+auto [result] = stdexec::sync_wait(std::move(snd)).value();
+\end{lstlisting}
+
+这套抽象值得学，原因有三：数据靠值在管道里流动，默认没有共享状态；
+换线程池、换加速卡提交队列只是换 scheduler，这正是本书第三部分的入口；
+取消有 \Fn{set\_stopped} 这条通道，不用把标志位埋进每个循环体。
+但要把现状写清：截至本书写作时它\emph{尚未进入任何已发布的 C++ 标准}，
+标准库里没有 \Tp{std::execution} 可用；工业界用的是参考实现 stdexec
+（随提案一起演进，名字仍在动：概念名的 \Tp{P} 前缀、\Fn{let\_value} 家族
+都改过写法），它要求 \cpp{20} 且对编译器版本敏感，以所用 stdexec 的
+支持矩阵为准。把项目押上去之前，先确认能锁版本、能在 CI 里编过。
+
+\section{执行策略标签：seq、unseq、par、par\_unseq}
+
+\cpp{17} 的 \Tp{<execution>} 给并行算法加了可选首参数，四档标签承诺的事情
+不同：\Tp{seq} 是串行且按给定顺序；\Tp{unseq} 仍是单线程，但允许库在同一次
+调用内乱序甚至向量化地执行元素操作（因此要求操作之间不可互相观察：
+无共享可变状态、无别名）；\Tp{par} 允许跨元素开并行执行代理；\Tp{par\_unseq}
+两者都给。要记住的是使用侧义务：选了 \Tp{unseq} 或 \Tp{par\_unseq}，
+就必须保证元素操作对内存的影响像 \Tp{restrict} 一样互不重叠，
+否则库有权产生你在串行下看不到的行为。
+\begin{lstlisting}[style=cppstyle,caption={std::reduce 加 par\_unseq 与它的手写等价物}]
+#include <execution>
+// 库写法：一句，并行与向量化都交给实现
+double total1(const std::vector<double>& v) {
+  return std::reduce(std::execution::par_unseq,
+                     v.begin(), v.end(), 0.0);
+}
+// 手写等价物：分块局部和再合并（par 内部大致就是这个结构）
+double total2(const double* a, size_t n, size_t nb) {
+  std::vector<double> part(nb + 1, 0.0);
+  auto run = [&](size_t t) {
+    size_t lo = t * n / nb, hi = (t + 1) * n / nb;
+    double s = 0.0;
+    for (size_t i = lo; i < hi; ++i) s += a[i]; // 这条循环可向量化
+    part[t] = s;                // 各写一格，绝不写 += 共享单元
+  };
+  for_each_on_pool(0, nb, run);   // 线程与池的原语见并发分册
+  return std::reduce(part.begin(), part.end()); // 不保证结合顺序
+}
+\end{lstlisting}
+
+实现支持度必须说清，否则代码会在别人的机器上退化成串行：MSVC STL 是四档
+最完整的实现（内部自带调度器）；libstdc++ 自 GCC 9 起提供这些算法，
+但并行档要链接 TBB（\Tp{-ltbb}），并且不保证真把 \Tp{unseq} 的
+``单线程内乱序''兑现出来；libc++ 要通过实验库开关选择并行后端
+（可选串行、TBB 等），没开就等于串行。也就是说同一句带 \Tp{par\_unseq}
+的 \Fn{std::reduce}，三家的实际执行结构可能完全不同。
+\Tp{unseq} 尤其难验证：线程沙箱（TSan）抓的是跨线程竞争，
+抓不到``同一线程内向量化后的乱序''。可行的自检有三件：把元素操作写成
+只碰 \Tp{in[i]} 与 \Tp{out[i]} 的形式（这是最便宜的证明）；开向量化报告
+确认它真的向量化了（第~7 章的命令），否则你付了风险却没拿到收益；
+再用 \Tp{seq} 与 \Tp{par\_unseq} 各跑一遍，比对容差内的结果。
+带执行器的写法（早先提案里的 \Tp{par.on(executor)}）从未进标准，
+要把算法绑到自己的池上，就走 TBB 的 arena 或 stdexec 的 \Fn{transfer}。
+
+\section{oneTBB 的归约与前缀和}
+
+\Fn{tbb::parallel\_reduce} 的现代写法是把单位元、元素累加、块合并三段都写成
+lambda，块与阈值由 partitioner 管；需要每线程一个对象（比如 256 桶直方图）时，
+用 \Tp{tbb::combinable} 或 \Tp{tbb::enumerable\_thread\_specific}
+（局部对象在退出时统一合并），比在 lambda 里塞原子量更省竞争。
+\Fn{tbb::parallel\_scan} 才是本章的重头：它的 body 要提供四个成员，
+两个 \Tp{operator()} 分别接 \Tp{pre\_scan\_tag} 与 \Tp{final\_scan\_tag}，
+再加 \Fn{assign} 与 \Fn{reverse\_combine}。
+\begin{lstlisting}[style=cppstyle,caption={parallel\_scan：算出每段在扁平输出里的写入偏移}]
+// 前缀和：第 k 段的元素数 -> 它在全局输出里的起始偏移
+class OffsetCalc {
+ public:
+  typedef std::size_t result_type;            // 值类型要默认构造
+  typedef tbb::blocked_range<std::size_t> range_type;
+  std::vector<std::size_t>& len;              // 每段多少元素
+  std::vector<std::size_t>& off;              // 输出：段起始偏移
+  // 第一趟：只累加，不产生副作用（同一块可能被跑两次）
+  void operator()(const range_type& r, std::size_t& sum,
+                  tbb::pre_scan_tag) const {
+    for (auto k = r.begin(); k != r.end(); ++k) sum += len[k];
+  }
+  // 第二趟：写下本段偏移，再把本段的量并入
+  void operator()(const range_type& r, std::size_t& sum,
+                  tbb::final_scan_tag) const {
+    for (std::size_t k = r.begin(); k != r.end(); ++k) {
+      off[k] = sum;
+      sum += len[k];
+    }
+  }
+  // 顺序敏感：combine 不可交换，lhs 是左半
+  void reverse_combine(std::size_t& lhs,
+                       const std::size_t& rhs) const {
+    lhs += rhs;
+  }
+  void assign(std::size_t& lhs, const std::size_t& rhs) const {
+    lhs = rhs;
+  }
+};
+// 用法：OffsetCalc b{len, off}; tbb::parallel_scan(range, b);
+\end{lstlisting}
+
+有了这张偏移表，各线程就能把局部直方图一次拷贝进全局表里自己那几行，
+不需要原子量也不需要锁：这就是``用 scan 换掉同步''的标准套路。
+STL 侧对应的是 \Fn{std::inclusive\_scan} 与 \Fn{std::exclusive\_scan}
+（在 \Tp{<numeric>}，接受策略标签与初值，另有先映射再前缀的
+\Fn{transform\_inclusive\_scan}）；OpenMP 5.0 给了 \Tp{omp scan} 指令，
+要写在带 \Tp{ordered(concurrent)} 的循环里。
+
+\section{归约与前缀和的代价结构}
+
+两者的差别不在算法复杂度（工作量都是 $O(n)$，关键路径都是 $O(\lg n)$ 量级），
+而在内存被摸了几遍。归约是两趟：第一趟每线程读自己那段并写一个局部值
+（读 $n$、写约 $P$ 个），第二趟只合并这 $P$ 个值，几乎不产生流量；
+前缀和通常要三趟：每段先做段内 scan（读 $n$、写 $n$），再对段总和做一次
+小 scan，最后一趟把段前缀加回段内每个元素（再读再写 $n$），
+所以流量是 $3n$ 量级而不是 $n$ 量级——这就是 scan 比 reduce 慢的原因，
+是内存层级的问题，不是``并行度不够''。两个补充判据：段内用 Hillis-Steele 式
+（对数步、每步全量操作）时关键路径更短但工作量翻一倍，延迟受限的小数据
+反而合适；Blelloch 式工作量最优但关键路径更长。只要``每个位置需要它之前
+所有位置的汇总''，scan 就是正解；只需要一个总量却写成 scan，
+就白付了一遍内存流量。
+
+\begin{compare}[title={OpenMP、oneTBB 与 stdexec 的表达力对照}]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+  >{\raggedright\arraybackslash}p{0.21\textwidth}
+  >{\raggedright\arraybackslash}p{0.20\textwidth}
+  >{\raggedright\arraybackslash}p{0.20\textwidth}@{}}
+\toprule
+维度 & OpenMP & oneTBB & stdexec \\
+\midrule
+写并行循环 & 一句 \Tp{parallel for} 最省事 &
+lambda 配 \Tp{blocked\Bk\_range}，稍啰嗦 &
+要自己拼 sender，最费笔墨 \\
+不规则任务与依赖 & \Tp{task} 可用但依赖靠人守 &
+task\_group 与 flow 图，成熟 &
+组合子本身就是依赖图，最贴合 \\
+取消与完成状态 & 要开关加取消点 & 标志位配 \Fn{cancel} &
+\Fn{set\Bk\_stopped} 是一等公民 \\
+跨执行域（CPU 之外） & 基本不管 & 基本不管 &
+换 scheduler 即可，为第三部分预留 \\
+进标准与可移植性 & 独立开放标准，三家编译器都有 &
+库级依赖，需要链接 & 尚未进标准，API 仍在动 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+\section{并行 STL 算法与什么时候别用库}
+
+\Fn{std::sort}、\Fn{for\_each}、\Fn{copy}、\Fn{transform}、\Fn{set\_union}
+这一族在 \cpp{17} 里都能接策略标签；oneTBB 另有 \Fn{tbb::parallel\_sort}、
+\Fn{tbb::parallel\_transform\_reduce}、\Fn{tbb::parallel\_invoke}
+与三维的 \Tp{tbb::blocked\_range3d}。两个现实约束要注意。
+第一，并行算法\emph{会}额外分配内存：并行 \Fn{sort} 与集合运算通常要临时缓冲，
+走的是全局 \Tp{operator new} 而不是你的容器分配器，标准也没给算法传分配器的
+口子（\Tp{pmr} 的池化分配在这个层面上帮不上忙），所以在实时、内存受限
+或统计分配次数的测试里会看到意外行为。第二，别用库的情况很具体：
+需要把多个阶段融合在一次遍历里以省内存流量（先 \Fn{transform} 再 \Fn{reduce}
+往往就是两遍）；需要控制分块与线程到数据段的亲和；需要确定性的合并顺序；
+需要跨执行域；或者瓶颈已经变成内存带宽——那时加并行度无用，
+该改的是数据布局（第~7 章）或算法本身。反过来，规整的``一循环一归约''
+几乎没有理由自己写：库的实现已经处理了阈值、窃取、异常与关闭。
+
+\begin{guideline}[title={选循环并行工具的判据}]
+\begin{itemize}
+  \item 形状是规整循环加归约：OpenMP 一句，或 \Tp{std::for\_each} 配 \Tp{par}，
+        别自己写线程。
+  \item 迭代代价不均、或要在循环里派生任务：oneTBB 的 partitioner
+        与 task\_group 更可控。
+  \item 每个元素需要它之前的汇总：写成 scan（库或 TBB），
+        不要写成带锁的循环，也不要用 reduce 凑。
+  \item 依赖是图而不是循环、或将来要把某段挪到 \GPU{}：现在就用 stdexec
+        的组合子，但要能锁版本并接受 API 会变动。
+  \item 浮点归约一律按``结果不确定''设计：测试用容差，
+        要可复现就上两阶段或定点。
+  \item 只有在性能被证明是问题处才把库换成自写，并保留串行实现做对拍。
+\end{itemize}
+\end{guideline}
+% ====================================================================
+% ====================================================================
+\chapter{共享状态：原子、内存序与无锁}
+
+前三章把任务切开，本章处理切开后\emph{仍然}要共享的那一点状态。先记住一条经验：原子的
+开销不在算术，而在缓存行所有权的迁移；内存序也不是``让 CPU 跑得快''的技巧，而是一份
+``哪些访存可以被挪动''的合同。读侧要不要自旋、写侧能不能阻塞、值能不能重读，这三问决定
+了该用锁、原子量、分片、seqlock 还是干脆别共享。
+
+\section{六档 memory\_order 与它们真正允许的乱序}
+
+\Fn{std::atomic} 的每个成员函数都接一个 \Tp{std::memory\_order}。六档之间不是``强弱''
+的一条直线，而是各自约束\emph{哪些别的访存}可以跨过这次访问被重排。编译器重排与硬件
+重排都归它管，所以``我这是 x86，不用写内存序''只对一半：x86 的硬件乱序确实少，
+编译器的乱序一档都不会少。
+
+\begin{table}[htbp]\centering
+\caption{六档 memory\_order 各自额外保证了什么}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+  >{\raggedright\arraybackslash}p{0.37\textwidth}
+  >{\raggedright\arraybackslash}p{0.29\textwidth}@{}}
+\toprule
+档位 & 它额外保证了什么 & 典型用法 \\
+\midrule
+\Tp{relaxed} & 只保证这次访问本身不被撕裂，不约束任何别的访存 & 统计计数、只需最终可见的量 \\
+\Tp{acquire} & 它之后的读写作不能跑到它前面；能看见配对 release 之前的写 & 加锁一侧、读已发布的指针 \\
+\Tp{release} & 它之前的读写作不能跑到它后面 & 解锁一侧、写完数据再置标志 \\
+\Tp{acq\Bk\_rel} & 两者合一，只给既读又写的操作 & \Fn{fetch\_add}、\Fn{compare\_exchange} \\
+\Tp{seq\_cst} & 在上面之上，再给所有 seq\_cst 访问一个单一总序 & 拿不准就用它；跨多个原子量推顺序 \\
+\Tp{consume} & 名义上只保护数据依赖链，但没有实现真按这个强度做 & 别写，编译器普遍按 acquire 处理 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+release 与 acquire 要\emph{成对}才有意义：一个线程写完普通变量后做 release 存，另一个
+线程 acquire 读到那个新值，前者的写才对它可见；单独的 release 不约束读者，单独的
+acquire 也唤不醒任何东西。\Fn{compare\_exchange} 还多给一个失败侧的序，失败时只是重读
+当前值，写 \Tp{relaxed} 就够。
+
+\Tp{seq\_cst} 的代价要说具体。在 x86 这种 TSO 机器上，普通载入本来就是 acquire 的形状、
+普通存出接近 release，代价集中在 seq\_cst 的\emph{存}：实现要插一条全序列化指令
+（\Tp{xchg} 或 \Tp{mfence}）才换得来``所有 seq\_cst 操作一个总序''。弱内存序的架构差别
+更大：ARM 有带获取与释放语义的载入存出指令（\Tp{LDAR}、\Tp{STLR}），acquire 与 release
+很便宜，但 seq\_cst 要一条完整的 \Tp{dmb} 屏障；RISC-V 的 RVWMO 模型用 \Tp{fence}
+表达同样的事。结论是：acquire 与 release 在主流架构上都便宜，seq\_cst 只在一部分架构
+上接近免费，把它当默认值要付钱。
+
+还有两件容易被忽略的事。\Fn{is\_always\_lock\_free} 要查：宽于机器字的原子量（例如 16
+字节的双字 CAS）在很多目标上退化成库里的分段自旋锁。\cpp{20} 的 \Tp{std::atomic\_ref}
+让你给已有对象套原子视图而不改变布局，代价是所有访问都得走这个视图；同一年代加的
+\Fn{wait} 与 \Fn{notify\_one} 是 futex 语义，这些原语怎么管线程是并发分册的话题。
+
+\section{原子量的隐藏成本：行所有权迁移与伪共享}
+
+\Fn{fetch\_add} 是一次读改写，硬件要把那条缓存行从``共享只读''搬到``本核独占''。八个
+线程往同一个地址上叠计数，这行就在八个核之间来回搬，每次操作都走一遍一致性协议：
+单次开销从本地命中的几纳秒量级跳到缓存到缓存往返的百纳秒量级，于是\emph{线程越多越慢}。
+这不是实现差，是共享本身的价目表。伪共享是同一机理的隐蔽版本：两个逻辑无关的计数器
+落在同一条 64 字节的线上，两个写者互相把对方的行作废。判据很便宜——把两个写者的数据
+隔到不同行，性能显著上升就说明之前一直在付这笔钱。
+\begin{lstlisting}[style=cppstyle,caption={分片计数器：先按线程分片，再按行对齐}]
+struct alignas(64) Cell {                  // 每格独占一条缓存行
+  std::atomic<std::size_t> v{0};
+};
+class Sharded {                            // 分片计数器的全部结构
+ public:
+  explicit Sharded(std::size_t n) : cells_(n) {}
+  void add(std::size_t x) {                // 写：只碰自己那一片
+    cells_[slot()].v.fetch_add(x, std::memory_order_relaxed);
+  }
+  std::size_t sum() const {                // 读：允许瞬时不一致
+    std::size_t t = 0;
+    for (const Cell& c : cells_)
+      t += c.v.load(std::memory_order_relaxed);
+    return t;
+  }
+ private:
+  std::size_t slot() const {               // 按线程分片，不按键哈希
+    static thread_local const std::size_t id = next_id();
+    return id % cells_.size();
+  }
+  static std::size_t next_id() {           // 只在建线程时争一次
+    static std::atomic<std::size_t> n{0};
+    return n.fetch_add(1, std::memory_order_relaxed);
+  }
+  std::vector<Cell> cells_;                // 超对齐的分配见正文
+};
+\end{lstlisting}
+
+对齐本身也有可移植性坑。\Tp{alignas(64)} 写死是本书示例的取巧做法，但苹果与部分服务器
+平台的行宽是 128 字节，把 64 当真理会留下半个行的共享。\cpp{17} 给了
+\Tp{std::hardware\Bk\_destructive\Bk\_interference\Bk\_size}（多大才会互相干扰）与
+\Tp{std::hardware\Bk\_constructive\Bk\_interference\Bk\_size}（多大刚好打包进一行），
+但两个常量在 libstdc++、libc++、MSVC 上的提供进度与取值口径并不同步，有的版本要开
+\cpp{17} 才给且附带警告，有的直接缺。另一个坑是超对齐对象的\emph{分配}：\cpp{17} 起
+带对齐的 \Tp{new} 要走 \Tp{std::align\_val\_t} 版本的全局 operator new，多数平台做到了，
+但把 \Tp{alignas(64)} 的结构塞进自定义分配器或 placement new 时对齐可能不保。稳妥顺序是：
+先分片、再对齐、最后才是去查那个常量。
+
+\section{无锁结构的真正难点：回收与 ABA}
+
+先把三个词分开。\emph{无锁}（lock-free）保证至少有一个线程能在有限步内推进，但某个具体
+线程可以反复失败；\emph{免等待}（wait-free）要求每个线程都在有限步内完成，通常要靠
+协助式（helping）实现；中间还有 obstruction-free，实践里少见。实时与信号处理路径要的
+是免等待，无锁给不了这个承诺。
+\begin{lstlisting}[style=cppstyle,caption={CAS 循环的正确形态与无锁栈的 ABA 现场}]
+// 一、CAS 骨架：expected 由 compare_exchange 自己更新
+template <class T>
+bool cas_to(std::atomic<T>& obj, T want) {
+  T old = obj.load(std::memory_order_relaxed);
+  while (!obj.compare_exchange_weak(old, want,       // 允许虚假失败
+      std::memory_order_acq_rel,
+      std::memory_order_relaxed)) {                  // 失败侧只要重读
+    if (old == want) return false;                   // 已被别人达成
+  }
+  return true;
+}
+// 二、无锁栈的 push：结构没错，风险在 pop 侧的回收
+struct Node { int v; Node* next; };
+std::atomic<Node*> head{nullptr};
+void push(int x) {
+  Node* n = new Node{x, nullptr};
+  n->next = head.load(std::memory_order_relaxed);
+  while (!head.compare_exchange_weak(n->next, n,     // 头变了就重试，
+      std::memory_order_release,                      // n->next 已自动
+      std::memory_order_relaxed)) {}                  // 更新为新头
+}
+\end{lstlisting}
+
+\Fn{compare\_exchange\_weak} 允许虚假失败，所以它只能写在循环里，而循环体里\emph{不要}重新
+load——上面第一段就是唯一的正确骨架。ABA 是第二个难点：线程一从栈顶取走头结点 A、记下
+\Tp{A->next} 是 B，准备把头顶 CAS 成 B；这期间另一个线程弹出 A、又弹出 B，然后把 A 这个地址
+重新压回来（值也恰好一样），于是第一个线程看到``头顶还是 A''就 CAS 成功，链表接到了已释放的
+位置上。三条规避路径：把指针与一个单调递增的标志拼成双字做 CAS（x86 要 \Tp{cmpxchg16b}，编译
+要 \Tp{-mcx16} 这类开关，结构还得 16 字节对齐；LL/SC 的独占监视能挡住单字 ABA，但监视窗口随时
+可能因干扰失效，仍然要重试循环）；节点地址永不复用；或者交给下面这些回收方案。
+
+回收才是无锁数据结构真正的复杂度来源：pop 之后什么时候能 \Tp{delete}？别的线程可能正拿着这个
+指针。四类答案各有代价。原子引用计数最直觉，但每次读写都要动一个共享计数，成本回到本节开头那条
+线。hazard pointer 让每个读者公布``我正在看这个''，写者攒一批待删节点后扫描所有指针才真正释放，
+读侧要付公布与清除的开销。基于 epoch 的回收把回收对象挂在纪元上，等所有线程都推进过两个纪元再
+批量释放。RCU 让读侧几乎零成本，写侧发布新版本并等待一个宽限期（旧版本里的读者都退出）才回收，
+Linux 内核与用户态的 liburcu 都走这条线。四者的共同点是\emph{用回收延迟换吞吐}，
+争用高时内存占用会明显上涨。
+
+\section{seqlock：读多、写少、且允许重读}
+
+seqlock 用\emph{一个版本号}把读者与写者彻底解耦：写者把版本变成奇数、改数据、变成下一个
+偶数；读者先记版本、拷一份数据、再查一次版本，两次相同才采纳。写者永不等待读者，读者
+永不阻塞写者；代价是读者可能反复重试，而且拿到的是拷贝。
+\begin{lstlisting}[style=cppstyle,caption={seqlock 的读写两侧：关键是版本号，不是锁}]
+template <class T>
+class Seqlock {
+ public:
+  void write(const T& next) {              // 假设单写者
+    std::size_t v = seq_.load(std::memory_order_relaxed);
+    seq_.store(v + 1, std::memory_order_relaxed);  // 奇数：正在写
+    std::atomic_signal_fence(std::memory_order_acq_rel);
+    data_ = next;                          // 可能读到半成品
+    seq_.store(v + 2, std::memory_order_release);  // 偶数：写完
+  }
+  template <class F>
+  void read(F&& f) const {                 // f 只做可重复的读
+    for (;;) {
+      std::size_t a = seq_.load(std::memory_order_acquire);
+      if (a & 1u) continue;                // 撞上写，重来
+      T copy = data_;
+      std::atomic_thread_fence(std::memory_order_acquire);
+      if (seq_.load(std::memory_order_relaxed) != a)
+        continue;                          // 期间有写，作废
+      f(copy); return;
+    }
+  }
+ private:
+  alignas(64) std::atomic<std::size_t> seq_{0};
+  T data_{};
+};
+\end{lstlisting}
+
+两件事必须写清。第一，按 C++ 抽象机，对非原子量 \Tp{data\_} 的并发读写本身就是数据竞争，严格
+意义上未定义；能这样用的前提是 payload 可平凡复制、读者拿到脏值后一定因版本不符而丢弃——Linux
+内核的 seqcount 正靠这个约定，它的乐观读配套函数也是同一形状。可移植的替代是把 payload 做成
+\Fn{is\_lock\_free} 为真的原子量（或逐字段原子读），再做一次``值未变''的校验。第二，适用面判据：
+值能被重复读、读侧只要一个瞬时一致的快照（配置、统计、坐标帧）、写者极少且写得很短。反过来，
+如果读取会消耗资源（弹出、计数、翻状态）、写者众多（读者重试率上升会把写者饿死）、或者要读的
+东西很大（拷贝比等待更贵），seqlock 就是错的选择。
+
+\section{并行哈希表与位并行}
+
+并发哈希表的主流形态就是``分桶加段锁''：桶切成若干段，每段一把小锁或读写锁，键按哈希落到段里；
+难的部分是扩容，常见做法是分段迁移（旧表找不到再去新表）或者 stop-the-world 重排。oneTBB 把两种
+取舍都摆出来了：\Fn{tbb::concurrent\_hash\_map} 用桶级读写锁，并提供 accessor 与 const\_accessor
+这对引用计数式的句柄，避免你在持锁期间节点被回收；\Fn{tbb::concurrent\_unordered\_map} 是链表
+CAS 插入的无锁容器，但桶数在构造时固定、不能边用边扩容、元素地址要稳定，适合容量可预估、
+以插入为主的聚合。开放寻址的并发表（Cuckoo、BHPS 一类）缓存局部性最好，但删除要留墓碑、查找要
+跳过、搬移别人的条目会破坏正在进行的查找，实现与验证成本远高于分桶。判据：需要一致的快照枚举
+就别指望任何并发容器；只要``每个键加一''就退回第~5 章的 per-thread 副本加 scan 聚合。
+
+另一半答案是：很多看着需要哈希表的场景，其实是一个位图。整数键、值域可界定、操作是集合运算或
+``有没有''判定时，位图一次覆盖 64 个元素（一个 \Tp{uint64\_t}），并、交、非是三条逻辑指令，
+统计基数是一条 \Tp{popcnt}（x86 上 SSE4.2 之后才有，编译要相应开关）。\cpp{20} 的 \Tp{<bit>}
+把这层能力标准化了：\Fn{std::popcount}、\Fn{std::countr\_zero}（找第一个空位）、
+\Fn{std::countl\_zero}、\Fn{std::has\_single\_bit}，都只接受无符号整数。向量层还有更直接的形状：
+AVX-512 的谓词掩码寄存器让比较结果直接是一个位向量，SVE 的谓词寄存器同样是``每元素一位''。
+稀疏整型域用 Roaring 一类分块压缩位图，交并差在容器层做，省掉哈希表的随机访问与每元素几十字节
+的开销。位图还常用来管并发空闲槽位：\Fn{compare\_exchange} 清一位就少掉一个回收问题，
+因为槽位地址从不消失。
+
+\begin{warning}[title={``无锁就是快''的三个反例}]
+\begin{enumerate}
+  \item 全局原子计数器：无锁，但所有写者争同一条缓存行，八线程的吞吐可以低于单线程，
+        因为一致性往返取代了实际计算。解法是分片，或 per-thread 副本加结束时合并。
+  \item 高争用的无锁队列：\Fn{compare\_exchange\_weak} 的失败率随活跃线程数上升，重试
+        本身又要搬缓存行，于是``无锁''变成``一直在重试''。同一场景里一把粗粒度自旋锁
+        保护的短临界区常常总开销更低——锁把冲突变成排队，排队比反复撞墙省流量。
+  \item 无锁栈或并发表加回收：读侧看着只有一条 CAS，实际每次访问都要公布或清除 hazard
+        指针，或者在 epoch 与宽限期里打点；回收扫描还会让某个读者的某一次操作突然
+        变成长尾。
+\end{enumerate}
+\end{warning}
+
+\begin{note}[title={内存序怎么选：三问加一条默认}]
+一问这次访问是不是在``发布或获取''一段有数据依赖的写。是，就写配对的 \Tp{release} 与
+\Tp{acquire}，绝大多数正确写法都在这里。二问是不是要在\emph{两个以上}原子量之间推一个
+顺序（互相监视的两个标志、Dekker 式的``我看见你没写''）。是，就用 \Tp{seq\_cst}：别靠
+推理证明弱序够用，这类证明最容易错，而且错了只在高争用或弱序机器上复现。三问是不是
+纯粹统计或单向的取消标志。是，\Tp{relaxed} 可以，但要认清\emph{标志之外的普通写可能对它
+不可见}，所以``先写数据再置标志''的那次置标志必须是 release。默认策略是先写对的 acquire
+与 release 版本，测过之后才把纯计数降成 relaxed，并在注释里写明理由。工具帮不上太多忙：
+ThreadSanitizer 报的是数据竞争，看不见合法弱序下的顺序错误；CDSChecker、herd7 这类内存
+模型枚举工具能查片段，工业代码里更可靠的还是``一次只放宽一档''配上高争用压测。
+\end{note}
+
+\section{该付哪一种代价：无共享、无通信、无锁}
+
+把选择排成一个阶梯，从上往下走，每下一步都要有证据。第一级是\emph{无共享}：能复制就复制，
+per-thread 副本、只读的 const 表、按核切开的区间，代价是结束时合并一遍。第二级是\emph{无通信}：
+确实要传东西就批量而单向地传——一次写一整段而不是逐元素写，让接收方读一个连续区间，把同步推到
+阶段边界（第~5 章的 reduction 就是这个形状）。第三级才是\emph{原子共享}：全局唯一必须被所有人
+看到时（取消标志、阶段计数、总配额），接受一次一条线的代价，并把它放进别人不会写的行。第四级是
+\emph{无锁结构}：只有当你证明锁的排队本身是瓶颈、并且愿意承担回收方案与验证成本时才上。跨 NUMA
+时整张价目表都会变贵（第~2 章）：同一个分片数在小机器上合适，在双路机器上可能刚好把一对线程分到
+两个节点。最后这条判据值得贴在屏幕上——如果你的并行化改动让共享状态变多了，多半只是把并行的
+成本搬到了同步那一栏。
+
+\begin{bestpractice}[title={共享状态的落地清单}]
+\begin{itemize}
+  \item 先问能不能不共享：能复制就复制，能分片就分片，分片数至少等于线程数，取 2 的幂
+        方便用掩码取模。
+  \item 一条缓存行只给一个写者：同一写者的标志与计数打包放一行，不同写者的数据强行分开；
+        对齐常量按目标平台核一次再用。
+  \item 内存序默认 acquire 与 release 配对，纯统计才用 relaxed，跨两个以上原子量的推理
+        才上 seq\_cst，并在注释里写下理由。
+  \item CAS 一律写成``用返回值更新 expected''的循环，只在循环外做初读；分清 weak 与
+        strong，循环体里不要重新 load。
+  \item 上无锁结构之前先定回收方案（引用计数、hazard、epoch、RCU 四选一），并给读侧配
+        一个``最坏耗时''的观测点。
+  \item 读多写少、值可重读、快照语义够用才上 seqlock；写者多或读取有副作用就退回锁；
+        整数键与集合运算优先用位图和 \Tp{<bit>}。
+  \item 把重试次数、CAS 失败率、锁等待时长做成可观测的量，``该不该无锁''就变成一个可以
+        回答的问题。
+\end{itemize}
+\end{bestpractice}
+% ====================================================================
+% ====================================================================
+\chapter{SIMD 与自动向量化}
+
+本章讲 CPU 上最后一层并行：一条指令同时处理几个数据。CPU 的 SIMD 与 \GPU{} 上的
+并行不是同一件事的两种写法，而是同一件事的两种\emph{宽度}与两种\emph{掩码语义}；
+把这条界线看清，才知道哪些内核该留在 \CPU{} 上做向量化、哪些该送去第~III 部分。
+
+\section{宽度、掩码与指令集现状}
+
+SIMD 寄存器是一个定宽数组：128 位装 4 个单精度、256 位装 8 个、512 位装 16 个。一次向量
+加法做的是 8 次或 16 次，控制流只有\emph{一条}——这是它与多线程的根本差别：多线程是八条独立
+指令流各自推进，SIMD 是一条指令流推着八个数据走。x86 一侧的层次要背下来，ARM 一侧的两种
+形态也要心里有数。
+
+\begin{table}[htbp]\centering
+\caption{常见向量扩展的宽度与配套能力}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}
+  >{\raggedright\arraybackslash}p{0.14\textwidth}
+  >{\raggedright\arraybackslash}p{0.21\textwidth}
+  >{\raggedright\arraybackslash}p{0.33\textwidth}@{}}
+\toprule
+扩展 & 位宽 & 掩码与分支 & 实践要点 \\
+\midrule
+SSE2 & 128 & 无谓词寄存器，比较结果是全 1 掩码 & x86-64 的地基，默认就有 \\
+AVX2 & 256 & 同上，靠 blend 与逻辑与做选择 & 八车道单精度，最现实的 \CPU{} 目标 \\
+AVX-512 & 512（子集众多） & 独立的 \Tp{k} 掩码寄存器，真正逐元素开关 & 要认 \Tp{avx512f}、\Tp{bw}、\Tp{vl} 这些子集名；部分型号在高密度向量指令下降频，收益必须实测 \\
+NEON & 128（固定） & 用全 1 掩码与选择指令做条件写回 & ARM 桌面的基线，宽度不会再长 \\
+SVE & 128 至 2048，运行时才知道 & 每元素一位的谓词，天生处理尾部 & 写与长度无关的代码：问``还剩几个车道''，不要假设 8 或 16 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+掩码是本章最被低估的特性。有掩码的架构（AVX-512、SVE）能把``循环尾巴上不够一组的元素''和
+``条件不成立的通道''表达成一次带谓词的访存或运算；没有掩码的（SSE、AVX2、NEON）只能把数据切成
+``整块的主循环''与``标量的收尾''两段。SVE 的可伸缩宽度还有个副作用：同一份二进制在不同向量长度
+的机器上都合法，所以不要按车道数取模，也不要假设尾部一定存在。
+
+\section{先问编译器：这条循环向量化了吗}
+
+自动向量化的收益是免费的，前提是编译器能证明四件事：\textbf{访存连续}（步长固定，或
+能证不重叠）、\textbf{次数可知}（上界在入口可得，运行时值也行）、\textbf{跨迭代无破坏性
+依赖}（归约与归纳变量除外）、\textbf{体内没有它看不懂的东西}（不外联的调用、可能抛出的
+异常、写 \Tp{errno} 的数学函数）。这四条里最常违规的是第一和第四，而每一条都能用一行
+诊断确认——向量化是一个\emph{可读取的属性}，不必猜。
+\begin{lstlisting}[style=shellstyle,caption={三家编译器：让向量器自己交代}]
+# GCC：只要报告，不改变产出
+gcc -O3 -march=native -fopt-info-vec-optimized -c simd.c
+gcc -O3 -march=native -fopt-info-vec-missed -c simd.c
+# Clang：三类报告，missed 带原因，analysis 给依赖细节
+clang++ -O3 -march=native -Rpass=loop-vectorize \
+        -Rpass-missed=loop-vectorize \
+        -Rpass-analysis=loop-vectorize -c simd.cpp
+# MSVC：/Qvec-report:2 逐循环说明原因（措辞随版本变）
+cl /O2 /arch:AVX2 /Qvec-report:2 /c simd.cpp
+# 确认机器码：反汇编里找宽乘法与融合乘加
+objdump -d simd.o | grep -E 'vmul|vadd|vfmadd'
+\end{lstlisting}
+诊断里反复出现的几种理由值得先认得：\Tp{non-contiguous stride}（步长不连续）、
+\Tp{pointer may alias}（别名）、\Tp{conditional internal control flow}（体内分支）、
+\Tp{call}（调用不外联）、\Tp{unsafe fp math}（要重结合浮点但浮点模型不许）。最后一条
+留给本章的浮点小节。还要知道向量器会自己算``值不值得''：迭代次数小于一组宽度时，
+对齐预处理（peeling）与收尾的固定开销就超过收益，编译器会主动放弃，这时强行按头让它
+向量化只会更慢。
+
+\section{挡住向量化的是别名，不是硬件}
+
+同一循环里既有 ``\Tp{a[i]} 的写'' 又有 ``\Tp{b[i]} 的读''时，编译器必须假设两个指针可能
+重叠——重叠时这次写会改变后面某次读的值，迭代就不再独立，向量化被彻底否决。这是
+``明明很简单却没向量化''的第一原因。
+\begin{lstlisting}[style=cppstyle,caption={可自动向量化与它的三种破坏写法}]
+// 一、成立：计数循环、两个指针保证不重叠、体内无调用
+void add_v1(float* __restrict__ out, const float* __restrict__ a,
+            const float* __restrict__ b, int n) {
+  for (int i = 0; i < n; ++i) out[i] = a[i] + b[i];
+}
+// 二、破坏：没有别名声明，编译器要保守假设 out 与 a 重叠
+void add_v2(float* out, const float* a, const float* b, int n) {
+  for (int i = 0; i < n; ++i) out[i] = a[i] + b[i];
+}
+// 三、破坏：体内有外调用，每个车道都得调一次
+float add_v3(float* out, const float* a, const float* b, int n,
+             float (*f)(float)) {
+  float s = 0.0f;
+  for (int i = 0; i < n; ++i) {
+    out[i] = f(a[i]) + b[i];                    // 调用挡住一切
+    s += out[i];
+  }
+  return s;                                     // 只有 s 是可向量化归约
+}
+// 四、破坏：跨迭代读写依赖，i 的写正是 i+1 的读
+void add_v4(float* x, int n) {
+  for (int i = 1; i < n; ++i) x[i] = x[i] + x[i - 1];
+}
+\end{lstlisting}
+三条出路按代价排序。最正统的是把别名信息交给编译器：\Tp{restrict} 是 C99 的关键字，
+GCC 与 Clang 写 \Tp{\_\_restrict\_\_}，MSVC 写 \Tp{\_\_restrict}；它是一份``这两个指针保证
+不重叠''的承诺，违反了就是未定义行为，得靠接口约定与断言守住。第二条是把可能重叠的
+输出改成\emph{新缓冲}（原地改变成 in 加 out），顺带改善了可复现性与缓存行为。第三条是
+断言式的指令：OpenMP 的 \Tp{simd} 与 \Tp{declare simd}、GCC 的 \Tp{\#pragma\ GCC\ ivdep}、
+Clang 的 \Tp{\#pragma\ clang\ loop\ vectorize(enable)} 与 \Tp{assume}。它们把正确性责任从
+编译器转到你手上，只在已经证明成立时用，并把依据写进注释。
+
+\section{数据布局：SoA 才是向量化想要的形状}
+
+向量器喜欢连续访存，所以布局直接决定收益上限。结构体数组（AoS）把三个分量排在一起，
+一次向量读要跨过 12 字节的步长，只能走 gather——而 gather 在多数实现上慢得足以毁掉
+收益；数组结构体（SoA）把同一分量的所有元素排在一起，一次向量读就是一条连续线。
+\begin{lstlisting}[style=cppstyle,caption={同一段物理：AoS 与 SoA 的向量化差别}]
+struct P3 { float x, y, z; };                     // AoS
+float energy_aos(const P3* p, int n, float m) {
+  float s = 0.0f;
+  for (int i = 0; i < n; ++i)
+    s += m * (p[i].x*p[i].x + p[i].y*p[i].y + p[i].z*p[i].z);
+  return s;                       // 步长非 1，通常向量化不了
+}
+struct SoA { std::vector<float> x, y, z; };       // SoA
+float energy_soa(const SoA& a, int n, float m) {
+  float s = 0.0f;
+  for (int i = 0; i < n; ++i)
+    s += m * (a.x[i]*a.x[i] + a.y[i]*a.y[i] + a.z[i]*a.z[i]);
+  return s;                       // 三条连续流，可向量化归约
+}
+\end{lstlisting}
+拆分（deinterleave）与合回（interleave）本身是打乱操作，代价随架构差别很大：有 permute 与
+掩码的架构能把一次 AoS 到 SoA 的转置做得很便宜，AVX2 上要靠多轮 unpack 与 shuffle。实践结论是：
+\emph{布局在边界上转一次，内层循环保持 SoA}，不要每帧都转；若内层是``逐元素跨分量''的短操作，
+AoS 反而更合算，这时用``分块 SoA''（每组 8 或 16 个元素，组内 SoA、组间 AoS）兼得两者。对齐也要
+看一眼：\cpp{20} 的 \Fn{std::assume\_aligned}（以及扩展 \Tp{\_\_builtin\_assume\_aligned}）可以把
+``这个指针是对齐的''告诉向量器，收尾分支就消失了；不保证对齐时改用 \Tp{loadu} 一类的非对齐载入，
+现代 x86 上它的代价主要出现在跨缓存行处。
+
+\section{归约、打乱与跨车道求和}
+
+向量化归约的形态是``每车道一个部分和，最后一次跨车道合并''，编译器会自动生成，但两件
+事要人来保证。第一，部分和的\emph{个数与合并顺序}由向量宽度与展开因子决定，换
+\Tp{-march} 就会变结果——这与第~5 章的浮点归约不确定性同源，测试一律用容差。第二，
+跨车道求和在没有专用指令的架构上要几步打乱，写成串行尾巴反而更慢：
+\begin{lstlisting}[style=cppstyle,caption={跨车道求和：先折半再相加，不要串行收尾}]
+static inline float hsum256(__m256 v) {          // 8 车道折成 1 个标量
+  __m128 lo = _mm256_castps256_ps128(v);         // 低 4 车道，不占指令
+  __m128 hi = _mm256_extractf128_ps(v, 1);       // 高 4 车道
+  __m128 s  = _mm_add_ps(lo, hi);                // 8 -> 4
+  s = _mm_add_ps(s, _mm_movehl_ps(s, s));        // 4 -> 2
+  s = _mm_add_ss(s, _mm_shuffle_ps(s, s, 1));    // 2 -> 1
+  return _mm_cvtss_f32(s);
+}
+float dot_avx2(const float* a, const float* b, int n) {
+  __m256 acc = _mm256_setzero_ps();
+  int i = 0;
+  for (; i + 8 <= n; i += 8)
+    acc = _mm256_fmadd_ps(_mm256_loadu_ps(a + i),
+                          _mm256_loadu_ps(b + i), acc);
+  float tail = 0.0f;
+  for (; i < n; ++i) tail += a[i] * b[i];        // 标量尾巴
+  return hsum256(acc) + tail;
+}
+\end{lstlisting}
+同一形状在 AVX-512 上更短（辅助内建已经把跨车道归约打包好，掩码还能把尾巴省掉），在
+SVE 上写成``按谓词折叠''。手写向量的顺序建议固定：先让标量版本被自动向量化，再决定
+\emph{是否}手写；多数时候真正需要手写的只有打乱、位操作与要跨架构复用的短内核。另一个
+纪律是别在一个循环里塞多种归约：三四个部分和会让寄存器压力与跨车道合并都变复杂，
+编译器通常自己拆成多个循环，那就接受多个循环——连续流式访问的吞吐主要看带宽，
+不看循环个数。
+
+\section{std::simd：抽象值钱，但边界要认}
+
+\Tp{std::experimental::simd}（常称 std::simd）来自 WG21 的向量化提案线（P0219 一路
+演进）与其后的\emph{技术规格}，不是已进标准的库设施：C++17、C++20 与 C++23 的正文里
+都没有它，头是 \Tp{<experimental/simd>} 这样的形式，命名空间带着 ``experimental''。
+参考实现在 isocpp 的 simd 仓库（底层借 Vc），要 \cpp{17} 以上与较新的 GCC 或 Clang，
+MSVC 支持不完整。它的价值是把宽度交给实现：源码写 \Tp{simd<float>}，每轮几个车道由所选
+的 \Tp{abi\_tag} 决定（也可以让实现自己挑，即 \Tp{dynamic}）；整段载入用 \Fn{copyFrom}
+一族，跨车道求和用成员 \Fn{reduce}，条件选择不写分支而用 \Fn{where} 把谓词写成表达式。
+这些名字在草案之间反复改过（命名空间、\Fn{reduce} 的参数表都动过），所以本书\emph{不给
+可直接编译的示例}：要用就照你所选实现版本的文档写，并保留一份标量实现对拍。
+
+判据是：它适合\emph{新写的、纯计算的、值得跨架构移植}的内核，不适合改造已经能自动
+向量化的旧循环；调试与内联质量目前也不如标量代码。想保住可移植性又想少写派发，
+另一条更成熟的路是 OpenMP 的 \Tp{simd} 与 \Tp{declare simd}（编译指令层，三家编译器都
+支持），代价是它只到``每迭代内并行''这一层，跨迭代仍要 \Tp{for}。
+
+\section{手写内建与多版本派发}
+
+真下沉到内建函数层时，可移植性靠``编译期多版本加运行期选择''。GCC 与 Clang 在 ELF
+平台上支持函数多版本：同一函数生成几份实现，链接出的跳表在加载时按 CPU 特性选一份。
+\begin{lstlisting}[style=cppstyle,caption={编译期多版本与运行时分派的骨架}]
+// 一、编译期生成多版本，加载时自动选（GCC/Clang）
+__attribute__((target_clones("avx2", "sse4.2", "default")))
+void scale(float* __restrict__ o, const float* __restrict__ i,
+           float k, int n) {
+  for (int t = 0; t < n; ++t) o[t] = i[t] * k;   // 每版本各自向量化
+}
+// 二、自己派发：查询放在循环外，一次选定整条流水线的实现
+void scale_base(float*, const float*, float, int);
+void scale_avx2(float*, const float*, float, int);
+void scale_avx512(float*, const float*, float, int);
+
+void scale_dispatch(float* o, const float* i, float k, int n) {
+  if (__builtin_cpu_supports("avx512f"))        // 查的是 CPU 特性位
+    scale_avx512(o, i, k, n);
+  else if (__builtin_cpu_supports("avx2"))
+    scale_avx2(o, i, k, n);
+  else scale_base(o, i, k, n);                  // 退化路径也得能跑
+}
+// 三、MSVC 没有 target_clones：整档 /arch:AVX2，或分文件各编一份
+\end{lstlisting}
+三处要当心。第一，AVX 与 AVX-512 还要求\emph{操作系统}保存扩展寄存器状态（要问
+\Tp{XGETBV}），单看 CPUID 的特性位不够；不同版本的内建与库在这件事上做到哪一步并不
+一致，跨版本部署前先跑一次带真实负载的小样。第二，\Tp{-march=native} 只适合``编译即
+部署''的场景，发布用的二进制要写基线（例如 \Tp{-march=x86-64-v3}）再配派发，否则在老
+机器上是非法指令崩溃而不是优雅退化。第三，派发要放在\emph{循环外}：每批数据查一次
+特性、整条流水线用同一实现；每次调用都重新选择会把分支预测与指令缓存的局部性打掉。
+
+\section{SIMD 与 GPU：宽度之外还差什么}
+
+第~III 部分会把同一批内核送去 \GPU{}，这里先把差别钉住。
+\begin{itemize}
+  \item 宽度：\CPU{} 一次 4 至 16 个单精度；\GPU{} 的一个 warp 是 32 个线程同步推进
+        （AMD 的 wavefront 是 64）；\NPU{} 的阵列一次铺满整个 tile。同样是``一条指令
+        多个数据''，宽度决定了什么算法值得上卡。
+  \item 掩码与分支：\CPU{} 的掩码只关掉车道，控制流仍是一条；\GPU{} 的分支发散会让同一
+        warp 的两条路径\emph{串行}执行，代价随发散层次相乘——``体内分支挡住向量化''这条
+        在 \GPU{} 上升级为首要问题。尾部也在此分岔：\CPU{} 靠掩码或标量收尾，\GPU{} 让
+        多余线程自己退出。
+  \item 归约：\CPU{} 是跨车道打乱；\GPU{} 是 warp 内 shuffle 加块内共享内存两级合并；
+        \NPU{} 上往往要写成显式的阵列累加。
+  \item 独立推进能力：\CPU{} 有乱序窗口、硬件预取与分支预测，少量在飞工作就能撑住延迟；
+        \GPU{} 靠大量在飞线程掩盖延迟（第~2 章）。只有 8 次迭代的循环放上 \GPU{} 几乎
+        全是启动开销，而它正是 SIMD 的舒适区。
+\end{itemize}
+于是``用 \CPU{} 的 SIMD 还是 \GPU{} 的批量并行''的判据不是谁快，而是\emph{独立工作量的
+数量级}与\emph{分支的形状}：千级独立元素、无分支、内核固定，留在 \CPU{} 上向量化；
+十万级同构元素、能整批搬进显存，送去 \GPU{}。介于两者之间的（万级元素、每次调用很短）
+才是真正要测量的区域，也是三段式划分最常见的落点。
+
+\begin{warning}[title={-ffast-math 改变的不只是速度}]
+\Tp{-ffast-math}（以及 \Tp{-Ofast}）打开的是重结合、有限值假设与一批用精度换速度的开关：
+它允许把 \Tp{(a+b)+c} 改写成 \Tp{a+(b+c)}、把 \Tp{x/2} 变成 \Tp{x*0.5}、按 \Tp{fma} 融合
+乘加，并\emph{假设}没有 NaN 与无穷参与比较。后果是结果会变、\Tp{isnan(x)} 之类的判定可能
+永远为假、跨编译单元与跨版本的行为不再一致；MSVC 的 \Tp{/fp:fast} 是同一套取舍。更稳的
+做法是只开你需要的那一档：\Tp{-fno-math-errno}（数学函数的向量版本多半被写 errno 挡住，
+这一条就放行 \Fn{sqrt} 与 \Fn{log}）、\Tp{-ffp-contract=fast}（允许融合乘加，误差通常还
+变小），需要对照时给单个函数加 \Tp{\_\_attribute\_\_((optnone))} 关掉优化。若确实要用
+fast-math，把它限定在\emph{单个}翻译单元上并写进构建说明——它会改变数值结果的可复现性，
+这件事要让同事看得见，而不是留給 CI 里一个``小数值差异''的失败去解释。
+\end{warning}
+
+\begin{compare}[title={三条向量化路线的取舍}]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+  >{\raggedright\arraybackslash}p{0.22\textwidth}
+  >{\raggedright\arraybackslash}p{0.20\textwidth}
+  >{\raggedright\arraybackslash}p{0.20\textwidth}@{}}
+\toprule
+维度 & 自动向量化 & std::simd & 手写内建 \\
+\midrule
+上手成本 & 改布局与注释即可 & 要学类型、宽度与谓词 & 每套 ISA 写一遍，还要派发 \\
+可移植性 & 跟编译器版本走，最稳 & 源码跨 ISA 不变，但设施本身未进标准 & 只在同族架构内可移植 \\
+可控性 & 低：只能靠诊断信息猜意图 & 中：宽度与掩码可显式表达 & 高：指令与合并顺序都能钉死 \\
+适合什么 & 规整循环、批量数值 & 新写的可移植计算内核 & 打乱、位操作、固定的热点内核 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+\begin{guideline}[title={向量化的决策顺序}]
+\begin{itemize}
+  \item 先量再改：确认瓶颈是算力还是带宽（第~1 章的 roofline 直觉），带宽撞墙时
+        向量化没有收益，该改的是数据布局或算法本身。
+  \item 第一步永远是布局与别名：SoA、连续写、别名声明、去掉体内调用，这四项能解锁
+        绝大多数循环。
+  \item 开诊断确认，别靠猜，并把``这条循环已向量化''变成回归测试里的一行断言。
+  \item 短循环与尾部不要硬凑：次数不足一组宽度就保留标量实现，或把多次小调用合并成
+        一次批量接口。
+  \item 归约一律按``结果随宽度变化''设计：测试用容差，要逐位复现就固定编译目标与合并
+        顺序。
+  \item 手写内建之前先试自动向量化与 OpenMP \Tp{simd}；真要手写就配一份标量兜底实现，
+        并把派发放在循环外。
+  \item 决定不上 \GPU{} 的理由写成一字千金的注释：独立工作量不足、分支发散重，
+        还是搬运成本高于收益。
+\end{itemize}
+\end{guideline}
+% ====================================================================
+% ====================================================================
+\part{加速卡侧的并行算法}
+
+\chapter{GPU并行算法模式}
+
+第一、二部分把一个计算拆成了可调度的单元，并给出了\CPU{}侧的并行结构。
+从这一章起换执行域：同样的算法结构放到\GPU{}上会长成什么形状，为什么某些算子只有在这个形状里才跑得动。
+PCIe与直接访问的机制、\Tp{cudaMemcpy}与流的语义、核函数怎么绑进宿主语言，在《HW Access and Kernels》里已经讲透；本章只谈算法结构，搬运与显存的账留到第11章。
+
+\section{SIMT：执行的最小单位不是线程}
+
+\GPU{}的编程模型是线程，执行模型却是warp。
+一个SM里有若干warp scheduler，每个周期从就绪的warp中挑一个发射一条指令；
+一个warp的32个lane共用这条取指和这份程序计数器，只是各自的数据不同。因此写算法要按32的倍数思考：归约、扫描、投票、广播的最小粒度都是warp，线程只是warp里的一格。
+
+分支发散是这套模型最贵的性质。
+同一个warp里若有lane走then分支、另一些走else分支，硬件不会把它们分给不同调度器，
+而是带着不同的写掩码依次执行每条路径，代价接近各路径耗时之和；路径越多、嵌套越深，越接近完全串行。判断代价的依据不是分支总数，而是同一warp内是否存在不同走向。
+三种常见缓解：把分支对齐到warp边界（一个warp只处理同类元素）、把条件换成掩码做算术选择、把分支体压到足够短让编译器谓词化。
+
+\begin{table}[H]
+\centering
+\caption{warp级原语：算法里真正可用的最小积木}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.25\textwidth}
+  >{\raggedright\arraybackslash}p{0.23\textwidth}
+  >{\raggedright\arraybackslash}p{0.20\textwidth}@{}}
+\toprule
+原语&语义&典型用途\\
+\midrule
+\Tp{\_\_shfl\_down\_sync} &把值向低号lane搬$k$步& warp内树形归约\\
+\Tp{\_\_shfl\_up\_sync} &向高号lane搬$k$步& warp内前缀扫描\\
+\Tp{\_\_ballot\_sync} &把32个谓词压成一个整数&流压缩、投票\\
+\Tp{\_\_reduce\_add\_sync} &硬件指令求warp整数和&直方图计数\\
+\Tp{\_\_syncthreads()} &块内屏障兼内存栅栏&阶段切换\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+带\Tp{\_sync}后缀的接口都要求调用者给出参与lane的掩码：
+掩码写宽了（warp已被上游分支裁掉一半却仍传\Tp{0xffffffffu}）是未定义行为，写窄了则参与lane拿不到结果。
+所有lane必须汇聚到同一条shuffle指令上，这点和屏障一样不能被分支跳过。还要记住\GPU{}的吞吐靠warp轮转掩盖延迟：单个warp卡在长延迟的全局访存上时，调度器切到别的warp，
+所以``活跃warp够不够''永远是第一问。
+
+\section{grid-stride loop：把线程数与数据量解耦}
+
+最直接的写法是一个线程处理一个元素，于是网格大小必须由数据量算出来。
+这个写法能工作，但把两件事绑死了：数据量一变启动配置就跟着变；尾部不足一个块要靠边界判断；
+调度器还要面对几十万个短命的块。grid-stride loop把两者分开：配置只依赖设备能力，
+每个线程以``块数乘块宽''为步长跨过整个数组，形式是
+\Tp{i = blockIdx.x * blockDim.x + threadIdx.x}，然后\Tp{for (; i < n; i += gridDim.x * blockDim.x)}。
+
+步长是整个网格的线程总数，所以同一时刻同一个warp的32个lane依然访问连续地址，合并访存的性质不变。
+好处有四条：配置一次算好可复用；每线程做多次独立访存，指令级并行度上升，更利于掩盖延迟；
+块数固定后块间工作分配可以做成软件队列（见8.9节）；循环尾部的访问局部性更稳定。代价是每线程的累加器要自己维护，边界判断变成循环条件。
+
+\section{分块归约的四层结构}
+
+归约最能体现warp语义。四层从下往上是：lane内用shuffle折叠32个值，
+块内用shared memory折叠各warp的结果，块间用原子汇总到全局，最后一层要么由宿主收尾、要么用二次归约。
+
+\begin{lstlisting}[style=cudastyle,caption={分块归约核函数：四层结构的前三层}]
+__global__ void blockReduce(const float* __restrict__ in,
+                            float* out, int n) {
+  __shared__ float warpPart[8];
+  int tid = blockIdx.x * blockDim.x + threadIdx.x;
+  float acc = 0.f;
+
+  for (int i = tid; i < n; i += gridDim.x * blockDim.x)
+    acc += in[i];                    // grid-stride loop
+
+  for (int off = 16; off > 0; off >>= 1)   // fold 32 lanes
+    acc += __shfl_down_sync(0xffffffffu, acc, off);
+  if ((threadIdx.x & 31) == 0) warpPart[threadIdx.x >> 5] = acc;
+
+  __syncthreads();                   // layer 2 boundary
+  if (threadIdx.x < 32) {
+    float v = (threadIdx.x < 8) ? warpPart[threadIdx.x] : 0.f;
+    for (int off = 4; off > 0; off >>= 1)
+      v += __shfl_down_sync(0x000000ffu, v, off);
+    if (threadIdx.x == 0) warpPart[0] = v;
+  }
+  __syncthreads();
+  if (threadIdx.x == 0) atomicAdd(out, warpPart[0]);  // layer 3
+}
+\end{lstlisting}
+
+第一层只要5条shuffle指令，比``相邻线程写shared、最后由线程0串行累加''的老写法少一次屏障。
+第二层的掩码\Tp{0x000000ffu}只允许前8个lane参与，必须与每块warp数一致，改块大小时要同步改。
+第三层把每块一个部分和原子累加到同一地址；\Tp{out}必须先清零，于是多一次\Tp{cudaMemsetAsync}。
+
+第四层存在的理由是争用。块数很大时几十万次原子落在同一个地址上，而同一地址的原子是排队执行的，
+这部分耗时几乎与块数成正比，却只用来写一个浮点数。
+两趟法（每块把部分和写进数组，再用一个块归约整个数组）多付一次全局写与一次全局读，换来零争用与确定的求和顺序。
+另一条折中是\emph{decoupled look-back}：每块发布自己的部分和与状态标记，按块号回看前驱的累计值，把两趟压进一趟，代价是控制逻辑复杂得多。
+还要注意浮点\Tp{atomicAdd}不可交换：同一输入两次运行结果可能不同。需要逐位复现（回归测试、数值对拍）时，要么用两趟固定顺序，要么把累加器换成定点整数。
+
+\section{前缀和：分块两趟、Blelloch与warp积木}
+
+前缀和是第二常用的并行原语：基数排序的写起点、变长batch的段偏移、流压缩的输出位置、注意力的序列切分都依赖它。
+串行扫描的依赖链是$s_i = s_{i-1} + x_i$，并行化必须打断这条链。
+工程上最常用的是分块两趟（严格说是三趟）：块内做一次扫描并写下块和，对块和数组再做一次扫描，最后把各段的排他前缀加回块内结果；总工作量比$O(n)$多一点，每一步都是合并访存。
+
+\begin{lstlisting}[style=cudastyle,caption={warp 扫描积木与两趟法的第一、第三段核函数}]
+__device__ unsigned warpScanInc(unsigned v) {  // 32 lanes
+  for (int d = 1; d < 32; d <<= 1) {
+    unsigned t = __shfl_up_sync(0xffffffffu, v, d);
+    if ((threadIdx.x & 31u) >= (unsigned) d) v += t;
+  }
+  return v;
+}
+
+__global__ void scanPass1(const int* __restrict__ in,
+                          int* __restrict__ out,
+                          int* __restrict__ blkSum, int n) {
+  __shared__ int warpExcl[8];
+  int tid = threadIdx.x, g = blockIdx.x * blockDim.x + tid;
+  int v = (g < n) ? in[g] : 0;
+  unsigned u = warpScanInc((unsigned) v);
+  if ((tid & 31) == 31) warpExcl[tid >> 5] = (int) u;
+  __syncthreads();
+  if (tid == 0) {                   // tiny serial scan of 8 totals
+    int acc = 0;
+    for (int k = 0; k < 8; ++k) {
+      int t = warpExcl[k]; warpExcl[k] = acc; acc += t;
+    }
+    blkSum[blockIdx.x] = acc;       // block total, for pass 2
+  }
+  __syncthreads();
+  if (g < n) out[g] = (int) u + warpExcl[tid >> 5];
+}
+
+__global__ void scanAddOff(int* __restrict__ out,
+                           const int* __restrict__ off, int n) {
+  for (int g = blockIdx.x * blockDim.x + threadIdx.x; g < n;
+       g += gridDim.x * blockDim.x)
+    out[g] += off[g / blockDim.x];   // off = scan of blkSum
+}
+\end{lstlisting}
+
+那段``8个warp和由线程0串行扫描''是刻意写的：规模只有8，用shared做树形反而更慢，
+而换成第三次warp扫描时要格外小心掩码与屏障。真正的第二趟是对长度等于块数的\Tp{blkSum}再跑一次同样的结构，它比$n$小两个数量级，通常一个块就装得下，装不下就递归。
+
+Blelloch算法显式地做upsweep（自底向上建树求部分和）与downsweep（自顶向下把左子树的和加进右子树），
+跨度$2\log_2 n$、工作量$O(n)$，渐进最优。但\GPU{}上很少照搬：两步都要反复读写shared，每步都要块内屏障，
+而``每线程先串行处理多个元素再做块扫描''把跨度压到5次shuffle加几次shared访问，实测通常更快。
+正确的看法是：Blelloch用来理解依赖链，block scan用来落地，组合关系就是``warp scan当积木、shared当接口''。
+
+\section{排序：基数排序的三段结构}
+
+\GPU{}上最常见的通用排序是基数排序。一段32位键通常切成4个8位段，每段跑一遍``直方图、扫描、散布''：
+\begin{enumerate}
+\item \emph{直方图}：统计本段256个桶各自的元素数，计数写在块内shared；
+\item \emph{扫描}：对桶计数做排他前缀，得到每个桶的写入起点；块起点再加上全局桶起点，由一次原子或一趟块间扫描给出；
+\item \emph{散布}：按元素所属桶的当前游标写入目标数组。游标可以用\Tp{atomicAdd}每元素递增一次，也可以先在块内算出排名，把原子次数降到每块每桶一次。
+\end{enumerate}
+
+它比比较排序常见，是三条理由同时成立。工作量：一趟pass是$O(n)$次读加$O(n)$次写，
+而双调排序要$O(\log^2 n)$个比较阶段、每阶段$n/2$次比较，比较总数明显更多。
+访存形态：pass的读与写都是线性合并访问，而归并排序的块间归并很难做平衡，链式合并的跨度还会退化。控制流：基数排序的分支只与数据值相关，块内几乎不发散；比较交换的分支随输入变化，warp内极易分裂。
+代价是它需要另一份缓冲区（原地版本靠两块乒乓），并且散布必须稳定，否则段之间的顺序信息会丢。
+双调排序并没有退出舞台：它的数据无关控制流意味着块内既无分支也无扫描，特别适合每行独立排序与局部top-K这类小规模、固定深度的网络。
+
+\section{gather、scatter与原子直方图}
+
+间接访存是\GPU{}算法灵活性的来源，也是性能塌方的常见入口。
+gather形如\Tp{out[i] = in[idx[i]]}：warp内地址由\Tp{idx}决定，离散时一次请求要拆成多个32字节扇区事务，读带宽利用率随之下降；
+但地址离散不影响并发度，长延迟仍能靠多warp掩盖，所以随机gather常常还是快于\CPU{}。
+scatter形如\Tp{out[idx[i]] = v}：两个线程可能写同一位置，必须原子化或提前分片，而写冲突无法靠调度掩盖。
+原子直方图在桶数少、块数多时会被排队拖死，标准做法是私有副本：每块在shared里开一份完整直方图，块内用shared原子，
+块结束每个桶各做一次全局原子；冲突仍高时再按warp分片，或让每线程独占一个桶再横向累加。流压缩则是ballot加popc：\Tp{ballot}得到谓词位图，配合块内前缀算出写位置，一次warp协作就把元素压到输出前缀里。
+
+\begin{table}[H]
+\centering
+\caption{间接访存的代价来源与对应修法}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.17\textwidth}
+  >{\raggedright\arraybackslash}p{0.28\textwidth}
+  >{\raggedright\arraybackslash}p{0.27\textwidth}@{}}
+\toprule
+形态&主要代价&常用修法\\
+\midrule
+gather离散&一次warp请求拆成多个扇区事务&按\Tp{idx}排序后分段、走只读缓存路径\\
+scatter离散&扇区事务兼写位置竞争&改写成gather、分片缓冲后再合并\\
+原子直方图&同地址原子排队& shared私有副本、按warp分桶\\
+块内横向累加&串行长度等于桶数&换\Tp{\_\_reduce\_add\_sync}或改扫描\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{合并访存与shared memory bank conflict}
+
+显存以32字节扇区为最小交易单位。同一个warp的32个lane访问连续的4字节元素时正好覆盖4个扇区共128字节，
+一条请求搬回全部数据；步长为$k$时同一个warp触达$32k$字节的地址范围，事务数按倍数上升，有效带宽可以跌到峰值的一小部分。
+由此得到两条纪律：下标沿\Tp{threadIdx.x}方向连续（结构体拆成数组，SoA优先于AoS）、
+按4或8个元素向量化读写以摊薄请求开销。转置类算法不可能两头都合并，必须用shared memory做一次中转。
+
+shared memory分为32个4字节bank。同一个warp内的同bank不同地址访问会串行化，$n$路冲突约$n$倍耗时；
+同一bank同一地址走广播，不额外花钱。于是``行主存、列主读''的二维片段是典型雷区：
+若\Tp{tile[r][c]}每行宽度是32的倍数，列访问的32个lane全部落在同一个bank。两种修法各有代价：
+\emph{padding}把每行加一列变成\Tp{tile[32][33]}，下标差33与32互素从而散开，但多占shared且破坏16字节对齐，向量化读写要退回去；
+\emph{swizzle}把列号做异或置换后再存，写入与读取都用\Tp{tile[r][c\textasciicircum r]}，
+异或保持每行元素个数不变，容量与对齐都不受影响，代价是两侧都要算下标。
+矩阵片段转置一般选swizzle，简单直方图选padding。
+
+\begin{warning}[title={本章最常在四个地方翻车}]
+其一，归约里漏屏障：第一层写\Tp{warpPart}之后、第二层读之前必须有\Tp{\_\_syncthreads()}，
+少了它读到的是旧值，结果时而对时而错，还只在特定块大小下复现。
+其二，掩码与真实参与lane不符：上游分支裁掉一半lane后仍传\Tp{0xffffffffu}给shuffle，属于未定义行为。
+其三，把bank conflict当成必然慢：冲突只发生在同一warp之内，改用向量读写后冲突形态会变，要重新算而不是照搬结论。
+其四，忘了atomic归约需要预清零，或者以为两次运行会得到同一个浮点结果。
+\end{warning}
+
+\section{占用率与launch bounds的寄存器预算}
+
+占用率是每SM已驻留warp数与硬件上限之比，限制它的一是每线程寄存器数，二是每块shared用量，三是每SM块数上限。
+提高占用率不是目的，掩盖延迟才是：单线程内有足够独立访存时，中等占用率的核函数常比高占用率版本更快，因为寄存器更多、溢出更少。
+真正的悬崖在溢出：寄存器不够时编译器把变量放到global的spill区，访存模式立刻变成离散读写。
+\Tp{\_\_launch\_bounds\_\_}把两个约束写成契约：第一个参数给出每线程寄存器预算，
+第二个参数声明``我依赖每SM至少驻留这么多块''。
+所有依赖每块活跃warp数的算法（成对归约、按warp分片、块间标志位）都必须显式声明，否则优化器可以合法地把它逼死。
+块宽与网格宽的自动选择用\Tp{cudaOccupancyMaxPotentialBlockSize}，比手拍经验值可靠。
+
+\section{persistent kernel与cooperative groups}
+
+persistent kernel把网格固定成``SM数乘每SM可驻留块数''：块不再对应数据段，而是在长驻循环里从工作队列领取tile，
+队列游标靠\Tp{atomicAdd}取，tile间依赖靠标志位或累计值解决。
+收益是块调度与启动开销被摊薄，中间结果能留在shared里复用，还能做软件流水；
+风险是队列粒度选小了原子争用回来、选大了负载不均，而驻留块数一旦超过实际可共驻数量就会死锁。
+
+cooperative groups把这些层级写进了类型：\Tp{this\_thread\_block()}表示块、\Tp{tiled\_partition<32>}表示warp，
+\Tp{cg::reduce}与\Tp{cg::sum}提供对应层级的归约，\Tp{this\_grid().sync()}提供网格级同步。
+网格同步要求协作式启动，且网格规模不得超过实际可共驻上限
+（用\Tp{cudaOccupancyMaxActiveBlocksPerMultiprocessor}事先算），否则启动直接失败。
+它的价值是把两趟合成一趟加一次同步，少一次全局往返；代价是占用率被钉死，长序列上未必划算。
+
+\section{什么时候直接调用CUB与Thrust}
+
+三级阶梯的分工很清楚：\Tp{thrust::}是容器加算法，写法接近标准库；\Tp{cub::}是显式指针加临时缓冲的器件级原语，可控、能进流水；
+手写核函数只在``多个原语能融成一次全局往返''时才值得。
+
+\begin{lstlisting}[style=cppstyle,caption={三种写法：CUB 两次调用与 Thrust 一行}]
+std::size_t bytes = 0;
+cub::DeviceReduce::Sum(nullptr, bytes, d_in, d_out, n, stream);
+void* tmp = nullptr;                        // temp storage size
+cudaMallocAsync(&tmp, bytes, stream);       // taken from the pool
+cub::DeviceReduce::Sum(tmp, bytes, d_in, d_out, n, stream);
+
+thrust::reduce(d_vals.begin(), d_vals.end(), 0.f);
+thrust::inclusive_scan(d_in.begin(), d_in.end(), d_out.begin());
+thrust::sort_by_key(d_keys.begin(), d_keys.end(), d_vals.begin());
+// device-level counterparts: cub::DeviceScan::ExclusiveSum,
+// cub::DeviceRadixSort::SortPairs, cub::DeviceSelect::If,
+// cub::BlockRadix, cub::WarpScan.
+\end{lstlisting}
+
+CUB的两次调用惯用法值得记住：第一次传\Tp{nullptr}只问临时存储字节数，字节数随$n$与类型变化，写死会越界。
+临时缓冲要么用\Tp{cudaMallocAsync}从池里取，要么预分配一次反复用；
+在延迟敏感的路径里为一次归约做同步分配是自找同步。
+
+\begin{compare}[title={手写核函数、CUB与Thrust}]
+手写：单趟里能同时完成扫描、直方图与散布，shared复用，零额外往返；
+代价是设备架构一变就要重调块宽、片数与向量宽度，正确性靠自己对拍，非确定性也得自己扛。
+CUB：块级与器件级原语都经过长期调优，寄存器与shared用量可预测，能嵌进自定义核函数；接口要自己管临时存储与流，语义偏底层。
+Thrust：表达力最好，接近标准库的写法几乎不会写错，适合参考实现与快速试验；
+代价是容器自己分配与释放显存、每一步一次设备往返，在延迟敏感路径上往往比CUB慢一层。
+实践顺序通常是：先用Thrust确认算法对，再用CUB拿到性能下限，最后只在确认过``往返次数是瓶颈''的地方手写。
+\end{compare}
+
+\begin{guideline}[title={本章要点}]
+一，按warp思考：归约、扫描、投票的最小单位是32个lane，掩码必须与真实参与lane一致。
+二，用grid-stride loop把启动配置与数据量解耦，配置只依赖设备。
+三，归约的第四层（二次归约或两趟）不是优化而是必需品：大网格上的单地址原子既慢又不确定。
+四，扫描的通用形态是warp scan当积木、shared当接口、块和再扫一遍；Blelloch用于理解依赖链。
+五，排序默认想基数排序的三段结构；小规模、固定深度、每行独立才想双调。
+六，性能问题第一站是访存形态：全局看合并，shared看bank，冲突看方向。
+七，占用率不是目标，寄存器溢出与依赖声明才是；用\Tp{\_\_launch\_bounds\_\_}把依赖写成契约。
+八，手写只在能减少一次全局往返时成立，其余情况交给CUB与Thrust。
+\end{guideline}
+% ====================================================================
+% ====================================================================
+\chapter{张量算子：从softmax到MLA}
+
+这一章是全书``为什么这类算子该上卡''的示例章。判断一个算子属于哪个执行域，靠的不是它的名字，而是三笔账：计算量、字节搬运量、以及能不能靠批量摊薄单次开销。下面四个算子恰好覆盖四种典型：
+softmax与layernorm是规约类，GEMM是算力受限类，MLA是带宽受限类。
+
+\section{算术强度决定瓶颈，批量决定能不能摊薄}
+
+把一次算子的浮点操作数记作FLOPs、需要从显存搬运的字节数记作Bytes，比值
+\begin{center}
+$F=\mathrm{FLOPs}/\mathrm{Bytes}$
+\end{center}
+就是算术强度。硬件有两个天花板：峰值算力与峰值带宽，两者之比记作$F_0$。若$F<F_0$，算子在跑满带宽之后就无事可做，称为带宽受限（memory bound）；
+若$F>F_0$，搬运永远追不上计算，称为算力受限（compute bound）。量级上$F_0$在几十到几百这一档（精度越低、矩阵单元越强，这个数越大）：算子每搬一个字节必须做几十到几百次浮点操作才喂得饱计算单元，
+而逐元素算子每元素只读一个、写一个、做几次运算，$F$远小于它，必然停在\GPU{}的存储层级上找瓶颈。
+
+同一笔账还要按批量重算一遍。算子启动一次的固定开销（核函数发射、描述符准备、参数拷贝）与$F$无关，只在数据量小时才占主导。这就是为什么单条向量的softmax在\GPU{}上未必比\CPU{}快，
+而一整个batch的同一算子能快两个数量级：\GPU{}的优势来自并行度与带宽，不来自单线程速度。
+
+\section{数值稳定softmax：减最大值与一次遍历}
+
+朴素写法$\mathrm{softmax}(x)_i=e^{x_i}/\sum_je^{x_j}$在float32下就会溢出：
+只要出现$x\approx700$附近的指数就溢出，$x\approx-700$附近下溢；bf16的动态范围更窄。标准做法是减去最大值，分数不变：
+\begin{equation}
+\mathrm{softmax}(x)_i=\frac{\exp(x_i-m)}{\sum_j\exp(x_j-m)},\qquad
+m=\max_j x_j .
+\end{equation}
+难点在$m$必须知道全部数据才得到，因此教科书实现遍历数组两遍：第一遍取最大值，第二遍求和并归一。
+
+\subsection{online形式与它的可归约性}
+
+把已处理的部分维护成三元组$(m,\ell,a)$：当前最大值$m$、分母$\ell=\sum e^{x-m}$、分子累加$a$，
+其中$a$是\emph{已按同一因子缩放}的加权和。两段结果$(m_1,\ell_1,a_1)$与$(m_2,\ell_2,a_2)$合并成一整段：
+\begin{equation}
+m=\max(m_1,m_2),\qquad
+\ell=e^{m_1-m}\ell_1+e^{m_2-m}\ell_2,\qquad
+a=e^{m_1-m}a_1+e^{m_2-m}a_2 .
+\end{equation}
+这个合并满足结合律（在浮点里只是舍入路径不同），因此可以做成树形并行归约：一个线程一段、一个warp折成一个三元组、一个块折成一个，块间再归约——第8章的四层结构原样复用。
+它带来的直接收益是省一趟全局读：一次遍历就能同时得到$m$与$\ell$，写回时再算一次指数即可。
+
+\begin{lstlisting}[style=cudastyle,caption={在线softmax：三元组合并与块内折叠}]
+struct Acc { float m, l, a; };  // max, denom, weighted sum
+
+__device__ Acc merge(Acc x, Acc y) {
+  Acc r;
+  r.m = fmaxf(x.m, y.m);
+  float sx = __expf(x.m - r.m), sy = __expf(y.m - r.m);
+  r.l = sx * x.l + sy * y.l;
+  r.a = sx * x.a + sy * y.a;
+  return r;
+}
+
+__global__ void rowSoftmax(const float* __restrict__ x,
+                           float* __restrict__ y, int cols) {
+  __shared__ Acc part[8];
+  int row = blockIdx.x;                        // one block per row
+  const float* xr = x + (size_t)row * cols;
+  float* yr = y + (size_t)row * cols;
+  Acc s{-1e30f, 0.f, 0.f};
+  for (int c = threadIdx.x; c < cols; c += blockDim.x) {
+    float v = xr[c];
+    s = merge(s, Acc{v, 1.f, v});   // one value is one triple
+  }
+  for (int off = 16; off > 0; off >>= 1) {     // fold one warp
+    float om = __shfl_down_sync(0xffffffffu, s.m, off);
+    float ol = __shfl_down_sync(0xffffffffu, s.l, off);
+    float oa = __shfl_down_sync(0xffffffffu, s.a, off);
+    s = merge(s, Acc{om, ol, oa});
+  }
+  if ((threadIdx.x & 31) == 0) part[threadIdx.x >> 5] = s;
+  __syncthreads();
+  if (threadIdx.x == 0) {
+    Acc t = part[0];
+    for (int k = 1; k < 8; ++k) t = merge(t, part[k]);
+    part[0] = t;
+  }
+  __syncthreads();
+  float inv = 1.f / part[0].l, m = part[0].m;
+  for (int c = threadIdx.x; c < cols; c += blockDim.x)
+    yr[c] = __expf(xr[c] - m) * inv;   // 2nd pass, data in L2
+}
+\end{lstlisting}
+
+三元组用\Tp{merge}而不是\Tp{std::tuple}，是因为归约要能被warp原语搬运：shuffle只能传标量，所以逐分量搬再合并。第二个循环重写回时数据还在L2里，代价远低于第一趟的全局读。
+分量$a$在这个核函数里没有参与输出，保留它是为了让同一段折叠代码直接搬到``加权求和''的形态——9.7节的分块外积正是用它累加$V$，那时$m$与$\ell$负责修正缩放，$a$负责携带结果。
+
+减最大值把溢出问题变成了精度问题：$e^{x_i-m}$全部落在$(0,1]$，求和不会因大数吞掉小数，但$m$本身必须是真正的最大值，否则仍可能上溢。跨块归约$m$时不能用求和式的归约，只能用\Tp{fmaxf}。
+另一处细节是\Tp{\_\_expf}：它是硬件快速路径，误差在$2$ulp量级，训练与推理里通常可以接受，但和框架的逐位结果不一致；对拍时要把容差放宽，或者改用标准\Tp{expf}再比一次。
+合并顺序会影响最后一位，这不是错误而是并行归约的固有性质；需要逐位一致就必须固定归约树形状。
+
+\section{layernorm与rmsnorm：两段归约与融合}
+
+LayerNorm对每一行求均值与方差再仿射：$\mu=\frac{1}{d}\sum_j x_j$，$\sigma^2=\frac{1}{d}\sum_j(x_j-\mu)^2$，输出$\gamma\hat x+\beta$。
+直接按定义写需要三趟：求$\mu$、求$\sigma^2$、写回。融合实现压成一趟，靠的是把一阶矩与二阶矩一起算：
+\begin{equation}
+\sigma^2=\frac{1}{d}\sum_j x_j^2-\mu^2 .
+\end{equation}
+一次遍历同时累加$\sum x_j$与$\sum x_j^2$，两个归约共用同一批寄存器里的值；写回时$\mu$与$\sigma$已经在shared或寄存器里。代价是数值上更脆：$x$的量级远大于其散布时，两个大数相减会丢掉有效位。
+所以工业实现常在fp32累加里做这一步，或者退回两趟、只把仿射与类型转换融进写回。
+
+RMSNorm是它的简化版：只除以二阶矩的平方根，不减均值，因此只需要一次平方和归约，分母是$\sqrt{\frac{1}{d}\sum_jx_j^2+\epsilon}$。归约更少、写回更简单，天然更适合融合。
+
+三者的共同点是同一件事：归约与逐元素操作绑在一起，中间张量绝不落地到显存。这也正是它们该待在\GPU{}上的理由——瓶颈是搬运，而\GPU{}有带宽，还有把一次遍历同时喂给上千个lane的能力。
+
+\section{GEMM的分块与张量核心的职责划分}
+
+$C=A B$（$A$为$M\times K$、$B$为$K\times N$，行主序）的工作量是$2MNK$次浮点操作，
+读写量是$MK+KN+2MN$个元素（忽略块边界重复）。当$M$、$N$、$K$同量级时操作数按立方增长而搬运按平方增长，
+算术强度$F\approx 2MNK/\bigl((MK+KN+2MN)s\bigr)$随规模线性上升，所以GEMM是算力受限算子：它的瓶颈是执行单元能不能填满，而不是显存带宽。
+
+填满执行单元靠三级分块。寄存器块（每线程一个$4\times 4$或$8\times 8$的小块）提供指令级并行；shared里的操作数片段把同一行、同一列的数据从全局一次搬进来，供块内所有线程复用，复用倍数就是块宽；
+块之间的乒乓（双缓冲）让``搬运下一片''与``计算当前片''重叠，把访存延迟藏进计算里。split-K是另一个轴：当$M$、$N$小、$K$大时，$M\cdot N$的块数不足以占满所有SM，
+就让多个块沿$K$方向分段，各自算部分和再归约——于是GEMM里出现了第8章的归约结构。
+
+\begin{lstlisting}[style=cudastyle,caption={分块GEMM骨架：三级存储与乒乓（omitted处见说明）}]
+// Skeleton: one block computes a BM x BN tile of C = A * B.
+#define BM 128
+#define BN 128
+#define BK 32
+__global__ void gemmTile(const float* __restrict__ A,
+                         const float* __restrict__ B,
+                         float* __restrict__ C,
+                         int M, int N, int K) {
+  __shared__ float As[2][BK][BM];  // double-buffered tiles
+  __shared__ float Bs[2][BK][BN];
+  float acc[4][4];                   // register block per thread
+  int tid = threadIdx.x;
+  int row0 = blockIdx.y * BM, col0 = blockIdx.x * BN;
+
+  for (int kk = 0; kk < K; kk += BK) {
+    int cur = (kk / BK) & 1;
+    // omitted: coalesced load of A and B into As[cur], Bs[cur]
+    // omitted: issue the load of the next stage before waiting
+    __syncthreads();
+    // omitted: BK outer-product steps, each thread does 4x4 FMAs
+    //          reading As and Bs as float4, accumulating into acc
+    __syncthreads();
+  }
+  // omitted: write acc back through shared to keep stores coalesced
+  // omitted: boundary handling when M or N is not a multiple of BM
+}
+\end{lstlisting}
+
+代码里几处\Tp{omitted}注释是刻意留白：加载片段与写回是访存问题（合并、向量化、padding或swizzle防bank conflict），外层乘累加是执行单元问题。张量核心（mma类指令）接管的是后者：
+它把一条指令的作用对象从``一个lane一个乘加''变成``一组线程共同完成一个小矩阵乘''，例如$16\times 8\times 16$这样的块，操作数直接放在寄存器片段里，累加也留在寄存器里。
+于是职责划分变成：全局与shared的搬运、布局与对齐由算法层负责；mma只负责把已经摆好的片段吃掉。用mma必须满足它的布局与对齐要求（矩阵片段要按固定顺序排、维度要是固定倍数），
+这也是为什么低精度GEMM的实现常常比fp32版本更啰嗦。
+
+\section{batched GEMM与注意力形状}
+
+注意力的分数与输出是两次矩阵乘：
+\begin{equation}
+S=\frac{1}{\sqrt{d_h}}QK^{\top},\qquad
+O=\mathrm{softmax}(S)V,
+\end{equation}
+形状为$Q\in\mathbb{R}^{n_q\times d_h}$、$K,V\in\mathbb{R}^{n_{kv}\times d_h}$、$S\in\mathbb{R}^{n_q\times n_{kv}}$。
+多头与批把它变成三维网格$\mathbb{R}^{B\times H\times n\times d}$，这正是batched GEMM的形态：
+每个$(b,h)$对一个小GEMM，块索引直接映射到$(b,h)$，各块之间零依赖，是\GPU{}最擅长的``规整、独立、可分片''。
+工程上$B\times H\times n_q$作为$M$、$n_{kv}$作为$N$、$d_h$作为$K$；长序列时$N$可达$10^4$量级，一个块装不下，于是按$N$方向分块，边分块边做softmax的在线归约。
+
+\section{MLA：把KV缓存压进低秩隐空间}
+
+多头注意力（MHA）给每个头各存一份键与值，每层每token的缓存量级是$2\,n_h\,d_h$。解码阶段每生成一个token，都要把整个缓存读一遍，而每头每token只做$O(d_h)$次乘加：
+搬运远多于计算，$F$与序列长度无关、与头数成反比，是教科书级的带宽受限算子。
+
+multi-head latent attention（MLA）的思路是把键与值压到一个共享的低秩隐空间：
+先用一个下投影$W_{DK}$把隐藏维$d_{\text{model}}$压成$d_c$（量级是几百），缓存只存这个隐向量$z=W_{DK}x$；每头再用各自的上投影$W_U^h$从$z$重建该头的键与值。缓存形状由此改变：
+
+\begin{table}[H]
+\centering
+\caption{每层每token的KV缓存内容与量级}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+  >{\raggedright\arraybackslash}p{0.32\textwidth}
+  >{\raggedright\arraybackslash}p{0.26\textwidth}@{}}
+\toprule
+方案&缓存内容&缓存量级\\
+\midrule
+MHA &每头独立的键与值& $2\,n_h\,d_h$ \\
+GQA &键值分组共享，头数除组数& $2\,n_{kv}\,d_h$ \\
+MLA &全头共享的隐向量，另加一个小位置分支& $d_c+d_r$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+关键在于头数不再出现在缓存量级里：所有头读的是同一份$z$。若按朴素做法每头各自把$z$上投影再打分，读取量不变但要做$n_h$次上投影的乘法；
+MLA用矩阵吸收（absorption）把这一步消掉。以列向量约定写，$q_h=W_Q^hx$（$W_Q^h$为$d_h\times d_{\text{model}}$）、
+$k_h=W_U^hz$（$W_U^h$为$d_h\times d_c$），则
+\begin{equation}
+q_h^{\top}k_h=x^{\top}W_Q^{h\top}W_U^{h}z
+=\bigl(W_U^{h\top}W_Q^h x\bigr)^{\top}z=\tilde q_h^{\top}z,
+\end{equation}
+也就是把上投影折进查询投影，得到$\tilde W_Q^h=W_U^{h\top}W_Q^h$这一份离线预处理好的权重，它的行数是$d_c$而不是$d_h$；
+打分因此变成``吸收后的查询直接点乘缓存隐向量''，不再需要每头重建键。值与输出同理：$W_V^h$折进输出投影$\tilde W_O^h=W_O^hW_V^h$，加权求和之后再乘一次即可。
+
+\begin{note}[title={吸收到底吸收了哪一步，代价是什么}]
+吸收消灭的是每次解码都要做$n_h$次的``隐向量到每头键''的上投影；输出侧消灭的是每头的值上投影。代数上完全等价，因此可以离线把两份小权重矩阵相乘、只保存结果。代价有三处。
+其一，两份小因子（$d_h\times d_c$与$d_h\times d_{\text{model}}$）合成一份$d_c\times d_{\text{model}}$的稠密投影，
+每步要读的注意力权重量级随之上升；这段权重是全批共享的，批量越大越划算，批量小、序列短时反而可能盖过省下的缓存读取。其二，融合后的矩阵要预先算好并常驻显存，训练侧通常按未吸收的因子形式实现（梯度与参数形状更自然），
+于是同一套权重存在两种形态，导出与数值校验时要对齐。其三，先乘后加改变了累加顺序与数值范围，fp16与bf16下要重新检查精度，必要时在fp32里做融合乘法。
+另外，位置分支不能被吸收：RoPE的旋转与头相关，无法折进一个与头无关的隐向量投影里，所以MLA把位置信息单独留成一个低维分支（量级几十），分数是两段内积之和；这一条决定了它在数学上必须是两次点乘，而不是一次。
+公开资料只有论文与报告里的机制描述，本文不推测任何未公开的实现细节与超参。
+\end{note}
+
+为什么它必须待在\GPU{}或\NPU{}上：缓存字节数直接乘进每一步解码的延迟里，而压缩比换来的节省只有在大带宽存储上才能兑现；显存带宽每翻一倍，解码吞吐就近似翻一倍。
+\CPU{}侧的内存带宽低一到两个数量级，同时并行度不足以把``一个token的注意力''切散，
+所以这不是``能不能移植''的问题，而是瓶颈根本不在\CPU{}擅长的维度上。
+
+对分页缓存与变长batch的影响也来自这个形状。每token一条定长记录（隐向量加上一个小的位置分支），页表项因此更小更规整，一页能装更多token，按页gather的离散步长变成常数，第8章的合并访存结论更容易成立。
+变长batch则要求按段做softmax，段起点由长度数组的前缀和给出：又回到scan与分段归约这套模式。代价是缓存不再是``每头可独立解释的键值''，任何想只看某几个头做稀疏裁剪的优化，
+都得先考虑隐空间是否可分——这是算法选择与缓存布局互相约束的地方。
+
+\section{算子融合：把带宽问题变成寄存器与shared问题}
+
+融合的收益可以直接用字节算出来：一个中间张量有$n$个元素、每元素$b$字节，写回再读出就是$2nb$字节的显存流量。融进上游算子的寄存器或shared里，这笔流量归零，
+瓶颈于是从HBM搬到了片上容量与算术吞吐——这就是``把带宽问题变成寄存器与shared问题''的准确含义。它的约束同样是片上容量：寄存器与shared放不下时只能分块，分块就要处理跨块归约。
+
+\emph{逐元素加归约}的融合最朴素：一次读，寄存器里同时累加，写回时只用一次。
+CUB与Thrust里的\Tp{transform\_reduce}就是这个模式，softmax与layernorm的融合都属此类。
+
+\emph{分块外积}是更进一步的形态。按$S$的行块与$K$的列块循环，每次只在片上算一个小$S$块、
+就地做在线softmax、立刻乘上对应的$V$块累加进输出，永远不把$n_q\times n_{kv}$的分数矩阵写成显存对象。省下的正是那$2n_qn_{kv}b$字节的往返，换来的是对同一批$V$数据多做一次读取：重算换带宽。
+这条路的终点是把归约维度切成块、把三元组$(m,\ell,a)$作为跨块状态传递，所以``在线softmax的可合并性''不是数值技巧，而是分块得以成立的结构性前提。
+
+\emph{persistent与warp specialization}是执行层的融合方向：
+一个块常驻，按tile领取工作，块内的warp分角色——一组只负责把数据从全局搬到shared，一组只负责执行矩阵乘与归约，靠命名屏障与有界队列解耦。
+它的目的仍然是让搬运永远走在计算前面，让片上数据在生命周期内被用完，而不是为了并行而并行。
+
+融合的代价也要写进账里：核函数变长、寄存器压力上升（占用率随之下降）、shape一变就要重新调块宽、调试与数值对拍都更难。所以``融得越多越快''是错觉，正确的判据是：被省掉的那次全局往返是否真的在关键路径上。
+
+\begin{lstlisting}[style=pythonstyle,caption={参考实现：注意力与吸收形式的代数等价（用于对拍）}]
+import torch
+
+def ref_attention(q, k, v, mask=None):
+    scale = q.shape[-1] ** -0.5
+    s = q @ k.transpose(-1, -2) * scale        # (.., n_q, n_kv)
+    if mask is not None:
+        s = s.masked_fill(mask == 0, float("-inf"))
+    p = torch.softmax(s, dim=-1)
+    return p @ v                               # (.., n_q, d_h)
+
+# absorbed form must match the unfactored one
+wq_abs = wq.T @ wuk                            # (d_model, d_c)
+score = (xq @ wq.T) @ (z @ wuk.T).T
+assert torch.allclose(score, (xq @ wq_abs) @ z.T, atol=1e-3)
+\end{lstlisting}
+
+\begin{table}[H]
+\centering
+\caption{四个算子的算术强度与瓶颈来源}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.14\textwidth}
+  >{\raggedright\arraybackslash}p{0.22\textwidth}
+  >{\raggedright\arraybackslash}p{0.20\textwidth}
+  >{\raggedright\arraybackslash}p{0.22\textwidth}@{}}
+\toprule
+算子&主要流量& $F$的量级&瓶颈与优化方向\\
+\midrule
+softmax &读一行、写一行&常数级，小于$F_0$ &带宽、融合进上游\\
+layernorm &读一行、写一行&常数级，小于$F_0$ &带宽、两段归约合一\\
+GEMM &读写三个矩阵&随块尺寸上升&算力、片上复用与流水线\\
+MLA解码&读全量隐空间缓存&低、与头数无关&带宽、压缩比与分页布局\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{compare}[title={四类算子的瓶颈来源对比}]
+softmax与layernorm是同一类：$F$是常数，怎么优化都绕不开搬运，因此正确策略是``少读一次''或者``根本不自己读''（融进邻居）。它们没有算力上限的问题，只有带宽上限的问题。
+GEMM相反：只要块够大，$F$就远大于$F_0$，瓶颈变成执行单元利用率，优化顺序是片上复用、流水线、专用矩阵单元，最后才轮到显存。
+MLA处在第三种情形：它内部有两个GEMM（打分与加权求和），但每个GEMM的$K$维很小、$N$维是缓存长度，于是复用不起来，整体退化成带宽受限。
+这也是它值得用低秩压缩去改数据形状的原因：这类算子的优化空间在字节数上，不在算术编排上。判据很简单——先看$F$，再看批量，最后才看指令。
+\end{compare}
+
+\begin{bestpractice}[title={张量算子的落地顺序}]
+一，先算$F$：低于机器平衡点的算子，一切优化都从减少字节数出发，先融合、再谈并行度。二，稳定化与并行化要同时设计：减最大值、平方和偏移这类数值技巧，必须写成可合并的三元组或双归约形式，否则两趟全局读省不掉。
+三，GEMM先定块形再定循环：寄存器块决定指令级并行，shared片段决定复用倍数，双缓冲决定延迟是否被藏住，split-K只在$M$、$N$不足以占满设备时才引入。
+四，注意力类算子优先减少搬运对象：把$S$与$P$留在片上、压缩缓存形状，比在同一个形状上调核函数参数收益大一个量级。五，任何融合都要用未融合版本对拍（例如上面的\Tp{ref\_attention}），
+容差按累加顺序变化的量级设定，不要用逐位相等做判据。
+\end{bestpractice}
+% ====================================================================
+% ====================================================================
+\chapter{NPU侧算子与图编译}
+
+本章以昇腾（达芬奇架构加CANN软件栈）为例，说明换一个执行域之后，同一套算法知识要怎么重新落地。
+这里不比较厂商优劣，只讲世界观差异：\GPU{}把调度权交给硬件与启动参数，\NPU{}把它交给编译器与图；
+\GPU{}让你描述一个线程做什么，\NPU{}更常让你描述一块数据从哪级缓冲来到哪级缓冲去。
+凡涉及接口名称、参数与工具行为，都会随CANN版本、固件版本与框架后端版本变化，
+本章一律按职责描述，具体名字以你所用版本的文档为准。
+
+\section{世界观差异：从线程调度到图编译}
+
+\GPU{}上的一次执行由启动配置决定：网格与块的形状、每块线程数、shared用量，
+硬件的warp调度器在运行时把块分给SM。算法层的自由度很高，编译期几乎不做全局规划。
+\NPU{}的主流路径相反：模型先被表达成数据流图，图编译器做形状推导、算子融合、片上缓冲分配、
+执行单元调度与内存规划，最后产出一个可执行的图或模型制品。
+自定义算子是内嵌进这个体系的，而不是替代它。
+这个差别带来三条纪律。
+其一，形状是编译期信息：静态shape让编译器敢把中间结果放进容量有限的片上缓冲，
+也意味着shape一变就可能要重新规划甚至重新编译。
+其二，融合多数时候不是你的选择而是编译器的：手工融合要能证明比自动融合更优，
+否则只是把可维护性换成了看不见的好处。
+其三，性能问题要先问图结构再问核函数：图层面的算子切分、搬运次数与同步点，
+往往比单算子内部的循环更难改。
+
+\section{执行单元与存储层级}
+
+达芬奇架构把执行单元按数据形态分成三类：矩阵类单元负责乘累加（一次处理一个小矩阵块），
+向量单元负责逐元素与归约（一次处理一小批连续数据），标量单元负责地址计算、循环控制与分支。
+分工是硬件层面的：矩阵单元吞吐最高但只会做乘累加，向量单元管激活函数与规约，
+控制流留在标量侧，因此把分支写进向量通路既无意义又拖慢流水。
+写算法时的读法是：一个算子通常被拆成``搬运、矩阵块、向量后处理''三段，
+段与段在片上缓冲之间流水。
+
+存储分三级：与执行单元紧耦合的近存缓冲（矩阵单元的输入输出各有一份，容量按一个小块设计）、
+片上一级缓冲（放操作数片段与中间结果，容量从数百KB到MB量级，随型号与代际不同）、
+以及片外高带宽存储（HBM类，容量以GB计，带宽通常比片上低一到两个数量级）。
+再往外是主机内存，两者之间由DMA通道搬运。
+片上缓冲是稀缺资源：它的容量决定了块形状的上限，也决定了融合能做到什么程度。
+第9章的算术强度在这里换了一种问法——不是``能不能喂饱算力''，
+而是``这一块的中间结果放不放得下近存缓冲''。
+
+\section{自定义算子的开发步骤}
+
+一个自定义算子由三部分组成，职责分别是：
+\begin{itemize}
+\item \emph{Tiling（切分）参数计算}：在主机侧根据张量形状算出``每核处理几个块、块多大、
+      分几批、边界怎么补''，以一小段二进制数据的形式随核函数下发。
+      它决定了设备侧的循环边界，因此也是负载是否均衡的关键。
+      把切分逻辑放在主机侧的代价是：形状变化时要重新计算，反复变化就可能反复走规划路径。
+\item \emph{设备侧核函数}：在片上缓冲之间做搬运与计算。它的工作单位是``核''而不是``线程''：
+      一个核独占一块片上缓冲与一套执行单元，不需要warp、lane或块内屏障这类概念，
+      同步发生在流水线阶段之间而不是线程之间。
+\item \emph{注册与构建}：把形状推导、数据类型支持、切分函数与核函数注册给图编译器，
+      让它能在这个算子周围做融合与内存规划。注册信息不完整时，编译器只能把算子当黑盒，
+      融合链在这里断掉。
+\end{itemize}
+
+设备侧的典型结构是三级流水，下面是示意骨架：接口名、宏名与参数顺序都要按所用版本改写，
+它表达的只是``搬运与计算分阶段、靠缓冲队列解耦''这一件事。
+
+\begin{lstlisting}[style=cppstyle,caption={自定义算子的示意骨架：接口名以所用CANN版本为准}]
+// Illustrative skeleton only: names below are placeholders for the
+// real interfaces of the release in use. One core owns one tile.
+extern "C" void MatmulBiasKernel(const TilingData& cfg,
+                                 const GTensor& a, const GTensor& b,
+                                 const GTensor& bias, GTensor& c) {
+  SBuffer inA, inB;        // staging buffers on the chip
+  SBuffer vec;             // result of the vector stage
+  for (int t = 0; t < cfg.tileNum; ++t) {
+    // stage 1: HBM -> on-chip, issued by the copy engine, not by a
+    //          thread loop; the next tile is issued before we wait.
+    CopyIn(a, b, inA, inB, cfg, t);
+    // stage 2: the matrix unit consumes the prepared buffers.
+    WaitCopyDone(cfg);     // pipeline sync, not a barrier
+    CubeMatmul(inA, inB, vec, cfg.blockM, cfg.blockN, cfg.blockK);
+    // stage 3: vector unit adds bias, casts, applies activation.
+    VectorBiasAct(vec, bias, cfg.vecLen);
+    // omitted: double buffering, i.e. alternating inA/inB with the
+    //          stage flag so copy and compute overlap across tiles.
+  }
+  CopyOut(vec, c, cfg);
+}
+\end{lstlisting}
+
+骨架里的三件事值得单独说。
+双缓冲是必需的而不是可选的：单缓冲时``等待搬运''与``执行计算''互斥，
+片上带宽与矩阵单元都会被空节拍吃掉；做法是两组缓冲交替，
+并用阶段标志（而不是全局同步）声明``这块已经可读''。
+阶段标志的调度思想是``按缓冲粒度解耦''：粒度太细则标志操作本身成为开销，
+太粗则流水退化成串行。
+搬运由拷贝引擎发起、以整块数据为单位，这一点与\GPU{}差别最大：
+CUDA里你写循环让线程自己搬，\NPU{}里你配置一次拷贝让DMA搬，
+线程级的gather/scatter语义在这里不自然。
+
+\section{精度：累加位宽与loss scale}
+
+矩阵单元的输入通常是fp16或bf16，累加在内部走更宽的通路（fp32量级），
+这是为什么低精度矩阵乘不会立刻把误差放大到不可用。但要注意两件事。
+第一，bf16的动态范围与fp32相同而尾数更短，舍入误差比fp16大；fp16尾数长但容易溢出，
+训练里靠loss scale把小梯度抬到可表示区间，反向算完再除掉。
+第二，累加顺序与分块形状会影响结果：矩阵单元的tile尺寸、split-K式的分段、
+以及跨核归约的顺序都会改变最后一位，这与第8章浮点原子归约的非确定性同源。
+因此对拍要用容差而不是逐位相等；换芯片型号或换版本导致tile尺寸变化时，
+逐位一致本来就不该是预期。
+量化推理另有一层：整型定点通路的舍入方式与缩放因子由图编译期插入，
+它和浮点实现之间的差异属于``两种算法''而不是``同一算法的噪声''，需要单独校验。
+
+\section{Host/Device划分与ACL层的职责}
+
+主机侧的调用面通常由一个库接口层承担，职责是固定的几件事：
+设备与上下文管理（选卡、绑定流队列）、片外存储的申请与释放、主机与设备之间的搬运、
+图或算子的构建与执行提交、错误码与异步事件的查询。
+推理流程的要点如下（参数一律以所用版本文档为准）：
+
+\begin{lstlisting}[style=shellstyle,caption={离线转换与推理流程的命令要点}]
+# 0) build the custom operator: compile the kernel, register it
+#    together with its shape-inference and tiling function.
+# 1) convert the framework graph into a device model artifact:
+atc --model=<graph-file> --framework=<framework-id> \
+    --output=<artifact-name> --input_shape=<shape-spec> \
+    --soc_version=<chip-model>
+#    run "atc --help" and read the release notes; option names, the
+#    meaning of framework ids and the supported ops all move between
+#    CANN versions. Never copy a flag list from a blog post.
+# 2) host program: init device, alloc, copy in, load, execute,
+#    copy out. The queue is asynchronous until you ask for it.
+# 3) profile: collect timeline and per-op counters
+msprof --application=<host-binary> --output=<prof-dir>
+\end{lstlisting}
+
+主机与设备之间要不要过一根总线，是这一层最贵的决定。
+第11章会算这笔账，这里只强调\NPU{}上它更硬：静态图把``输入在哪、多大''在编译期就固定了，
+如果每个step都在主机侧准备新张量，你就在图外面重新引入了同步。
+另一个常见形态是把预处理（解码、resize、归一化）也编进图，
+让它与推理共享同一次搬运，这是图编译优先的世界观里更自然的融合方式。
+
+\section{框架后端的定位}
+
+以\Tp{torch\_npu}这一类适配包为代表，框架后端的定位是``设备与派发层''，不是``算法层''：
+它注册一个新的设备类型，把算子调用派发到厂商算子库，
+实现随机数、内存分配器、流与同步这些运行时语义，并把框架的导出格式接进图编译流程。
+
+\begin{lstlisting}[style=pythonstyle,caption={后端切换的示意：设备字符串与同步语义由适配包提供}]
+import torch
+import torch_npu            # registers the extra device backend
+
+x = torch.randn(8, 1024, device="npu")   # alloc lives on the device
+y = torch.softmax(x, dim=-1)             # dispatched to op library
+with torch.no_grad():
+    z = (x @ x.transpose(-1, -2)).float()
+torch.npu.synchronize()    # the queue is async until you say so
+\end{lstlisting}
+
+它的价值是让同一份模型代码在两个执行域之间迁移，代价是你对形状的掌控变弱：
+适配包通常会把动态shape转成``按观察到的形状重新编译，或回落到单算子直调''，
+这两条路都可能比原生的静态图路径慢。
+做算法验证时它是好工具，做延迟归因时它是一层间接。
+另外要注意：并非所有算子都有设备实现，未覆盖的长尾会静默回落到主机，
+每一步的回落都等于一次往返搬运，这往往比算子本身慢。
+
+\section{同一算法在两个执行域上的写法差异}
+
+\begin{table}[H]
+\centering
+\caption{CUDA与NPU写法对照（名称按职责描述，具体以版本文档为准）}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.17\textwidth}
+  >{\raggedright\arraybackslash}p{0.31\textwidth}
+  >{\raggedright\arraybackslash}p{0.28\textwidth}@{}}
+\toprule
+概念 & \GPU{}（CUDA） & \NPU{}（达芬奇加CANN） \\
+\midrule
+工作单位 & 线程，按块与网格组织 & 核，按切分方案分到片上执行单元 \\
+warp & 有，32个lane锁步，掩码与shuffle是算法积木 & 没有对应概念，向量单元一次处理一批数据 \\
+片上暂存 & shared memory，按块分配、显式同步 & 分级片上缓冲，按核分配、由编译器或开发者规划 \\
+归约 & shuffle加shared加原子，四层结构 & 向量单元内的树形归约，跨核靠二次归约 \\
+前缀和 & 分块两趟，warp scan当积木 & 需要手写分段或用算子库里的等价件 \\
+搬运 & 线程自己读写，靠合并访存吃满带宽 & 配置拷贝引擎按块搬，线程循环不是主路径 \\
+动态shape & 启动参数在主机侧现算，天然支持 & 静态图优先，形状变化触发重新规划或回落 \\
+算子融合 & 多数靠手写，或靠库与图捕获 & 主要由图编译器自动完成 \\
+调试与剖析 & 采样式剖析器加事件计时 & 厂商剖析工具走时间线与算子计数两条线 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+三行的读法要说明。
+``没有warp''不等于没有并行：向量通路本身是宽的，只是它没有掩码、没有lane间交换这类语义，
+于是第8章的warp积木在这里要换成``把批量数据交给向量单元处理''的写法。
+``归约靠二次归约''是因为跨核的原子语义与\GPU{}不同：与其构造大网格上的原子，
+不如把各核部分和写回缓冲再走一次归约通路。
+``动态shape触发重新规划''是最容易低估的一条，下一节展开。
+
+\begin{compare}[title={图编译优先带来的得与失}]
+得到的是全局规划：编译器看得见整条链，于是能把中间结果安排在片上缓冲里、
+能把逐元素链自动拼成一个算子、能按容量把内存生命周期错开。
+这类优化在手写\GPU{}核函数时要么靠库、要么靠人力反复验证。
+失去的是即时性与自由度：形状是编译期事实，控制流被压缩到标量通路，
+长尾算子要自己补齐，性能问题的定位要多穿过一层图。
+迁移一个算法到\NPU{}，工作量通常不在``改写核函数''，
+而在``把形状与数据布局改成编译器喜欢的样子''，
+以及``为没被覆盖的算子补注册信息''。
+\end{compare}
+
+\section{什么时候NPU反而更慢}
+
+有四类场景要事先算账，否则迁移的收益会被吃掉。
+小算子与短链：单次执行的固定开销（提交、同步点、图与算子的调度）在几微秒量级，
+张量足够小时这部分占主导，而\GPU{}的小核函数启动更轻。
+判断依据是每步字节数与每步操作数的绝对量，不是算子名字。
+动态shape反复触发重编译：变长序列、动态batch、按长度分桶不当时，
+每个新形状都走一遍规划与编译路径，延迟抖动远大于计算本身。
+常见对策是按长度分桶并补齐、把形状变化收进少数几档、或者让主机侧的批组织保持恒定；
+这本质上是第8章分段偏移要解决的同一个问题。
+主机侧拷贝与同步：任何``每步从主机准备输入''的写法都会把流水切成串行，
+在异步队列上还会引入隐藏等待；对策与第11章一致（pinned缓冲、批量提交、事件依赖）。
+算子库覆盖不到的长尾：未注册的算子要么回落主机，要么由适配包拆成若干基本算子执行，
+两条路都比一个融合好的原生核函数慢；这时自定义算子的开发成本要计入迁移总价。
+还有第五类偶发情形：数据类型组合不被支持（某些位宽或布局的组合需要额外转换），
+转换本身变成两个额外算子。
+
+\begin{warning}[title={静态图与动态shape的三类翻车}]
+第一类，形状没被预告：只在推理时见过的shape会让编译器现场重新规划，
+首批请求的延迟尖峰就来自这里。对策是把可能的shape范围交给图构建期声明，
+并在上线前把每一档都预热一遍。
+第二类，分支藏在数据里：条件执行、按长度截断、top-K变长这类结构在静态图里要展开成
+多路加掩码，写不好就退化成``两条路都算一遍''。
+第三类，张量在主机与设备之间来回：某个算子只有主机实现，
+或某处调用了取回主机做判断的同步接口，一条链就被切成两半，中间夹进一次往返搬运。
+定位方法是看时间线而不是看代码——剖析器的时间线会把``设备空闲、等主机''的区间显示得很清楚。
+\end{warning}
+
+\begin{guideline}[title={把算法迁到NPU的操作顺序}]
+一，先画数据流再写核函数：把搬运次数、中间结果大小与片上容量放在一起比，
+绝大多数性能问题在这一步就能预判。
+二，形状策略前置：确定是静态、分桶还是动态，并把它写成构建期就要满足的约定；
+动态shape的重编译代价在测试环境里很容易漏掉。
+三，切分方案当参数对待：Tiling的块大小与分批数决定负载是否均衡，也决定双缓冲能否成立，
+改动后要同时看时间线与算子计数确认效果。
+四，先信自动融合，再手工融合：手工融合要用数据证明它减少了搬运，而不是减少了代码行数。
+五，数值校验按容差设计：位宽、累加顺序、tile尺寸都可能随版本变化，
+逐位一致的预期只在同一份二进制、同一形状、同一版本内成立。
+六，接口名一律查所用版本的文档：本章的骨架与命令只表达职责，不能直接复制进工程。
+\end{guideline}
+% ====================================================================
+% ====================================================================
+\chapter{数据搬运、显存与流水}
+
+前几章假设数据已经在设备侧。本章处理这个假设成立之前的那一段：数据放在哪一侧、什么时候过总线、怎么让搬运与计算在时间上重叠。这一层最容易出现的误区是把带宽问题当成算力问题去优化——核函数一行没改，只是拷贝方式不同，端到端时间就差几倍。总线、MMIO与DMA的硬件机制在硬件访问分册已经讲过，本章只谈结构决定：谁持有这块内存、以什么粒度移动它、它在什么时刻被谁读写。
+
+\begin{note}[title={容量、带宽、延迟三笔账}]
+三笔账要分开算，它们的单位不同，因此优化方向经常互相冲突。
+容量：显存以GB计，通常比主机内存小一个数量级；它决定batch上界、中间结果是否落盘、以及模型要不要切开。这是硬约束，超了就失败而不是变慢。
+带宽：普通PCIe链路上的主机到设备以十GB每秒量级计，片上存储以百GB每秒到TB每秒量级计，两者差一到两个数量级（高速一致性互联上另算）；带宽决定流水的稳态吞吐，即每字节进出的时间下界。
+延迟：一次小传输或一次核函数启动的固定开销在微秒量级，与数据量无关；它决定分块的下限，块切得太碎时总时间由这个常数项支配。
+判据顺序建议是：先用容量确定数据必须在哪儿，再用带宽算稳态时间，最后用延迟检查分块粒度是不是太细。跳过第一步的优化通常白做。
+\end{note}
+
+\section{拷贝路径的成本模型}
+
+一次\Tp{cudaMemcpy}的耗时可以拆成一个常数项加上字节数除以可达带宽。常数项包含提交、中转与同步，量级在几微秒；于是超过约百KB的传输才开始被带宽项支配，更小的传输无论怎么调带宽都不会快——这是很多细碎拷贝无法优化的根本原因，唯一有效的结构性修法是把多次小拷贝攒成一次。
+
+pageable与pinned的差别不在接口而在可达性。主机内存默认可被操作系统换页或搬移，DMA引擎不能安全地直接读它，所以驱动先把数据拷进一块固定的pinned中转区再发起传输。后果有两个：多一次同尺寸的主机内memcpy，以及大传输的并发度受中转区大小限制。
+用\Tp{cudaMallocHost}或\Tp{cudaHostAlloc}直接申请pinned内存，或者把已有的缓冲区用\Tp{cudaHostRegister}注册，才能真正跑满链路带宽，也让\Tp{cudaMemcpyAsync}有意义。pinned内存是稀缺资源，它不可换页，申请过多会挤压主机可用内存，因此按分块大小申请而不是按整个数据集申请。
+
+\begin{table}[H]
+\centering
+\caption{常见传输路径的支配因素（量级随代际与平台不同）}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+  >{\raggedright\arraybackslash}p{0.34\textwidth}
+  >{\raggedright\arraybackslash}p{0.29\textwidth}@{}}
+\toprule
+路径 & 时间由什么支配 & 结构性修法 \\
+\midrule
+H2D、pageable & 中转区多一次memcpy，带宽常跑不满，大传输难真异步 & 改用pinned源，注册旧缓冲区 \\
+H2D、pinned & 链路带宽加一个小的常数项 & 攒批、分块并与计算重叠 \\
+D2H & 同上，且常被写成同步版而顺带排空队列 & 只在必要的标量上做，或拷回pinned区后再处理 \\
+D2D、同卡 & 片上带宽，但仍占用一次提交的常数项 & 让算子链在设备侧走完，或融合掉中间张量 \\
+小于百KB的碎拷贝 & 几乎全是常数项 & 合并成一次、或改用主机映射内存 \\
+多卡P2P & 链路类型：NVLink量级明显高于PCIe & 开peer访问，或按卡切分数据避免跨卡 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{流、异步拷贝与事件依赖}
+
+一个流是一个先进先出的命令队列：同一个流里的操作按提交顺序执行，不同流之间可以并发。因此\Tp{cudaMemcpyAsync}的语义是``在本流中，排在它前面的命令做完之后开始''，而不是``此刻开始''。只有源内存pinned时，命令返回后主机才可以立刻改写这块缓冲之外的一切——更准确地说，返回意味着已入队，不意味着数据已经离开主机；在传输完成之前修改源缓冲区是数据竞争，这也是最常见的隐蔽错误。
+
+事件是给流水图加边的工具。\Tp{cudaEventRecord}把一个标记插进某个流，
+而\Tp{cudaStreamWaitEvent}让另一个流等待它，这条等待是异步的，只建立依赖而不阻塞主机。于是跨流的先后关系可以精确表达：拷贝流负责搬运，计算流负责消费，两边用事件握手；纯依赖用途的事件要用\Tp{cudaEventCreateWithFlags}配\Tp{cudaEventDisableTiming}创建，带计时的实现代价随版本不同，但关掉计时总是更便宜的那个选择。
+
+\begin{lstlisting}[style=cudastyle,caption={pinned源加双流分块：拷贝与计算重叠}]
+// Placeholder: the real kernel and the data source are elsewhere.
+__global__ void consume(const float* in, float* out, int per);
+
+void pipeline(int nchunk, int per, float* dOut) {
+  float* hPin = nullptr;
+  size_t bytes = (size_t)per * nchunk * sizeof(float);
+  cudaMallocHost(&hPin, bytes);    // pinned: DMA reads it later
+  fill_from_dataset(hPin, nchunk * per);
+
+  cudaStream_t sCopy, sWork;
+  cudaStreamCreate(&sCopy);
+  cudaStreamCreateWithFlags(&sWork, cudaStreamNonBlocking);
+  cudaEvent_t evIn[2], evOut[2];
+  float* dBuf[2];
+  for (int i = 0; i < 2; ++i) {
+    cudaMalloc(&dBuf[i], per * sizeof(float));
+    cudaEventCreate(&evIn[i]);
+    cudaEventCreateWithFlags(&evOut[i], cudaEventDisableTiming);
+  }
+
+  for (int c = 0; c < nchunk; ++c) {
+    int i = c & 1;                 // which slot this chunk uses
+    size_t off = (size_t)c * per;
+    if (c >= 2)                    // slot reuse: wait for kernel
+      cudaStreamWaitEvent(sCopy, evOut[i], 0);
+    cudaMemcpyAsync(dBuf[i], hPin + off, per * sizeof(float),
+                    cudaMemcpyHostToDevice, sCopy);
+    cudaEventRecord(evIn[i], sCopy);   // this slot is now loaded
+    cudaStreamWaitEvent(sWork, evIn[i], 0);
+    consume<<<256, 256, 0, sWork>>>(dBuf[i], dOut + off, per);
+    cudaEventRecord(evOut[i], sWork);
+  }
+  cudaStreamSynchronize(sWork);    // join once, at the very end
+  for (int i = 0; i < 2; ++i) {
+    cudaEventDestroy(evIn[i]);
+    cudaEventDestroy(evOut[i]);
+    cudaFree(dBuf[i]);
+  }
+  cudaFreeHost(hPin);
+}
+\end{lstlisting}
+
+这段结构里三处细节值得强调。第一，槽位数就是双缓冲：两槽让第$c$块的计算与第$c+1$块的搬运同时进行，再加第三槽一般只多吃内存，因为瓶颈仍然是较慢的那一段。
+第二，\Tp{cudaStreamWaitEvent}不阻塞主机，它只是在依赖图里加一条边；写成\Tp{cudaStreamSynchronize}才会真的把线程停住。
+第三，稳态时间由$\max(\sum_i c_i,\sum_i k_i)$决定而不是两者之和，其中$c_i$是第$i$块搬运时间、$k_i$是计算时间；而串行版本的总时间是$\sum_i (c_i+k_i)$。
+重叠能成立还有一个隐含条件：核函数没有把机器占满，否则拷贝虽不占计算单元，却仍会因资源排队而退化，这与第8章的占用率结论相连。
+
+\section{隐式同步：异步为什么莫名变串行}
+
+流水被打断的常见来源有六类，都与代码逻辑无关，只与调用的语义有关。
+默认流上的工作：传统默认流与其他阻塞流之间存在隐式的全局序，往默认流提交一个核函数，就等于把它排在所有阻塞流之后；对策是要么用\Tp{cudaStreamNonBlocking}建流，要么整体改用显式流。
+内存申请与释放：\Tp{cudaFree}会等待设备完成此前所有工作，因此在循环里出现的一对\Tp{cudaMalloc}加\Tp{cudaFree}，等于每轮一次设备级同步。
+同步版拷贝与\Tp{cudaMemset}：不带Async后缀的版本天生自带等待语义，尤其是D2H方向，顺带把整条队列排空。
+取回标量：任何把设备数据搬到主机以决定下一步分支的写法，都是一次强制同步；在框架里它就是一次\Tp{item}式的取值调用。
+事件轮询：\Tp{cudaEventSynchronize}放在计时区间内或热循环里，会把重叠窗口压成零。
+主机回调：\Tp{cudaLaunchHostFunc}的回调在执行期间会阻塞其所在队列的后续工作，放在流水中间等于一个闸门。
+
+\begin{warning}[title={五种把异步流水意外变成串行的写法}]
+一，在分块循环末尾写\Tp{cudaDeviceSynchronize}：只有一个块真正在重叠，其余时间全部空转，流水退化成搬运与计算两段串行。
+二，把pinned缓冲区在提交拷贝之后立即改写：不报错，但结果随机，这是数据竞争而不是竞态性能问题。
+三，在循环里申请与释放设备内存：语义上是设备级同步，还会把分配器拖进碎片整理，时间与数据量都不成比例。
+四，为了``看看进度''而轮询事件或查询状态：单次无害，高频轮询会让主机线程与设备互相等，吞吐呈台阶式下降。
+五，把异步拷贝发回与生产者相同的流：同一个流是有序的，于是拷贝必然排在计算之后，两个流才有重叠可言。
+判别方法：拉出剖析器的时间线看设备侧的忙带，如果是一段一段的空隙而不是连续带，就是被同步切开了。
+\end{warning}
+
+\section{统一内存、页迁移与预取}
+
+\Tp{cudaMallocManaged}返回一个两侧都能解引用的指针，物理页按需归属。它把搬运从程序员手上收走，代价是访问模式变成性能的第一决定因素：设备首次触碰一页会触发缺页并把页迁过来，迁移粒度是页而不是元素，于是稀疏访问等于按页搬运整个数组，等效带宽能低一到两个数量级。
+两个接口用来把``按需''变成``可预期''。预取（\Tp{cudaMemPrefetchAsync}）显式把一段范围搬到某个位置，它是流有序的，可以提前一步发起，让迁移在计算期间完成。
+建议（\Tp{cudaMemAdvise}）表达访问模式：读多写少的页可以复制以便多卡并发读，声明某设备为优先位置则迁移时机更可控，声明某设备会访问则建立映射，让该设备读写时不必每次都搬页。
+具体枚举名与效果随CUDA版本、驱动与平台差异较大，在有高速一致性链路的平台上语义还会再变一层，务必以实测为准。
+还有一条常被忽略的行为：在没有硬件一致性的平台上，主机侧写入之后要先同步，排在后面的核函数才保证看得见——统一内存消除的是拷贝代码，不是依赖关系。
+
+\section{主机映射内存与零拷贝}
+
+\Tp{cudaHostAlloc}配上映射标志，再取一个设备侧指针，就得到两侧同址可见的一块主机内存：设备解引用时每个访问都过总线。单次访问延迟在微秒量级，比片上访问高两到三个数量级，所以它的合理用途很窄：少量控制字与状态标志、主机读一次的进度值、以及规模小到不值得走一次正规拷贝的数据。
+读多写少还是写多读少也要选对属性：写合并（write-combined）内存适合主机写、设备读，反过来设备写、主机读会非常慢。
+把它当``省掉拷贝的万能方案''是错的：批量数据用映射内存让设备逐元素读，通常比一次pinned异步拷贝慢一到两个数量级，因为后者是整块顺序流式搬运，前者是每个访问一次总线往返。
+
+\section{显存申请、池与碎片}
+
+裸的申请与释放在两条路径上都会伤到流水：它们本身可能同步，而且分配器面对的形状序列不可预测时会产生碎片——总空闲量够，但没有一段连续区能满足请求，于是``明明还有余量却失败''。
+结构性的处理顺序是：先改变生命周期，再改变分配器。先做到``峰值可算''：常驻权重、激活、中间结果与缓存分开统计，把可复用的缓冲显式复用；
+再考虑流式池，即\Tp{cudaMallocAsync}加\Tp{cudaFreeAsync}把申请变成流有序操作，让分配器按队列进度决定能否复用，并按池的释放阈值属性决定缓存跨迭代保留多少。
+框架侧还有segment策略可调（例如允许扩容段而不是新分配大块），目的是缓解碎片而不是提高带宽。
+多卡同进程时要留意：池是每设备一份，跨卡复用缓冲等于换设备重新申请；跨进程共享要用显存句柄导出再映射（一对\Tp{cudaIpcGetMemHandle}与\Tp{cudaIpcOpenMemHandle}），共享的是同一块物理内存，不要为了``省一次拷贝''复制成两份。
+
+\section{多卡：链路与可见性}
+
+跨卡可见性由两个接口决定：先问\Tp{cudaDeviceCanAccessPeer}能不能直接解引用，
+再用\Tp{cudaDeviceEnablePeerAccess}把对端内存映进本卡的地址空间；
+映上之后一次跨卡拷贝可以省掉，设备指针可以直接被另一侧核函数读写。
+要区分两种情况：链路是高速一致性互联时，跨卡访问可以接近本地带宽的几成；只有PCIe时，跨卡访问延迟高且带宽低，此时``数据不动、计算动''常常更差，按卡把数据切干净、只在必要时通信一次才是正解。
+跨卡通信的量级取决于并行切法：一次全归约的通信量大致正比于每卡的激活宽度、与batch线性相关，因此相对计算时间它是可以先算出来的；判断要不要跨卡，先算这次通信占计算时间的比值，再决定切分方式。
+还有一件容易漏的事：peer映射是单向建立还是双向建立要显式确认，只在一侧启用会出现``能提交但解引用失败''的错误。
+
+\section{跨框架零拷贝与DLPack}
+
+DLPack是一份交换张量元数据的协议：设备指针、形状、步长、元素类型、设备编号与所有权句柄，不含数据本身。因此它消除的是``从框架A复制到框架B''这一步，而不是任何真实的总线搬运：如果张量在主机上而消费者要设备侧，该过的链路还是要过，DLPack不会改变这一点。工程上要注意三件事。
+一是所有权：导出方必须保证缓冲在消费方用完之前不被回收，框架通常把这件事挂在引用计数上，跨语言边界时最容易掉。
+二是布局：步长信息是协议的一部分，非连续的切片视图过去之后，消费方按连续假设去读就是错的。
+三是流：数据在某个流上被写过，消费方在自己的流上读它之前需要依赖关系；新版本协议允许携带流参数以便同步，能力随版本不同，最稳妥的做法是显式对齐两个执行域当前的流，而不是假定同一默认流。
+
+\begin{lstlisting}[style=pythonstyle,caption={DLPack交接与pinned、非阻塞拷贝的要点}]
+import torch
+from torch.utils import dlpack
+
+def hand_off(t):
+    # Zero-copy means: the same bytes, no extra device round trip.
+    assert t.is_cuda, "a CPU tensor still needs a real H2D copy"
+    assert t.is_contiguous(), "layout travels with the capsule"
+    cap = dlpack.to_dlpack(t)   # ptr, dtype, shape, strides travel
+    return my_ext.consume(cap)    # extension imports the capsule
+
+def stage(x_batch):
+    # pin_memory pays off only if this buffer is reused a lot.
+    pinned = x_batch.pin_memory()
+    d = pinned.to("cuda", non_blocking=True)  # src is pinned
+    return d
+# allocator knob against fragmentation, not for bandwidth:
+# PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+\end{lstlisting}
+
+\section{分块、微批次与流水并行}
+
+分块大小是一个两端有约束的选择。太小则常数项支配，提交、依赖与调度把时间吃完；太大则双缓冲吃掉的显存变多，而且第一块之前的空窗变长（首块延迟直接进入端到端时间）。
+可用的起点是让每块字节数落在百KB到MB量级，再用``块数至少是流槽位数的几倍''保证稳态里有足够多在飞的任务，最后用时间线核对拷贝带与计算带是否真的重叠。
+微批次是同一个技巧用在模型层面：把batch沿样本维切成几份，每份走一遍前向与反向，各份处在不同阶段，于是通信可以与计算错开。
+它的收益上限是重叠比例，代价是激活显存与梯度累加的额外一次读写，因此它治的是``链路空转''，治不了``单算子太慢''。
+样本维切分与第8章的grid-stride是同一种解耦思想：把并行粒度与数据规模分开，让调度器有余地。
+
+\section{混合执行时数据留在哪一侧}
+
+判断的顺序建议固定下来：先看数据是否被两侧都读写，两侧都高频读写的中间结果哪边都不该留，应该把算子链搬到同一侧走完；只被设备读一次的输入适合留在主机侧流式搬运；只被主机读的统计量应该由设备写回一个小结构而不是一整个张量。
+其次看规模：远大于显存的数据集分片必须留在主机侧，用双缓冲流水喂进来；规模明显小于显存且生命周期与迭代相同的参数与缓存应该常驻设备侧。
+最后看归属能否验证：\Tp{cudaPointerGetAttributes}能告诉你一个指针到底是主机内存、设备内存还是统一内存，以及属于哪个设备；框架里对应的就是张量的设备属性。
+在混合执行里把设备侧张量交给一个会隐式要求主机内存的接口，最常见的后果不是报错而是一次静默的回拷，所以交接点上把类型查一遍是便宜的保险。
+
+\begin{table}[H]
+\centering
+\caption{数据驻留位置的建议与理由}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}
+  >{\raggedright\arraybackslash}p{0.19\textwidth}
+  >{\raggedright\arraybackslash}p{0.36\textwidth}@{}}
+\toprule
+数据形态 & 建议驻留 & 理由 \\
+\midrule
+参数、梯度、长期缓存 & 设备侧常驻 & 每步都读写，任何一次回主机都是往返 \\
+数据集原始分片 & 主机侧加流式 & 容量决定的，留在设备侧只是换不来收益 \\
+两侧交替读写 & 留在被读次数多的一侧 & 消灭的是搬运次数而不是拷贝速度 \\
+少量标量、进度、控制字 & 主机映射内存 & 不值得一次正规拷贝，容忍高延迟 \\
+调试用的完整快照 & 主机侧 & 一次D2H，代价可预期且不在关键路径上 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{计时与归因}
+
+端到端时间由最慢的一段决定，因此先把``拷贝、计算、同步空隙''三者分开计时，再谈优化。事件计时的要点是把它当成设备侧的两点差：标记插进流里，等待放在区间之外，主机时钟只用来兜底核对。
+
+\begin{lstlisting}[style=cudastyle,caption={事件计时的正确姿势}]
+cudaEvent_t e0, e1;
+cudaEventCreate(&e0);             // timing is on by default
+cudaEventCreate(&e1);
+for (int i = 0; i < 3; ++i)       // warm up: first calls differ
+    launch_once(stream);          // alloc, JIT, caches are cold
+cudaEventRecord(e0, stream);      // queued, not executed yet
+launch_measured(stream);          // returns once enqueued
+cudaEventRecord(e1, stream);
+cudaEventSynchronize(e1);         // one wait, outside the region
+float ms = 0.f;
+cudaEventElapsedTime(&ms, e0, e1); // device-side interval in ms
+// Wrong habits: timing the launch call (that only times enqueue),
+// syncing inside the loop (you then time the pipeline drain), and
+// trusting one iteration (cold caches and pool growth dominate it).
+// To split copy from compute, record events on the copy stream too
+// and read the timeline: overlap shows up as two busy bands.
+\end{lstlisting}
+
+\begin{bestpractice}[title={搬运层的落地顺序}]
+一，先把拷贝次数减到最少：合并碎传输、把算子链留在同一侧走完，这一步的收益通常是倍数级的，且不需要任何硬件知识。
+二，主机侧缓冲区一律pinned：只改申请方式就能同时改善带宽与异步能力，但按分块大小申请，不要按整个数据集申请。
+三，用事件而不是同步表达依赖：跨流的先后关系应该是依赖图上的边，不应该是主机线程的一次等待。
+四，统一内存只在访问模式配合时使用：先用预取把迁移变成可预期的操作，出现缺页风暴时立刻退回显式拷贝，不要指望建议接口救回随机访问。
+五，显存问题先改生命周期再改分配器：把峰值算清楚、把缓冲复用出来，再考虑流式池与segment策略。
+六，交接点上核对数据归属与布局：零拷贝协议交换的是同一块内存，不是免费的搬运，所有权与流对齐要显式处理。
+七，任何结论都要有时间线证据：分段计时加剖析器能直接指出空隙属于拷贝、同步还是资源不足，缺证据的优化极易搬错方向。
+\end{bestpractice}
+% ====================================================================
+% ====================================================================
+\part{导出为 Python 库}
+
+\chapter{pybind11 的机制与边界}
+
+前三部分回答了``算法怎么并行、跑在哪个执行域''，第 IV 部分回答最后一个问题：怎么交付给 Python 用户。本章讲 pybind11，只讲并行库特有的那一半：\CPU{}与 \GPU{}混合调用路径下的 GIL 策略、大数组零拷贝与设备内存生命周期，这三件事在普通绑定教程里常被``装上就能用''一句带过。``脚本语言集成''的一般原理见《Script》分册，torch 扩展路线见硬件访问分册；本路线不依赖 torch，torch 只是可选互操作。
+
+\section{模块与函数绑定}
+
+\Tp{PYBIND11\_MODULE} 的第一个实参是模块名，必须与最终动态库文件名的
+最后一段一致（例如导入路径 \Tp{parallel\_algorithms.\_C} 对应宏里写
+\Tp{\_C}），不一致的症状要到导入时才暴露，见第 13 章；模块级函数用
+\Tp{m.def} 注册。
+
+参数名与默认值用 \Tp{py::arg} 声明；\Tp{py::kw\_only()} 与
+\Tp{py::pos\_only()} 是分界标记：写在它们前面的实参列表分别被划为
+``仅关键字''与``仅位置''。对并行库而言，把 \Opt{sync}、\Opt{tol} 这类
+开关设为仅关键字，能把函数签名长期稳定下来，便于以后换后端。
+
+重载解析顺序值得强调：同一个名字多次 \Tp{def} 之后，Python 侧按注册
+顺序从最早一条开始依次尝试（先注册者优先），并且``先尝试无转换的
+精确匹配，再尝试带类型转换的匹配''。所以宽泛签名（如 \Tp{py::object}）
+必须注册在最具体签名之后，否则窄签名永远轮不到。文档字符串用
+\Tp{py::doc} 传入，与 \Tp{py::arg} 的默认值一起构成 Python 侧
+\Tp{help()} 看到的全部事实，C++ 声明本身对用户不可见。
+
+\section{类绑定与 holder}
+
+\Tp{py::class\_<T>} 默认按值持有对象。并行库里凡是``跨语言多态''的
+对象——比如把 C++ 抽象基类 \Tp{Backend} 在 Python 里子类化、再传回
+C++ 调度器——必须显式指定 holder：
+
+\begin{lstlisting}[style=cppstyle,caption={类绑定：shared\_ptr holder 与只读属性}]
+class Backend {
+ public:
+  virtual ~Backend() = default;
+  virtual int run(const Task &t) = 0;      // 供 Python 覆写
+};
+
+PYBIND11_MODULE(_C, m) {
+  py::class_<Backend, std::shared_ptr<Backend>> b(m, "Backend");
+  b.def(py::init<>())
+   .def("run", &Backend::run, py::arg("task"))
+   .def_property_readonly("name", &Backend::name);  // 只读属性
+}
+\end{lstlisting}
+
+holder 换成 \Tp{std::shared\_ptr} 后，Python 引用计数与 C++ 的 \Tp{shared\_ptr} 合并成一条生命周期线：Python 侧丢弃对象、而 C++ 调度器还持有引用时，对象不会被析构；反之亦然。跨语言重写虚函数要靠跳板（trampoline）类：写一个继承 \Tp{Backend} 的 C++ 辅助类，用 \Tp{PYBIND11\_OVERRIDE} 宏把虚函数转发给 Python 覆写，配合 \Tp{py::virtual\_hook} 实现``Python 没覆写就回落 C++ 实现''；绑定时把辅助类作为 \Tp{py::class\_<Backend, std::shared\_ptr<Backend>, Tramp>} 的第三个模板实参。属性方面，\Tp{def\_readwrite} 直接暴露成员，\Tp{def\_property} 走 getter/setter；设备句柄一类``构造后不许改''的字段一律 \Tp{def\_property\_readonly}，否则用户会改掉运行中任务的设备号。
+
+\section{异常翻译与 Python 侧错误类型}
+
+pybind11 会把 \Tp{std::exception} 族（如 \Tp{invalid\_argument}、
+\Tp{out\_of\_range}）默认转成语义相近的 Python 内建异常，
+\Tp{py::error\_already\_set} 用于把``已经在飞的 Python 异常''原样重抛。
+映射关系随版本微调，不要把表当规范背；可靠的写法是：库自己抛带消息的
+\Tp{std::runtime\_error}，或用 \Tp{py::register\_exception} 注册专用
+异常类，让 Python 侧 \Tp{except pa.CudaError} 能捕获。
+
+并行库有两个特有条款。其一，CUDA 与驱动 API 返回的是错误码而不是异常，
+绑定层必须在\textbf{持有 GIL 时}把它翻译成 C++ 异常再让 pybind11 转
+Python 异常——在 \Tp{gil\_scoped\_release} 作用域内直接
+\Tp{throw py::value\_error} 是错误顺序。其二，
+设备侧异步错误（核函数内部出错）在``下一次同步点''才浮现，报错位置与
+出错位置错位，错误消息里必须带上是哪次提交、哪个流。
+
+\section{GIL 规则：本章的主干}
+
+规则一：Python 线程调用进入任何 pybind11 绑定代码时，默认\textbf{持有
+GIL}，这不是可选项。由此推出两条纪律：任何超过几微秒的
+\CPU{}密集段或阻塞等待段，必须放进 \Tp{py::gil\_scoped\_release}
+的作用域；反过来，在放锁作用域内触碰任何 Python 对象（包括回调
+\Tp{py::function}、构造 \Tp{py::tuple}、甚至抛 Python 异常对象）之前，
+必须用 \Tp{py::gil\_scoped\_acquire} 重新拿锁。给已持锁的 Python 线程
+再套一层 \Tp{gil\_scoped\_acquire} 是空操作，它只对本来不持锁的线程有意义。
+
+规则二：后台线程（自起的 \Tp{std::thread}、完成回调线程、线程池
+worker）默认\textbf{不持有} GIL，一切 Python API 调用前必须先
+\Tp{gil\_scoped\_acquire}——并行库的经典死法，就是在 TBB 任务里
+顺手调了一个 Python 日志函数。
+
+规则三与 \GPU{}有关：核函数\textbf{提交}（launch、异步拷贝入队）是
+不阻塞的短临界区，几十微秒量级，放锁与否对并行度影响很小；真正要
+放锁的是\textbf{等待}——\Fn{cudaStreamSynchronize}、事件同步与一切
+隐式同步的取回操作，一阻塞就是毫秒级，不放锁整个解释器陪着卡死。
+正确圈法见清单 \ref{lst:gil}：元数据与指针在持锁段取，计算与同步
+圈进放锁段，拿回锁之后再翻译异常。
+
+\begin{lstlisting}[style=cppstyle,caption={GIL 的正确圈法：持锁读元数据、放锁做计算与等待},label={lst:gil}]
+// 01_gil_discipline.cpp
+#include <pybind11/numpy.h>
+#include <algorithm>
+#include <numeric>
+#include <stdexcept>
+#include <string>
+namespace py = pybind11;
+
+double l2_norm(py::array_t<float, py::array::c_style> x) {
+  // 此刻持有 GIL：读形状、取指针，都是纯主机侧内存访问
+  py::buffer_info bi = x.request();
+  if (bi.ndim != 1)
+    throw py::value_error("expect a 1-D array");
+  const float *p = static_cast<const float *>(bi.ptr);
+  const ssize_t n = bi.size;
+  double acc = 0.0;
+  {
+    py::gil_scoped_release nogil;        // 计算段放锁
+    for (ssize_t i = 0; i < n; ++i) acc += double(p[i]) * p[i];
+  }                                      // 出作用域：重新持有 GIL
+  return std::sqrt(acc);
+}
+
+PYBIND11_MODULE(_C, m) {
+  m.def("l2_norm", &l2_norm, py::arg("x"),
+        py::doc("l2_norm(x) -> float; runs without the GIL"));
+}
+\end{lstlisting}
+
+\begin{warning}[title={三种典型 GIL 误用}]
+\begin{enumerate}[label=\arabic*.)]
+\item \textbf{不放锁}：核函数等待、大数组归约全程持锁。后果不是崩溃，
+而是``明明并行了，吞吐却是 1''：Python 的多线程、asyncio worker、
+GUI 主线程全被串行化，多核 \CPU{}的 \Tp{std::execution} 并行段也救不了
+场——瓶颈在解释器，不在你的循环。
+\item \textbf{放了锁又回调 Python}：在 \Tp{gil\_scoped\_release} 作用域
+内调 \Tp{py::function} 回调、构造异常或打印，轻则段错误、重则死锁。
+凡回调必重新 \Tp{gil\_scoped\_acquire}。
+\item \textbf{后台线程裸奔}：C++ 线程池或定时器线程直接调 Python 对象
+却没有 \Tp{gil\_scoped\_acquire}；或者反过来，在解释器关闭之后还有
+线程拿着 \Tp{py::object} 活着。两条都归到``谁发起调用，谁负责锁''。
+\end{enumerate}
+\end{warning}
+
+\section{numpy 互操作：\Tp{array\_t} 与 buffer 视图}
+
+数值并行库的主入口类型是 \Tp{py::array\_t<double>}（需
+\Tp{pybind11/numpy.h}）。不带模板 flag 时，非连续输入照样能接（strides
+在 \Tp{buffer\_info} 里带着）；若显式要求 \Tp{py::array::c\_style}
+或 \Tp{f\_style} 布局，不满足就抛异常；若再或上
+\Tp{py::array::forcecast} 这个选项，那么 pybind11 会\textbf{隐式拷贝
+并转类型}——这是并行库最隐蔽的性能杀手：用户传 \Tp{float32} 而签名要
+\Tp{double}，一切看似正常，只是每次多付一份全量拷贝。
+所以约定：数值入口一律显式写 flag，宁可报错也不静默拷贝；对不连续
+输入，要么在 C++ 里按 strides 走（清单 \ref{lst:strides}），要么让
+调用方自己 \Tp{np.ascontiguousarray}。
+
+\Tp{request()} 返回 \Tp{py::buffer\_info}，\Tp{ptr}、\Tp{ndim}、
+\Tp{shape}、\Tp{strides} 等字段一应俱全；需要可写内存就
+\Tp{request(true)}（对只读数组抛异常）。返回语义要
+在文档里写死两选一：返回\textbf{视图}（共享内存，生命周期挂在输入上）
+或返回\textbf{拥有者}（\Fn{py::empty\_like} 造的新内存）。并行库里
+就地算子返视图、算子结果返拥有者，与 numpy 习惯一致。
+
+\begin{lstlisting}[style=cppstyle,caption={零拷贝读写与 strides 检查},label={lst:strides}]
+// 02_array_view.cpp
+py::array_t<double> row_scale(py::array_t<double> a,
+                              py::array_t<double> w) {
+  if (a.ndim() != 2 || w.ndim() != 1 || w.shape(0) != a.shape(1))
+    throw py::value_error("shape mismatch: want (n, k) and (k,)");
+  // 只接受 C 连续；不连续交给调用方复制，绑定层不静默拷贝
+  if (!a.is_contiguous() || !w.is_contiguous())
+    throw py::value_error("expect C-contiguous, copy first");
+  py::buffer_info ba = a.request(true);     // 请求可写视图
+  py::buffer_info bw = w.request();
+  double *p = static_cast<double *>(ba.ptr);
+  const double *q = static_cast<const double *>(bw.ptr);
+  const ssize_t rows = ba.shape[0], cols = ba.shape[1];
+  { py::gil_scoped_release nogil;
+    for (ssize_t r = 0; r < rows; ++r)
+      for (ssize_t c = 0; c < cols; ++c)
+        p[r * cols + c] *= q[c];
+  }
+  return a;               // 返回的还是用户那块内存：视图语义
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=pythonstyle,caption={调用侧：共享内存与不连续的验证}]
+import numpy as np
+import parallel_algorithms as pa
+
+a = np.arange(12, dtype=np.float64).reshape(3, 4)
+out = pa.row_scale(a, np.array([2.0, 0.5, 1.0, 1.0]))
+
+# 视图语义：返回对象与输入共用同一块内存
+ptr_a = a.__array_interface__["data"][0]
+ptr_out = out.__array_interface__["data"][0]
+assert ptr_a == ptr_out
+
+nc = a.T                                  # 转置后 strides 非默认
+try:
+    pa.row_scale(nc, np.ones(3))         # C++ 侧检查 strides 后拒绝
+    raise AssertionError("must not reach here")
+except ValueError as exc:
+    print("rejected as expected:", exc)
+
+fast = pa.row_scale(np.ascontiguousarray(nc), np.ones(4))
+\end{lstlisting}
+
+\section{buffer 协议与 DLPack：设备内存的零拷贝}
+
+\Tp{py::buffer} 走 Python 缓冲协议，与 \Tp{py::array\_t} 一样只描述
+\textbf{主机}内存；把 GPU 张量硬塞进 \Tp{py::array\_t}，要么失败、
+要么触发一次隐式设备到主机拷贝。跨设备零拷贝的正路是 DLPack：Python
+侧张量对象暴露 \Tp{\_\_dlpack\_\_()}，返回一个封装
+\Tp{DLTensor} 结构的 capsule；绑定层解析出设备指针、设备类型与
+strides，直接把指针交给核函数。协议细节见第 11 章，这里只讲绑定层
+职责的三件事：第一，从 capsule 到``可安全使用的指针''之间
+必须\textbf{让生产者活着}——管理器 capsule（协议里随数据一并交出的
+所有权凭据）要在消费侧转存一份、用完再释放，不同 DLPack 协议版本
+的保管细节略有差异，以第 11 章与所用版本规范为准；谁忘记这一步，
+谁就会拿到一段已被释放的设备内存。第二，
+设备指针进 \Tp{std::execution} 主机并行段是非法的，DLPack 交付的
+\GPU{}指针只能进核函数。第三，不支持 DLPack 的对象仍走
+\Tp{py::array\_t} 兜底，两条入口要在绑定层合流成同一个内部函数。
+
+\section{STL 转换的隐性代价}
+
+\Tp{py::cast} 把 \Tp{std::vector<double>} 变成 \Tp{py::list} 是
+\textbf{逐元素深拷贝}，每个 \Tp{double} 还要装箱成一个 Python 浮点
+对象：一百万个元素，就是百万次小对象分配，比核函数本身慢两三个数量级。
+数值载荷一律走 \Tp{py::array\_t}，让 numpy 一次性接管这块内存；
+\Tp{std::vector} 自动转换只留给``确实只有几十个元素''的配置类返回值。
+惰性遍历用 \Tp{py::make\_iterator} 做视图，元素在迭代时才产生；视图
+不保生命周期，容器本体必须活得比迭代器久。
+
+\section{引用计数与生命周期陷阱}
+
+pybind11 的 \Tp{py::object} 析构会减引用计数，因此\textbf{减计数必须
+持有 GIL}。由此产生两类经典事故。其一，静态存储期的 \Tp{py::object}
+（全局缓存的类对象、异常类型、模块引用）在 C++ 静态析构阶段被销毁，
+而那往往发生在解释器关闭之后——症状是``\Tp{import} 正常、退出时
+段错误''，或干脆静默卡死。对策：让这类引用故意``漏''到进程结束，
+或注册 Python 侧 \Tp{atexit} 在解释器还活着时显式清空。其二，
+后台线程持有 \Tp{py::object} 横跨解释器关闭，或在关闭流程里才
+\Tp{gil\_scoped\_acquire}。对策同上：常驻对象在模块级字典里留一份
+引用，并在解释器还活着时（如 \Tp{atexit}）先停线程、再放对象。
+
+\section{free-threaded CPython 与稳定 ABI：版本敏感区}
+
+以下事实全部按``随版本不同''理解，落地时查当时代际的官方说明：
+CPython 3.13 起提供实验性的 free-threaded（无 GIL）构建，wheel 标签
+带 \Tp{t} 后缀（如 \Tp{cp313t}），官方长期标注为实验性支持；
+对扩展的影响是\textbf{双向的}——\Tp{gil\_scoped\_release} 在该构建下
+接近空操作，但``默认持有 GIL''这一简化前提不再替你保证对象引用的
+线程安全，所有跨线程 \Tp{py::object} 读写要靠真实锁。pybind11 对
+free-threaded 构建的支持是逐步完善的，接入前确认版本说明。
+稳定 ABI（\Tp{Py\_LIMITED\_API}）方面：pybind11 的既有路线是按
+具体 CPython 版本编译、不走 limited API，所以每个次版本一对 wheel；
+``用 abi3 一套通吃''在 pybind11 里不是默认可得，需要留意版本进展。
+对比表见框 \ref{box:compare-bind}。
+
+\begin{compare}[title={四种把 C++ 并行库递给 Python 的路子},label={box:compare-bind}]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.17\textwidth}
+  >{\raggedright\arraybackslash}p{0.19\textwidth}
+  >{\raggedright\arraybackslash}p{0.36\textwidth}@{}}
+路线 & 机制 & 定位与并行库适配度 \\
+\midrule
+pybind11 & C++ 模板头文件库 & 类、异常、GIL 原语齐全，本书主线；逐版本编译 \\
+ctypes、cffi & 运行时按签名调 C 符号 & 零编译依赖，但只认 C ABI；\Tp{void*} 入参手写，numpy 要另接缓冲协议 \\
+nanobind & 新一代绑定库 & 更小更快，走稳定 ABI、支持 free-threaded；生态与 numpy 集成不如 pybind11 厚 \\
+torch 扩展 & cpp\_extension 打包 & 与 torch 张量、autograd 咬合最紧，代价是绑死 torch；torch 路线另见硬件访问分册，本书不走 \\
+\end{tabular}
+\end{compare}
+
+\begin{guideline}[title={本章要点}]
+\begin{itemize}
+\item 调用进来默认持锁；超过微秒级的 \CPU{}段与一切等待放锁；凡回调 Python、凡抛 Python 侧异常，先把锁拿回来。
+\item CUDA 提交是短临界区可不放锁，同步等待必须放锁；异常翻译放在持锁段完成。
+\item 数值入口用 \Tp{py::array\_t} 并显式写 flag；宁可对不连续报错，不用 \Tp{forcecast} 静默拷贝。
+\item 返回值在文档里写死``视图''或``拥有者''；设备张量走 DLPack，并负责管理器生命周期。
+\item \Tp{std::vector} 到 \Tp{py::list} 是装箱深拷贝，大数据绝不走这条路；惰性遍历用迭代器视图。
+\item 静态 \Tp{py::object} 与后台线程引用是解释器关闭期的两大雷区；free-threaded 与稳定 ABI 属版本敏感区，落地前查版本说明。
+\end{itemize}
+\end{guideline}
+% ====================================================================
+% ====================================================================
+\chapter{构建、类型桩与分发}
+
+绑定代码写得再干净，用户面对的仍然只有三件事：\Tp{pip install} 装不装
+得上、\Tp{import} 进不进得来、编辑器有没有补全。本章把并行库的构建
+链路走一遍：CMake 目标怎么设计、CUDA 与 \NPU{}工具链怎么混进同一次
+构建、wheel 矩阵怎么发、类型桩怎么让 Python 用户看见 C++ 的签名，
+最后是崩溃了怎么查。
+
+\section{pybind11\_add\_module 与 CMake 目标设计}
+
+\Tp{pybind11\_add\_module} 在普通 \Fn{add\_library} 之上做了三件
+烦人事：按目标解释器配好隐藏符号（Linux 上等价于 \Tp{visibility
+=hidden} 一族设置）、关掉多余的前后缀（产出 \Tp{pa\_core.so} 而不是
+\Tp{libpa\_core.so}）、把 pybind11 与 Python 头挂进 include。现代用法
+是 Config 模式找包：
+
+\begin{lstlisting}[style=cmakestyle,caption={模块与核函数分目标：绑定层薄、核函数可单测}]
+cmake_minimum_required(VERSION 3.24)
+project(parallel_algorithms LANGUAGES CXX)
+
+find_package(pybind11 CONFIG REQUIRED)
+find_package(TBB CONFIG REQUIRED)
+
+add_library(pa_core STATIC core/pack.cpp core/kv_cache.cpp
+                           core/scheduler.cpp)
+target_link_libraries(pa_core PUBLIC TBB::tbb)
+
+pybind11_add_module(_C bind/bindings.cpp)
+target_link_libraries(_C PRIVATE pa_core)
+set_target_properties(_C PROPERTIES OUTPUT_NAME "_C")
+\end{lstlisting}
+
+命名规则务必背下：导入路径末段等于 \Tp{PYBIND11\_MODULE} 的第一个
+实参，也等于动态库文件名的首段（\Tp{\_C.cpython-312-x86\_64-linux.
+so} 首段是 \Tp{\_C}）；带 ABI 标签的文件名由构建系统生成，不要手写。
+包结构上，扩展模块作为包的私有子模块（\Tp{parallel\_algorithms.\_C}）
+最省心：公开 API 留在纯 Python 层，绑定层随时可换。单模块还是多模块
+是个工程权衡：单模块构建简单、符号共享，代价是一处 CUDA 编译失败
+全量重来；多模块（如 \Tp{\_C\_cpu} 与 \Tp{\_C\_cuda} 分家）能让
+纯 \CPU{}用户完全避开 \GPU{}工具链，代价是共享状态（设备表、日志）
+要在模块间小心同步。本书第 14 章的实战采用折中：一个绑定模块，
+后端差异用运行时探测消化。
+
+\section{scikit-build-core 与现代打包布局}
+
+旧的 \Tp{setup.py} 加 setuptools 路线对``构建时需要外部工具链''的
+项目很勉强；现在的事实标准是 PEP 517 后端 scikit-build-core：它把
+CMake 塞进标准的 \Fn{build\_wheel} 钩子，顺带管构建依赖隔离、
+ninja 拉取、并行度、wheel 标签。骨架见清单 \ref{lst:pyproject}，
+键名以所用 scikit-build-core 版本文档为准（早期与近期版本的键名
+有重命名与迁移，属版本敏感区）。
+
+\begin{lstlisting}[style=tomlstyle,caption={pyproject.toml 关键段},label={lst:pyproject}]
+[build-system]
+requires = ["scikit-build-core>=0.9", "pybind11>=2.13",
+            "setuptools_scm"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "parallel-algorithms"
+description = "Parallel kernels exported to Python"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.23"]
+
+[project.optional-dependencies]
+test = ["pytest", "torch"]
+
+[tool.scikit-build]
+cmake.version = ">=3.24"
+build-dir = "build/{wheel_tag}"
+wheel.packages = ["python/parallel_algorithms"]
+install.components = ["pa_python"]
+\end{lstlisting}
+
+安装位置分工：CMake 侧只负责把扩展模块装进
+\Tp{parallel\_algorithms/} 包目录（用自定义 install component 或
+目标直接落在 Python 源目录旁），纯 Python 文件由
+\Tp{wheel.packages} 搬运。\Tp{cmake.args}（写成
+\Tp{[tool.scikit-build.cmake.args]} 表）或环境变量里的
+\Tp{SKBUILD\_CMAKE\_ARGS} 是向 CMake 传参的正规通道，比如
+\Tp{CMAKE\_CUDA\_ARCHITECTURES}。\Opt{verbose}、并行度
+\Opt{nuke} 之类开关同样归 scikit-build-core 管，键名随版本变，
+现场查表。可编辑安装：scikit-build-core 支持 \Tp{pip install -e .}，
+并提供多种可编辑模式（重定向到构建目录、或安装时同步），行为与
+默认值随版本不同，团队内先统一版本再谈模式。构建隔离出问题
+（比如离线机器上拉不到 pybind11）时的诊断手段是
+\Tp{--no-build-isolation}：它复用当前环境里已装的构建依赖，绕开
+临时环境——注意这是排障开关，不是日常构建方式。
+
+\section{CUDA 与 NPU 混合构建}
+
+CMake 3.18 起原生 \Fn{enable\_language}(CUDA)，现代写法只设一个变量：
+\Tp{CMAKE\_CUDA\_ARCHITECTURES}。它的默认值随 CMake 与 CUDA 版本
+变化（近年版本一度倾向 \Tp{native} 或最低架构），所以发布构建
+\textbf{永远显式写死目标架构}，如 \Tp{80;86;90}；它会被翻译成
+nvcc 的 \Tp{-gencode arch=compute\_XX,code=...} 组合，具体展开式
+无需手抄。给核函数单独立静态库、绑定层只链接它，好处与清单
+\ref{lst:cmake-cuda} 的写法一致：核函数可以脱离 Python 单独测试，
+换后端不动绑定层。
+
+\begin{lstlisting}[style=cmakestyle,caption={CUDA 混合构建：核函数静态库进绑定模块},label={lst:cmake-cuda}]
+enable_language(CUDA)
+find_package(CUDAToolkit REQUIRED)
+set(CMAKE_CUDA_ARCHITECTURES 80 86 90 CACHE STRING "")
+
+add_library(pa_kernels STATIC kernels/mla_fwd.cu kernels/scan.cu)
+set_target_properties(pa_kernels PROPERTIES
+  POSITION_INDEPENDENT_CODE ON
+  CUDA_STANDARD 17)
+target_link_libraries(pa_kernels PUBLIC CUDA::cudart)
+
+target_link_libraries(_C PRIVATE pa_kernels)
+\end{lstlisting}
+
+找不到工具链时要有降级路径，而不是让用户吃一个天书般的
+\Fn{find\_package} 失败：用 \Tp{option(PA\_ENABLE\_CUDA)} 宏（描述串
+与默认值 \Tp{OFF} 照惯例写全）
+按``探测到再开''处理，探测失败就关掉 \GPU{}目标、照常产出
+\CPU{}模块，并在 \Tp{import} 元数据里记录本次构建启用了哪些后端
+（写进生成的 \Tp{\_build\_info.py}）。工具链探测本身按显式路径、
+环境变量、默认安装位置三级查找；CUDA 可用 \Fn{find\_package}(CUDA)
+或 \Tp{CUDAToolkit}，\NPU{}侧（CANN 类工具包）没有统一标准，做法
+是查环境变量（如工具包根目录变量）与 \Fn{find\_library} 组合，找不到
+就把对应选项静默降级——降级要留日志，构建产物要可追溯。跨版本
+提醒：nvcc 与主机编译器版本配对、架构集合是否含 PTX 嵌入，都随
+CUDA 大版本不同，别把一台机器上的成功命令当真理。
+
+\section{运行时后端选择与降级}
+
+构建期决定``编进什么''，导入期决定``用什么''。原则一：探测发生在
+\Tp{import} 时一次，结果缓存；逐次调用探测会在热路径上塞进驱动
+调用。原则二：\textbf{后端差异绝不泄漏进函数签名}——同一个
+\Fn{mla\_forward}，\CPU{}与 \GPU{}参数、返回、异常类型完全一致，
+张量在哪就结果在哪；用户唯一应感知的差异是耗时与
+\Tp{pa.BACKEND} 这类只读查询。原则三：降级到纯 \CPU{}兜底实现是
+默认行为而非失败，兜底实现允许慢、不允许结果不同（容差内的
+一致性由第 14 章的对拍保证）。实现骨架：
+
+\begin{lstlisting}[style=pythonstyle,caption={导入时探测，签名对后端一无所知}]
+# parallel_algorithms/_backend.py
+BACKEND = "cpu"          # 兜底值，探测成功后覆盖
+
+def _probe():
+    global BACKEND
+    try:
+        from ._C import cuda_available   # 编译时含 CUDA 才有此符号
+        if cuda_available():
+            BACKEND = "cuda"
+            return
+    except ImportError:
+        pass
+    try:
+        from ._C import npu_available
+        if npu_available():
+            BACKEND = "npu"
+            return
+    except ImportError:
+        pass
+
+_probe()
+\end{lstlisting}
+
+\section{类型桩：让签名可见}
+
+C++ 的签名对 Python 类型检查器默认不可见：\Tp{m.def} 传进去的
+\Tp{py::arg} 与默认值只影响运行时，\Tp{mypy}、编辑器补全都读
+\Tp{.pyi} 桩文件。两条来路：手写 \Tp{.pyi}（推荐，桩即对外契约，
+绑定细节可隐藏）；或 \Fn{pybind11-stubgen} 一类工具对编译好的模块
+做内省自动生成、发布前校验两者一致。约定：扩展模块 \Tp{pa\_core}
+对应 \Tp{pa\_core.pyi}，随包一起装进 wheel 并配 \Tp{py.typed}
+标记文件，否则类型检查器无视你的桩。docstring 与签名一致性会被
+\Tp{pytest} 加 \Fn{inspect.signature} 的自检测试抓住，值得写。
+
+\section{分发：cibuildwheel 矩阵与 CUDA 运行时的打包策略}
+
+\Tp{cibuildwheel} 在 CI 里按矩阵构建 wheel：三个维度是 CPython
+次版本、平台与目标架构。Linux 走 manylinux 与 musllinux 容器镜像（glibc 基线随
+镜像 tag 版本变，基线选择取决于目标用户的环境），Windows 出 amd64 与 arm64，
+macOS 出 arm64 为主；numpy 与 free-threaded 解释器的组合覆盖也随
+cibuildwheel 版本推进，矩阵以所用版本文档为准。
+
+\begin{lstlisting}[style=shellstyle,caption={本地触发一个切片并检查产物}]
+pipx run cibuildwheel --print-build-identifiers
+CIBW_BUILD="cp312-manylinux_x86_64" \
+  cibuildwheel --output-dir wheelhouse .
+auditwheel show wheelhouse/parallel_algorithms-*.whl
+find build -name '_C*.so' -exec ldd {} \; | grep "not found"
+\end{lstlisting}
+
+Linux 上 \Fn{auditwheel} repair 把缺失的系统级动态依赖搬进 wheel；
+macOS 用 \Fn{delocate} 同类工作。CUDA 侧要克制：\Fn{auditwheel}
+若把整套 cudart 塞进去，wheel 轻松过百 MB。通行策略三选一——
+捆绑完整运行时的 fat wheel（体积大、零配置）；依赖 PyPI 上的
+NVIDIA 官方运行时组件包并自行处理加载顺序（体积可控，版本配对
+纪律要求高）；不捆绑、要求环境自备 CUDA（发布最轻，用户体验
+最差）。三档没有普适答案，按目标用户群选，并在 README 写明。
+musl 基线与 \GPU{}运行时的组合兼容性要实测，别信文档推断。
+体积控制还有第二战场：调试符号、多架构 fatbin、测试数据都不该进
+发布 wheel，用 install component 或事后裁剪把非必要内容留在源码树。
+
+\section{ABI 与 numpy 兼容}
+
+扩展模块的 CPython ABI 按次版本编译（cp312 的模块在 cp313 常规
+构建上直接 \Tp{ImportError}，stable-ABI 的 abi3 轮子可跨次版本——
+但 pybind11 不走 limited API，这条路要具体版本支持，属版本敏感区）。
+numpy 侧的历史包袱：numpy 1.x 时代编译期链接的 numpy C-API 与运行期
+版本强耦合，所以生态用 oldest-supported-numpy 元包指定``按能支持
+的最老 numpy 编译''；numpy 2.x 引入稳定化的 C-API 分层后，``按
+较新头文件编译、向后兼容运行''成为可能，pybind11 对 numpy 2 头文件
+的支持也分阶段合入。落到操作层面就两条：构建依赖里显式钉住 numpy
+版本策略，发布前在目标 numpy 区间两端各跑一次 \Tp{import} 冒烟测试。
+free-threaded 解释器标签带 \Tp{t}（\Tp{cp313t}）需单独出轮子，
+是否纳入矩阵随你的 pybind11 与 cibuildwheel 版本而变。
+
+\section{调试：崩溃、符号与 sanitizer}
+
+发布 wheel 用 Release 没问题，开发轮建议 RelWithDebInfo（Windows
+上配合 \Tp{/Zi} 与 \Tp{/Od} 家族选项），并把 \Tp{-g}、CUDA 的
+\Tp{-lineinfo} 打开——\GPU{}崩溃报``未知位置''比不报更耗时间。
+Python 侧先开 \Tp{faulthandler}（\Tp{PYTHONFAULTHANDLER=1}）拿到
+C 栈所在的那个 Python 调用；再用 \Tp{py-spy} 或调试器附加看原生栈。
+GIL 类问题（放锁后碰 Python 对象）现场常常已是二次崩溃，调试构建
+里加断言把``此刻是否持锁''显式化（\Tp{PyGILState\_Check} 可用但
+有成本，只进开发构建）。sanitizer 要谨慎：ASan 链接进普通构建的
+解释器会产生大量来自 CPython 分配器的噪声乃至冲突报告，正规做法
+是用 sanitizer 版解释器或把被怀疑的扩展模块从解释器进程里剥出来、
+写纯 C++ 的最小复现单测——并行库的绑定层测试本来就应该是
+``C++ 单测管算法、pytest 管接口''两层，崩溃归属用后者排除法定位。
+
+\begin{note}[title={模块导入失败的四种真实原因}]
+\begin{enumerate}[label=\arabic*.)]
+\item \textbf{ABI 不匹配}：wheel 的 cp3xx 标签与环境解释器不符；或环境是 free-threaded 构建而 wheel 是常规构建。报错直白：\Tp{ImportError} 提示架构或版本不兼容。
+\item \textbf{缺动态库}：\Tp{ldd} 一下扩展 so，多半是 cudart、工具包 so 或 MSVC 运行时不在加载路径；Windows 的症状是``找不到指定的模块''这种误导性消息。
+\item \textbf{CUDA 架构不匹配}：导入与 \Tp{import torch} 都活着，第一次调用报 \Tp{no kernel image is available}——wheel 里的 fatbin 没编当前架构、也没嵌 PTX 兜底。
+\item \textbf{名字不对}：\Tp{PYBIND11\_MODULE} 第一实参与文件名末段、导入路径末段三处不一致；子包相对导入写错；扩展装了但 \Tp{\_\_init\_\_.py} 没转发符号。先打印 \Tp{sys.path} 与包目录内容核对加载路径，再逐一核对三处名字。
+\end{enumerate}
+\end{note}
+
+\begin{bestpractice}[title={构建与分发纪律}]
+\begin{itemize}
+\item 绑定层薄化：核函数进静态库，绑定只做参数转换与生命周期，C++ 单测不依赖解释器。
+\item 发布构建显式钉死 \Tp{CMAKE\_CUDA\_ARCHITECTURES} 与 numpy 策略；架构集合里要不要嵌 PTX 按目标用户决定并记录在发布说明。
+\item 后端探测只在 import 做一次；函数签名对后端零感知，降级走兜底实现是行为而不是失败。
+\item \Tp{.pyi} 是对外契约：手写维护、发布前与运行时签名对拍一致，并随包安装 \Tp{py.typed}。
+\item 开发轮带符号（RelWithDebInfo、\Tp{-lineinfo}）；sanitizer 只进专用构建，别混进用户轮子。
+\end{itemize}
+\end{bestpractice}
+% ====================================================================
+% ====================================================================
+\chapter{实战：一个混合执行库}
+
+本章把全书主线走通一遍：注意力与归约这类算子放进加速卡，变长打包、mask、分页块表、批调度这类控制流留在 \CPU{}，最后用 pybind11 导出成名为 \Tp{parallel\_algorithms} 的 Python 包。各片段共用同一套命名；判据见第 3 章，归约与分块 softmax 见第 8、9 章，构建与分发见第 13 章。
+
+\section{设计目标与职责划分}
+
+API 面收得很窄：算子只给 \Fn{mla\_forward}（变长 MLA 前向，\GPU{}与 \NPU{}共享同一签名）；\CPU{}侧给变长打包、padding bias 构造、分页 KV cache 块表与批调度，另有一份纯 \CPU{}兜底实现，保证无卡环境``慢但结果一致''。表 \ref{tab:domain-split} 给出按第 3 章判据的划分。
+
+\begin{table}[htbp]
+\centering
+\caption{混合执行库里每一步的执行域与理由}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}
+  >{\raggedright\arraybackslash}p{0.12\textwidth}
+  >{\raggedright\arraybackslash}p{0.46\textwidth}@{}}
+\toprule
+步骤 & 执行域 & 理由（判据见第 3 章） \\
+\midrule
+变长打包与前缀和 & \CPU{} & 至多数万行，行级独立；产出索引而非数据洪水 \\
+mask 与 padding bias & \CPU{} & 控制密集，上卡即逐线程分支 \\
+分页块表分配回收 & \CPU{} & 全局视图加短临界段，内存管理是 \CPU{}主场 \\
+注意力内积与 softmax & \GPU{}、\NPU{} & 算术强度与足迹双双过线的带宽受限计算 \\
+批调度决策 & \CPU{} & 不规则比较与全局队列状态 \\
+结果取回与回调 & \CPU{} & 必须持 GIL 的段，本就不是吞吐瓶颈 \\
+\bottomrule
+\end{tabular}
+\label{tab:domain-split}
+\end{table}
+
+\begin{compare}[title={全 \CPU{}、全 \GPU{}、混合三种方案的真实代价}]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+  >{\raggedright\arraybackslash}p{0.60\textwidth}@{}}
+方案 & 真实代价 \\
+\midrule
+全 \CPU{} & 单一 wheel、开发最省；吞吐被核数与内存带宽封顶，长序列注意力最先撞墙 \\
+全 \GPU{} & 打包、mask、调度全搬上卡：控制流引发整族发散，形状一变就重建图或重编译，主机与设备往返吃掉收益 \\
+混合（本章） & 维护两套工具链、一层互操作；换来每步待在最合适的域，接口收敛为``\CPU{}出形状与索引，卡上做大块规则计算'' \\
+\end{tabular}
+\end{compare}
+
+\section{目录结构与模块划分}
+
+\begin{lstlisting}[style=shellstyle,caption={仓库骨架：四层各司其职}]
+parallel_algorithms/   # wheel 可见：__init__.py、_backend.py、
+                       # _fallback.py、_C.pyi、py.typed
+src/core/      # 纯 C++：pack.cpp、kv_cache.cpp、scheduler.cpp
+src/kernels/   # CUDA：mla_fwd.cu（同接口另有 NPU 实现）
+src/bind/      # bindings.cpp：只做转换与生命周期（tests/ 在仓库根）
+\end{lstlisting}
+分层纪律：\Tp{src/core} 不认 Python 也不认 CUDA，\Tp{src/kernels} 只认指针与形状；绑定层是唯一同时接触两种世界的地方，GIL、异常翻译、生命周期三件事只在这一层发生；构建与打包文件见 13.1 节与 14.10 节。
+
+\section{\CPU{}侧核心：打包、块表与调度}
+
+打包第一步是把每序列长度变成排他前缀和（\Tp{cu\_seqlens} 风格的索引）。宏 \Tp{PA\_PAR} 在 \Tp{<execution>} 可用时展开成策略实参，否则展开为空，于是前缀和与按序列搬运都是``有策略就用、没有就退化串行''；序列之间互不相干，是最干净的并行维度。块表只动一张空闲表，微秒级短临界段，绑定层里不放 GIL 反而更稳（并发保护交给互斥锁）：
+
+\begin{lstlisting}[style=cppstyle,caption={core/pack.cpp 与 core/kv\_cache.cpp：打包与块表}]
+#include <cstring>
+#include <numeric>
+#include <stdexcept>
+#include <vector>
+#ifdef __cpp_lib_execution
+#include <execution>
+#define PA_PAR std::execution::par,   // 有策略即用策略重载
+#else
+#define PA_PAR                        // 没有则退化为串行重载
+#endif
+namespace pa {
+// cu[i] 为第 i 条序列在打包缓冲区中的起始行号
+std::vector<int64_t> make_cu_seqlens(
+    const std::vector<int64_t> &l) {
+  std::vector<int64_t> cu(l.size() + 1, 0);
+  std::partial_sum(PA_PAR l.begin(), l.end(), cu.begin() + 1);
+  return cu;
+}
+
+// 把 padded 批量 src 的有效行压进连续缓冲区 dst
+std::vector<float> pack_rows(const std::vector<float> &src,
+                             const std::vector<int64_t> &lens,
+                             const std::vector<int64_t> &cu,
+                             int64_t dim, int64_t max_len) {
+  std::vector<float> dst(cu.back() * dim);
+  auto copy_seq = [&](int64_t i) {    // 一条序列一段连续内存
+    const float *s = src.data() + i * max_len * dim;
+    std::memcpy(dst.data() + cu[i] * dim, s,
+                lens[i] * dim * sizeof(float));
+  };
+  std::vector<int64_t> idx(lens.size());
+  std::iota(idx.begin(), idx.end(), 0);
+  std::for_each(PA_PAR idx.begin(), idx.end(), copy_seq);
+  return dst;
+}
+// ---- core/kv_cache.cpp：分页 KV cache 的空闲页管理 ----
+class PagePool {
+ public:
+  PagePool(int64_t num_pages, int64_t page_size)
+      : page_size_(page_size) {       // 初始时全部页空闲
+    free_.resize(num_pages);
+    std::iota(free_.begin(), free_.end(), 0);
+  }
+  std::vector<size_t> allocate(int64_t n) {
+    if (n > static_cast<int64_t>(free_.size()))
+      throw std::runtime_error("kv cache: out of pages");
+    auto tail = free_.end() - n;      // 从空闲表尾部取页
+    std::vector<size_t> got(tail, free_.end());
+    free_.erase(tail, free_.end());
+    return got;                       // 交给核函数的块表片段
+  }
+  void release(std::vector<size_t> pages) {
+    free_.insert(free_.end(), pages.begin(), pages.end());
+  }
+  size_t free_pages() const { return free_.size(); }
+ private:
+  std::vector<size_t> free_;  int64_t page_size_;
+};
+}  // namespace pa
+\end{lstlisting}
+padding bias 的构造同样在 \CPU{}：有效块取因果三角、padding 行整行为零，按行 \Fn{transform} 生成，随批次一次性流上卡。批调度（哪个请求进下一个 batch、要不要抢占）是数据依赖的比较与全局队列读取，按判据留在 \CPU{}，实现就是带预算约束的优先级扫描——两者上卡的反面教材见 14.9 节。
+
+\section{核函数侧：只收指针与形状的算子入口}
+
+核函数接口是与第 8、9 章的接缝：输入只有打包后的 \Tp{q}、\Tp{kv} 指针、\Tp{cu\_seqlens} 设备副本与形状；分块内积加在线 softmax 的主体逐字复用第 8、9 章，这里只留入口骨架。
+
+\begin{lstlisting}[style=cudastyle,caption={kernels/mla\_fwd.cu：算子入口与 launch}]
+// 第 8 章 warp 归约、第 9 章分块在线 softmax 在此复用
+__global__ void __launch_bounds__(256)
+mla_tile_kernel(const float *__restrict__ q,
+                const float *__restrict__ kv,
+                float *__restrict__ out, const int64_t *cu) {
+  const int seq = blockIdx.y, tile = blockIdx.x;
+  const int64_t beg = cu[seq], len = cu[seq + 1] - beg;
+  if (tile * 64 >= len) return;       // 越界行块，整块退出
+  // 本块 64 行 Q 进共享内存；沿 KV 行块循环调用 tile_qk(...)
+  // 与 softmax_online(...)
+}
+cudaError_t launch_mla_fwd(const float *q, const float *kv,
+                           float *out, const int64_t *cu,
+                           int num_seq, int64_t max_len,
+                           cudaStream_t stream) {
+  const int tiles = static_cast<int>((max_len + 63) / 64);
+  mla_tile_kernel<<<dim3(tiles, num_seq), 256, 0, stream>>>(
+      q, kv, out, cu);
+  return cudaGetLastError();
+}
+\end{lstlisting}
+两点纪律：核函数不读任何 Python 可见的结构体，块表与 bias 都是 \CPU{}算好传入的普通数组——这就是``控制流留 \CPU{}''在接口上的落点；float16 入口是同一骨架的模板实例化，由绑定层按输入 dtype 分派。
+
+\section{绑定层：转换、放锁与错误翻译}
+
+绑定层是全库唯一允许同时出现 \Tp{py::} 类型与 \Tp{cudaError\_t} 的文件，落实第 12 章全部纪律：入参显式 \Tp{c\_style}、拷贝提交等待整体圈进放锁作用域、异常在拿回锁之后翻译。numpy 主机内存走``拷上拷下''；设备张量走 \Tp{\_\_dlpack\_\_()} 入口（\Fn{mla\_fwd\_dl}，未展开），两条路在 \Fn{launch\_mla\_fwd} 合流，且管理器引用在同步完成前不得释放（12.6 节）。
+
+\begin{lstlisting}[style=cppstyle,caption={bind/bindings.cpp：算子绑定与类绑定},label={lst:bind}]
+#include <pybind11/numpy.h>
+#include <algorithm>
+#include <stdexcept>
+#include <vector>
+namespace py = pybind11;
+// 设备侧薄封装在头文件声明、实现省略：copy_h2d、copy_back、
+// dev_q/dev_kv/dev_out/dev_cu、get_stream、query_cuda（13.3 降级恒 0）
+py::array mla_fwd(py::array_t<float, py::array::c_style> q,
+                  py::array_t<float, py::array::c_style> kv,
+                  py::array_t<int64_t, py::array::c_style> cu,
+                  bool sync) {
+  if (q.ndim() != 2 || kv.ndim() != 2 || q.shape(1) != kv.shape(1))
+    throw py::value_error("expect packed (total, dim) arrays");
+  const int nseq = static_cast<int>(cu.size()) - 1;
+  const int64_t *pcu = cu.data();
+  int64_t max_len = 0;                // 持锁段只读元数据
+  for (int i = 0; i < nseq; ++i)
+    max_len = std::max(max_len, pcu[i + 1] - pcu[i]);
+  auto out = py::empty_like(q);
+  cudaError_t err = cudaSuccess;
+  {
+    py::gil_scoped_release nogil;     // 拷贝、提交、等待都在锁外
+    copy_h2d(q.data(), kv.data(), pcu, get_stream());
+    err = launch_mla_fwd(dev_q(), dev_kv(), dev_out(), dev_cu(),
+                         nseq, max_len, get_stream());
+    if (sync && err == cudaSuccess)   // 回取与同步同样在锁外
+      err = copy_back(static_cast<float *>(out.mutable_data()));
+  }                                   // 此处重新持有 GIL
+  if (err != cudaSuccess)             // 异常翻译必须持锁
+    throw std::runtime_error(cudaGetErrorString(err));
+  return out;                         // 拥有者语义：新缓冲
+}
+PYBIND11_MODULE(_C, m) {              // 类绑定 holder 见 12.2
+  using Pool = pa::PagePool;
+  m.def("cuda_available", &query_cuda);
+  m.def("cu_seqlens", &pa::make_cu_seqlens, py::arg("lens"));
+  m.def("mla_fwd", &mla_fwd, py::arg("q"), py::arg("kv"),
+        py::arg("cu"), py::kw_only(), py::arg("sync") = true);
+  py::class_<Pool, std::shared_ptr<Pool>> pp(m, "PagePool");
+  pp.def(py::init<int64_t, int64_t>(), py::arg("num_pages"),
+         py::arg("page_size"))
+    .def("allocate", &Pool::allocate, py::arg("n"))
+    .def("release", &Pool::release, py::arg("pages"))
+    .def_property_readonly("free_pages", &Pool::free_pages);
+}
+\end{lstlisting}
+
+\section{Python 侧 API 与类型桩}
+
+\begin{lstlisting}[style=pythonstyle,caption={\_\_init\_\_.py 与 \_C.pyi（节选）：签名对后端零感知}]
+import numpy as np
+from typing import Sequence
+from . import _C
+from ._backend import BACKEND         # 13.4 的探测结果
+from ._fallback import mla_forward_cpu
+
+def cu_seqlens(seqlens: Sequence[int]) -> np.ndarray:
+    """把每条序列的长度转成排他前缀和（int64 数组）。"""
+    return np.asarray(_C.cu_seqlens(list(seqlens)), dtype=np.int64)
+
+def mla_forward(q, kv, seqlens, *, sync: bool = True):
+    """变长 MLA 前向。q、kv 为打包后的 (total_len, head_dim) 张量
+    （float32 或 float16；numpy 主机数组，设备张量走 DLPack 零拷贝）；
+    seqlens 给出各序列长度；sync 阻塞至结果就绪（期间放 GIL）。
+    BACKEND 为 cpu 时走兜底实现，数值语义一致、仅慢。
+    """
+    cu = cu_seqlens(seqlens)
+    if BACKEND == "cpu":
+        return mla_forward_cpu(q, kv, cu)
+    return _C.mla_fwd(q, kv, cu, sync=sync)
+# ---- _C.pyi：对外契约（节选）----
+def mla_fwd(q: np.ndarray, kv: np.ndarray, cu: np.ndarray,
+            *, sync: bool = ...) -> np.ndarray: ...
+class PagePool:
+    def __init__(self, num_pages: int, page_size: int) -> None: ...
+    def allocate(self, n: int) -> list[int]: ...
+    def release(self, pages: Sequence[int]) -> None: ...
+    @property
+    def free_pages(self) -> int: ...
+\end{lstlisting}
+
+\section{正确性对拍}
+
+对拍基准用 PyTorch 逐序列朴素实现（慢但可读），\CPU{}兜底与核函数实现都对它比。容差不靠玄学：两边累加顺序不同，误差随累加长度按平方根量级增长，故 rtol、atol 随序列长度放宽；fp32 从机器精度乘安全系数起步，fp16 结果一律对 fp32 参考比、放粗一到两个数量级。下面的取值是起点示例，不是承诺：
+
+\begin{lstlisting}[style=pythonstyle,caption={tests/test\_parity.py（节选）：对拍骨架}]
+import numpy as np
+import pytest
+import torch
+import parallel_algorithms as pa
+
+SEED = 20240515
+
+def ref_mla(q, kv, lens):                # 逐序列朴素参考，fp32
+    outs, beg = [], 0
+    for L in lens:
+        s, e = q[beg:beg + L], kv[beg:beg + L]
+        w = torch.softmax(s @ e.T / (q.shape[1] ** 0.5), dim=-1)
+        outs.append(w @ e); beg += L
+    return torch.cat(outs).numpy()
+def tol(dtype):                          # 量级规则，不是承诺值
+    return dict(rtol=1e-4, atol=1e-5) if dtype == np.float32 \
+        else dict(rtol=1e-2, atol=1e-2)
+@pytest.mark.parametrize("lens",
+                         [[1], [7, 33, 2], [128] * 8, [511]])
+def test_parity_fp32(lens):
+    g = torch.Generator().manual_seed(SEED)
+    q = torch.rand(sum(lens), 64, generator=g).numpy()
+    kv = torch.rand(sum(lens), 64, generator=g).numpy()
+    got = np.asarray(pa.mla_forward(q, kv, lens), dtype=np.float32)
+    np.testing.assert_allclose(got, ref_mla(q, kv, lens),
+                               **tol(np.float32))
+\end{lstlisting}
+float16 分支同构：输入 cast 成 \Tp{float16} 走同一入口，参考仍是 fp32，\Fn{tol} 落粗档——fp16 结果对 fp32 参考时，参考里``被舍掉的低位''正是容差要吸收的量。形状覆盖刻意含长度质数、批量 1、超长单序列三类边角，种子固定到每个用例，失败可复现。
+
+\section{基准方法}
+
+基准只答相对问题，不给绝对数字。三条纪律：预热（首调含上下文建立与核函数加载）；报中位数与分位数，不报平均数；CUDA 用 event 在流上计时，且计时区间只圈算子——把 H2D、D2H 算进``内核时间''是混合库最常见的自欺。设备驻留路径（DLPack 入口）没有主机往返，是 \GPU{}性能的标准口径；numpy 路径按``拷贝加计算''整体报，两个口径分列：
+
+\begin{lstlisting}[style=pythonstyle,caption={bench/mla\_bench.py（节选）：event 计时}]
+import torch
+import parallel_algorithms as pa
+
+def bench_device(lens, dim=64, reps=51):
+    assert pa.BACKEND == "cuda"
+    g = torch.Generator(device="cuda").manual_seed(20240515)
+    q = torch.rand(sum(lens), dim, device="cuda", generator=g)
+    kv = torch.rand(sum(lens), dim, device="cuda", generator=g)
+    ev = [torch.cuda.Event(enable_timing=True) for _ in range(2)]
+    for _ in range(5):                   # 预热
+        pa.mla_forward(q, kv, lens)
+    ts = []
+    for _ in range(reps):                # 只圈算子本身
+        ev[0].record(); pa.mla_forward(q, kv, lens); ev[1].record()
+        torch.cuda.synchronize()
+        ts.append(ev[0].elapsed_time(ev[1]))
+    ts.sort()
+    return ts[len(ts) // 2], ts[int(0.05 * len(ts))], \
+        ts[int(0.95 * len(ts))]
+\end{lstlisting}
+
+\section{复盘：放错执行域的两步，以及怎么发现的}
+
+第一版有两处放错了域。一是变长 mask：为``少一次传输''把``当前行是否在 padding 区、是否越过因果边界''的判断写进核函数，让每个线程读 \Tp{cu\_seqlens} 分支；二是批调度：想把队列管理也搬上设备求``全链路在卡上''。两处后来都搬回了 \CPU{}。
+
+\begin{warning}[title={把变长 mask 塞进核函数的教训}]
+逐线程读索引再分支，把规整的分块核函数变成发散核函数：同一 warp 里既有``继续累加''又有``跳过行块''的线程，执行的是两条分支的并集，第 9 章分块 softmax 依赖的``整块同进同出''被破坏；形状一变分支界就变，按形状特化的实现还会引发重编译。修复不动数学：mask 与打包放回 \CPU{}生成，核函数只拿均匀行块与预好的边界——对拍结果不变，profiler 里的发散指标肉眼可见地回落。固化为判据：凡要逐元素读索引做条件分支的逻辑，先问它能否在主机上变成``预先算好的表''。
+\end{warning}
+
+批调度的错暴露得更直接：\Tp{nsys} 时间线上，主机决策与设备计算串成互相等待的链，流里出现成片空隙，搬回 \CPU{}后空隙合拢。工具分工一句话：\Tp{nsys} 看空隙与同步等待，\Tp{ncu} 看单核函数的占用、发散与访存合并，\NPU{}侧用 asight 系看同类指标，\CPU{}热点用 \Tp{perf} 确认。发现放错域靠测量，不靠对照表猜。
+
+\section{最小可构建片段}
+
+\begin{lstlisting}[style=cmakestyle,caption={CMakeLists.txt（节选）：合装一个模块}]
+add_subdirectory(src)       # pa_core 静态库；有 CUDA 时加 pa_kernels
+pybind11_add_module(_C src/bind/bindings.cpp)
+target_link_libraries(_C PRIVATE pa_core)
+if(TARGET pa_kernels)
+  target_link_libraries(_C PRIVATE pa_kernels)
+  target_compile_definitions(_C PRIVATE PA_WITH_CUDA=1)
+endif()
+install(TARGETS _C LIBRARY DESTINATION parallel_algorithms)
+install(DIRECTORY python/parallel_algorithms DESTINATION .
+        FILES_MATCHING PATTERN "*.py*")
+\end{lstlisting}
+\Tp{PA\_WITH\_CUDA} 关掉时设备路径整体编译为``恒不可用''的桩，探测自然落到 \Tp{cpu} 后端——13.3``构建期降级''与 13.4``运行期兜底''在此合拢；\Tp{pyproject.toml} 按 13.2 骨架，不再重复。
+
+\begin{guideline}[title={全书六条判断}]
+\begin{enumerate}
+\item 执行域由算术强度、分支密度、指针追逐、足迹与形状静态性决定（第 3 章）：先分域，再写代码，最后才谈绑定。
+\item 数据搬运算进决策：跨域传输与同步常常大于域内计算收益；同域步骤合并成一次传输。
+\item 控制流与全局状态留 \CPU{}：打包、mask、块表、调度都在主机变成``预先算好的边界或表''，卡上只做规则大块。
+\item GIL 策略是接口的一部分：等待放锁、提交持锁、回调与异常翻译在持锁段——这条纪律决定库能否与 Python 生态共存。
+\item 绑定层是边界不是垃圾桶：后端差异、设备语义、生命周期都在这一层消化干净；签名稳定即承诺稳定。
+\item 正确性靠固定种子的对拍与按类型分档的容差，性能靠 profiler 的时间线与指标：结论来自测量，不来自常识。
+\end{enumerate}
+\end{guideline}
+% ====================================================================
+% ====================================================================
+\appendix
+
+\chapter{执行域速查表}
+
+\section{算法族一览}
+
+表 \ref{tab:domain-cheatsheet} 把全书的判据压成一张速查：行是算法族，
+列给出推荐执行域、判据、常见坑与可用库。推荐域都写着``默认''应有的
+样子——判据列里的数字条件一旦反转，结论就跟着反转，这比背行更重要。
+
+\begin{lstlisting}[style=cppstyle,caption={判据的第一项：算术强度粗估}]
+// 强度 = 运算次数 / 搬运字节数；脊点强度 = 峰值算力 / 峰值带宽
+// 两个峰值都取自家硬件手册，不要抄网帖
+double arithmetic_intensity(double ops, double bytes) {
+  return ops / bytes;
+}
+// 长 n 的 GEMV：ops 约 2n，bytes 约 4n，强度约 0.5，
+// 远低于 CPU 与 GPU 的脊点——它属于「谁持有数据谁算」的
+// 带宽受限算子，这正是 MLA 解码阶段该整体搬上卡的理由。
+\end{lstlisting}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+  >{\raggedright\arraybackslash}p{0.10\textwidth}
+  >{\raggedright\arraybackslash}p{0.24\textwidth}
+  >{\raggedright\arraybackslash}p{0.20\textwidth}
+  >{\raggedright\arraybackslash}p{0.13\textwidth}@{}}
+\caption{执行域速查表}\label{tab:domain-cheatsheet}\\
+\toprule
+\textbf{算法族} & \textbf{推荐域} & \textbf{判据} & \textbf{常见坑} &
+\textbf{可用库} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{算法族} & \textbf{推荐域} & \textbf{判据} & \textbf{常见坑} &
+\textbf{可用库} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+稠密线性代数 & \GPU{} & 算术强度高、形状静态；转置与批量可合并 &
+小批量下启动与同步开销占大头；布局换算吃掉收益 & cuBLAS、oneDNN、Eigen \\
+卷积（图像） & \GPU{}、\NPU{} & 强度高；通道维可切分 & NHWC、NCHW
+格式间的换算常比计算本身贵 & cuDNN、oneDNN \\
+注意力、MLA & \GPU{}、\NPU{} & 带宽受限；序列长时足迹超 \CPU{}缓存 &
+varlen 控制流上卡引发发散；块表、mask 应在主机生成 & 自研核函数、CUTLASS \\
+归约与扫描 & \GPU{} & 线性强度；层级归约模式成熟 & 原子加用错退化成
+串行；scan 的包含前缀语义要选对 & CUB、Thrust、oneTBB \\
+排序 & 小规模 \CPU{}、大规模 \GPU{} & 比较密集、分支多；以数据足迹
+划线 & GPU 排序对小数组固定开销大；稳定排序语义受限 & \Bk std::sort、CUB \\
+图遍历 & 看结构 & 指针追逐、数据依赖并行、强度低 & 负载不均与原子竞争；
+图太大放不进卡上内存 & Ligra 式核函数、Boost Graph \\
+字符串与文本 & \CPU{} & 分支密度高、长度不可预测 & SIMD 加速要处理
+编码边界；回溯式匹配难并行 & simdjson、RE2 类 \\
+稀疏矩阵 & \CPU{} 优先、规则块上 \GPU{} & 访存不规则、强度低；块稀疏
+才值得上卡 & CSR、COO 格式转换的隐性成本；稀疏度不均即负载不均 &
+cuSPARSE 与 Eigen Sparse \\
+动态规划 & \CPU{} & 状态转移串行依赖；对角线波前并行 & 波前在卡上
+局部性差；状态压缩限制可并行度 & 自研核函数、TBB \\
+哈希与集合运算 & 混合 & 访存随机、可细粒度并行 & 伪共享与原子竞争；
+分片数与核数错配 & TBB、并发容器 \\
+状态机与解析 & \CPU{} & 数据依赖分支、本质串行 & 所谓``批量上卡''
+多半只是把解析搬回主机 & lex、yacc 类、自研 \\
+系统调用与 I/O & \CPU{} & 延迟受限而非算力受限 & 同步调用阻塞事件环；
+GIL 与线程池互相拖累 & \Tp{io\_uring}、AIO \\
+调度与内存管理 & \CPU{} & 短临界段；需要全局视图 & 锁当吞吐来源而非
+正确性工具；回收与分配线程亲和性 & TBB 分配器、mimalloc 类 \\
+随机数 & 两域皆可 & 需保证流独立；计数式发生器易并行 & 共享状态发生器
+跨线程串味；卡上同种子流相互关联 & \Tp{<random>}、Philox 类 \\
+编译期任务 & \CPU{} & 零运行成本；并行发生在编译期 & 模板实例化爆炸；
+constexpr 链难以调试 & \cpp{20} constexpr、\Tp{consteval} \\
+\end{longtable}
+
+\section{读表的四条注意}
+
+\begin{itemize}
+\item ``推荐域''只是\textbf{默认}，判据列才是\textbf{理由}。同一行里
+把条件反转，结论就跟着反转：稠密线性代数在小批量下归 \CPU{}，排序在
+足迹进 L3 后归 \CPU{}，稀疏矩阵一旦变成规则块状就该上卡。背行不如
+记住三问：算术强度多少、分支多密、指针追逐走到哪一层。
+\item ``常见坑''这一列的信息量通常大于``推荐域''：它记的是别人交过的
+学费。表里反复出现同一类坑——格式换算、隐式拷贝、负载不均、原子竞争，
+它们都是``跨域一次、换算一次''的成本，也就是第 3 章判据的落点。
+\item ``可用库''只指路、不背书：版本、许可、平台支持都要当场查
+（附录 C 给了各库的定位与许可口径）。写进签名的依赖越少越好，能只
+依赖标准库与自家核函数的路径应当优先。
+\item 表里没有的算法族，先归到最近的一行再验证：按算术强度、分支
+密度、指针追逐、数据足迹、形状静态性五个维度量一遍，落在哪一档就用
+哪一档的默认域，然后按下节的三条反直觉检查有没有踩坑。
+\end{itemize}
+
+\section{三条反直觉}
+
+\subsection{一：小批量在 GPU 上更慢}
+
+卡上的固定成本——提交、流同步、主机与设备往返——不随批量变小而
+缩水。当每批的计算量不足以把这些固定开销摊薄到``等效 CPU 时间''
+以下时，\GPU{}反而更慢，而且延迟抖动更大，因为等待同步的窗口相对
+变长了。正确姿势是把启动开销换算成等效行数，推出一个批量下限：
+低于下限就留在 \CPU{}，或攒批到下限再上卡；``攒批''本身又是调度，
+于是它属于 14.1 节表里留在 \CPU{}的那一行。
+
+\subsection{二：SMT 对内存受限核收益小}
+
+同步多线程在计算密集的核上能填延迟槽，收益明显；在内存受限的核上，
+两个兄弟线程只是更快地一起堵在同一条带宽上，吞吐增量趋近于零，
+缓存互扰时甚至为负。判据接在算术强度之后：强度低于脊点一半的核，
+与其加线程，不如减线程——把核留给别的任务，或做数据布局优化。
+测量别靠感觉：同一核分别以``每核一线程''与``每核两线程''跑峰值
+吞吐对照，SMT 的真实收益一次看清。
+
+\subsection{三：无锁队列不等于高吞吐}
+
+无锁（lock-free）保证的是系统级进展：总有线程能往前走。它不保证
+你的线程往前走，更不保证总吞吐高。高竞争下 CAS 重试风暴、每元素
+原子指令的缓存行弹跳，常常让无锁队列输给``按生产者分片、每片一把
+轻锁''的朴素设计。选无锁的理由应当是实时性、避免优先级反转、
+中断上下文可用，而不是``据说无锁更快''；写性能关键路径之前，
+先量竞争度：队列两端线程数与核数、缓存行共享方式，都是自变量。
+
+\begin{guideline}[title={速查表的正确用法}]
+\begin{itemize}
+\item 表给的是默认结论，判据列才是本体：形状静态否、强度过脊点否、
+分支密度、指针追逐、足迹大小，五项里三项反转，结论就该重写。
+\item 跨域一步的传输与同步必须计成本；``上卡''从来不是单点决定，
+而是整条流水线的重新划分。
+\item 三个反直觉的共同根源：固定开销不分摊、带宽是共享资源、
+进展保证不等于吞吐保证——测出来才可信。
+\end{itemize}
+\end{guideline}
+% ====================================================================
+% ====================================================================
+\chapter{编译命令与工具矩阵}
+
+本附录把正文里散落的``开关在哪、工具叫什么、哪条随版本变''集中成
+两张矩阵加三段命令。矩阵只解决``去哪找''，具体取值——尤其
+OpenMP 标准版本、CUDA 架构默认值、NPU 工具链入口——随编译器与
+工具包代际而变，动手前查对应版本的官方文档。
+
+\section{主机与加速卡编译开关矩阵}
+
+表 \ref{tab:host-switches} 是 \CPU{}侧的开关对照。
+\textbf{先记住一个容易搞错的事实}：\Tp{std::execution} 的策略对象
+是 \cpp{17} STL 的一部分，但三大编译器里长期只有 MSVC 的 STL 真正
+实现它；GCC 与 Clang 的标准库不配 \Tp{par} 策略，正路是直接使
+oneTBB，或用 stdexec 这类发送者库。把``加了 \Tp{-std=c++20}
+就能用 \Tp{std::execution::par}''当默认认知，编译会在包含
+\Tp{<execution>} 处报错或静默串行。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}
+  >{\raggedright\arraybackslash}p{0.24\textwidth}
+  >{\raggedright\arraybackslash}p{0.24\textwidth}
+  >{\raggedright\arraybackslash}p{0.19\textwidth}@{}}
+\caption{主机侧并行开关对照}\label{tab:host-switches}\\
+\toprule
+\textbf{工具链} & \textbf{OpenMP} & \textbf{并行库依赖} &
+\textbf{SIMD 与向量化诊断} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{工具链} & \textbf{OpenMP} & \textbf{并行库依赖} &
+\textbf{SIMD 与向量化诊断} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+MSVC（cl） & \Tp{/openmp}；对标准版本的支持长期停在 2.0，较新
+工具集补了 LLVM 系后端（随版本） & \Tp{/std:c++20}；\Tp{std::execution}
+由 STL 实现、需要 TBB；PPL 是另一族现成 API & \Tp{/Qvec-report}
+信息很粗；向量化诊断建议换 clang-cl 做 \\
+GCC & \Tp{-fopenmp}，标准版本随 GCC 发布线推进 & 标准库无
+\Tp{par} 策略：直接链 oneTBB（\Tp{-ltbb}）或用 stdexec &
+\Tp{-fopt-info} 系列的 \Tp{-vec} 与 \Tp{-vec-missed} 两档 \\
+Clang & \Tp{-fopenmp}；Windows 上 \Tp{-Xclang -fopenmp}，方言版本
+随发布 & 同 GCC：oneTBB 或 stdexec &
+\Tp{-Rpass=loop-\Bk vectorize} 及 \Tp{-Rpass-missed} 家族 \\
+nvcc & 主机侧代码经 \Tp{-Xcompiler -fopenmp}；设备侧用线程模型，
+不靠 OpenMP（较新版本的 offload 方言随发布） & 设备并行以
+grid、block、warp 表达；主机段同上游编译器 &
+\Tp{--ptxas-\Bk options=-v} 报寄存器与溢出，不是向量化而是资源诊断 \\
+CANN（NPU） & 主机侧跟随其所用 GCC、Clang & 核函数内并行由切分与
+调度表达，无 OpenMP 语义 & 资源与编译诊断用 toolkit 自带入口（随版本） \\
+\end{longtable}
+
+表 \ref{tab:accel-tools} 是加速卡与观测工具的对照；第 14 章复盘用到
+的名字都在这里。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}
+  >{\raggedright\arraybackslash}p{0.25\textwidth}
+  >{\raggedright\arraybackslash}p{0.24\textwidth}
+  >{\raggedright\arraybackslash}p{0.18\textwidth}@{}}
+\caption{加速卡侧构建与观测工具对照}\label{tab:accel-tools}\\
+\toprule
+\textbf{工具链} & \textbf{目标架构与产物} & \textbf{sanitizer} &
+\textbf{profiler} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{工具链} & \textbf{目标架构与产物} & \textbf{sanitizer} &
+\textbf{profiler} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+GCC、Clang & \Tp{-march=native} 只可用于本机测试；发布轮子钉基线
+ISA & \Tp{-fsanitize=...} 的 address、thread、undefined 三工具——
+同一构建别混多种 & \Tp{perf}、厂商采样器 \\
+MSVC & \Tp{/arch:AVX2} 一族只推 ISA；无 \Tp{native} 对应物 &
+\Tp{/fsanitize=\Bk address}（较新工具集，随版本） & ETW 一族、厂商采样器 \\
+CUDA & \Tp{-gencode} 手写；CMake 用
+\Tp{CMAKE\_CUDA\Bk\_ARCHITECTURES}（3.18 起原生，默认值随版本，
+发布必须显式钉死；架构集合里留不留 PTX 决定兼容下限） &
+\Tp{compute-\Bk sanitizer}：memcheck、racecheck、initcheck、synccheck
+四个工具 & \Tp{nsys} 看时间线与空隙，\Tp{ncu} 看单核函数的占用、
+发散、访存 \\
+CANN、Ascend & 按芯片或 SoC 选目标，路径探测见 13.3；工具包代际
+差异大 & 检查语义在运行时与 toolkit 工具两侧（入口名随版本） &
+\Tp{msprof}、asight 系：分工与 CUDA 侧的 nsys、ncu 相仿 \\
+\end{longtable}
+
+\section{常用命令片段}
+
+\begin{lstlisting}[style=shellstyle,caption={主机侧三件套：OpenMP、TBB、向量化诊断}]
+cl /std:c++20 /openmp /Qvec-report:1 app.cpp        # MSVC
+g++ -std=c++20 -fopenmp -O2 -fopt-info-vec app.cpp  # GCC
+g++ -std=c++20 -O2 app.cpp -ltbb                    # oneTBB 路线
+clang++ -std=c++20 -fopenmp -O2 \
+  -Rpass=loop-vectorize app.cpp                     # Clang
+\end{lstlisting}
+
+\begin{lstlisting}[style=shellstyle,caption={CUDA：架构显式化、资源诊断与观测}]
+# 编 sm_80 并嵌 compute_80 的 PTX 兜底；其余架构照样列进去
+nvcc -O3 -gencode arch=compute_80,code=sm_80 \
+     -gencode arch=compute_80,code=compute_80 \
+     --ptxas-options=-v kernels/mla_fwd.cu
+# CMake 等价物（发布构建写死，不靠默认值）：
+#   set(CMAKE_CUDA_ARCHITECTURES "80;86;90;90-ptx")
+compute-sanitizer --tool memcheck ./pa_core_test
+nsys profile -o run01 python tests/mla_bench.py
+ncu --set full -k mla_tile_kernel python tests/mla_bench.py
+\end{lstlisting}
+
+\begin{lstlisting}[style=shellstyle,caption={NPU 侧：路径探测与 profiler 入口}]
+# CANN 类工具链：先探测再设环境（约定随代际变，见 13.3）
+source ${ASCEND_TOOLKIT_HOME}/set_env.sh
+msprof --help        # 入口名与参数以本机 toolkit 版本文档为准
+# 无工具链环境：构建降级到 CPU 后端（13.3），import 探测兜底（13.4）
+\end{lstlisting}
+
+sanitizer 与 Python 的冲突提醒（13.8 展开过）：ASan、TSan 这类
+构建与发行版解释器混用会产生海量噪声甚至自身崩溃，只对纯 C++
+单测目标开 sanitizer，绑定层问题用最小复现脚本排除。
+
+\begin{guideline}[title={矩阵使用要点}]
+\begin{itemize}
+\item 先分清``策略对象''与``并行库实现''：\Tp{std::execution::par}
+写在源码里不等于任何编译器都能执行它，MSVC、GCC、Clang 三条路的
+依赖各不相同。
+\item 发布产物永远显式钉 ISA 与 CUDA 架构；\Tp{native}、默认架构
+只属于本机开发。
+\item sanitizer 与 profiler 都按``先主机段、再设备段''排障：
+\Tp{perf}、\Tp{nsys} 找空隙，\Tp{ncu}、asight 钻单核；一次只改
+一类变量。
+\item 表里所有带``随版本''字样的格，落笔前都要在目标环境实测一遍。
+\end{itemize}
+\end{guideline}
+% ====================================================================
+% ====================================================================
+\chapter{参考实现清单}
+
+正文点名过的库散落在各章，这里按``定位、许可、在本工程里的用法''
+收拢成一张表。许可列写的是项目公开采用的许可证，具体版本的条款
+以官方仓库为准；静态链接还是源码引入，直接影响你发行 wheel 的
+合规动作，发布前再核一遍。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+  >{\raggedright\arraybackslash}p{0.30\textwidth}
+  >{\raggedright\arraybackslash}p{0.14\textwidth}
+  >{\raggedright\arraybackslash}p{0.23\textwidth}@{}}
+\caption{并行算法相关参考实现速查}\label{tab:ref-libs}\\
+\toprule
+\textbf{名称} & \textbf{定位} & \textbf{许可} & \textbf{本工程用法} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{名称} & \textbf{定位} & \textbf{许可} & \textbf{本工程用法} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+CUB & CUDA 归约、扫描、排序的块级与设备级原语，头文件库 & BSD 系 &
+第 8、9 章的归约与 scan 直用；Thrust 之下也是它 \\
+Thrust & GPU 上的类 STL 算法层（仿函数加容器） & BSD 系 & 原型验证与
+对照组基准；极限性能场景换手写核函数 \\
+CUTLASS & NVIDIA 矩阵乘与注意力类模板库，CUDA C++ 模板 & BSD 系 &
+第 9 章分块 GEMM 的结构参照；自研 MLA 时的 tile 骨架 \\
+oneDNN & Intel 架构深度 primitives（CPU、GPU） & Apache-2.0 & \CPU{}
+稠密与卷积路径的现成实现；别用它做绑定层 \\
+Eigen & \CPU{} 头文件线性代数，表达式模板 & MPL2（附 GPL 兼容选项，
+条款见仓库） & 第 6 章 SIMD 向量化示范；编译期成本要盯 \\
+oneTBB & 任务调度、并行容器、\Tp{std::execution} 的后端 & Apache-2.0 &
+第 4 至 7 章的 \CPU{}任务图；GCC、Clang 路径的 par 策略替身 \\
+stdexec & 发送者、接收者并发模型（P2300）参考实现 & Apache-2.0 &
+第 7 章异步管线示范；与 TBB、CUDA 执行器对接 \\
+DLPack & 框架间张量内存交换协议（非库） & Apache-2.0 & 第 11、12 章
+零拷贝入口；消费侧负责管理器生命周期 \\
+pybind11 & C++ 到 Python 的绑定头文件库 & BSD 系 & 第 IV 部分主线；
+逐 CPython 次版本编译 \\
+nanobind & pybind11 同作者的轻量继任，走稳定 ABI & BSD 系 & 备选路线；
+新项目评估对象，本书示例不切换 \\
+\end{longtable}
+
+\section{一个最小的``库对库''入口}
+
+参考实现的价值在于``先站在库上测，再决定要不要手写''。第 14 章的
+归约入口最初就是 Thrust 直译，确认带宽受限后再换成手写两级归约的
+过程，清单 \ref{lst:cub-start} 是当时留下的第一版：
+
+\begin{lstlisting}[style=cudastyle,caption={用 Thrust 做归约对照组（第一版，后被手写核函数替换）},label={lst:cub-start}]
+#include <thrust/device_vector.h>
+#include <thrust/reduce.h>
+float reduce_sum(const float *d_in, size_t n) {
+  // 把裸指针包成迭代器，不拥有内存：生命周期仍归调用方
+  thrust::device_ptr<const float> first(d_in);
+  return thrust::reduce(first, first + n, 0.f,
+                        thrust::plus<float>());
+}
+\end{lstlisting}
+
+\begin{note}[title={许可与分发的三个动作}]
+\begin{itemize}
+\item 头文件-only 的库（CUB、Thrust、Eigen、pybind11）随 wheel
+分发时，把对应 LICENSE 文件复制进发行包；
+\item 链接式依赖（oneTBB、oneDNN）要么静态链进扩展模块并在 NOTICE
+里声明，要么作为运行时依赖单列；
+\item ``BSD 系''与``Apache-2.0''的专利条款差异会影响专利诉讼防御，
+商业发布前让法务读原文，不要转述。
+\end{itemize}
+\end{note}
+
+\begin{guideline}[title={选型次序}]
+\begin{itemize}
+\item 先找参考实现跑对照组，用它的数值行为校准对拍容差，再用它的
+性能当下限；
+\item 库解决的是``能不能''，手写核函数解决的是``贴不贴得住带宽''，
+第 8、9 章的判据决定你什么时候可以离开库；
+\item 许可证在选定当天就记进清单，而不是发布前夜；版本升级时
+重新核一次条款。
+\end{itemize}
+\end{guideline}
+% ====================================================================
+\end{document}

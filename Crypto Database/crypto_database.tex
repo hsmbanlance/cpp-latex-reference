@@ -1,0 +1,4770 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}{\setmonofont{Consolas}}{\setmonofont{DejaVu Sans Mono}}
+
+% ==================== 颜色 ====================
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,array,byte},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+\lstset{style=cppstyle}
+
+% ---- Java（JCA/JCE 与 JDBC 对照使用）----
+\lstdefinelanguage{JavaCD}{
+  morekeywords={abstract,assert,boolean,break,byte,case,catch,char,
+    class,const,continue,default,do,double,else,enum,extends,final,
+    finally,float,for,goto,if,implements,import,instanceof,int,
+    interface,long,native,new,package,private,protected,public,
+    return,short,static,strictfp,super,switch,synchronized,this,
+    throw,throws,transient,try,void,volatile,while,var,record,
+    sealed,permits,yield},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+}
+\lstdefinestyle{javastyle}{
+  language=JavaCD,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  emph={String,integer,int,long,byte,boolean,Object,List,Map,Set,
+    Optional,Record,MessageDigest,Cipher,SecretKey,KeyGenerator,
+    SecureRandom,IvParameterSpec,GCMParameterSpec,Signature,
+    KeyPairGenerator,SecretKeySpec,PBEKeySpec,Source,Result,
+    Connection,PreparedStatement,ResultSet,DataSource,DriverManager,
+    SQLException,RowSet,HikariDataSource,JdbcTemplate},
+  emphstyle=\color{teal!80!black}\bfseries,
+}
+
+% ---- C#（System.Security.Cryptography 与 ADO.NET 对照使用）----
+\lstdefinelanguage{CSharpCD}{
+  morekeywords={
+    abstract,as,base,bool,break,byte,case,catch,char,checked,class,
+    const,continue,decimal,default,delegate,do,double,else,enum,
+    event,explicit,extern,false,finally,fixed,float,for,foreach,
+    goto,if,implicit,in,int,interface,internal,is,lock,long,
+    namespace,new,null,object,operator,out,override,params,
+    partial,private,protected,public,readonly,ref,return,sbyte,
+    sealed,short,sizeof,stackalloc,static,string,struct,switch,
+    this,throw,true,try,typeof,uint,ulong,unchecked,unsafe,
+    ushort,using,virtual,void,volatile,while,
+    var,async,await,yield,dynamic,where,select,from,
+    get,set,init,value,record,with,required,file,global
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]@",
+}
+\lstdefinestyle{csharpstyle}{
+  language=CSharpCD,
+  keywordstyle=\color{violet}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={int,string,bool,double,float,void,long,byte,char,object,
+    decimal,var,Task,List,Dictionary,Action,Func,IDisposable,
+    Span,Memory,Nullable,CancellationToken},
+  emphstyle=\color{teal!80!black}\bfseries,
+}
+
+% ---- SQL ----
+\lstdefinelanguage{SqlCD}{
+  morekeywords={SELECT,FROM,WHERE,INSERT,INTO,VALUES,UPDATE,SET,
+    DELETE,CREATE,TABLE,INDEX,VIEW,ALTER,DROP,PRIMARY,KEY,FOREIGN,
+    REFERENCES,NOT,NULL,DEFAULT,UNIQUE,JOIN,INNER,LEFT,RIGHT,FULL,
+    ON,AND,OR,ORDER,BY,GROUP,HAVING,LIMIT,OFFSET,DISTINCT,AS,
+    BEGIN,COMMIT,ROLLBACK,TRANSACTION,WITH,RETURNING,UPSERT,CONFLICT,
+    DO,IF,EXISTS,BETWEEN,LIKE,IN,is,CAST,GENERATE},
+  sensitive=false,
+  morecomment=[l]{--},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]',
+}
+\lstdefinestyle{sqlstyle}{
+  language=SqlCD,
+  keywordstyle=\color{cppkeyword}\bfseries,
+}
+
+% ---- JSON（密文封装 / 连接串示例）----
+\lstdefinelanguage{JsonLD}{
+  sensitive=false,
+  morestring=[b]",
+  morecomment=[l]{//},
+}
+\lstdefinestyle{jsonstyle}{
+  language=JsonLD,
+  basicstyle=\small\ttfamily,
+  stringstyle=\color{cppstring},
+}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{float}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+\setlength{\headheight}{14.5pt}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+\emergencystretch=3em
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={C++ Reference},
+  pdftitle={C/C++ 加解密与数据库：与 Java 和 C\# 的差异},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+\newcommand{\CSharp}{C\#}
+\newcommand{\CppJava}{C/C++}
+
+% ====================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C/C++ 加解密与数据库\par}
+\vspace{1cm}
+{\LARGE 与 Java、C\# 的抽象层级差异、库全景与迁移要点\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+% ====================================================================
+\part{加解密}
+% ====================================================================
+
+\chapter{同一件事的三种抽象层级}
+
+\section{为什么从 ``AES-GCM 加密一段字节'' 开始}
+
+密码学是跨语言对比中最干净的一个样本：任务是纯粹的技术性的（把一段明文字节变成
+带认证的密文字节），全世界只有一种正确做法，而且三种语言都有官方推荐的实现路径。
+因此，完成任务所需的\emph{层数}、\emph{对象数}和\emph{失败模式数}，几乎可以直接
+当作抽象层级的度量尺。
+
+本章不讨论算法强度，只讨论一件事：\textbf{谁替你把步骤拆开、又把步骤装回去}。
+
+\begin{guideline}[title=本章要点]
+\begin{itemize}
+  \item Java 与 \CSharp{} 都把密码学做成了\emph{语言级命名空间}：
+        \Tp{javax.crypto} 与 \Tp{System.\allowbreak Security.\allowbreak Cryptography}，
+        类名、异常类型、资源释放约定在所有提供商之间是一致的。
+  \item \CppJava{} 没有这样的命名空间。可用的是 OpenSSL、libsodium、Botan、
+        mbedTLS、Windows CNG、macOS CommonCrypto 各自发明的一套 API，
+        它们的对象模型、错误约定、内存所有权互不兼容。
+  \item 结论：\CppJava{} 换库等于换 API，甚至等于换一种写法风格；
+        Java/\CSharp{} 换 Provider（或换实现类）通常只改一到两行。
+  \item 但 \CppJava{} 的一侧收益也很明确：层数少的那条路
+        （libsodium 单函数）比 Java/\CSharp{} 更短，且没有名字解析与
+        Provider 查找的运行时开销。
+\end{itemize}
+\end{guideline}
+
+\section{Java：字符串变换名 + Provider 查找 + 五个对象}
+
+Java 的 JCA/JCE 用\emph{变换字符串}（transformation string）描述算法组合，
+格式是 \texttt{算法/模式/填充}。运行时拿到这个字符串后，向已注册的
+Provider 列表逐个询问``谁能做''，第一个应答者胜出。
+
+\begin{lstlisting}[style=javastyle,caption={Java 21：AES-256-GCM 加密一段字节}]
+import javax.crypto.*;
+import javax.crypto.spec.*;
+import java.security.*;
+
+KeyGenerator kg = KeyGenerator.getInstance("AES");
+kg.init(256);
+SecretKey key = kg.generateKey();
+
+byte[] iv = new byte[12];
+SecureRandom rnd = new SecureRandom();
+rnd.nextBytes(iv);
+
+Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
+c.init(Cipher.ENCRYPT_MODE, key,
+       new GCMParameterSpec(128, iv));
+byte[] ct = c.doFinal(plain);        // 密文含 16 字节标签
+\end{lstlisting}
+
+数一数这里的\emph{层}：(1) Provider 注册表；(2) 变换名字符串的解析；
+(3) \Tp{KeyGenerator} 工厂；(4) \Tp{SecretKey} 密钥抽象；
+(5) \Tp{Cipher} 会话对象；(6) \Tp{GCMParameterSpec} 参数对象；
+(7) \Tp{SecureRandom} 实例。七层里有四层是 ``查找/解析''性质的间接层，
+它们换来的是可替换性与统一写法。
+
+\section{\CSharp{}：顶层类 + 直接字节缓冲 + using 作用域}
+
+.NET 走的是另一条路：不为每个算法发明一个字符串名字，而是\emph{一个类对应一个
+具体构造}。\Tp{AesGcm} 就是 ``AES + GCM''，没有模式串、没有填充位、没有 Provider
+注册表；参数全部是显式的缓冲区，标签长度在构造时声明。
+
+\begin{lstlisting}[style=csharpstyle,caption={.NET 8：同一任务的 C\# 写法}]
+using System.Security.Cryptography;
+
+byte[] key = RandomNumberGenerator.GetBytes(32);
+byte[] iv = RandomNumberGenerator.GetBytes(12);
+
+byte[] ct = new byte[plain.Length];
+byte[] tag = new byte[16];
+
+using var aes = new AesGcm(key, 16);
+aes.Encrypt(iv, plain, ct, tag);     // 标签单独返回
+\end{lstlisting}
+
+注意三点差异：其一，标签与密文\emph{分开}返回，``拼成什么线格式''是调用者的责任
+（Java 的 \Tp{doFinal} 已经把标签追加在密文尾部）；其二，\Tp{AesGcm} 实现了
+\Tp{IDisposable}，密钥缓冲区的清理挂在作用域结束上；其三，
+\Tp{RandomNumberGenerator.GetBytes} 是静态方法，没有 ``实例化一个随机源''
+这一步，也就没有 ``这个随机源是谁提供的'' 这个问题。
+
+\section{\CppJava{}：三条长度悬殊的路}
+
+\subsection{路一：OpenSSL EVP 的五步协议}
+
+EVP 是 OpenSSL 3.x 的推荐接口层（第 2 章详解）。它的 ``初始化可以调用两次''
+这一设计（第一次定算法、第二次定密钥与 IV）是历史上为了复用上下文而保留的，
+对新人极不直观，但确实是官方文档写明的推荐用法。
+
+\begin{lstlisting}[caption={C/C++ 路一：OpenSSL EVP 的完整五步},
+    basicstyle=\small\ttfamily]
+EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+int len = 0;
+unsigned char tag[16];
+
+EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL);
+EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, 12, NULL);
+EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv);   // 第二次: 装密钥
+EVP_EncryptUpdate(ctx, NULL, &len, aad, aadlen);  // 先送关联数据
+EVP_EncryptUpdate(ctx, ct, &len, plain, plainlen);
+EVP_EncryptFinal_ex(ctx, ct + len, &len);
+EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, 16, tag);
+EVP_CIPHER_CTX_free(ctx);
+\end{lstlisting}
+
+关联数据（AAD）必须在真正的明文之前送入，顺序错了不会报错，只会在解密时
+认证失败。这是 ``API 允许你写出合法但错误的调用序列'' 的典型例子。
+
+\subsection{路二：libsodium 的一步函数}
+
+libsodium 的高层接口把上面所有决定预先固定：XChaCha20-Poly1305、192 位随机 nonce、
+密文尾部追加标签、密钥长度写死。
+
+\begin{lstlisting}[caption={C/C++ 路二：libsodium 单函数完成同一件事}]
+unsigned char ct[64 + crypto_aead_xchacha20poly1305_ietf_ABYTES];
+unsigned long long ctlen = 0;
+
+crypto_aead_xchacha20poly1305_ietf_encrypt(
+    ct, &ctlen, plain, plainlen,   /* 明文 */
+    aad, aadlen,                   /* 关联数据 */
+    NULL,                          /* nsec: 保留, 传 NULL */
+    npub,                          /* 24 字节 nonce */
+    key);                          /* crypto_..._KEYBYTES = 32 */
+\end{lstlisting}
+
+这条路比 \CSharp{} 还短，而且没有堆分配、没有异常、没有名字解析。
+代价是：可选项被库作者替你定完了，你想换成 AES-GCM 就要学另一组函数名
+（\texttt{crypto\_aead\_aes256gcm\_siv\_encrypt} 之类），
+而想换成 ``国密 SM4-GCM'' 则根本没有这条路。
+
+\subsection{路三：Windows CNG 的双调长度查询}
+
+CNG（BCrypt 系列函数）要求你先以 ``输出缓冲为空'' 调一次问长度，
+再以 ``真实缓冲'' 调一次做加密，这叫 two-call idiom。GCM 还需要一个
+填充结构体承载 nonce 与标签。
+
+\begin{lstlisting}[caption={C/C++ 路三：CNG 的两次调用模式}]
+BCRYPT_AUTHENTICATED_CIPHER_MODE_INFO info;
+BCRYPT_INIT_AUTH_MODE_INFO(info);
+info.pbNonce = iv;   info.cbNonce = sizeof(iv);
+info.pbTag = tag;    info.cbTag = sizeof(tag);
+
+ULONG need = 0;
+BCryptEncrypt(hKey, plain, plainlen, &info,
+              NULL, 0, NULL, 0, &need, 0);         /* 问长度 */
+std::vector<unsigned char> ct(need);
+BCryptEncrypt(hKey, plain, plainlen, &info,
+              NULL, 0, ct.data(), need, &need, 0);  /* 真加密 */
+\end{lstlisting}
+
+\begin{note}[title=这段代码省略了什么]
+\Tp{hKey} 不是裸字节能直接变成的：需要先
+\Fn{BCryptOpenAlgorithmProvider} 拿到 ``带 GCM 标志的 AES 算法句柄''，
+再 \Fn{BCryptGenerateSymmetricKey} 把 32 字节密钥包成
+\Tp{BCRYPT\_KEY\_HANDLE}，用完 \Fn{BCryptDestroyKey} 与
+\Fn{BCryptCloseAlgorithmProvider} 关闭。加上这两步，本任务的
+\CppJava{} 层数是六层，与 \CSharp{} 差四倍。完整可运行代码见第 6 章。
+\end{note}
+
+\section{``谁负责什么''：六项职责的归属表}
+
+层数差异不是审美问题，它是\emph{职责分配}问题的外在表现。下面这张表是全章的核心。
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.12\textwidth}
+                  >{\raggedright\arraybackslash}p{0.21\textwidth}
+                  >{\raggedright\arraybackslash}p{0.23\textwidth}
+                  >{\raggedright\arraybackslash}p{0.25\textwidth}@{}}
+\toprule
+\textbf{职责} & \textbf{\CppJava{}（库各异）} & \textbf{Java（JCA/JCE）} &
+\textbf{\CSharp{}（SSC）} \\
+\midrule
+算法名解析 &
+每个库自定义：EVP 用 C 函数指针、libsodium 用函数名、
+CNG 用宽字符常量串 &
+变换字符串 \texttt{AES/GCM/\allowbreak NoPadding}，
+由 Provider 逐个应答 &
+类型名即算法：\Tp{AesGcm}、\Tp{RSA}；无运行时解析 \\
+\addlinespace
+填充与线格式 &
+调用者手写偏移：标签是追加还是分离，各库不同 &
+\Tp{Cipher} 按变换名决定，\Tp{doFinal} 统一追加 &
+分离返回、调用者组合；\Tp{Cryptographic\allowbreak Operations} 提供辅助 \\
+\addlinespace
+IV 与 nonce 生成 &
+无标准：\Tp{RAND\_bytes}、\Tp{BCryptGen\allowbreak Random}、
+\Tp{getrandom}、\Tp{arc4random} 任选 &
+\Tp{SecureRandom}（可指定实现）；部分 \Tp{Cipher} 可自动生成 &
+\Tp{RandomNumber\allowbreak Generator.GetBytes}，静态即取 \\
+\addlinespace
+密钥编码 &
+自己解析 DER、PEM，或交给 \Tp{OSSL\_STORE}、mbedTLS、Botan &
+\Tp{KeyFactory} 与 \Tp{SecretKeySpec} 负责把字节变成密钥对象 &
+\Tp{ImportFromPem}、\Tp{ImportSubject\allowbreak PublicKeyInfo} 等显式方法 \\
+\addlinespace
+错误传递 &
+返回码各库不同：\texttt{1} 成功（EVP）、\texttt{0} 成功（libsodium）、
+\texttt{NTSTATUS}（CNG） &
+异常体系：\Tp{General\allowbreak Security\allowbreak Exception} 家族 &
+异常体系：\Tp{Cryptographic\allowbreak Exception} \\
+\addlinespace
+内存清零 &
+\Tp{OPENSSL\_cleanse}、\Tp{explicit\_bzero}、\Tp{SecureZero\allowbreak Memory}，
+或自己保证 &
+无 API 承诺；\Tp{Destroyable\allowbreak SecretKey} 可选 &
+\Tp{Cryptographic\allowbreak Operations.\allowbreak ZeroMemory} 一等公民 \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+
+\section{核心论点：\CppJava{} 没有 ``密码学 SPI''}
+
+Java 有一个叫 SPI（Service Provider Interface）的机制。
+\Tp{CipherSpi} 与 \Tp{MessageDigest\allowbreak Spi} 这类
+``要实现的接口''被放在 \Tp{java.security} 包里，
+SunJCE、发行版自带实现、BouncyCastle 都只是往注册表里再插一个 Provider。
+\CppJava{} 没有这一层，原因是结构性的：
+
+\begin{itemize}
+  \item \textbf{没有统一的运行期对象模型}。C++ 的虚函数表可以模拟 SPI，
+        但谁来规定 ``所有密码库都必须实现同一个抽象基类''？没有标准机构管这件事。
+  \item \textbf{没有统一的类型词汇}。\Tp{std::span} 到 \cpp{23} 才进标准库，
+        长度类型有 \Tp{size\_t}、\Tp{unsigned long long}、\Tp{int} 三种流派，
+        抽象接口需要这些词汇先统一。
+  \item \textbf{错误处理没有公约数}。返回码、\Tp{errno}、OpenSSL 线程局部错误队列、
+        异常，四者不能同时出现，任何跨库 SPI 都必须先做一场语言内战。
+  \item \textbf{安全边界假设不同}。CNG 假定内核参与、OpenSSL 假定纯用户态、
+        PKCS\#11 假定设备句柄；一个抽象层要同时表达这三种假设，成本极高。
+\end{itemize}
+
+于是 \CppJava{} 项目实际做了什么？\textbf{自己写抽象层}：在内部定义一个
+\Tp{Cipher} 概念或一个纯虚基类，只暴露本项目的算法集合，把 OpenSSL 或
+libsodium 藏在实现文件里。这条路可行，但它是\emph{每个项目重写一遍}的抽象，
+而不是全生态共享一次的抽象。第 6 章的实战清单会给出一个最小可用形态。
+
+\begin{warning}[title=换库等于换 API 的真实成本]
+一个 ``把加密后端从 OpenSSL 换成 libsodium'' 的需求，在 \CppJava{} 里通常
+连带改动：错误处理分支（\texttt{<=0} 变 \texttt{!=0}）、缓冲区所有权
+（谁分配标签、标签是否在密文尾部）、nonce 长度（12 字节变 24 字节）、
+密钥派生（\Tp{PKCS5\_PBKDF2} 变 \Tp{crypto\_pwhash}）、
+以及构建脚本（头文件路径与静态库列表）。
+在 Java 里，同样的需求通常是换一个 Provider 名或加一行依赖。
+不要低估这份差异：它决定了 ``加密后端'' 能否作为运维期可切换项存在。
+\end{warning}
+
+\section{本章小结}
+
+\begin{enumerate}
+  \item 同一件 AES-GCM 任务：Java 约七层对象、\CSharp{} 约三层、
+        \CppJava{} 从一步（libsodium）到十步（CNG 含句柄准备）不等。
+  \item \CppJava{} 的 ``步数少'' 与 ``步数多'' 出现在同一门语言里，
+        差异由库决定而非语言决定，这正是缺乏统一 SPI 的后果。
+  \item 层数的价值不在优雅，在于\emph{约定能否被工具检查}：
+        Java/\CSharp{} 的静态分析器知道 \Tp{Cipher} 与 \Tp{AesGcm} 的语义，
+        对 \CppJava{} 只能知道 ``这里调了一个返回 int 的函数''。
+\end{enumerate}
+
+\chapter{OpenSSL 3.x：EVP、Provider 与句柄管理}
+
+\section{为什么必须用 EVP}
+
+OpenSSL 3.x 的接口分层可以概括为一句话：\textbf{只有 EVP 及以下
+（\Tp{OSSL\_PARAM}、\Tp{OSSL\_STORE}、\Tp{BIO}）是稳定的，
+再往上的所谓 ``简单接口'' 都已被冻结}。
+
+低层对称加密函数（\Tp{AES\_encrypt}、\Tp{AES\_set\_encrypt\_key}、
+\Tp{DES\_ecb\_encrypt} 一族）在 3.0 起被正式标记为 deprecated，
+官方文档给出的理由与本章论点直接相关：
+
+\begin{itemize}
+  \item \textbf{它们绕过 Provider}。硬编码调用 \Fn{AES\_encrypt} 意味着
+        永远拿不到 CPU 的 AES-NI/ARMv8 加密指令路径，也拿不到
+        FIPS provider 经过验证的实现，还拿不到硬件加速卡的卸载。
+        实测差距常见在一个数量级以上。
+  \item \textbf{它们不含认证}。AES 单块函数连模式都不管，
+        用它 ``手搓'' 一个 CBC 或 CTR 是当前最常见的自造漏洞来源。
+  \item \textbf{它们不支持流式与分片}。EVP 的 \Fn{EVP\_EncryptUpdate}
+        可以多次调用；单块函数只能由调用者自己维护链。
+  \item \textbf{算法名不再是函数名}。换算法时只需换一个
+        \Tp{EVP\_CIPHER} 指针参数，其余调用序列完全不动；
+        低层函数则要把整套函数名换一遍，等于重写。
+\end{itemize}
+
+同理，\cpp{11} 时代 ``把 \Tp{EVP\_CIPHER\_CTX} 放在栈上、
+再调用不带 \texttt{\_ex} 后缀的 \Tp{EVP\_encrypt\_init}'' 这一写法也应放弃：
+3.x 只保留 \texttt{EVP\_CIPHER\_CTX\allowbreak\_new} 与
+\texttt{EVP\_CIPHER\_CTX\allowbreak\_free} 这一对，
+上下文成了不透明的堆对象，无法再作为值类型嵌入。
+
+\begin{warning}[title=版本断层：1.1.x 的写法在 3.x 上不只是 ``能用'' 而已]
+1.1.x 时代扩展性靠 engine（\Tp{ENGINE}）；3.x 的扩展性靠 provider。
+engine 在 3.x 中仍编译、但仍存在，官方定位是 ``已被 provider 取代，
+仅为兼容保留''。把一个 1.1.x 项目原样搬到 3.x 时，
+自定义硬件的 engine 桥接（\Fn{ENGINE\_load\_private\_key}）
+应规划迁移到 provider 或 PKCS\#11 路径，不要指望长期共存。
+\end{warning}
+
+\section{Provider：算法实现的装载单位}
+
+3.x 把 ``算法实现'' 从编译期绑定改成运行期装载。常用的三个内置 provider：
+
+\begin{itemize}
+  \item \textbf{default}：绝大多数现代算法，隐式装载。
+  \item \textbf{legacy}：MD4、DES、RC2、RC4、旧式加密 PEM 等
+        ``已知不安全或格式过时'' 的算法，需显式装载。
+  \item \textbf{FIPS}：经过验证模块认证的算法集合，
+        装载后需要通过属性查询确认生效。
+\end{itemize}
+
+\begin{lstlisting}[caption={显式装载 provider 并用属性串约束选择}]
+#include <openssl/provider.h>
+#include <openssl/evp.h>
+
+/* 读旧系统导出的 RC4/DES 数据时才需要 legacy */
+OSSL_PROVIDER *legacy = OSSL_PROVIDER_load(NULL, "legacy");
+OSSL_PROVIDER *deflt  = OSSL_PROVIDER_load(NULL, "default");
+
+/* 强制只选满足 fips=yes 的实现 */
+int ok = EVP_set_default_properties(NULL, "fips=yes");
+if (ok != 1) {
+    /* 属性串无人满足：说明 FIPS provider 没装上 */
+}
+...
+OSSL_PROVIDER_unload(legacy);
+OSSL_PROVIDER_unload(deflt);
+\end{lstlisting}
+
+第一个参数是 \Tp{OSSL\_LIB\_CTX}，传 \Tp{NULL} 表示使用默认库上下文。
+这个细节很重要：\textbf{3.x 里几乎所有 ``全局'' 都可以被库上下文隔离}，
+一个进程可以同时存在两套互不干扰的 provider 配置。这实际上是把
+Java 的 ``多 Provider 注册表'' 思路搬进了 C 库，只是粒度由你自己决定。
+
+\begin{note}[title=配置文件的三种生效路径]
+provider 可以由 \Tp{openssl.cnf} 的 \texttt{providers} 段声明、
+由代码 \Fn{OSSL\_PROVIDER\_load} 装载、或由命令行与环境变量
+（\Tp{OPENSSL\_MODULES} 指定模块搜索目录）提供。
+部署环境里最常见的故障是：编译时带了 legacy 模块但运行机上找不到它，
+于是 \Fn{OSSL\_PROVIDER\_load} 返回 \Tp{NULL}，
+而代码把它当 ``已经装载'' 继续跑。务必检查返回值并入队错误报告。
+\end{note}
+
+\section{EVP 家族地图}
+
+``EVP'' 不是一个类，是一族以不透明上下文为核心的抽象。选型时的关键
+是知道每件事属于哪一族，因为 \cpp{14}/\cpp{17} 的项目经常只学了摘要那一路。
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+                  >{\raggedright\arraybackslash}p{0.24\textwidth}
+                  >{\raggedright\arraybackslash}p{0.41\textwidth}@{}}
+\toprule
+\textbf{族} & \textbf{做什么} & \textbf{关键入口} \\
+\midrule
+\Tp{EVP\_CIPHER} & 对称加密、AEAD &
+\Fn{EVP\_Cipher\_fetch}、\Fn{EVP\_EncryptInit\_ex}、
+\Fn{EVP\_EncryptUpdate}、\Fn{EVP\_EncryptFinal\_ex} \\
+\addlinespace
+\Tp{EVP\_MD} & 哈希摘要（含一次性 \Fn{EVP\_Q\_digest}） &
+\Fn{EVP\_MD\_fetch}、\Fn{EVP\_DigestInit\_ex}、
+\Fn{EVP\_DigestUpdate}、\Fn{EVP\_DigestFinal\_ex} \\
+\addlinespace
+\Tp{EVP\_MAC} & HMAC、CMAC、KMAC &
+\Fn{EVP\_MAC\_fetch}（名字 \texttt{HMAC}）、\Fn{EVP\_MAC\_init} \\
+\addlinespace
+\Tp{EVP\_KDF} & HKDF、TLS1-PRF、SS、KBKDF &
+\Fn{EVP\_KDF\_fetch}（\texttt{HKDF}）、\Fn{EVP\_KDF\_CTX\_set\_params}、
+\Fn{EVP\_KDF\_derive} \\
+\addlinespace
+\Tp{EVP\_PKEY} & 非对称密钥、签名、验签、加解密、密钥协商 &
+\Fn{EVP\_PKEY\_Q\_keygen}、\Fn{EVP\_DigestSignInit}、
+\Fn{EVP\_PKEY\_encrypt} \\
+\addlinespace
+\Tp{EVP\_ENCODE} & Base64、PEM 编解码 &
+\Fn{EVP\_Encoder\_new\_to\_bio}、\Fn{EVP\_Encoder\_encode\_pkey} \\
+\addlinespace
+\Tp{OSSL\_STORE} & ``从某处取密钥或证书'' 的统一 URI 抽象 &
+\Fn{OSSL\_STORE\_open}、\Fn{OSSL\_STORE\_load} \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+
+\section{OSSL\_PARAM：把 ``参数族函数'' 收敛成一个数组}
+
+1.1.x 时代每个算法都有几十个 \texttt{\_ex}/\texttt{\_ctrl} 变体，
+3.x 的方向是：能用一个类型化的参数数组表达，就不要新增函数。
+
+\begin{lstlisting}[caption={HKDF 派生：参数数组风格}]
+EVP_KDF *kdf = EVP_KDF_fetch(NULL, "HKDF", NULL);
+EVP_KDF_CTX *kctx = EVP_KDF_CTX_new(kdf);
+static char md[] = "SHA2-256";
+OSSL_PARAM params[5], *q = params;
+
+*q++ = OSSL_PARAM_construct_utf8_string(
+           OSSL_KDF_PARAM_DIGEST, md, 0);
+*q++ = OSSL_PARAM_construct_octet_string(
+           OSSL_KDF_PARAM_KEY, ikm, ikmlen);
+*q++ = OSSL_PARAM_construct_octet_string(
+           OSSL_KDF_PARAM_SALT, salt, saltlen);
+*q++ = OSSL_PARAM_construct_octet_string(
+           OSSL_KDF_PARAM_INFO, info, infolen);
+*q = OSSL_PARAM_construct_end();
+
+int ok = EVP_KDF_derive(kctx, out, outlen, params);
+\end{lstlisting}
+
+这种风格的收益是\emph{新算法不需要新 API}：只要 provider 认识参数名，
+换摘要、换上下文串都不改调用形状。风险则是参数名是字符串，
+写错不会编译失败，只会在运行时 ``无效参数''。
+\Tp{OSSL\_PARAM\_construct\_*} 家族负责把类型信息带进数组，
+不要用已经废弃的手工填充写法。
+
+\section{错误队列是线程局部的}
+
+OpenSSL 不用异常，用一个\emph{每线程}的 FIFO 错误队列记录 ``哪里出了事''。
+这带来三条硬规则：
+
+\begin{enumerate}
+  \item \textbf{返回值必须先判断再取错误}。很多函数返回 \texttt{0}
+        表示失败，但 ``0 之外还有别的语义''（\texttt{-2} 表示
+        ``需要更多数据'' 之类），因此不要凭队列是否为空来推断成败。
+  \item \textbf{同线程内后续 OpenSSL 调用可能污染队列}。
+        失败后要立刻把错误取出并转成自己的错误类型，
+        不能 ``攒到最后统一打印''。
+  \item \textbf{跨线程不会传递}。工作线程里失败、主线程里打印，
+        看到的是空队列或别人的错误。
+\end{enumerate}
+
+\begin{lstlisting}[caption={把 OpenSSL 错误队列转成自己的异常}]
+[[noreturn]] void throw_last_ossl(const char *what) {
+    char buf[256] = {0};
+    unsigned long e = ERR_get_error();
+    if (e == 0) {
+        std::snprintf(buf, sizeof buf, "%s: 未知错误（队列为空）", what);
+    } else {
+        ERR_error_string_n(e, buf, sizeof buf);
+    }
+    ERR_clear_error();                 /* 不要留给下一次调用 */
+    throw CryptoError(what, buf);
+}
+\end{lstlisting}
+
+\section{BIO：库内统一的 ``字节来源/去向''}
+
+\Fn{BIO\_new\_mem\_buf} 把一段已有内存变成可读源（常用于解析
+PEM/DER 缓冲区），\Tp{BIO\_f\_base64} 是一个只做编解码的过滤型 BIO，
+可以 \Fn{BIO\_push} 到另一个 BIO 之前形成流水线。
+这相当于 \CppJava{} 世界里少见的 ``带装饰器的流''，
+值得复用它而不是自己写 Base64 中转缓冲。
+
+\section{句柄的 RAII 包装}
+
+\CppJava{} 项目里 EVP 相关代码最常见的问题不是加密写错，而是
+``失败路径忘 \texttt{\_free}''。正确做法是一次性写一个通用删除器，
+全项目复用：
+
+\begin{lstlisting}[caption={通用句柄删除器与 EVP 上下文别名}]
+template <class T, auto Free>
+struct HandleDeleter {
+    void operator()(T* p) const noexcept {
+        if (p != nullptr) { (void)Free(p); }
+    }
+};
+
+template <class T, auto Free>
+using Owning = std::unique_ptr<T, HandleDeleter<T, Free>>;
+
+using EvpCtxPtr   = Owning<EVP_CIPHER_CTX, &EVP_CIPHER_CTX_free>;
+using EvpMdPtr    = Owning<EVP_MD_CTX,     &EVP_MD_CTX_free>;
+using PkeyPtr     = Owning<EVP_PKEY,       &EVP_PKEY_free>;
+using StorePtr    = Owning<OSSL_STORE_CTX, &OSSL_STORE_close>;
+using ProviderPtr = Owning<OSSL_PROVIDER,  &OSSL_PROVIDER_unload>;
+\end{lstlisting}
+
+注意三点：第一，\Tp{EVP\_CIPHER\_fetch} 返回的
+\Tp{EVP\_CIPHER} 是\emph{只读且引用计数}的对象，
+必须用 \Fn{EVP\_CIPHER\_free} 释放，不能与上下文的删除器混用；
+第二，删除器里判空是必需的，因为 \Tp{NULL} 上的
+\Fn{EVP\_CIPHER\_CTX\_free} 虽然被文档允许，
+但 \Fn{OSSL\_PROVIDER\_unload} 之类并不都允许；
+第三，这个包装解决的是 ``上下文''，
+不解决 ``密钥字节缓冲区''，后者要单独用清零分配器（第 5 章）。
+
+\begin{lstlisting}[caption={用 RAII 重写 AEAD 加密：异常安全版}]
+std::vector<std::byte> aead_encrypt(std::span<const std::byte> key,
+                                    std::span<const std::byte> iv,
+                                    std::span<const std::byte> aad,
+                                    std::span<const std::byte> in) {
+    EvpCtxPtr ctx{EVP_CIPHER_CTX_new()};
+    if (!ctx) { throw_last_ossl("CTX_new"); }
+    auto* c = ctx.get();
+
+    if (EVP_EncryptInit_ex(c, EVP_aes_256_gcm(), nullptr,
+                           nullptr, nullptr) != 1) {
+        throw_last_ossl("Init(alg)");
+    }
+    if (EVP_CIPHER_CTX_ctrl(c, EVP_CTRL_AEAD_SET_IVLEN,
+                            int(iv.size()), nullptr) != 1) {
+        throw_last_ossl("SetIVLEN");
+    }
+    if (EVP_EncryptInit_ex(c, nullptr, nullptr,
+                           as_uchar(key), as_uchar(iv)) != 1) {
+        throw_last_ossl("Init(key)");
+    }
+    int used = 0;
+    EVP_EncryptUpdate(c, nullptr, &used, as_uchar(aad),
+                      int(aad.size()));       /* AAD 先行 */
+    std::vector<std::byte> out(in.size() + 16);
+    EVP_EncryptUpdate(c, as_uchar(out), &used, as_uchar(in),
+                      int(in.size()));
+    int rest = 0;
+    EVP_EncryptFinal_ex(c, as_uchar(out) + used, &rest);
+    out.resize(std::size_t(used + rest));
+    std::vector<std::byte> tag(16);
+    EVP_CIPHER_CTX_ctrl(c, EVP_CTRL_AEAD_GET_TAG, 16, as_uchar(tag));
+    out.insert(out.end(), tag.begin(), tag.end());
+    return out;
+}
+\end{lstlisting}
+
+\section{与 Java、\CSharp{} 的 ``可替换性'' 对比}
+
+\begin{compare}[title=三语言 ``换一个实现'' 的改动面]
+\begin{itemize}
+  \item \textbf{Java}：\Tp{Provider} 是一等概念。
+        \Fn{Security.addProvider}（或 \Fn{insertProviderAt}）注册后，
+        同一句 \Tp{Cipher.getInstance} 就换到了新实现；
+        也可以在 \Tp{META-INF/services} 与 \Tp{java.security}
+        配置文件里做全局声明。选择是 ``按名字与优先级'' 完成的。
+  \item \textbf{\CSharp{}}：默认实现按平台自动挑选（Windows 走 CNG、
+        Linux 走 OpenSSL、其余走托管代码），
+        而 \Tp{RSACng}、\Tp{RSAOpenSsl}、
+        \Tp{RSACryptoServiceProvider} 这些\emph{公开}的实现类
+        又允许你显式绑定某个后端。于是出现了 ``同一件事三种类型''
+        的分裂：泛型代码想接受 ``任意 RSA'' 只能依赖
+        \Tp{RSA} 抽象基类，或者用 \Tp{Create()} 工厂。
+  \item \textbf{\CppJava{}}：\Fn{OSSL\_PROVIDER\_load} 加
+        属性串（\texttt{fips=yes}）在\emph{机制}上最接近 Java，
+        但它只覆盖 OpenSSL 这一家。项目跨 OpenSSL、CNG、
+        CommonCrypto 时仍需自己写一层。
+\end{itemize}
+\end{compare}
+
+\begin{guideline}[title=本章要点]
+\begin{itemize}
+  \item 3.x 的唯一正道是 EVP 族；\Tp{AES\_encrypt} 一类函数已废弃，
+        且绕过 provider 与硬件加速。
+  \item provider 让 ``算法实现'' 成为运行期可装载件，
+        \Tp{OSSL\_LIB\_CTX} 提供进程内隔离；
+        legacy 只为历史格式存在，不应出现在新链路上。
+  \item \Tp{OSSL\_PARAM} 是 3.x 的通用扩展点，代价是名字写错只在
+        运行期暴露。
+  \item 错误队列线程局部、会被后续调用污染，必须 ``立刻取、立刻转''。
+  \item 一个通用 \Tp{HandleDeleter} 模板 + 每类上下文一个别名，
+        可以把 OpenSSL 代码的泄漏面压到接近零。
+\end{itemize}
+\end{guideline}
+
+\chapter{密码库全景与选型矩阵}
+
+\section{\CppJava{} 侧：八家主流库的实际定位}
+
+\subsection{OpenSSL 与 LibreSSL}
+
+OpenSSL 是事实上的默认选择，3.x 的 EVP 加 provider 架构见第 2 章。
+它的强项是覆盖面（TLS、X.509、CMS、S/MIME、时间戳、QUIC 通道）与平台支持；
+弱项是历史包袱（低层函数仍导出、宏与 \_ex 函数众多）和
+``库即运行时'' 带来的部署耦合。
+
+LibreSSL 从 OpenSSL 1.0.1 分支出去，走的是另一条工程路线：删除它认为不该
+导出的符号、简化构建、强化默认安全。它\textbf{没有} 3.x 的 provider 机制，
+API 形状停留在 1.1 风格（栈上上下文、\texttt{\_ex} 家族）。
+因此 ``OpenSSL 与 LibreSSL 二进制兼容'' 是一个常见误解：
+头文件与符号集合都不等价，跨两者移植必须做条件编译或适配层。
+
+\subsection{BoringSSL}
+
+Google 为维护 TLS 栈（Chromium、Envoy 等）而分叉的 OpenSSL 派生物。
+它的关键特征是\emph{刻意不提供向后兼容承诺}：API 会随上游需要增删，
+库也不提供稳定 ABI。因此它的正确用法是 ``作为自己构建的一部分源码级集成''，
+而不是 ``当作系统依赖链接''。把它当 OpenSSL 的替代品做长期运维，
+会付出不成比例的移植成本。其密码学校验实现质量很高，
+但 ``是否满足某个合规框架'' 需按目标认证范围单独核对，不能由 ``它是 OpenSSL 分支''
+推出。
+
+\subsection{libsodium}
+
+libsodium 1.0.x 是 NaCl（TweetNaCl/supercop 研究谱系）的工程化封装，
+设计目标是 ``让普通人写对''：
+
+\begin{itemize}
+  \item 高层一次性函数：\Fn{crypto\_secretbox\_easy}、
+        \Fn{crypto\_box\_easy} 与 \Fn{crypto\_sign}；
+  \item AEAD 家族：
+        \Tp{crypto\_aead\_xchacha20\_\allowbreak poly1305\_\allowbreak\_ietf\_encrypt}、
+        AES-256-GCM 与 AES-SIV 一族，接口形状一致；
+  \item 口令哈希：\Fn{crypto\_pwhash}，默认 Argon2id，也支持 scrypt，
+        并内置 ``交互式/敏感/极端'' 三档预设常量；
+  \item 随机数：\Fn{randombytes}（另有
+        \Fn{randombytes\_close} 供 fork 后重新播种的场景）；
+  \item 常量时间比较：\Fn{sodium\_memcmp}；缓冲清零：\Fn{sodium\_memzero}。
+\end{itemize}
+
+代价是覆盖面：没有（或只有很薄的）X.509/PKCS\#7/TLS 栈，
+算法集合由作者精选，想用地域性算法（如 SM 系列）通常要另找实现。
+许可证为 ISC（近似 public domain），这是它容易被静态吞进产物的原因之一。
+
+\subsection{Botan}
+
+Botan 3 是其中唯一的 ``纯 \CppJava{} 风格 C++'' 库：命名空间
+\Tp{Botan}、异常报错、RAII 对象、\Tp{std::vector} 与
+\Tp{std::span} 交换数据，而不是返回码加裸指针。
+它对 ``块密码/分组模式/AEAD'' 用统一的 \Tp{Cipher\_Mode} 抽象，
+由 \Fn{Cipher\_Mode::create} 按字符串名构造；哈希、MAC、KDF、
+PBKDF 各自有对应的抽象基类。这一层的存在，
+使它成为 ``在 \CppJava{} 里最接近 Java JCE 体验'' 的库。
+需要 TLS、X.509、SRP、XMSS 等时它也在同一套 API 内提供。
+
+\subsection{mbedTLS}
+
+mbedTLS 3.x 面向资源受限与嵌入式：全部可裁剪、纯 C、无强制堆使用，
+许可证 Apache-2.0。它的两个接口层值得区分：
+
+\begin{itemize}
+  \item 传统 \Tp{mbedtls\_} 层：\Tp{mbedtls\_cipher\_\allowbreak ctx}、
+        \Tp{mbedtls\_pk\_\allowbreak context}、
+        \Tp{mbedtls\_ssl\_\allowbreak context}，
+        风格接近 OpenSSL 1.x；
+  \item \textbf{PSA Crypto} 层：Arm 主导的独立抽象，用
+        \Tp{psa\_key\_id\_t} \emph{密钥句柄}加
+        \Tp{psa\_operation\_status\_t} 状态码，
+        目标是 ``一个 API，后端可以是软件、TrustZone-M 或安全 enclave''。
+\end{itemize}
+
+PSA 的意义在第 5 章会再出现：它是 \CppJava{} 世界里少数
+``把密钥变成句柄'' 的标准化尝试。
+
+\subsection{GnuTLS}
+
+以 TLS/DTLS 会话为核心的库，密码学后端使用 libgcrypt 等，
+API 抽象层次较高（会话、凭证、认证路径），许可证为 GPL 加宽松例外条款，
+静态链接前必须核对项目许可证策略。
+
+\subsection{Windows：CNG、DPAPI 与 CryptoAPI 遗留}
+
+CNG（Cryptography Next Generation）以 BCrypt（算法）、
+NCrypt（密钥存储）、Crypt32（证书与编码）三组 API 组成，
+特点是\emph{内核参与}：密钥可以做 ``句柄化 + 存储提供者''，
+于是同一份代码可以跑在软件、TPM 智能卡或厂商 KSP 上。
+DPAPI（\Fn{CryptProtectData}）则提供与用户或机器登录态绑定的
+``随手加密''，是本地凭据缓存最常用的路径（第 11 章）。
+CryptQuery/CryptAcquireContext 时代的 CryptoAPI 只应在维护旧代码时接触。
+
+\subsection{Apple：CommonCrypto 与 Security.framework}
+
+macOS 与 iOS 上，CommonCrypto 提供 C 接口族
+（\Tp{CCCrypt}、\Tp{CCHmac}、\Tp{CCKeyDerivationPBKDF}、
+\Fn{CCCryptorCreateWithMode}），风格是 ``返回 OSStatus、
+调用者提供缓冲''。Security.framework 负责证书、密钥链与
+\Tp{SecKey} 句柄；\Fn{SecItemCopyMatching} 取出的密钥是
+CoreFoundation 对象，在纯 C/C++ 里需要自己管引用计数。
+\textbf{CryptoKit 是 Swift 专属}，\CppJava{} 无法直接调用，
+不要把它写进跨平台方案的可行性清单。
+
+\subsection{更底层的一层：随机源与可信执行环境}
+
+Linux 的 \Fn{getrandom} 系统调用、\Tp{/dev/urandom}、
+kernel keyring（内核内的密钥袋，权限由 key 描述符控制）；
+BSD 与 macOS 的 \Fn{arc4random} 家族；Windows 的
+\Fn{BCryptGenRandom}。可信执行环境（OP-TEE、TrustZone、SE、
+以及 PKCS\#11 设备）在 \CppJava{} 中通常表现为
+``另一种 provider 或另一种句柄来源''，抽象代价明显，
+第 5 章讨论密钥材料时一并给出建议。
+
+\section{Java 侧：Provider 名录与真实差异}
+
+JDK 自带的 provider 名字是固定的：\Tp{SUN}（摘要与部分非对称）、
+\Tp{SunJCE}（对称与密钥工厂）、\Tp{SunRsaSign}、\Tp{SunEC}、
+\Tp{JdkCrypto} 等；平台相关的 \Tp{SunPKCS11} 用于对接 HSM 设备。
+``同一算法多个 provider 都能做'' 是常态，
+于是 \Fn{Cipher.getInstance} 的\emph{第一个命中者}决定了实际实现，
+而这个顺序受 \Tp{Security.insertProviderAt} 与配置文件影响。
+实践中最常见的两个坑：
+
+\begin{enumerate}
+  \item \textbf{实现依赖}：某 provider 支持
+        \texttt{AES/GCM/NoPadding}，另一家只支持
+        \texttt{AES/GCM}；换 JDK 发行版就抛
+        \Tp{NoSuch\allowbreak Algorithm\allowbreak Exception}。
+        需要确定行为时应显式指定 provider 名并写测试。
+  \item \textbf{随机源与密钥强度}：无限制密钥长度策略早已是默认，
+        但 \Tp{SecureRandom} 的具体算法在不同实现下的强度与阻塞性不同
+        （\Tp{getInstanceStrong} 在部分环境会显著变慢甚至失败）。
+\end{enumerate}
+
+第三方里 Bouncy Castle 的地位相当于 \CppJava{} 的 OpenSSL：
+覆盖 SM2/SM3/SM4、OpenPGP、PKCS\#12、CMS、TLS（轻量实现），
+并且是很多框架 ``想要额外算法'' 时的实际提供者。
+
+\section{\CSharp{} 侧：一个命名空间加若干实现类}
+
+.NET 8 的密码学集中在
+\Tp{System.\allowbreak Security.\allowbreak Cryptography}
+命名空间里。摘要用 \Tp{SHA256.\allowbreak HashData}（静态、一次性）或
+\Tp{Incremental\allowbreak Hash}（流式），对称用 \Tp{AesGcm}、
+\Tp{AesCcm}、\Tp{ChaCha20\allowbreak Poly1305}，口令派生用
+\Tp{Rfc2898\allowbreak DeriveBytes\allowbreak.Pbkdf2}（静态方法）与
+\Tp{Argon2}（较新版本才有的类型，需确认目标框架版本），
+非对称用 \Tp{RSA}、\Tp{ECDsa}、\Tp{ECDiffie\allowbreak Hellman}，
+签名与 KDF 辅助在 \Tp{Cryptographic\allowbreak Operations}。
+CMS/PKCS\#7 在\emph{单独}的
+\Tp{System.Security.\allowbreak Cryptography.Pkcs} 程序集里，
+XML 签名、JSON Web Token 亦各属独立包，这是 ``一个命名空间''
+印象下的真实碎片。BouncyCastle 也有 .NET 移植版，
+但它在 .NET 生态里的位置远不如在 Java 里重要。
+
+\section{选型矩阵}
+
+\begin{scriptsize}
+\setlength{\tabcolsep}{2pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.11\textwidth}
+                  >{\raggedright\arraybackslash}p{0.08\textwidth}
+                  >{\raggedright\arraybackslash}p{0.12\textwidth}
+                  >{\raggedright\arraybackslash}p{0.07\textwidth}
+                  >{\raggedright\arraybackslash}p{0.08\textwidth}
+                  >{\raggedright\arraybackslash}p{0.09\textwidth}
+                  >{\raggedright\arraybackslash}p{0.08\textwidth}
+                  >{\raggedright\arraybackslash}p{0.09\textwidth}
+                  >{\raggedright\arraybackslash}p{0.11\textwidth}@{}}
+\toprule
+\textbf{库} & \textbf{分层} & \textbf{算法覆盖} & \textbf{常时} &
+\textbf{异步} & \textbf{许可证} & \textbf{体积} & \textbf{平台} &
+\textbf{FIPS} \\
+\midrule
+OpenSSL\allowbreak 3.x & 低层与 EVP & 极全，含 TLS、X.509、CMS &
+多数是 & 无，靠非阻塞 BIO & Apache-2.0 & 中到大 & 全 &
+有认证 provider \\
+\addlinespace
+LibreSSL & 单层，1.1 风格 & 全，随分支 & 多数是 & 无 & BSD 式 & 中 &
+Unix 与 Win & 无常规路径 \\
+\addlinespace
+BoringSSL & EVP 派生 & 精选，随上游变 & 是 & 无 & ISC 与 OpenSSL & 中 &
+集成方决定 & 不以认证为目标 \\
+\addlinespace
+libsodium & 高层默认 & 精选现代算法 & 设计强调 & 无 & ISC & 小 &
+全，含 WASM & 无认证模块 \\
+\addlinespace
+Botan 3 & C++ 抽象基类 & 很全，含 TLS、XMSS & 是 & 无 & BSD 风格 & 中大 &
+全 & 有相关历史 \\
+\addlinespace
+mbedTLS 3 & 传统层与 PSA & 嵌入式子集 & 是 & 可配 & Apache-2.0 &
+很小 & 嵌入式与通用 & 有认证版本 \\
+\addlinespace
+GnuTLS & 会话抽象 & TLS 为主，后端委托 & 依后端 & 回调式 & GPL 加例外 & 中 &
+Unix 为主 & 需核对后端 \\
+\addlinespace
+CNG（Win） & 句柄与提供方 & 系统算法库 & 依实现 & 有异步 API & 随系统 &
+无 & 仅 Win & 有 FIPS 标志 \\
+\addlinespace
+CC（Apple） & 单层 C & 系统算法库 & 依实现 & 无 & 随系统 & 无 &
+仅 Apple & 有相关声明 \\
+\addlinespace
+JDK provider & SPI 与 Provider & JDK 声明的子集 & 依实现 & 阻塞为主 &
+随 JDK & 无 & 全 & 依发行版 \\
+\addlinespace
+Bouncy\allowbreak Castle & Provider & 很全，含 SM 系列 & 多数是 & 无 &
+MIT 式 & 无（托管） & JVM 与 .NET & 有相关模块 \\
+\addlinespace
+.NET SSC & 抽象类加实现类 & 现代算法齐全 & 是 & 部分支持 & MIT 式 &
+无（运行时） & 全（跨平台） & 有 FIPS 模式 \\
+\bottomrule
+\end{longtable}
+\setlength{\tabcolsep}{6pt}
+\end{scriptsize}
+
+\begin{note}[title=读这张表的三个提醒]
+第一，表头缩写：``常时'' 指常数时间（抗时序侧信道）实现，
+``体积'' 指静态链接进产物的增量，``Win'' 指 Windows，
+``CC'' 指 CommonCrypto，``SSC'' 指
+\Tp{System.\allowbreak Security.\allowbreak Cryptography}。
+第二，``体积'' 一列只在 \CppJava{} 语境有意义：Java 与 \CSharp{} 的
+密码学在运行时或系统组件里，不进入你的可执行体积。
+第三，合规（FIPS 相关）判定\emph{永远}要以证书编号与运行配置为准，
+表里只标 ``有没有这条路''，不标 ``你现在是否满足''。
+\end{note}
+
+\section{为什么 \CppJava{} 会同时链接两个 OpenSSL}
+
+\begin{compare}[title=同进程两套密码学运行时：\CppJava{} 的常态，托管语言的罕见事故]
+\textbf{\CppJava{}}：OpenSSL 1.1.x 与 3.x 的共享库名字不同
+（\Tp{libcrypto.so.1.1} 与 \Tp{libcrypto.so.3}），因此在同一进程里
+\emph{可以共存}。共存本身不报错，但会引出真实故障：
+两套 provider 配置与错误队列、两份随机状态、
+两份 C 运行时分配器（一个对象在 A 里 \Fn{malloc}、
+被 B 的 \Fn{BIO\_free} 释放即堆损坏）；
+以及符号插入顺序导致 ``你以为用了 3.x，其实解析到了 1.1''。
+触发路径通常是：vcpkg 或 Conan 拉了一份 OpenSSL，
+系统里另有一份，某依赖（curl、gRPC、数据库驱动）动态链了系统那份。
+防御手段是构建期的显式单一来源（静态化或
+\Tp{OPENSSL\_ROOTDIR} 之类的显式指定）加部署后用
+\Fn{OPENSSL\_VERSION\_\allowbreak number} 自检。
+
+\textbf{Java}：同一 JVM 只有一套
+\Tp{javax.crypto} 类型；BouncyCastle 是\emph{额外 Provider}，
+它复用 JDK 的抽象类型，因此不存在 ``两套 Cipher 接口''。
+版本冲突在类加载器层面（同名不同 jar），症状是
+\Tp{LinkageError} 或 ``NoSuchProvider''，
+与 ``两套堆分配器'' 这类原生故障性质完全不同，且被构建工具
+（Maven/Gradle 依赖解析）在编译期就收敛掉。
+
+\textbf{\CSharp{}}：同理，托管程序集只有一套
+\Tp{System.\allowbreak Security.\allowbreak Cryptography} 类型；
+NuGet 版本冲突是可诊断的构建错误。
+唯一的 ``双运行时'' 风险来自自己
+P/Invoke 或包进原生库（例如同时带两份 OpenSSL 的第三方组件），
+此时故障形态回到 \CppJava{} 那一类。
+\end{compare}
+
+\begin{guideline}[title=本章要点]
+\begin{itemize}
+  \item \CppJava{} 的选型不是 ``选一个最好的库''，而是
+        ``在覆盖面、抽象风格、许可证、可裁剪性、部署耦合之间选一组妥协''。
+  \item 追求 ``少写代码且不易错'' 选 libsodium；
+        追求 ``算法与格式全覆盖'' 选 OpenSSL 或 Botan；
+        嵌入式走 mbedTLS 与 PSA；平台原生（CNG、CommonCrypto）
+        在需要系统信任链与硬件密钥时不可替代。
+  \item Java 与 \CSharp{} 的选型差异体现在 ``选 provider/选实现类''，
+        不会体现在 ``换 API 形状''，这是抽象层带来的真实价值。
+  \item 无论哪种语言，\textbf{同进程单一密码学运行时} 都应作为构建约束
+        写进脚本，而不是靠 code review。
+\end{itemize}
+\end{guideline}
+
+\chapter{算法选择与迁移路线}
+
+\section{哈希：先分清 ``摘要'' 与 ``指纹''}
+
+\subsection{选择当前算法}
+
+SHA-2 家族（SHA-256、SHA-384、SHA-512）仍是默认答案；SHA-3
+（SHA3-256 等）存在的意义主要是\emph{结构多样化}（海绵构造与 Merkle--Damgård
+不同，避免一类碰撞攻击同时命中两者），而不是 ``比 SHA-2 更强''；
+BLAKE2 与 BLAKE3 在软件实现里更快，但跨语言可得性最差。
+
+三语言对同一算法的名字不一样，这是移植时最容易踩的第一颗坑：
+
+\begin{itemize}
+  \item OpenSSL 3.x 的 provider 名字是 \texttt{SHA2-256}、\texttt{SHA2-512}、
+        \texttt{SHA3-256}、\texttt{BLAKE2B512}；
+        旧的 \Tp{EVP\_sha256} 仍可用，但 fetch 风格才能配合 provider。
+  \item Java 的变换名是 \texttt{SHA-256}、\texttt{SHA3-256}
+        （注意有连字符），一次性用法是
+        \Tp{MessageDigest\allowbreak.digest(byte[])}。
+  \item \CSharp{} 用类型名：\Tp{SHA256.HashData}、\Tp{SHA384.HashData}，
+        JDK 与 .NET 都\emph{不}提供 BLAKE2 内置实现。
+\end{itemize}
+
+\subsection{MD5 与 SHA-1 的合法残留}
+
+``MD5 已死'' 的正确读法是：\emph{抗第二原像与抗碰撞}已死，
+单向预像抵抗仍然很强。因此仍有两类正当用途：
+
+\begin{enumerate}
+  \item \textbf{非安全指纹}：缓存键、去重标识、文件分块索引。
+        此时应显式在文档里写明 ``此摘要不承担安全属性''，
+        否则会被审计工具与同事一致判定为缺陷。
+  \item \textbf{协议兼容}：旧系统的校验字段、某些签名格式的中间步骤。
+        这类调用点要集中封装，便于第 4.7 节的迁移。
+\end{enumerate}
+
+\begin{warning}[title=把摘要当口令存储]
+用 \Fn{SHA256\_} 一次性哈希口令再比对，是\emph{错误}做法：
+没有盐、没有内存硬度、GPU 上每秒可试极大次数。
+口令存储必须用 PBKDF2、scrypt 或 Argon2id（见 4.4），
+并且比对时用固定时间比较（第 5 章）。
+``我们用了 SHA-256，很安全'' 是本章要消灭的第一句话。
+\end{warning}
+
+\section{完整性由谁提供：HMAC、AEAD 还是签名}
+
+三者都 ``保证数据没被改''，但\emph{密钥模型}完全不同，
+选错的代价是架构级的。
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+                  >{\raggedright\arraybackslash}p{0.22\textwidth}
+                  >{\raggedright\arraybackslash}p{0.21\textwidth}
+                  >{\raggedright\arraybackslash}p{0.23\textwidth}@{}}
+\toprule
+\textbf{机制} & \textbf{密钥模型} & \textbf{提供什么} & \textbf{典型用途} \\
+\midrule
+HMAC & 双方共享同一把密钥 &
+仅完整性与来源（不加密） &
+会话 token、Webhook 签名、报文头校验 \\
+\addlinespace
+AEAD & 共享密钥（同一把既加密又认证） &
+机密性、完整性、来源，防重放（需配合 nonce 管理） &
+字段加密、文件加密、TLS 记录 \\
+\addlinespace
+数字签名 & 签名方私钥、验证方公钥 &
+完整性、来源、\textbf{不可否认性} &
+软件发布、审计日志、跨组织交换 \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+
+关键判断只有一句：\textbf{验证方是否也持有生成密钥？}
+如果持有（HMAC、AEAD），那么 ``对方能验证'' 同时意味着
+``对方也能伪造''，因此不能作为\emph{向第三方证明来源}的依据。
+\CppJava{} 项目常见的错误是把 ``加密加个 CRC'' 当完整性，
+Java 生态则常见把 HMAC 当成签名用（缺少不可否认性会在合规审查时被挑出）。
+
+\section{AEAD：GCM 与 ChaCha20-Poly1305 的真实差异}
+
+\subsection{硬件与侧信道}
+
+AES-GCM 的性能几乎完全取决于有没有 AES 指令集：x86-64 的 AES-NI、
+ARMv8 的 CE 扩展、PowerPC 的 VCES。有指令加速时 GCM 通常更快
+（可流水、可与硬件集成），没有时软件 AES 的表查询实现历史上就与
+cache 侧信道研究绑在一起，在共享云主机等场景下是真实的顾虑。
+ChaCha20-Poly1305 是纯算术运算、无查表，\textbf{在缺指令集的平台上
+更快且侧信道面更小}（典型：老 ARM 设备、部分模拟器、软件实现路径）。
+
+选型规则由此而来：桌面与服务器用 AES-256-GCM；
+不确定硬件、或面向低端设备与固件，用 ChaCha20-Poly1305；
+两者都可用时优先 GCM（硬件卸载与合规审计更容易）。
+
+\subsection{nonce 是 AEAD 的命门}
+
+\begin{itemize}
+  \item AES-GCM 的推荐 nonce 长度是 96 位（12 字节）。同一密钥下
+        nonce \emph{重复}会直接导致密钥流复用与认证密钥泄露，
+        后果是 ``加密和签名同时失效''，而不是 ``弱一点''。
+  \item 量级上限必须提前算：SP 800-38D 对单密钥的使用次数
+        给出的界在 $2^{32}$ 量级，单次消息的数据量也有约
+        64 GiB 量级的上限。高吞吐服务应当定期换密钥
+        （或用支持更大 nonce 的构造）。
+  \item XChaCha20-Poly1305 把 nonce 扩到 192 位（24 字节），
+        使得 ``随机取一个 nonce'' 在实践中的碰撞概率低到可以忽略，
+        这是它最适合本地文件加密的原因。
+\end{itemize}
+
+\begin{warning}[title=计数器、全零与 ``这条数据只加密一次'' ]
+用固定全零 IV、把 nonce 与密文分开存又忘记存、
+在多线程里共享一个自增计数器却没有加锁——这三种写法
+在 \CppJava{} 与 \CppJava{} 之外的项目里出现频率一样高。
+正确姿势只有一种：\textbf{每次加密新生成 nonce，并与密文一起持久化}
+（前缀拼接即可），解密时按固定长度切出来。
+\end{warning}
+
+\section{KDF：两类完全不同的问题}
+
+\subsection{从高质量密钥材料扩展：HKDF}
+
+输入已经是强随机（密钥协商结果、主密钥），只是想派生出
+``加密钥、MAC 钥、盐'' 三把互不相关的子密钥——这是 HKDF（提取再扩展）
+的任务，用它代替 ``截断哈希''。它\emph{不是}为口令设计的，
+速度极快，因此拿来派生口令密钥等于把离线爆破成本降到 GPU 友好。
+
+\subsection{从口令派生：PBKDF2、scrypt、Argon2id}
+
+口令熵低，唯一防线是\emph{成本}：迭代次数（CPU 硬度）与
+内存占用（内存硬度，抗 GPU 与 ASIC 并行）。
+
+\begin{itemize}
+  \item PBKDF2：只有 CPU 硬度，没有内存硬度。
+        若必须兼容旧系统，迭代次数应按当前推荐量级设置（十万次以上，
+        以 OWASP 当期建议与合规文档为准），并用 SHA-256 而非 SHA-1。
+  \item scrypt：引入内存硬度（$N,r,p$ 三参数）。
+        典型基线取 $N=2^{17}$、$r=8$、$p=1$，内存约 128 MiB 量级。
+  \item Argon2id：当前默认推荐，同时有内存、时间与并行度参数
+        （$m$、$t$、$p$），是三家里最需要 ``按目标机器实测'' 的一个：
+        服务端 4 GiB 内存与嵌入式设备能承受的 $m$ 差两个数量级。
+\end{itemize}
+
+\textbf{参数必须与哈希一起存进记录}（现代口令哈希格式
+（如 PHC 风格的字符串）已经把算法、参数、盐、摘要编在一串里），
+否则将来 ``提高成本参数'' 这一步无法平滑执行。
+
+\subsection{三语言的 KDF 入口对照}
+
+\begin{lstlisting}[style=javastyle,caption={Java：PBKDF2WithHmacSHA256}]
+SecretKeyFactory f = SecretKeyFactory.getInstance(
+    "PBKDF2WithHmacSHA256");
+PBEKeySpec spec = new PBEKeySpec(pwChars, salt, 310000, 256);
+byte[] dk = f.generateSecret(spec).getEncoded();
+spec.clearPassword();
+// pwChars 来自 char[]，不要把口令拼成 String
+\end{lstlisting}
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：静态 Pbkdf2 与 Argon2 的存在性}]
+byte[] dk = Rfc2898DeriveBytes.Pbkdf2(
+    password, salt,
+    iterations: 310_000,
+    HashAlgorithmName.SHA256,
+    outputLength: 32);
+// Argon2 类型在较新的 .NET 版本中提供；
+// 目标框架不含时走第三方实现，并核对其维护状态。
+\end{lstlisting}
+
+\begin{lstlisting}[caption={C/C++：libsodium 的 Argon2id 与 OpenSSL 的 PBKDF2}]
+// 路线 A: libsodium, 直接用预设强度常量
+crypto_pwhash(outkey, outlen, pass, strlen(pass), salt,
+              crypto_pwhash_OPSLIMIT_INTERACTIVE,
+              crypto_pwhash_MEMLIMIT_INTERACTIVE,
+              crypto_pwhash_ALG_ARGON2ID1);
+
+// 路线 B: OpenSSL EVP_KDF, 参数走 OSSL_PARAM
+EVP_KDF *k = EVP_KDF_fetch(NULL, "PBKDF2", NULL);
+EVP_KDF_CTX *kc = EVP_KDF_CTX_new(k);
+OSSL_PARAM p[4], *q = p;
+*q++ = OSSL_PARAM_construct_int(OSSL_KDF_PARAM_ITER, &iter);
+*q++ = OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST,
+                                        md, 0);
+*q = OSSL_PARAM_construct_end();
+EVP_KDF_derive(kc, outkey, outlen, p);
+\end{lstlisting}
+
+三家的\emph{语义}差异值得注意：Java 通过 ``密钥工厂 + 密钥规格对象''
+表达，参数错会抛异常；\CSharp{} 是静态方法直接给字节；
+\CppJava{} 是 ``选库即选算法''（Argon2id 在 OpenSSL 里要靠
+\texttt{Argon2} KDF 的 provider 支持，路径与 libsodium 完全不同）。
+
+\section{非对称：把 ``能用'' 与 ``用对'' 分开}
+
+\subsection{RSA 只剩两种正确用法}
+
+签名用 RSA-PSS、加密用 RSA-OAEP，两者都要显式指定哈希
+（常见为 SHA-256）。PKCS\#1 v1.5 的两条路都已不宜新增：
+签名侧的兼容价值仍高（旧证书链、旧协议），
+加密侧的 Bleichenbacher 家族攻击使它成为应当主动迁移的对象。
+长度上，2048 位是当前普遍接受的\emph{下限}，
+需要保护长期机密性的数据建议 3072 位；
+具体的淘汰时间表以 NIST SP 800-131A 系列的当期版本为准。
+
+\subsection{ECDSA 与其致命细节}
+
+ECDSA P-256 在同等安全强度下密钥与签名都远小于 RSA，
+移动端与证书场景已成主流。它的历史事故全部来自
+\textbf{随机 nonce 的重复或弱生成}（一次性泄露私钥）。
+RFC 6979 用 HMAC-DRBG 把 nonce 变成 ``由消息与私钥确定性导出''，
+从而消除这一类故障。三语言现状：
+
+\begin{itemize}
+  \item OpenSSL 3.x 的 ECDSA 签名走确定性随机派生并叠加熵输入，
+        行为受版本与配置影响，不要在协议层依赖 ``签名可重现''。
+  \item Java 的 \Tp{Signature}（\texttt{SHA256withECDSA}）
+        不保证确定性，同一消息两次签名结果不同是常态。
+  \item \CSharp{} 的 \Tp{ECDsa} 同样不把确定性作为契约。
+\end{itemize}
+
+若协议要求可重现签名（某些区块链与审计场景），
+必须显式选用提供确定性的实现并在集成测试里断言。
+
+\subsection{Ed25519 与 X25519}
+
+Ed25519（签名）与 X25519（密钥协商）是当前推荐的首选椭圆曲线组合：
+无表查找实现、参数少、实现难度低。混合密钥交换
+（X25519 之后再过一遍经典协商）与 HPKE 风格封装是较新的方向，
+各语言支持的成熟度差别很大：libsodium 完整、OpenSSL 3.x 具备原语、
+Java 需要 \cpp{jdk} 较新版本的算法支持或 Bouncy Castle、
+\CSharp{} 的 \Tp{ECDiffie\allowbreak Hellman} 在较新框架上支持 X25519。
+落地前必须在目标运行时上实测 \texttt{getInstance}
+（或对应 Create 方法）是否接受该名字。
+
+\section{随机数：三语言差别最大的一节}
+
+\begin{itemize}
+  \item \textbf{\CppJava{}}：\Fn{RAND\_bytes}（OpenSSL）、
+        \Fn{randombytes}（libsodium）、
+        \Fn{BCryptGenRandom}（Windows）、
+        \Fn{getrandom}（Linux）、\Fn{arc4random}（BSD 系与 macOS）。
+        密钥生成\emph{不能}用 \Tp{std::random\_device}：
+        标准只要求它是 ``随机数源''，各实现可以是伪随机引擎，
+        甚至在某些配置下确定性可预测，也不保证不阻塞。
+  \item \textbf{Java}：\Tp{Secure\allowbreak Random} 是唯一正道。
+        默认实例由实现选择；\Fn{getInstanceStrong}
+        要求 ``最强'' 的实例，可能在无足够熵的环境里失败或很慢，
+        适合启动期一次性用，不适合热路径。注意对
+        \Tp{SecureRandom} 调用 \Fn{setSeed} 会
+        \emph{改变}（在某些实现下是替换）其种子来源。
+  \item \textbf{\CSharp{}}：\Tp{RandomNumber\allowbreak Generator.Fill}
+        直接填 \Tp{Span} 字节、\Fn{Get\allowbreak Bytes} 返回数组、
+        \Fn{GetInteger} 给出无偏的区间整数。
+        旧的 \Fn{AddEntropy} 已被视为无效果并弃用。
+\end{itemize}
+
+\begin{compare}[title=同一件事的三语言 ``取随机字节'']
+\CSharp{} 一行：\Tp{RandomNumberGenerator.GetBytes(12)}。
+Java 三行：拿到 \Tp{SecureRandom} 实例、\Fn{nextBytes} 填充。
+\CppJava{} 取决于你链接了谁：\Fn{RAND\_bytes}（要检查返回值，
+且失败时 \CppJava{} 不会自动帮你换源）、\Fn{randombytes}
+（不会失败，因为它内部已经保证）、\Fn{getrandom}
+（要处理 \Tp{EINTR} 与 \Tp{EAGAIN}，以及 \Tp{GRND\_RANDOM}
+标志下熵池未初始化时的阻塞语义）。\textbf{三者的失败模式不同}，
+这正是 ``没有统一 SPI'' 在随机源这一最基础件上的表现。
+\end{compare}
+
+\section{迁移路线：从遗留算法走到现代组合}
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.19\textwidth}
+                  >{\raggedright\arraybackslash}p{0.20\textwidth}
+                  >{\raggedright\arraybackslash}p{0.19\textwidth}
+                  >{\raggedright\arraybackslash}p{0.24\textwidth}@{}}
+\toprule
+\textbf{遗留做法} & \textbf{真实风险} & \textbf{迁移目标} &
+\textbf{兼容窗口的工程手段} \\
+\midrule
+MD5 或 SHA-1 做数据完整性 & 可构造碰撞 &
+SHA-256 摘要或直接 AEAD &
+双写摘要列，读时接受旧值并回填 \\
+\addlinespace
+AES-CBC 不加认证 & 填充oracle、位翻转可被利用 &
+AES-256-GCM 或 ChaCha20-Poly1305 &
+密文头加版本号字节，解密按版本分派 \\
+\addlinespace
+CBC 加自写 HMAC 但顺序错 & 先解密后验证会放大风险 &
+优先单一 AEAD；必须组合时先验后解 &
+封装成 \texttt{verify\_then\_decrypt} 单点函数 \\
+\addlinespace
+RSA PKCS\#1 v1.5 加密 & Bleichenbacher 家族 &
+RSA-OAEP（SHA-256）或 EC 混合 &
+按密钥标识分派两套解封装路径 \\
+\addlinespace
+SHA-256(口令) 存库 & 无盐、GPU 可爆破 &
+Argon2id（或 scrypt、PBKDF2 高迭代） &
+登录成功后透明重算并升级存储 \\
+\addlinespace
+固定 IV 或全零 IV & 密钥流复用 & 每次随机 nonce 并前缀存储 &
+只有一条路：不接受 ``旧数据没存 nonce'' \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+
+迁移的操作顺序建议固定为四步：
+\textbf{(1)} 盘点点（把所有调用密码学的地方收敛到少数模块）；
+\textbf{(2)} 数据格式版本化（在密文或记录头里加一个版本号，
+这一步不做，后面无法回退）；
+\textbf{(3)} 新写用新算法、旧数据读时兼容、写回时升级；
+\textbf{(4)} 兼容路径彻底关闭并删除代码。
+Java 与 \CSharp{} 的 Provider 或实现类机制让第 (3) 步
+可以做成 ``多注册一个 provider''；\CppJava{} 通常要做成
+``多一个 if 分支与多一个 .cpp 文件''，且必须自己保证两条路径都测到。
+
+\section{同一任务的两段并列清单}
+
+\subsection{任务一：口令登录的验证路径}
+
+\begin{lstlisting}[caption={C/C++：Argon2id 口令校验（libsodium 路线）}]
+// stored 形如: $argon2id$v=19$m=65536,t=3,p=4$<盐>$<摘要>
+// 该字符串自带算法标识与全部参数, 无需调用方解析
+int verify_login(const char* stored, const char* pass) {
+    size_t plen = strlen(pass);
+    int rc = crypto_pwhash_str_verify(stored, pass, plen);
+    sodium_memzero((void*)pass, plen);   /* 尽力清理, 见第 5 章 */
+    if (rc == 0) { return 0; }
+    if (rc == -1) { return -1; }         /* 口令不匹配 */
+    return -2;                           /* 字符串格式非法 */
+}
+
+// 注册时生成该字符串:
+// crypto_pwhash_str(out, pass, plen,
+//                   crypto_pwhash_OPSLIMIT_INTERACTIVE,
+//                   crypto_pwhash_MEMLIMIT_INTERACTIVE);
+\end{lstlisting}
+
+注意这条路是 ``整串自描述'' 的：算法、参数、盐、摘要都在一个字符串里，
+所以第 4.4.2 节说的 ``参数必须持久化'' 由库替你完成了。
+OpenSSL 3.x 的 default provider\textbf{不含} Argon2 与 scrypt，
+因此 \CppJava{} 项目要拿 Argon2id 通常走 libsodium、Botan
+或独立实现，这本身就是 ``换库即换 API'' 的一个具体例子。
+
+Java 与 \CSharp{} 做同一件事时，``解析参数'' 通常交给
+专职库（Java 侧的 argon2 与 bcrypt 库、\CSharp{} 侧的对应包或
+框架内建类型），语言本身提供的是 \Tp{MessageDigest} 的
+\Fn{isEqual} 这类固定时间比较工具，而 \CppJava{} 需要
+\Fn{sodium\_memcmp}、\Fn{CRYPTO\_memcmp} 或自己写一个
+\texttt{volatile} 累积异或版本。
+
+\subsection{任务二：文件 AEAD 加密}
+
+\begin{lstlisting}[caption={C/C++：分片 AES-GCM 加密整个文件}]
+// 分片: 每 64 KiB 一片, 每片独立 nonce = 基nonce XOR 序号
+unsigned char base[12];
+RAND_bytes(base, sizeof base);
+fwrite(base, 1, sizeof base, fp);            // 头: 基 nonce
+for (uint32_t i = 0; ; ++i) {
+    size_t n = fread(buf, 1, sizeof buf, src);
+    if (n == 0) { break; }
+    unsigned char iv[12];
+    memcpy(iv, base, 12);
+    iv[11] ^= (unsigned char)i;              // 简化: 序号低 8 位
+    iv[10] ^= (unsigned char)(i >> 8);
+    chunk_encrypt_gcm(key, iv, buf, n, i);   // AAD 里带上 i
+    if (n < sizeof buf) { break; }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=javastyle,caption={Java：同样的分片用 Cipher 流式接口}]
+Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
+for (int i = 0; ; ++i) {
+    int n = src.read(buf);
+    if (n <= 0) { break; }
+    byte[] iv = nonceFor(base, i);
+    c.init(Cipher.ENCRYPT_MODE, key,
+           new GCMParameterSpec(128, iv));
+    c.updateAAD(BigInteger.valueOf(i).toByteArray());
+    out.write(c.doFinal(buf, 0, n));
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：AesGcm 逐片处理}]
+using var aes = new AesGcm(key, TagSize);
+for (uint i = 0; ; ++i) {
+    int n = src.Read(buf);
+    if (n == 0) { break; }
+    NonceFor(base, i, iv);
+    Span<byte> ct = ctBuf.AsSpan(0, n);
+    aes.Encrypt(iv, buf.AsSpan(0, n), ct,
+                tag, BitConverter.GetBytes(i));
+    out.Write(ct);
+    out.Write(tag);
+}
+\end{lstlisting}
+
+\begin{guideline}[title=本章要点]
+\begin{itemize}
+  \item 摘要名字在三语言里不通用（\texttt{SHA2-256}、\texttt{SHA-256}、
+        \Tp{SHA256}），移植时先看名字再看语义。
+  \item 完整性 ``谁提供'' 取决于密钥模型：共享密钥（HMAC、AEAD）
+        不等于签名。
+  \item AEAD 选型看硬件与侧信道，落地看 nonce 纪律与每密钥用量上限。
+  \item KDF 分两类：HKDF 用于扩展强密钥材料，
+        Argon2id、scrypt、PBKDF2 用于口令；参数要和哈希一起持久化。
+  \item RSA 只剩 PSS 与 OAEP 两种用法；ECDSA 的隐患在 nonce；
+        新设计优先 Ed25519 与 X25519，但要实测运行时支持度。
+  \item \CppJava{} 的随机源要按 ``哪家库、失败怎么表现'' 逐个处理，
+        绝不要用 \Tp{std::random\_device} 生成密钥。
+\end{itemize}
+\end{guideline}
+
+\chapter{密钥材料、格式与内存残留}
+
+\section{先统一词汇：五种编码格式各管一件事}
+
+移植事故里很大一部分不是算法错，而是\emph{格式词被混用}。
+五个词各自的意义与常见容器如下。
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+                  >{\raggedright\arraybackslash}p{0.24\textwidth}
+                  >{\raggedright\arraybackslash}p{0.44\textwidth}@{}}
+\toprule
+\textbf{词} & \textbf{是什么} & \textbf{说明} \\
+\midrule
+DER & ASN.1 的二进制编码 &
+所有下面格式的底料；一段裸字节，无自描述头 \\
+\addlinespace
+PEM & DER 加 Base64 加头尾行 &
+\texttt{BEGIN/END} 行是\emph{类型标签}，
+标签写错就解析失败（\texttt{PRIVATE KEY} 与
+\texttt{RSA PRIVATE KEY} 不是一种东西） \\
+\addlinespace
+PKCS\#8 & 私钥的信封结构 &
+内层算法专属字节 $+$ 外层算法标识；
+加密版 PKCS\#8 用口令保护，旧式 ``DEK-Info'' 私有加密 PEM 是另一套 \\
+\addlinespace
+X.509 & 证书与 CRL 的结构 &
+含公钥、主体、签发者、扩展、签名；
+公钥本身的编码是 SubjectPublicKeyInfo \\
+\addlinespace
+JWK / JWS & JSON 世界的密钥与签名 &
+JWK 描述密钥参数（含曲线点坐标），JWS 是 ``可验证的 JSON''；
+与 DER 体系\emph{不}自动互通 \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+
+还有两个容器值得单列：\textbf{PKCS\#12}（\Tp{.pfx}、\Tp{.p12}，
+私钥加证书链的加密打包，操作系统与浏览器普遍接受）与
+\textbf{Java KeyStore}（\Tp{.jks} 与 \Tp{.p12} 两种，
+Java 生态的密钥库）。二者都是 ``多对象加口令'' 的容器，
+但口令策略、算法集合与默认值差异极大，跨语言交换时优先用 PKCS\#12。
+
+\section{解析与装载：\CppJava{} 没有标准入口}
+
+\subsection{\CppJava{} 的四条路}
+
+\begin{lstlisting}[caption={C/C++：四家库装载同一段 PEM 私钥}]
+// OpenSSL: 直接文件入口（3.x 推荐 OSSL_STORE, 统一 URI）
+EVP_PKEY* k1 = NULL;
+BIO* b = BIO_new_file("server.key", "rb");
+k1 = PEM_read_bio_PrivateKey(b, NULL, NULL, (void*)pass);
+BIO_free(b);
+
+// OpenSSL 3.x: URI 风格, 同一套代码可指向文件/引擎/存储
+OSSL_STORE_CTX* s = OSSL_STORE_open("file:server.key",
+                                    NULL, NULL, NULL, NULL);
+while (!OSSL_STORE_eof(s)) {
+    OSSL_STORE_INFO* i = OSSL_STORE_load(s);
+    if (i) { /* 按类型分派: PKEY / CERT / CRL */
+        EVP_PKEY* p = OSSL_STORE_INFO_get1_PKEY(i);
+        use(p); EVP_PKEY_free(p);
+    }
+    OSSL_STORE_INFO_free(i);
+}
+OSSL_STORE_close(s);
+
+// Botan: 异常报错, 返回智能指针语义的对象
+Botan::secure_vector<char> pem = read_file("k.pem");
+auto k2 = Botan::load_key(pem);
+
+// mbedTLS: 需要 entropy/ctr_drbg 上下文参与
+mbedtls_pk_context pk;
+mbedtls_pk_init(&pk);
+mbedtls_pk_parse_keyfile(&pk, "server.key", pass,
+                         my_rand, NULL);   /* 随机回调 */
+\end{lstlisting}
+
+\subsection{Java：字节数组进、密钥对象出，PEM 是 ``额外工作''}
+
+JCA 的入口只吃 \emph{DER 字节}，不吃 PEM 文本：
+
+\begin{lstlisting}[style=javastyle,caption={Java：PKCS\#8 私钥与 X.509 证书装载}]
+byte[] der = Files.readAllBytes(Path.of("server.key.der"));
+KeyFactory kf = KeyFactory.getInstance("RSA");
+PrivateKey priv = kf.generatePrivate(
+        new PKCS8EncodedKeySpec(der));
+
+CertificateFactory cf =
+        CertificateFactory.getInstance("X.509");
+try (InputStream in = Files.newInputStream(certPath)) {
+    X509Certificate c =
+        (X509Certificate) cf.generateCertificate(in);
+    c.checkValidity();
+    c.verify(caCert.getPublicKey());    // 用签发者公钥验
+}
+PublicKey pub = c.getPublicKey();       // 或直接 SPKI 字节
+\end{lstlisting}
+
+PEM 到 DER 的 ``剥壳''（去头尾、Base64 解码）要么自己写
+（\Tp{Base64.\allowbreak getMimeDecoder()} 十行内搞定），
+要么交给 Bouncy Castle 的 \Tp{PEMParser}。这个 ``标准里没有 PEM''
+的事实，与 \CSharp{} 的对比很能说明抽象层级的差别。
+
+\subsection{\CSharp{}：装载方法直接挂在算法类上}
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：PEM、DER 与证书库三种入口}]
+using RSA rsa = RSA.Create();
+rsa.ImportFromPem(File.ReadAllText("server.key"));
+byte[] der = rsa.ExportPkcs8PrivateKey();
+// 或从 DER 进: rsa.ImportSubjectPublicKeyInfo(spki, out _)
+// 或从加密 PEM 进（较新版本提供, 需核对目标框架）
+
+using var store = new X509Store(StoreName.My,
+                                StoreLocation.CurrentUser);
+store.Open(OpenFlags.ReadOnly);
+var cert = store.Certificates.Find(
+    X509FindType.FindByThumbprint, thumb, validOnly: true)[0];
+using RSA pubOnly = cert.GetRSAPublicKey();
+\end{lstlisting}
+
+\begin{compare}[title=``装载一把私钥'' 的三语言成本]
+\CSharp{} 一个方法名（\Tp{ImportFromPem}）覆盖 PEM 与内部解码，
+并且与操作系统证书库共用同一套
+\Tp{X509Store} 抽象。Java 覆盖 DER（\Tp{PKCS8EncodedKeySpec}）
+与证书（\Tp{CertificateFactory}），PEM 需要自己或第三方解码。
+\CppJava{} 每家库都给了入口，但没有一个 ``标准库入口''：
+OpenSSL 有 \Tp{PEM\_\allowbreak read\_\allowbreak bio\_\allowbreak PrivateKey}
+与 \Tp{OSSL\_STORE}，Botan 有 \Fn{load\_key}，
+mbedTLS 有 \Fn{mbedtls\_pk\_parse\_\allowbreak keyfile}，
+CNG 则要求先 \Fn{BCryptImportKeyPair} 或走 NCrypt 存储。
+四套语义互不兼容，这就是第 1 章 ``抽象由库各自发明'' 的具体含义。
+\end{compare}
+
+\section{密钥在内存里的残留}
+
+\subsection{\CppJava{}：为什么 \Fn{memset} 会被删掉}
+
+编译器有权删除 ``对后续不可见内存的写入''。函数返回前对局部缓冲的
+\Fn{memset} 正好满足这个条件，因此
+\texttt{-O2} 下被优化掉是\emph{符合标准}的行为。三种可靠写法：
+
+\begin{lstlisting}[caption={C/C++：清零的三种可移植写法}]
+// 1. 平台或库提供的专用清洗函数(内部阻止优化)
+OPENSSL_cleanse(buf, len);          // OpenSSL
+sodium_memzero(buf, len);           // libsodium
+explicit_bzero(buf, len);           // BSD、glibc 较新版本
+SecureZeroMemory(&buf, sizeof buf); // Windows
+
+// 2. 自己写: volatile 保证写入不可见性可被观察到
+void wipe(void* p, size_t n) {
+    volatile unsigned char* q = (volatile unsigned char*)p;
+    while (n--) { *q++ = 0; }
+    // 还需编译器屏障, 防止前移
+}
+
+// 3. C++: 把清零放进 RAII 包装, 避免忘记
+template <class T>
+class Secure {
+    std::vector<T> v_;
+public:
+    ~Secure() {
+        if (!v_.empty()) {
+            OPENSSL_cleanse(v_.data(),
+                            v_.size() * sizeof(T));
+        }
+    }
+    // 省略拷贝禁用与移动语义, 实际项目必须显式处理
+};
+\end{lstlisting}
+
+真正的难点不在 ``清哪一块''，而在 ``一共被复制了几份''：
+\Tp{std::string} 的每次拷贝、\Tp{std::vector} 的增长重分配、
+异常消息、调试日志、标准输出的格式化中间缓冲，
+都可能留下副本。因此 \CppJava{} 的密钥管理必须
+\textbf{限制密钥类型的可拷贝性}（禁用拷贝、只允许引用或
+\Tp{std::span} 传递），否则清零代码只是心理安慰。
+另有两条常被忽略：进程可能被换页到磁盘（\Fn{mlock} 或
+\Fn{VirtualLock} 可缓解，但有配额与权限限制），
+以及崩溃转储会把整个地址空间写进文件。
+
+\subsection{Java：\Tp{String} 是一个陷阱}
+
+\begin{itemize}
+  \item 口令\emph{不该}是 \Tp{String}。字符串不可变，
+        会进常量池与内部 \Tp{char}/\Tp{byte} 数组，
+        在被 GC 回收前无法清零（\Tp{System.gc()}
+        不保证时机，也不保证移动后旧副本消失）。
+        正确做法：\Tp{char[]} 读入、用完 \Fn{Arrays.fill} 清零。
+  \item \Tp{SecretKeySpec} 实现 \Tp{DestroyableKey}，
+        提供 \Fn{destroy} 与 \Fn{isDestroyed}；
+        但 ``清零是否真的抹掉所有副本'' 依赖实现，
+        且销毁后该对象不可再用（\Fn{getEncoded} 抛
+        \Tp{IllegalStateException}）。
+  \item 较新版本引入了更明确的 \Tp{Destroyable\allowbreak SecretKey}
+        契约，方向是对的；但 Java 的整体保证仍然弱于
+        ``你能控制堆'' 的语言。
+  \item \Tp{MessageDigest.\allowbreak isEqual} 是官方提供的固定时间比较，
+        不要用 \Tp{Arrays.equals} 比摘要（后者遇到第一个
+        不等字节就返回，可被时序测量）。
+\end{itemize}
+
+\subsection{\CSharp{}：\Tp{Span} 路线与 \Tp{SecureString} 的退场}
+
+\begin{itemize}
+  \item 主推写法是把密钥缓冲声明成可清零的临时对象：
+        用完立刻调用 \Tp{Cryptographic\allowbreak Operations} 的
+        \Fn{ZeroMemory} 把字节抹掉，比较摘要与标签一律用
+        同一类型的 \Fn{FixedTimeEquals}。
+        二者都是一等 API，静态分析工具能识别这种调用。
+  \item \Tp{SecureString} 的历史定位是 ``在 GC 堆之外存口令''，
+        但官方文档已把它标注为不推荐用于新代码
+        （互操作时仍要复制成非安全缓冲），
+        新项目应使用 \Tp{NetworkCredential}、
+        配置提供程序或把口令直接交给 API 后立即清零的 \Tp{char[]}。
+  \item \Tp{AesGcm}、\Tp{RSA} 等类型的 \Fn{Dispose}
+        会清理内部密钥调度表，这是 ``用 \Tp{using} 作用域
+        承载密钥生命周期'' 的实际收益。
+\end{itemize}
+
+\section{句柄化：让密钥字节永远不出现在你的地址空间}
+
+上面的所有挣扎都指向同一个结论：\textbf{能拿到裸密钥字节，就要负责擦除它}。
+因此现代设计倾向于让密钥以\emph{句柄}形式存在：
+
+\begin{itemize}
+  \item \textbf{HSM 与 PKCS\#11}：对象有 \Tp{CK\_OBJECT\_HANDLE}，
+        运算在设备内完成，策略位（\Tp{CKA\_EXTRACTABLE}）
+        决定密钥能否导出。
+  \item \textbf{云 KMS}：网络调用，密钥永不下发，
+        只提供 \texttt{Encrypt}、\texttt{Decrypt}、\texttt{Sign}
+        以及数据密钥生成功能；\CppJava{} 侧要接受
+        ``加密操作可能是 RPC'' 这一事实（延迟、重试、配额）。
+  \item \textbf{TPM 与 Secure Enclave}：平台绑定，
+        Windows 通过 NCrypt 的存储提供者暴露
+        \Tp{NCRYPT\_KEY\_HANDLE}，
+        Apple 通过 \Tp{SecKey} 加 \Tp{kSecAttrTokenID}。
+  \item \textbf{PSA Crypto}（mbedTLS）：\Tp{psa\_key\_id\_t}
+        句柄加策略位，是 \CppJava{} 生态里最接近
+        ``语言无关密钥句柄'' 的标准化尝试。
+  \item \textbf{\CSharp{}}：\Tp{CngKey}
+        与 \Tp{RSACng} 组合可以把密钥固定在 CNG 存储提供者里，
+        代码只持有名字或句柄。
+  \item \textbf{Java}：\Tp{KeyStore} 的
+        \Tp{PasswordProtection}、\Tp{SunPKCS11} 的
+        \Tp{Key} 实现，以及较新框架里
+        ``\Tp{Key} 对象内部只是句柄'' 的写法。
+\end{itemize}
+
+\begin{warning}[title=十种最常见的密钥材料事故]
+\begin{itemize}
+  \item \textbf{把密钥拼进日志}：把 key 变量直接拼进日志语句
+        或 \CppJava{} 的 \texttt{std::cout << key\_hex}，
+        一次即泄露，且会进归档系统。给密钥类型实现
+        ``不可打印'' 是最省事的防御。
+  \item \textbf{把 Base64 当加密}：Base64 是编码不是加密，
+        它是本章最高频的 ``看起来做了保护'' 事故。
+  \item \textbf{自造 IV}：用时间戳、进程号或 ``消息哈希前 12 字节''
+        当 nonce，等于把 nonce 唯一性交给运气。
+  \item \textbf{ECB 模式}：相同的明文块产生相同密文块，
+        图像与结构化数据会直接暴露模式。
+  \item \textbf{固定 nonce 的 AEAD}：见 4.3.2，后果是密钥恢复。
+  \item \textbf{混合模式误用}：先加密再对明文算 MAC、
+        或把两个不同密钥的密文首尾相接当作一条消息。
+  \item \textbf{未验证的证书链}：\CppJava{} 的
+        \Fn{SSL\_CTX\_set\_verify} 传
+        \Tp{SSL\_VERIFY\_NONE} 来 ``绕过测试环境问题''；
+        Java 侧对应自定义一个什么都不拒绝的
+        \Tp{X509TrustManager}；\CSharp{} 侧对应
+        \Tp{ServerCertificateCustomValidationCallback}
+        直接返回真值。三语言同一种事故。
+  \item \textbf{忘了主机名验证}：链验过不等于对端正确，
+        三语言都要显式做主机名或 SAN 检查。
+  \item \textbf{用非固定时间比较}：摘要、MAC、口令哈希的比较必须用
+        \Tp{MessageDigest.\allowbreak isEqual}（Java）、
+        \Tp{Cryptographic\allowbreak Operations.FixedTimeEquals}
+        （\CSharp{}）、\Fn{sodium\_memcmp} 或
+        \Fn{CRYPTO\_memcmp}（\CppJava{}）。
+  \item \textbf{把口令塞进环境变量或命令行}：
+        进程列表、审计日志与 shell 历史都会留下它。
+\end{itemize}
+\end{warning}
+
+\begin{bestpractice}[title=密钥材料清单]
+\begin{enumerate}
+  \item 密钥类型必须禁拷贝、可清零、不可打印，
+        且在 API 边界只暴露 \Tp{span} 或只读视图。
+  \item 每一条 ``取密钥'' 的路径都记明来源（文件、环境、KMS、
+        证书库），并在启动自检里打印来源与指纹\emph{前 4 字节}，
+        绝不打印全长。
+  \item 派生密钥用 HKDF 分标签，禁止把同一把密钥直接同时用于
+        加密与 MAC（即便 AEAD 内部已处理，也不要跨协议复用）。
+  \item 给每把密钥配 ``轮换窗口'' 与 ``版本前缀''：
+        密文头部放 1 字节密钥 ID，轮换成本从 ``重写全部数据''
+        降到 ``新增一个 ID''。
+  \item 能句柄化就句柄化：把 ``拿到裸字节'' 当成需要评审的例外。
+\end{enumerate}
+\end{bestpractice}
+
+\begin{guideline}[title=本章要点]
+\begin{itemize}
+  \item PEM、DER、PKCS\#8、X.509、JWK 各管一层，
+        混用它们是移植事故的主因之一。
+  \item \CppJava{} 装载密钥没有标准入口，四家库四套语义；
+        Java 只吃 DER、\CSharp{} 直接吃 PEM，
+        两者都把这个能力放在标准类型上。
+  \item \Fn{memset} 可被优化掉；平台清洗函数、\Tp{volatile} 写法、
+        RAII 清零是三种可移植解法，但\emph{副本控制}才是真正难点。
+  \item Java 的 \Tp{String} 口令是结构性缺陷；
+        \CSharp{} 的 \Tp{SecureString} 已退出主流建议、
+        转为 \Tp{Span} 加 \Fn{ZeroMemory}。
+  \item 句柄化（PKCS\#11、KMS、TPM、PSA、CNG 存储）是唯一
+        能从根本上免除清零责任的方向。
+\end{itemize}
+\end{guideline}
+
+\chapter{实战：三种语言实现同一套加密需求}
+
+\section{需求与共同契约}
+
+给三个语言实现同一份需求，才能把前两章的抽象差异落到行数与故障面上。需求如下。
+
+\begin{guideline}[title=需求 6-A：本地端凭据与数据保护]
+\begin{enumerate}
+  \item \textbf{口令登录}：注册时保存自描述口令哈希（含算法与参数）；
+        登录时验证，验证过程不受时序测量影响。
+  \item \textbf{字段加密}：用户表中的手机号字段需本地加密存储。
+        主密钥来自一个 32 字节随机值，字段密钥由主密钥派生（HKDF，
+        标签绑定字段名），每条记录使用独立随机 nonce，
+        密文格式为 ``版本字节 $+$ nonce $+$ 密文 $+$ 标签''。
+  \item \textbf{导出签名}：导出 CSV 后对文件内容签名（Ed25519，
+        私钥从 PEM 读入），提供独立的验签入口供对端使用。
+  \item \textbf{通用约束}：口令与密钥不得进日志；
+        所有失败路径都要清零已分配的敏感缓冲；
+        算法参数集中在一个配置结构里，便于轮换。
+\end{enumerate}
+\end{guideline}
+
+\section{\CppJava{}：OpenSSL 3.x 路线}
+
+这段代码是全 volume 里最 ``手工'' 的一段，注意三件事：
+错误队列的即时转译、上下文与缓冲的两套 RAII、
+以及 ``密文格式'' 由自己写出来（没有标准类型替你规定拼接顺序）。
+
+\begin{lstlisting}[caption={C/C++：敏感缓冲与全局入口}]
+namespace app {
+struct Buf {                       // 自带清零的字节缓冲
+    std::vector<std::byte> v;
+    Buf() = default;
+    explicit Buf(size_t n) : v(n) {}
+    ~Buf() { clear(); }
+    Buf(Buf&& o) noexcept : v(std::move(o.v)) {}
+    Buf& operator=(const Buf&) = delete;   // 禁止隐式复制
+    std::byte* data() { return v.data(); }
+    size_t size() const { return v.size(); }
+    void clear() {
+        if (!v.empty()) { OPENSSL_cleanse(v.data(),
+                         v.size() * sizeof(std::byte)); }
+        v.clear();
+    }
+};
+[[noreturn]] static void ossl_fail(const char* what) {
+    char m[256] = {0};
+    unsigned long e = ERR_get_error();
+    if (e) { ERR_error_string_n(e, m, sizeof m); }
+    ERR_clear_error();
+    throw std::runtime_error(std::string(what) + ": " + m);
+}
+}  // namespace app
+\end{lstlisting}
+
+\begin{lstlisting}[caption={C/C++：字段加密（AES-256-GCM, HKDF 派生）}]
+app::Buf derive_field_key(const std::byte* master, size_t mlen,
+                          const char* label) {
+    app::Buf out(32);
+    EvpKdfPtr k{EVP_KDF_fetch(nullptr, "HKDF", nullptr)};
+    EvpKdfCtxPtr kc{EVP_KDF_CTX_new(k.get())};
+    static char md[] = "SHA2-256";
+    size_t lablen = std::strlen(label);
+    OSSL_PARAM p[5], *q = p;
+    *q++ = OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST,
+                                           md, 0);
+    *q++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_KEY,
+           const_cast<std::byte*>(master), mlen);
+    *q++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_INFO,
+           const_cast<char*>(label), lablen);
+    *q = OSSL_PARAM_construct_end();
+    if (EVP_KDF_derive(kc.get(), out.data(), out.size(), p) != 1) {
+        ossl_fail("HKDF_derive");
+    }
+    return out;
+}
+
+app::Buf encrypt_field(const std::byte* key, size_t klen,
+                       std::span<const std::byte> plain) {
+    app::Buf out(1 + IV_LEN + plain.size() + TAG_LEN);
+    unsigned char* w = reinterpret_cast<unsigned char*>(out.data());
+    *w++ = VERSION_V1;
+    if (RAND_bytes(w, IV_LEN) != 1) { ossl_fail("RAND_bytes"); }
+    unsigned char* iv = w; w += IV_LEN;
+    int n = 0;
+    EvpCtxPtr c{EVP_CIPHER_CTX_new()};
+    EVP_EncryptInit_ex(c.get(), EVP_aes_256_gcm(), nullptr,
+                       nullptr, nullptr);
+    EVP_CIPHER_CTX_ctrl(c.get(), EVP_CTRL_AEAD_SET_IVLEN,
+                        IV_LEN, nullptr);
+    EVP_EncryptInit_ex(c.get(), nullptr, nullptr,
+                       key, iv);
+    EVP_EncryptUpdate(c.get(), w, &n,
+                      as_bytes(plain), int(plain.size()));
+    w += n;
+    EVP_EncryptFinal_ex(c.get(), w, &n); w += n;
+    if (EVP_CIPHER_CTX_ctrl(c.get(), EVP_CTRL_AEAD_GET_TAG,
+                           TAG_LEN, w) != 1) { ossl_fail("GetTag"); }
+    return out;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption={C/C++：Ed25519 签名与验签}]
+app::Buf sign_file(EVP_PKEY* priv,
+                   std::span<const std::byte> blob) {
+    EvpMdPtr md{EVP_MD_CTX_new()};
+    if (EVP_DigestSignInit(md.get(), nullptr, nullptr,
+                           nullptr, priv) != 1) {
+        ossl_fail("SignInit");
+    }
+    size_t slen = 0;
+    /* 第一次调用只问长度 */
+    if (EVP_DigestSign(md.get(), nullptr, &slen,
+                       as_bytes(blob), blob.size()) != 1) {
+        ossl_fail("sign size");
+    }
+    app::Buf sig(slen);
+    if (EVP_DigestSign(md.get(), as_bytes(sig), &slen,
+                       as_bytes(blob), blob.size()) != 1) {
+        ossl_fail("sign");
+    }
+    sig.v.resize(slen);
+    return sig;
+}
+/* 验签对称地用 EVP_DigestVerifyInit 加 EVP_DigestVerify */
+\end{lstlisting}
+
+\textbf{\CppJava{} 的真实成本在这里}：光是 ``拿到一把能签名的私钥''
+就要 6 到 10 行（BIO、PEM 或 \Tp{OSSL\_STORE}、类型判断、失败分支）；
+签名本身还要两次调用问长度。Ed25519 只能走 \Fn{EVP\_DigestSign}
+这一类 ``一次性'' 入口（不支持分片 update），
+而 ``哪些算法只能用一次性入口'' 这件事本身就要查文档才知道。
+密文格式、nonce 长度、标签拼接顺序全部由本项目的注释 ``约定''，
+换一个人接手就得靠单元测试把这些约定钉住。
+清单里的 \Fn{as\_bytes} 与 \Fn{as\_uchar}
+是本项目自定义的一行式指针转换辅助，不是库函数。
+
+\section{Java：JCE 路线}
+
+\begin{lstlisting}[style=javastyle,caption={Java：三段需求对应三类对象}]
+// 1) 口令登录（PBKDF2 路线, 参数随哈希一起存）
+SecretKeyFactory f = SecretKeyFactory.getInstance(
+        "PBKDF2WithHmacSHA256");
+PBEKeySpec spec = new PBEKeySpec(pwd, salt, ITER, 256);
+byte[] dk = f.generateSecret(spec).getEncoded();
+spec.clearPassword();
+boolean ok = MessageDigest.isEqual(dk, stored);
+
+// 2) 字段加密：AES/GCM/NoPadding, 密钥由 HKDF 思想手工分标签
+byte[] iv = new byte[12];
+new SecureRandom().nextBytes(iv);
+Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
+c.init(Cipher.ENCRYPT_MODE, fieldKey,
+       new GCMParameterSpec(128, iv));
+c.updateAAD(fieldName.getBytes(StandardCharsets.UTF_8));
+byte[] body = c.doFinal(plain);
+// 拼接: version | iv | body(含标签)
+
+// 3) 导出签名
+Signature s = Signature.getInstance("Ed25519");
+s.initSign(privKey);
+s.update(csvBytes);
+byte[] sig = s.sign();
+// 验签: s.initSign 换成 s.initVerify(cert.getPublicKey())
+\end{lstlisting}
+
+行数少下来的原因是 ``决定被提前做完了''：
+变换名决定了模式与填充，\Tp{GCMParameterSpec}
+决定了标签长度，\Tp{doFinal} 决定了标签放在
+尾部，\Tp{MessageDigest} 的 \Fn{isEqual} 决定了怎么
+比。Java 的代价在别处：受检异常逼你在签名上写
+\texttt{throws}，装箱与对象分配多，
+以及 \Tp{char[]} 口令与 \Tp{SecretKey} 的销毁语义要靠自觉。
+
+\section{\CSharp{}：SSC 路线}
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：三个静态入口加一个 using}]
+// 1) 口令登录
+byte[] dk = Rfc2898DeriveBytes.Pbkdf2(
+    pwdChars, salt, Iterations, HashAlgorithmName.SHA256, 32);
+bool ok = CryptographicOperations.FixedTimeEquals(dk, stored);
+CryptographicOperations.ZeroMemory(dk);
+
+// 2) 字段加密
+byte[] iv = RandomNumberGenerator.GetBytes(12);
+byte[] ct = new byte[plain.Length];
+byte[] tag = new byte[16];
+using var aes = AesGcmFactory.ForField(masterKey, fieldName);
+aes.Encrypt(iv, plain, ct, tag);
+// 拼接: version | iv | ct | tag  (顺序由本项目定义)
+
+// 3) 导出签名
+using var ecdsa = ECDsa.Create();
+ecdsa.ImportFromPem(File.ReadAllText("sign.key"));
+byte[] signature = ecdsa.SignData(
+    csvBytes, HashAlgorithmName.SHA256);
+// 若要 Ed25519, 需较新框架或第三方实现, 先在目标运行时实测
+\end{lstlisting}
+
+\Tp{AesGcm} 的构造函数只接受密钥字节与标签长度，
+所以 ``按字段派生密钥'' 必须自己封装（上面的
+\Tp{AesGcmFactory}），这与 \CppJava{} 的处境相同——
+语言抽象层管不到 ``密钥怎么来'' 这件事。
+\section{差异小结}
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+                  >{\raggedright\arraybackslash}p{0.28\textwidth}
+                  >{\raggedright\arraybackslash}p{0.19\textwidth}
+                  >{\raggedright\arraybackslash}p{0.19\textwidth}@{}}
+\toprule
+\textbf{维度} & \textbf{\CppJava{}（OpenSSL）} & \textbf{Java} &
+\textbf{\CSharp{}} \\
+\midrule
+完成三件事的代码量 &
+约 120 行（含缓冲类型、错误转译、派生封装） &
+约 25 行 & 约 20 行 \\
+\addlinespace
+错误处理 &
+返回码加异常转译，两套并存 &
+受检异常，编译期强制处理 &
+运行时异常，\Tp{using} 保证释放 \\
+\addlinespace
+资源与清零 &
+手写 RAII：上下文与敏感缓冲都要管 &
+GC 管理对象，密钥需显式销毁 &
+\Tp{Dispose} 加 \Fn{ZeroMemory} 两种粒度 \\
+\addlinespace
+格式约定 &
+密文拼接顺序、nonce 长度全靠注释与测试 &
+由变换名与 API 形状决定 &
+由类型决定，标签分离需自己拼 \\
+\addlinespace
+可测试性 &
+需为每种后端写测试；换库要重写测试 &
+接口稳定，可用假 Provider 注入 &
+类型即接口，易 mock 上层封装 \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+
+\begin{warning}[title=这段清单里被故意留下的 ``工程不完美'']
+\begin{itemize}
+  \item \CppJava{} 版把标签直接追加在密文尾部，与 Java 的
+        \Tp{Cipher} 行为一致，但与 \CSharp{} 版的 ``分离存储''
+        不一致：跨语言解密时必须先看格式，
+        这正是第 9 章 ``值映射'' 问题在密码侧的翻版。
+  \item 派生函数用了 \Tp{static char md[]} 局部常量，
+        在多线程里 \Tp{OSSL\_PARAM} 的构造是安全的
+        （值被拷贝进数组），但把它换成共享可变缓冲区就会引入竞争。
+  \item \CSharp{} 清单里的曲线选择依赖目标框架版本，
+        Ed25519 的支持度必须在实际运行时上验证，
+        不能从 ``.NET 支持 X'' 推出。
+\end{itemize}
+\end{warning}
+
+% ====================================================================
+
+% ====================================================================
+\part{数据库访问}
+% ====================================================================
+
+\chapter{访问层模型的三语言差异}
+
+\section{\CppJava{}：没有内建数据库，也没有统一 SPI}
+
+\CppJava{} 标准库里\textbf{没有任何} 数据库访问设施。可用的每一种后端
+都自带一套互不相干的 API：
+
+\begin{itemize}
+  \item \textbf{SQLite}：\Tp{sqlite3\_\allowbreak*} 句柄加
+        \Tp{sqlite3\_stmt}，纯 C，进程内函数调用，无网络。
+  \item \textbf{PostgreSQL}：\Tp{PGconn} 加 \Tp{PGresult}（libpq），
+        C 库，自己实现协议。
+  \item \textbf{MySQL 与 MariaDB}：\Tp{MYSQL} 句柄
+        （\Tp{mysql\_real\_connect} 一族），C 库。
+  \item \textbf{ODBC}：\Fn{SQLExecDirect} 加三类句柄
+        （环境、连接、语句），是唯一 ``接口与驱动分离'' 的一层，
+        需要驱动管理器与 ini 配置。
+  \item \textbf{MongoDB 与 Redis}：\Tp{mongoc\_client\_t} 与
+        hiredis 的 \Tp{redisReply}，各说各的协议。
+\end{itemize}
+
+它们的错误模型（返回码加 \Fn{sqlite3\_errmsg}、
+\Fn{PQresultErrorField}、\Tp{SQLSTATE}）、
+参数绑定方式（\Fn{sqlite3\_bind\_int64}、
+\Fn{PQexecParams} 的字符串数组、\Fn{SQLBindParameter}）、
+结果遍历方式（\Fn{sqlite3\_step} 状态机、
+\Fn{PQntuples} 随机访问、\Fn{SQLFetch} 游标）都不同。
+所谓 ``\CppJava{} 的数据库层'' 实际是
+\textbf{项目自己写的那 300 行包装}。
+
+\section{Java：接口在 \Tp{java.sql}，驱动是插件}
+
+JDBC 的分界非常清楚：\Tp{java.sql} 与 \Tp{javax.sql} 里全是接口
+（\Tp{Connection}、\Tp{PreparedStatement}、\Tp{ResultSet}、
+\Tp{ResultSetMetaData}、\Tp{DataSource}），
+实现由 \Tp{java.sql.Driver} 提供，通过
+\Tp{ServiceLoader}（\Tp{META-INF/services}）被
+\Tp{DriverManager.\allowbreak getConnection} 调用 发现。
+今天的驱动几乎都是 ``Type 4''（纯 Java 直接说服务器协议），
+``JDBC-ODBC 桥'' 早已移除。
+
+关键事实：\textbf{连接池不在 JDK 里}。\Tp{DataSource}
+只是接口，池化由 HikariCP、DbCP 这类第三方提供，
+应用服务器再包一层 JNDI。``接口标准化、池化生态化''
+是 JDBC 与 \CppJava{} 最大的区别。
+
+\section{\CSharp{}：ADO.NET 的工厂抽象加内建池}
+
+ADO.NET 用 \Tp{DbProviderFactory} 把 ``造对象'' 这件事也抽象了：
+\Tp{SqlConnection}、\Tp{NpgsqlConnection}、\Tp{MySqlConnector}
+各自提供工厂，代码可只依赖 \Tp{DbConnection}、\Tp{DbCommand}、
+\Tp{DbDataReader}、\Tp{DbParameter}。
+连接池是\emph{内建}的（连接串 \Tp{Pooling=true} 默认开启），
+\Tp{Dispose} 归还而不是真关闭。
+更重要的是：EF Core 是生态里的一等 ORM，
+LINQ 查询在语言层就被类型检查，这在 \CppJava{} 侧没有对应物。
+
+\section{同一件事：连库、查询、取一行}
+
+\begin{lstlisting}[caption={C/C++：libpq 的一条参数化查询}]
+PGconn* cn = PQconnectdb("host=localhost dbname=app");
+if (PQstatus(cn) != CONNECTION_OK) {
+    std::string err = PQerrorMessage(cn);
+    PQfinish(cn);
+    throw std::runtime_error("connect: " + err);
+}
+const char* vals[1] = { nullptr };
+std::string idbuf = std::to_string(id);
+vals[0] = idbuf.c_str();
+PGresult* rs = PQexecParams(cn,
+        "SELECT id, name FROM cust WHERE id = $1",
+        1, nullptr, vals, nullptr, nullptr, 0);
+if (PQresultStatus(rs) != PGRES_TUPLES_OK) {
+    std::string err = PQresultErrorMessage(rs);
+    PQclear(rs); PQfinish(cn);
+    throw std::runtime_error("query: " + err);
+}
+if (PQntuples(rs) == 1) {
+    long long k = std::strtoll(
+            PQgetvalue(rs, 0, 0), nullptr, 10);
+    bool isnull = PQgetisnull(rs, 0, 1) == 1;
+    std::string name = isnull ? "" : PQgetvalue(rs, 0, 1);
+    use(k, name);
+}
+PQclear(rs);
+PQfinish(cn);
+\end{lstlisting}
+
+\begin{lstlisting}[style=javastyle,caption={Java：同一条查询的 JDBC 写法}]
+String url = "jdbc:postgresql://localhost/app";
+try (Connection cn = DriverManager.getConnection(url, u, p);
+     PreparedStatement ps = cn.prepareStatement(
+             "SELECT id, name FROM cust WHERE id = ?")) {
+    ps.setLong(1, id);
+    try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+            long k = rs.getLong(1);
+            String n = rs.getString(2);
+            if (rs.wasNull()) { n = null; }
+            use(k, n);
+        }
+    }
+}   // 三个资源在作用域结束自动关闭
+\end{lstlisting}
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：同一条查询的 ADO.NET 写法}]
+await using var cn = new NpgsqlConnection(connStr);
+await cn.OpenAsync();
+await using var cmd = new NpgsqlCommand(
+    "SELECT id, name FROM cust WHERE id = @id", cn);
+cmd.Parameters.AddWithValue("id", id);
+await using var rd = await cmd.ExecuteReaderAsync();
+if (await rd.ReadAsync()) {
+    long k = rd.GetInt64(0);
+    string? n = rd.IsDBNull(1) ? null : rd.GetString(1);
+    Use(k, n);
+}
+\end{lstlisting}
+
+三段代码的语义完全对应，但\emph{责任的分布}不同：
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.17\textwidth}
+                  >{\raggedright\arraybackslash}p{0.22\textwidth}
+                  >{\raggedright\arraybackslash}p{0.21\textwidth}
+                  >{\raggedright\arraybackslash}p{0.22\textwidth}@{}}
+\toprule
+\textbf{事项} & \textbf{\CppJava{}（libpq）} & \textbf{Java（JDBC）} &
+\textbf{\CSharp{}（ADO.NET）} \\
+\midrule
+驱动发现 & 构建期静态或动态链接 & \Tp{ServiceLoader} 扫描 &
+工厂类型由代码显式选择 \\
+\addlinespace
+参数文本形式 & \texttt{\$1} 占位符 加字符串数组 &
+\texttt{?} 占位符 加 \Fn{setLong} &
+命名参数 加 \Tp{DbParameter} 集合 \\
+\addlinespace
+NULL 表达 & \Fn{PQgetisnull} 或值为 \Tp{NULL} &
+\Fn{wasNull} 事后询问 & \Fn{IsDBNull} 加 \Tp{DBNull.Value} \\
+\addlinespace
+结果形态 & 全量客户端缓冲，可随机访问 &
+游标式 \Fn{next}，可设 \Fn{setFetchSize} &
+向前只读 \Fn{Read}，可流式 \\
+\addlinespace
+错误传递 & 返回码 加连接或结果对象取文本 &
+\Tp{SQLException} 含 SQLSTATE &
+\Tp{DbException} 含 SQLSTATE \\
+\addlinespace
+资源释放 & 手工 \Fn{PQclear} 与 \Fn{PQfinish} &
+try-with-resources & \Tp{using} 加内建池归还 \\
+\addlinespace
+连接池 & 自己做或用第三方 & 第三方（HikariCP 等） & 驱动内建 \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+
+\begin{warning}[title=三个高频误判]
+\begin{itemize}
+  \item \textbf{``\CppJava{} 用 ODBC 就能统一''}：ODBC 确实是统一接口，
+        但它带来驱动管理器、DSN 配置与宽字符绑定负担，
+        新项目的实际采用率远低于直接链接各家 C 库，
+        而且 NoSQL 后端基本不在它的能力圈内。
+  \item \textbf{``Java 有了 \Tp{DataSource} 就有池''}：
+        \Tp{DriverManager.\allowbreak getConnection} 每次都是真连接。
+        不接池的 JDBC 服务在高并发下的表现与 \CppJava{} 手写的
+        ``全局单连接'' 一样糟，且更难诊断。
+  \item \textbf{``\CSharp{} 关连接会断开''}：\Tp{Dispose}
+        只是归还给池。想在测试里验证 ``连接真的断了''
+        需要 \Fn{ClearAllPools} 之类的手段，
+        这也是很多人误判池行为的原因。
+\end{itemize}
+\end{warning}
+
+\begin{compare}[title=``接口在标准库、驱动是插件'' 为什么重要]
+Java 与 \CSharp{} 的应用代码可以只依赖接口类型，
+于是 ``从 PostgreSQL 换到 SQL Server'' 主要是换连接串与方言
+（EF Core 与 JDBC 抽象都能吸收大部分差异）；
+ORM、迁移工具、池、监控组件都建立在同一套接口之上，
+因此这些生态件天然跨数据库。
+\CppJava{} 没有这层公共接口，\textbf{每一个生态位都要按后端重做一遍}：
+没有 ``一个迁移工具支持所有库''，没有 ``一个池适配所有驱动''，
+监控与 APM 也只能按 C 库逐个挂钩。
+这是本章对 ``抽象层级'' 的最终落点：省下的不是打字量，
+而是\emph{整个中间件生态的可能性}。
+\end{compare}
+
+\begin{guideline}[title=本章要点]
+\begin{itemize}
+  \item \CppJava{} 只有 ``各家 C API'' 加 ``一个很少用的 ODBC''；
+        抽象层必须由项目自己拥有。
+  \item JDBC 的分界在接口包与 Driver SPI；池与 ORM 是第三方生态。
+  \item ADO.NET 多一层工厂抽象，池内建，ORM（EF Core）在语言生态内。
+  \item 三语言的 ``连库、查询、取一行'' 语义一一对应，
+        差异集中在 NULL 表达、结果形态与资源归还语义上。
+\end{itemize}
+\end{guideline}
+
+% ====================================================================
+
+\chapter{\CppJava{} 数据库库全景}
+
+\section{SQLite：状态机与 WAL}
+
+SQLite 的 C API 是 \CppJava{} 数据库接口里最 ``干净'' 的一个
+（单文件、无网络、进程内），但它的形状与 ``游标'' 完全不同：
+准备语句是一个\emph{状态机}，靠 \Fn{sqlite3\_step} 推进。
+
+\begin{lstlisting}[caption={SQLite C API：prepare、bind、step、finalize}]
+sqlite3* db = nullptr;
+if (sqlite3_open_v2("app.db", &db,
+        SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr)
+        != SQLITE_OK) {
+    std::string e = sqlite3_errmsg(db);
+    sqlite3_close(db);
+    throw std::runtime_error(e);
+}
+sqlite3_exec(db, "PRAGMA journal_mode=WAL;", nullptr,
+             nullptr, nullptr);
+sqlite3_stmt* st = nullptr;
+sqlite3_prepare_v2(db,
+        "SELECT id, name FROM cust WHERE id > ?1",
+        -1, &st, nullptr);
+sqlite3_bind_int64(st, 1, min_id);
+for (;;) {
+    int rc = sqlite3_step(st);          /* 推进一行 */
+    if (rc == SQLITE_ROW) {
+        auto id = sqlite3_column_int64(st, 0);
+        auto nm = sqlite3_column_text(st, 1);   /* 可能为 NULL */
+        use(id, nm);
+    } else if (rc == SQLITE_DONE) {
+        break;
+    } else {
+        sqlite3_finalize(st); sqlite3_close(db);
+        throw std::runtime_error(sqlite3_errmsg(db));
+    }
+}
+sqlite3_finalize(st);   /* 漏掉这一步等于泄漏语句 */
+\end{lstlisting}
+
+三个必须记住的点：\textbf{(1)} \Fn{sqlite3\_step} 返回
+\Tp{SQLITE\_ROW} 或 \Tp{SQLITE\_DONE}，
+其它值都是错误，中途 \Tp{return} 会漏掉 \Fn{sqlite3\_finalize}；
+\textbf{(2)} \Fn{sqlite3\_column\_text} 返回的指针\emph{归语句所有}，
+在 \Fn{sqlite3\_step} 或 \Fn{sqlite3\_reset} 之后就失效，
+要拷贝出来；\textbf{(3)} 事务用
+\Fn{sqlite3\_exec}（\texttt{BEGIN}、\texttt{COMMIT}）包住，
+批量写入不包事务会慢一到两个数量级。
+
+包装层三选一：\textbf{SQLiteCpp}（\Tp{SQLite::Database} 与
+\Tp{SQLite::Statement}，异常报错，工程成熟度高）、
+\textbf{sqlite\_orm}（把头文件映射到结构体，
+\Fn{sync\_schema} 会自动改表，谨慎用于生产库）、
+\textbf{sqlite\_modern\_cpp}（\texttt{db << ``SELECT ...''} 流式接口，
+轻量但功能少）。
+
+\section{PostgreSQL：libpq 与其上的 C++ 层}
+
+libpq 的骨架是 ``连接对象 加 结果对象''：
+\Fn{PQconnectdb}、\Fn{PQexecParams}、\Fn{PQresultStatus}、
+\Fn{PQclear}、\Fn{PQfinish}。它把整张结果表\emph{一次性拉到客户端}，
+所以大结果集要么用服务端游标（\texttt{DECLARE CURSOR} 加
+\Fn{PQsetSingleRowMode}），要么自己分批。
+预编译语句走 \Fn{PQprepare} 加 \Fn{PQexecPrepared}，
+参数默认是文本形式，要二进制需在
+\Fn{PQexecParams} 的格式数组里逐列声明。
+
+\begin{lstlisting}[caption={libpqxx 8：事务与结果访问}]
+pqxx::connection cn("host=localhost dbname=app");
+{
+    pqxx::work txn(cn);
+    auto r = txn.exec_params(
+        "INSERT INTO cust(name, score) VALUES ($1, $2) "
+        "RETURNING id", name, score);
+    int64_t id = r[0][0].as<int64_t>();
+    txn.commit();                 /* 不 commit 则回滚 */
+}
+auto all = cn.exec("SELECT id, name FROM cust");
+for (auto row : all) {
+    std::string n = row["name"].as<std::string>();
+    /* NULL 列: row["name"].is_null() 或 as 到 std::optional */
+}
+\end{lstlisting}
+
+\Tp{pqxx::work} 的析构负责回滚，这是 \CppJava{} 里少见的
+``把事务挂 RAII'' 的成熟例子。写批量数据时注意
+libpq 的 pipeline 模式（较新版本提供，
+\Fn{PQenterPipelineMode}）与复制协议
+（\texttt{COPY} 系列函数），这两条路是性能差距的来源。
+另有一个编译期方向：ozo 用 C++ 模板在编译期检查查询与映射，
+代价是编译时间与诊断可读性，评估前先看它在目标编译器上的表现。
+
+\section{MySQL 与 MariaDB、以及 ClickHouse}
+
+原生 C API 的连接入口是 \Fn{mysql\_real\_\allowbreak connect}。
+预编译语句这一族由四个函数构成：
+\Fn{mysql\_stmt\_\allowbreak init}、
+\Fn{mysql\_stmt\_\allowbreak prepare}、
+\Fn{mysql\_stmt\_\allowbreak bind\_param}、
+\Fn{mysql\_stmt\_\allowbreak execute}。
+它们的共同要求是：\textbf{把每个参数与结果列都绑定到
+\emph{自己维护}的缓冲与长度指针}，
+一个结构体手写映射，出错信息散落在
+\Fn{mysql\_stmt\_\allowbreak error} 里。
+这是本章最 ``手工'' 的接口，也是很多团队转向 ORM 或 ODBC 的直接原因。
+官方 C++ 连接器与社区驱动并存多年，选型时要核对当期发布节奏、
+对 \cpp{17} 及以后标准的适配、以及是否仍在推荐路径上；
+MariaDB 一方另有以 libmariadb 为代表的客户端实现。
+ClickHouse 走的是官方 C++ 客户端（clickhouse-cpp）这条路，
+它面向列式批量写入，接口语义与关系型驱动差别较大。
+
+\section{ODBC：唯一 ``接口与驱动分离'' 的一层}
+
+\Fn{SQLAllocHandle} 建三类句柄（环境、连接、语句），
+\Fn{SQLDriverConnect} 用连接串或 DSN，
+\Fn{SQLPrepare} 加 \Fn{SQLBindParameter} 加
+\Fn{SQLExecute} 是参数化正途，\Fn{SQLFetch} 游标推进，
+\Fn{SQLGetDiagRec} 取错误。它的优点是\emph{真的能换驱动}，
+代价是类型矩阵（\Tp{SQL\_C\_} 对 \Tp{SQL\_INTEGER} 等）、
+指示器变量与字符集设置都要自己照表处理。
+手写太苦时用 \textbf{nanodbc}（RAII 加 \Tp{std::string} 绑定）或
+\textbf{soci}（多后端：ODBC、PostgreSQL、SQLite、MySQL、Oracle，
+\Fn{into} 与 \Fn{use} 的绑定风格）之一。
+
+\section{NoSQL 两家的形状}
+
+MongoDB 的 \CppJava{} 官方驱动 mongocxx（3.x 系列）分
+\Tp{mongoc::driver} 高层与 \Tp{mongoc} 底层：
+文档类型 \Tp{bson\_cxx} 命名空间里的 \Tp{document::value} 是 ``构建后不可变'' 的值对象，
+插入用 \Fn{append} 流式拼装，读回用视图遍历；
+连接串由 \Fn{uri::parse} 处理，池化体现在
+\Tp{pool} 类型上。Redis 侧有 hiredis（命令用
+\Fn{redisCommand} 与 printf 风格格式串，返回
+\Tp{redisReply} 裸结构，需 \Fn{freeReplyObject}）
+与其上的 redis-plus-plus（\Tp{Redis} 加 \Tp{Command} 加
+\Tp{Reply} 的 C++ 封装，支持连接池与哨兵、集群）。
+两者的共同教训是：\textbf{NoSQL 没有 ``参数化'' 这个概念}，
+注入防线变成了 ``不要用用户输入拼命令名与键名'' 与
+输入模式白名单（第 11 章）。
+
+\section{查询生成器与 ``为什么没有 \CppJava{} 版 Hibernate''}
+
+\begin{warning}[title=三个结构性缺失]
+\begin{enumerate}
+  \item \textbf{没有运行期反射}：``给我 \Tp{struct User}，
+        我去把表映射出来'' 需要元数据来源。
+        \CppJava{} 只能靠宏、代码生成器、
+        或模板元编程（把成员指针当键），
+        三条路都比 ``加个注解'' 贵。
+  \item \textbf{没有统一类型系统}：数据库类型到语言类型的映射
+        在第 9 章会看到是三语言里最不规整的一支，
+        通用 ORM 需要这个映射先标准化。
+  \item \textbf{没有统一的驱动接口}：抽象要架在驱动之上，
+        而 \CppJava{} 的驱动层本身就是五种 API。
+        于是 sqlpp11、sqlite\_orm 这类库都只覆盖有限后端。
+\end{enumerate}
+此外还有\textbf{编译期成本}（模板化查询的报错可读性差、
+增量编译变慢）与\textbf{调试成本}（映射逻辑在模板里）。
+\CppJava{} 的 ``接近 ORM'' 生态位因此长期停留在
+``查询生成器 加 手写映射''，而不是 ``会话 加 脏检查 加 迁移''。
+\end{warning}
+
+\section{选型矩阵}
+
+\begin{scriptsize}
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}
+                  >{\raggedright\arraybackslash}p{0.13\textwidth}
+                  >{\raggedright\arraybackslash}p{0.09\textwidth}
+                  >{\raggedright\arraybackslash}p{0.08\textwidth}
+                  >{\raggedright\arraybackslash}p{0.10\textwidth}
+                  >{\raggedright\arraybackslash}p{0.11\textwidth}
+                  >{\raggedright\arraybackslash}p{0.09\textwidth}
+                  >{\raggedright\arraybackslash}p{0.08\textwidth}@{}}
+\toprule
+\textbf{库} & \textbf{协议或后端} & \textbf{编译期开销} & \textbf{异步} &
+\textbf{参数化} & \textbf{错误模型} & \textbf{许可证} &
+\textbf{维护} \\
+\midrule
+sqlite3 C API & SQLite & 无 & 无 & 绑定函数 & 返回码加文本 &
+公有领域 & 极高 \\
+\addlinespace
+SQLiteCpp & SQLite & 低 & 无 & \Tp{bind} 模板 & 异常 & MIT & 活跃 \\
+\addlinespace
+sqlite\_orm & SQLite & 中（模板） & 无 & 表达式映射 & 异常 & MIT & 活跃 \\
+\addlinespace
+libpq & PostgreSQL & 无 & 需自己接事件循环 & 占位符加格式数组 &
+返回码加结果对象 & PG 许可 & 极高 \\
+\addlinespace
+libpqxx & PostgreSQL & 低到中 & 有实验性支持 & \Fn{exec\allowbreak \_params} &
+异常 & BSD 式 & 活跃 \\
+\addlinespace
+ozo & PostgreSQL & 高（重模板） & 依赖后端 & 编译期检查 &
+异常加返回码 & 许可需核对 & 社区较小 \\
+\addlinespace
+MySQL C API & MySQL 与 MariaDB & 无 & 无 & 句柄绑定缓冲 &
+返回码加错误号 & GPL 例外 & 高 \\
+\addlinespace
+clickhouse-cpp & ClickHouse & 低 & 部分 & 列式绑定 & 异常加返回码 &
+Apache-2.0 & 活跃 \\
+\addlinespace
+nanodbc & ODBC 驱动 & 低 & 无 & \Fn{bind} 加指示器 &
+诊断句柄加异常 & MIT & 中等 \\
+\addlinespace
+soci & 多后端 & 中 & 无 & \Fn{use} 与 \Fn{into} &
+异常加返回码 & Boost 式 & 中等 \\
+\addlinespace
+mongocxx & MongoDB & 低 & 有 & 文档对象 & 异常加错误域 & Apache-2.0 &
+活跃 \\
+\addlinespace
+redis-plus-plus & Redis & 低 & 有 & 命令对象 & 异常 & MIT & 活跃 \\
+\bottomrule
+\end{longtable}
+\setlength{\tabcolsep}{6pt}
+\end{scriptsize}
+
+\begin{guideline}[title=本章要点]
+\begin{itemize}
+  \item \CppJava{} 的每个后端都自带一种 ``结果游标语义''：
+        SQLite 状态机、libpq 全量结果对象、MySQL 绑定缓冲、
+        ODBC 游标、MongoDB 文档视图。
+        包装层的价值首先是统一这五件事。
+  \item 项目决策通常是 ``直接用 C API'' 与 ``用一层薄包装'' 之间选，
+        而不是 ``用不用 ORM''：\CppJava{} 没有覆盖全后端的 ORM。
+  \item 编译期方案（ozo、sqlpp11 风格）把错误从运行期搬到编译期，
+        收益真实，但要按团队与构建时间预算评估。
+  \item 无论选哪家，参数化、事务 RAII、语句生命周期三件事
+        必须在项目内部约定成一套写法。
+\end{itemize}
+\end{guideline}
+
+% ====================================================================
+
+\chapter{类型、NULL 与值映射}
+
+\section{鸿沟从哪里来}
+
+数据库类型系统与三门语言的类型系统之间没有一个是 ``天然对齐'' 的。
+差异的根源有三条：\textbf{数据库有 NULL 而语言没有直接对应}、
+\textbf{数据库有精确十进制而语言整数是二进制}、
+\textbf{数据库的时间带时区语义而多数语言的时间类型不带}。
+三语言给出的答案是三种不同的机制：
+
+\begin{itemize}
+  \item \textbf{JDBC}：一张整型常量表 \Tp{java.sql.Types} 描述 SQL 类型，
+        读写靠 \Fn{setObject}、\Fn{getInt} 一族加事后询问的
+        \Fn{wasNull}；反射式映射（\Fn{getObject} 传类型参数的重载、
+        \Tp{RowSet}、ORM）在此之上做自动化。
+  \item \textbf{ADO.NET}：两套枚举 \Tp{DbType} 与供应商专有
+        \Tp{SqlDbType} 或 \Tp{NpgsqlDbType}，NULL 由单例
+        \Tp{DBNull.Value} 表达；读取有强类型泛型
+        \Fn{GetFieldValue}，可拿到数组与流。
+  \item \textbf{\CppJava{}}：\emph{没有}映射层。
+        每列都要自己决定 ``可空怎么写、字节怎么拿、
+        精度怎么保''，通常落成一堆手写绑定函数。
+\end{itemize}
+
+\section{逐类看：最常被误映射的九种}
+
+\subsection{整数}
+
+PostgreSQL 的 \texttt{integer} 是 32 位、\texttt{bigint} 是 64 位；
+MySQL 的 \texttt{int} 同为 32 位。JDBC 的 \Fn{getInt} 返回 \Tp{int}、
+\Fn{getLong} 返回 \Tp{long}；\CSharp{} 的 \Fn{GetInt32} 与
+\Fn{GetInt64} 一样窄。风险点是主键：
+自增列声明成 \texttt{integer} 而代码里按 64 位用是安全的，反过来
+（\texttt{bigint} 读进 \Tp{int}）在 Java 里抛异常、
+在 \CppJava{} 里\emph{静默截断}。
+SQLite 更进一步：它没有真正的整数宽度概念，
+整数按 1 到 8 字节存储，任何 ``整数列'' 都必须按 64 位读；
+rowid 也是 64 位。
+
+\subsection{精确十进制}
+
+\texttt{NUMERIC(12,2)} 一类的列必须走十进制路径：
+Java 用 \Tp{BigDecimal}（\Fn{setScale} 与舍入模式要显式给），
+\CSharp{} 用 \Tp{decimal}（128 位，约 28 到 29 位有效数字，
+超出时要退回 \Tp{BigDecimal} 式第三方类型），
+\CppJava{} 没有原生十进制类型：可选 \Tp{boost::\allowbreak multiprecision}、
+或 ``以字符串进出、只在边界转换'' 的策略。
+\textbf{金额用 \Tp{double} 是三语言共同的第一号事故源}。
+
+\subsection{时间与日期}
+
+\texttt{timestamp without time zone} 与
+\texttt{timestamp with time zone} 语义不同，
+后者（PostgreSQL）存的是时刻、按会话时区显示。
+\CSharp{} 的 \Tp{DateTimeOffset} 与较新的 \Tp{DateOnly}、
+\Tp{TimeOnly} 能表达偏移；Java 用 \Tp{Instant}（时刻）、
+\Tp{OffsetDateTime}、\Tp{LocalDateTime}（无时区，慎用）。
+\CppJava{} 的 \Tp{std::chrono} 里 \Tp{system\_clock} 的 
+\Tp{time\_point} 只表示一个时刻、\emph{不带时区信息}，\Tp{time\_t}
+与 \Fn{localtime} 还依赖进程全局的 \Tp{TZ} 环境变量。
+统一建议：\textbf{库里只存 UTC 时刻}，
+本地化留给展示层，且不要混用两种 timestamp 列。
+
+\subsection{布尔}
+
+PostgreSQL 有真正的 \texttt{boolean}；SQLite 没有，
+它把布尔存成 0 与 1，且 \textbf{列声明成} \texttt{BOOLEAN}
+仍会被归到 INTEGER 亲和类型；MySQL 的
+\texttt{BOOL} 是 \texttt{TINYINT(1)} 的别名。
+于是 ``从 SQLite 导出的 1 到 PostgreSQL 的 boolean'' 需要显式转换。
+\CppJava{} 侧 \Tp{int} 与 \Tp{bool} 的 \Tp{sizeof}
+与表示都不等价，绑定要按列宽度写。
+
+\subsection{二进制大对象}
+
+\CppJava{} 有两条路：整块读进缓冲（小字段），
+或 SQLite 的增量 \Fn{sqlite3\_blob\allowbreak \_open}、
+PostgreSQL 的大对象接口（\Fn{lo\_open} 一族）。
+JDBC 用 \Fn{setBinaryStream} 与 \Fn{getBinaryStream} 避免
+一次性搬进 \Tp{byte[]}；ADO.NET 提供 \Fn{GetStream} 与
+\Fn{GetFieldValue} 到流类型。共同约束是：
+\textbf{流必须活到读取完成}，在 \CppJava{} 里意味着
+连接对象的生命周期必须覆盖返回值的使用，这是最容易出悬挂句柄的地方。
+
+\subsection{JSON 列}
+
+PostgreSQL 的 \texttt{jsonb}、MySQL 的 \texttt{JSON}、
+SQLite 的 JSON1 函数都是 ``存文本加函数解释''，
+三语言都没有原生 JSON 列类型：Java 与 \CSharp{} 落到
+\Tp{String} 再用 Jackson 或 \Tp{System.Text.\allowbreak Json} 解析，
+\CppJava{} 落到 \Tp{std::string} 再用 nlohmann 一类库。
+真正的差异在\emph{驱动是否帮你把 JSON 列当文本返回}
+（多数会），以及是否有类型化的 JSON 参数绑定（少数驱动有）。
+
+\subsection{数组与复合类型}
+
+这是三种语言分化最明显的一项。PostgreSQL 的数组在 libpq
+看来是 \textbf{一段带花括号的文本}（\texttt{\{1,2,3\}}），
+需要自己解析或依赖上层库（libpqxx 提供了数组与复合类型的
+\Tp{field} 到容器的 \Fn{as} 转换）；
+JDBC 有 \Tp{java.sql.Array}（要记得
+\Fn{free}），但驱动对多维与自定义类型的支持不一致；
+ADO.NET 的 Npgsql 提供 \Fn{GetFieldValue} 到
+\Tp{int[]}、\Tp{List} 与 \Tp{DateTime[]}，
+是三条路里最顺的。跨库可移植的结论是：\textbf{数组列不要进 schema}。
+
+\subsection{字符集与编码}
+
+字符集要按后端各自设置。
+PostgreSQL 侧的参数名是 \texttt{client\allowbreak\_encoding}，
+可以写进连接串、放进环境变量，
+或调用 \Fn{PQset\allowbreak ClientEncoding}。
+MySQL 侧调用 \texttt{mysql\_set\allowbreak \_character\_set}。
+SQLite 的 \texttt{TEXT} 只保证 UTF-8 与 UTF-16 两种内部编码；
+ODBC 用宽字符绑定（\Tp{SQLWCHAR}，通常是 UTF-16）
+让驱动做转换。三语言的字符串类型分别是
+\Tp{char} 数组、\Tp{String}、\Tp{string}，
+但\emph{长度语义}不同（字节还是代码元），
+\texttt{varchar(50)} 在 UTF-8 下能装多少汉字是三语言都要
+单独确认的问题（PostgreSQL 按字符计，部分数据库按字节计）。
+
+\subsection{结果行的整体映射}
+
+Java 与 \CSharp{} 都有 ``对象关系映射'' 的语言级便利：
+Java 靠反射（\Tp{ResultSet} 到 POJO）、
+\CSharp{} 靠 EF Core 的属性绑定，
+而 \CppJava{} 只能为每个结构体写一个
+\texttt{from\_row} 函数（或用代码生成器）。
+这不是风格偏好：手写映射会在列增删时\emph{静默}错位，
+除非测试覆盖到每一列。
+
+\section{四列映射速查表}
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+                  >{\raggedright\arraybackslash}p{0.22\textwidth}
+                  >{\raggedright\arraybackslash}p{0.23\textwidth}
+                  >{\raggedright\arraybackslash}p{0.22\textwidth}@{}}
+\toprule
+\textbf{SQL 类型} & \textbf{JDBC} & \textbf{ADO.NET} &
+\textbf{\CppJava{} 建议} \\
+\midrule
+\texttt{boolean} & \Fn{getBoolean}；类型码
+\Tp{Types.BOOLEAN} & \Fn{GetBoolean}；\Tp{DbType.Boolean} &
+整型读出再转 \Tp{bool}（SQLite 无此类） \\
+\addlinespace
+\texttt{smallint} & \Fn{getShort} & \Fn{GetInt16} &
+\Tp{int16\_t}，注意符号扩展 \\
+\addlinespace
+\texttt{integer} & \Fn{getInt} & \Fn{GetInt32} &
+\Tp{int32\_t}；SQLite 一律按 64 位读 \\
+\addlinespace
+\texttt{bigint} & \Fn{getLong} & \Fn{GetInt64} &
+\Tp{int64\_t}；\textbf{不要用} \Tp{int} 接 \\
+\addlinespace
+\texttt{numeric(p,s)} & \Tp{BigDecimal} 加舍入模式 &
+\Tp{decimal}（超 28 位需变通） &
+字符串或 \Tp{boost::\allowbreak multiprecision} \\
+\addlinespace
+\texttt{real} 与 \texttt{double precision} &
+\Fn{getFloat}、\Fn{getDouble} & \Fn{GetDouble} &
+\Tp{float}、\Tp{double} \\
+\addlinespace
+\texttt{text} 与 \texttt{varchar} & \Fn{getString} &
+\Fn{GetString}；超长用 \Fn{GetTextReader} &
+\Tp{std::string}（UTF-8）或零拷贝 \Tp{string\_view} \\
+\addlinespace
+\texttt{bytea}、\texttt{BLOB} & \Tp{byte[]}; 大值用流 &
+\Tp{byte[]}; 大值用 \Fn{GetStream} &
+\Tp{std::vector} 的 \Tp{byte}，或流式读 \\
+\addlinespace
+\texttt{timestamptz} & \Tp{OffsetDateTime}（推荐）或
+\Tp{Timestamp} & \Tp{DateTimeOffset} &
+\Tp{chrono} 时刻加 ``库里是 UTC'' 约定 \\
+\addlinespace
+\texttt{uuid} & \Tp{UUID}；或 \Tp{getString} &
+\Tp{Guid}；\Fn{GetFieldValue} & 16 字节缓冲加自写格式化 \\
+\addlinespace
+\texttt{jsonb} & \Tp{String} 加 JSON 库 &
+\Tp{String} 加 \Tp{JsonDocument} & \Tp{std::string} 加第三方库 \\
+\addlinespace
+任意可空列 & 值加 \Fn{wasNull}；
+或 \Fn{getObject} 返回 \Tp{null} &
+\Tp{DBNull.Value}；\Fn{IsDBNull} &
+\Tp{std::optional} 逐列手写 \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+
+\begin{lstlisting}[caption={C/C++：一个手写行映射的样子}]
+struct Customer {
+    int64_t id;
+    std::optional<std::string> nickname;
+    std::string balance;            // NUMERIC(12,2) 原样保留
+    int64_t created_utc_ms;         // 约定: 库里存 UTC 毫秒
+};
+
+// libpq 版: 每列都要判空、解码
+Customer from_row(PGresult* r, int row) {
+    Customer c{};
+    c.id = std::strtoll(PQgetvalue(r, row, 0), nullptr, 10);
+    if (PQgetisnull(r, row, 1) == 0) {
+        c.nickname = std::string(PQgetvalue(r, row, 1));
+    }
+    c.balance = PQgetvalue(r, row, 2);
+    c.created_utc_ms = parse_ts(PQgetvalue(r, row, 3));
+    return c;
+}
+\end{lstlisting}
+
+\begin{warning}[title=三个最贵的映射错误]
+\begin{itemize}
+  \item \textbf{用 32 位接 64 位列}：\CppJava{} 静默截断，
+        Java 抛异常，\CSharp{} 抛
+        \Tp{InvalidCastException}。只有 \CppJava{} 会
+        ``跑得很好直到数据变大''。
+  \item \textbf{金额走二进制浮点}：三语言都会。
+        修复要同时动 schema（改成 \texttt{numeric}）与代码路径，
+        成本远高于当初省下的那次类型选择。
+  \item \textbf{时间列不带时区且按本地时区写入}：
+        夏令时切换与服务器迁移时出现 ``历史数据时间倒挂''。
+        唯一稳的做法是库里只存 UTC 或带偏移的类型。
+\end{itemize}
+\end{warning}
+
+\begin{bestpractice}[title=映射层的最小约定]
+\begin{enumerate}
+  \item 每种 SQL 类型固定一个语言类型（写进项目文档），
+        不允许 ``这列我用 \Tp{int} 那列用 \Tp{long}''。
+  \item 可空列一律映射到可选类型：\Tp{optional}、
+        \Tp{Nullable}、或引用类型加显式判空。
+  \item 十进制与时间在边界处集中转换，业务层只见项目类型。
+  \item 行映射函数与列顺序解耦：按列名取（libpq 的
+        \Fn{PQfnumber}、JDBC 的 \Fn{getString} 传列名、
+        ADO.NET 的 \Fn{GetOrdinal}），
+        并加一条 ``列数与列名清单'' 的自检。
+\end{enumerate}
+\end{bestpractice}
+
+% ====================================================================
+
+\chapter{资源、事务与并发}
+
+\section{连接、语句、结果集：三份资源三种责任}
+
+\begin{lstlisting}[caption={C/C++：用智能指针把三类句柄管起来}]
+template <class T, auto Free>
+struct Closer { void operator()(T* p) const { if (p) Free(p); } };
+using Conn = std::unique_ptr<PGconn,   Closer<PGconn,   PQfinish>>;
+using Res  = std::unique_ptr<PGresult, Closer<PGresult, PQclear>>;
+
+Conn cn{PQconnectdb("host=localhost dbname=app")};
+if (!cn || PQstatus(cn.get()) != CONNECTION_OK) {
+    throw std::runtime_error("db connect failed");
+}
+PQexec(cn.get(), "BEGIN");                  /* 事务靠手工语句 */
+Res  rs{PQexec(cn.get(), "SELECT id FROM t")};
+if (PQresultStatus(rs.get()) != PGRES_TUPLES_OK) {
+    PQexec(cn.get(), "ROLLBACK");
+    throw std::runtime_error("query failed");
+}
+PQexec(cn.get(), "COMMIT");
+/* 忘了 ROLLBACK 分支 = 连接回到池里仍带着打开的事务 */
+\end{lstlisting}
+
+\begin{lstlisting}[style=javastyle,caption={Java：try-with-resources 一层不漏}]
+try (Connection cn = ds.getConnection();
+     PreparedStatement ps = cn.prepareStatement(SQL);
+     ResultSet rs = ps.executeQuery()) {
+    cn.setAutoCommit(false);
+    while (rs.next()) { use(rs.getLong(1)); }
+    cn.commit();
+} catch (SQLException e) {
+    /* 三个资源都已关闭；但 commit 失败时缺少显式回滚分支 */
+    throw new UncheckedSQLException(e);
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：await using 与异步 I/O}]
+await using var cn = new NpgsqlConnection(cs);
+await cn.OpenAsync();
+await using var tx = await cn.BeginTransactionAsync();
+await using var cmd = new NpgsqlCommand(Sql, cn, tx);
+await using var rd = await cmd.ExecuteReaderAsync(
+    CommandBehavior.CloseConnection, ct);
+while (await rd.ReadAsync(ct)) { Use(rd.GetInt64(0)); }
+await tx.CommitAsync(ct);
+\end{lstlisting}
+
+责任分配一目了然：\CppJava{} 要自己保证 ``每条失败路径都回滚并释放''，
+Java 与 \CSharp{} 由语法结构托管释放，
+但\emph{事务提交与回滚}在三语言里都是开发者的显式决定。
+
+\section{连接池：一家内建、两家外购}
+
+\begin{itemize}
+  \item \textbf{\CppJava{}}：没有通用池（因为\emph{没有}通用连接类型）。
+        常见做法是自己写一个
+        \texttt{pool\_<ConnectionType>}（获取、归还、健康检查、
+        最大等待、空闲回收），或依赖某个包装库自带的池。
+        正确性最难的部分是 ``归还时必须复位会话状态''：
+        事务是否结束、\texttt{search\_path}、会话级临时表、
+        \texttt{SET LOCAL} 的效果，都要清。
+  \item \textbf{Java}：HikariCP 是事实标准，关键参数是
+        \Tp{maximumPoolSize}、\Tp{minimumIdle}、
+        \Tp{connectionTimeout}、\Tp{idleTimeout}、
+        \Tp{maxLifetime}（务必小于数据库侧的连接寿命）、
+        \Tp{leakDetectionThreshold}（借出超过阈值就打告警栈）。
+  \item \textbf{\CSharp{}}：驱动内建池，连接串里
+        \Tp{Pooling=true}（默认开）、\Tp{Max Pool Size}、
+        \Tp{Min Pool Size}、\Tp{Connection Lifetime}、
+        \Tp{Connection Idle Lifetime}。
+        \Fn{Open} 从池取、\Fn{Dispose} 归还，
+        因此 ``using 包连接'' 在 .NET 里是\emph{必需}的写法而不是风格。
+\end{itemize}
+
+\section{隔离级别与默认值：三处最容易踩空的差异}
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.17\textwidth}
+                  >{\raggedright\arraybackslash}p{0.22\textwidth}
+                  >{\raggedright\arraybackslash}p{0.43\textwidth}@{}}
+\toprule
+\textbf{数据库} & \textbf{默认级别} & \textbf{必须知道的细节} \\
+\midrule
+PostgreSQL & READ COMMITTED（语句级快照） &
+\texttt{READ UNCOMMITTED} 被接受但等同 \texttt{READ COMMITTED}；
+\texttt{REPEATABLE READ} 是快照隔离；
+\texttt{SERIALIZABLE} 用 SSI 实现，冲突时报 40001 需重试 \\
+\addlinespace
+SQLite & SERIALIZABLE（默认 DEFERRED 事务） &
+没有行级锁：写锁是库级；WAL 模式允许一写多读；
+遇到锁立即 \Tp{SQLITE\_BUSY}，靠 \Fn{sqlite3\_busy\_timeout}
+或 busy handler 退避 \\
+\addlinespace
+MySQL（InnoDB） & REPEATABLE READ（快照加间隙锁） &
+唯一的 \texttt{READ UNCOMMITTED} 真实实现之一；
+RR 下的 gap 与 next-key 锁是死锁主要来源；
+可切 \texttt{READ COMMITTED} 减少间隙锁 \\
+\addlinespace
+SQL Server & READ COMMITTED（默认锁式） &
+可开 \texttt{READ\_COMMITTED\_SNAPSHOT} 变成行版本化；
+在 ADO.NET 里通过 \Tp{IsolationLevel} 指定 \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+
+语言侧的接口也不同：JDBC 用 \Tp{Connection} 上的整型常量
+\Tp{TRANSACTION\_READ\_\allowbreak COMMITTED} 等，
+\CSharp{} 用 \Tp{IsolationLevel} 枚举，
+\CppJava{} 只能 \texttt{SET TRANSACTION \allowbreak ISOLATION LEVEL ...}
+发语句，且各家语法不完全一致（SQLite 就没有这条语句，
+它用事务类型 \texttt{BEGIN DEFERRED/\allowbreak IMMEDIATE/EXCLUSIVE}）。
+
+\section{批量写入：三语言的最快路径}
+
+\begin{itemize}
+  \item \textbf{JDBC}：\Fn{addBatch} 加 \Fn{executeBatch}。
+        MySQL 驱动还要打开
+        \Tp{rewrite\allowbreak Batched\allowbreak Statements}
+        才会真正合成多值插入，否则仍是逐条往返。
+        PostgreSQL 下 ``一条多值 INSERT''
+        （\texttt{VALUES (...),\allowbreak (...)}）通常比批处理接口更快。
+  \item \textbf{ADO.NET}：SqlServer 用 \Tp{SqlBulkCopy}，
+        Npgsql 用 \Fn{WriteToServer}（同样走
+        \texttt{COPY} 协议）。这是三语言里最省事的批量入口。
+  \item \textbf{PostgreSQL 直连}：
+        \Fn{PQputCopyData} 走 \texttt{COPY}，
+        十万行的量级差距通常是 5 到 20 倍；
+        \Fn{PQprepare} 加 \Fn{PQexecPrepared}
+        则解决 ``同一条语句反复执行'' 的解析开销。
+  \item \textbf{SQLite}：\textbf{务必包在一个事务里}，
+        并用 \Fn{sqlite3\_reset} 与
+        \Fn{sqlite3\_clear\_\allowbreak bindings} 复用同一条语句；
+        逐条自动提交会慢一到两个数量级。
+  \item \textbf{\CppJava{} 通用建议}：批量插入用
+        多值参数化语句或 \texttt{COPY}；
+        ``循环里单条 \Fn{PQexecParams}'' 只适合几百行以内。
+\end{itemize}
+
+\section{超时、死锁与泄漏}
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.19\textwidth}
+                  >{\raggedright\arraybackslash}p{0.24\textwidth}
+                  >{\raggedright\arraybackslash}p{0.39\textwidth}@{}}
+\toprule
+\textbf{目的} & \textbf{数据库或库侧} & \textbf{语言侧} \\
+\midrule
+语句超时 & \Tp{statement\_\allowbreak timeout}（PG）、
+\Tp{busy\_timeout}（SQLite） &
+JDBC \Fn{setQueryTimeout}；ADO.NET
+\Tp{CommandTimeout}；\CppJava{} 无统一入口，
+靠异步加自己计时 \\
+\addlinespace
+锁等待超时 & \Tp{lock\_timeout}（PG）、
+\Tp{innodb\_lock\_\allowbreak wait\_\allowbreak timeout}（MySQL） &
+无语言级参数，只能读驱动错误码判断 \\
+\addlinespace
+死锁处理 & PG 自动检测并牺牲一个事务（SQLSTATE 40001 或 40P01） &
+\textbf{必须写成可重试}：捕获、回滚整个事务、退避后重放 \\
+\addlinespace
+空闲事务 & \Tp{idle\_in\_\allowbreak transaction\_\allowbreak session\_timeout}（PG） &
+\CppJava{} 常见 ``异常路径不 rollback'' 造成阻塞 vacuum；
+Java 与 \CSharp{} 靠自动关闭缓解 \\
+\addlinespace
+连接泄漏 & 服务端 \Tp{pg\_stat\_activity} 观察 &
+HikariCP \Tp{leakDetectionThreshold}；
+\CppJava{} 用池自带的借出计数或日志 \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+
+\begin{warning}[title=四个跨语言的并发事故]
+\begin{itemize}
+  \item \textbf{归还连接时事务还开着}：\CppJava{} 手工管理最常见；
+        下一次借出时第一条语句被当成事务中间步骤，
+        表现为 ``偶发的旧数据''。
+  \item \textbf{把重试写在语句级而不是事务级}：
+        隔离级别冲突下必须\emph{整个事务}重来，
+        只重发失败的语句会读到不同快照。
+  \item \textbf{事务里做外部 I/O}（HTTP、消息、加解密远端 KMS）：
+        持锁时间由网络决定，三语言同一种事故，
+        而且 \CppJava{} 里还常见 ``在事务里做批量加解密''。
+  \item \textbf{SQLite 上的多进程写}：WAL 只解决一写多读，
+        写冲突是库级；把它当 ``免费的并发数据库''
+        会看到成片 \Tp{SQLITE\_BUSY}。
+\end{itemize}
+\end{warning}
+
+\begin{guideline}[title=本章要点]
+\begin{itemize}
+  \item 释放责任：语言语法（Java、\CSharp{}）与手工 RAII
+        （\CppJava{}）之差，落在 ``失败路径是否还有未结束事务''。
+  \item 池化：\CSharp{} 内建、Java 外购、\CppJava{} 自造，
+        三者的 ``会话状态复位'' 都是同一份检查清单。
+  \item 隔离级别默认值\emph{不一致}，
+        移植时先看默认再看语法，尤其 SQLite。
+  \item 批量写入的正确姿势由数据库决定，不由语言决定；
+        但 ``是否给你一条现成的高速通道''
+        是 \CppJava{} 与托管语言的真实差距。
+\end{itemize}
+\end{guideline}
+
+% ====================================================================
+
+% ====================================================================
+% ====================================================================
+\chapter{注入、参数绑定与可信边界}
+
+\section{为什么这一章属于一本对比手册}
+
+关于 SQL 注入，\CppJava{} 程序员的直觉通常是 ``这门语言更容易出事''，这个直觉是错的：拼接字符串在三种语言里同样危险，托管语言也无法阻止你把请求字段直接接进语句文本。真正的差异在\textbf{默认路径}——托管生态把参数化做进了框架的每条主干道，开发者要绕开两层约定才拼得出 SQL；而 \CppJava{} 的库把 ``编译、绑定、步进'' 摊在你面前，拼字符串反倒是一条能跑、还比绑定少两行的捷径。所以本章的对比单位不是 ``谁有漏洞''，而是 ``谁的默认写法更安全，绕过它要费多少力气''。
+
+\begin{compare}[title=三种语言交给你的 ``安全默认值'']
+\begin{itemize}
+  \item \textbf{\CppJava{}}：\emph{没有}默认值。SQLite 与 libpq 只给离散动作，胶水由项目自己写；查询生成器能收敛写法，但每家都留了接受裸文本语句的后门。
+  \item \textbf{Java}：\Tp{Statement} 与 \Tp{PreparedStatement} 是两个不同类型，评审时一眼看得出用了哪个，ORM 与 \Tp{JdbcTemplate} 的占位符形式都是参数化的。风险转移到 ``拼接进了 \Fn{query} 的第一个参数''。
+  \item \textbf{\CSharp{}}：命令对象天生带 \Tp{Sql\allowbreak Param\allowbreak Collection}；EF Core 把原始 SQL 入口分成 \Fn{FromSqlRaw}（\texttt{\{0\}} 占位）与 \Fn{From\allowbreak SqlInterpolated}（插值串自动变参数），后者是三种语言里最接近 ``想拼都拼不进去'' 的设计。
+\end{itemize}
+\end{compare}
+
+\section{共同的原罪与三套绑定 API}
+
+\subsection{SQLite：编译、绑定、步进、复位}
+
+\Fn{sqlite3\_prepare\_v2} 把文本编译成字节码并输出 \Tp{sqlite3\_stmt*}，第五参数 \Tp{tail} 指明文本用到哪里（一次带多条语句时要自己循环）。\Fn{sqlite3\_bind\_text}、\Fn{sqlite3\_bind\_int64}、\Fn{sqlite3\_bind\_null} 按\emph{从 1 开始}的下标填值；文本绑定的第四参数是析构标志：\Tp{SQLITE\_TRANSIENT} 让 SQLite 自己复制，\Tp{SQLITE\_STATIC} 表示借用你的缓冲——把临时 \Tp{std::string} 的 \Fn{c\_str} 用 STATIC 绑进去是最典型的随机崩溃来源。\Fn{sqlite3\_step} 返回 \Tp{SQLITE\_ROW} 或 \Tp{SQLITE\_DONE}，而 \Fn{sqlite3\_column\_text} 给的指针在下一次步进、\Fn{sqlite3\_reset} 或 \Fn{finalize} 之后\emph{失效}。复用靠 \Fn{sqlite3\_reset}，但它\emph{不清绑定值}：漏绑一列会沿用上一次的值而不是报错，要清得再调 \Fn{sqlite3\_clear\_bindings}。
+
+把 \Tp{stmt} 长期缓存是 \CppJava{} 侧最常见的性能直觉，v2 也确实会在 schema 变化时自动重新编译。这个直觉要补三条：早于 v2 的 \Fn{sqlite3\_prepare} 返回 \Tp{SQLITE\_SCHEMA} 且要手工重来；自动重编译发生在下一次 \Fn{sqlite3\_step}，所以 ``列被迁移删掉'' 表现为\emph{运行期}失败而非启动期失败，需要版本校验（第 12 章）把它提前；一条停在 \Tp{SQLITE\_ROW}、既没 reset 也没 finalize 的语句会\textbf{持有读事务}——WAL 下 checkpoint 被卡住，DDL 与 \texttt{VACUUM} 报 \Tp{SQLITE\_BUSY}，共享缓存下还连累同进程其它连接。批量写入循环的结束处要显式 reset 或 finalize，别指望析构顺序正合你意。
+
+\subsection{libpq：PQprepare、PQexecParams 与二进制格式}
+
+\Fn{PQexecParams} 的八个参数是重点：占位符写作 \texttt{\$1}\ldots\texttt{\$n}；\Tp{paramTypes} 是 OID 数组（传 \Tp{NULL} 让服务器推断）；\Tp{paramValues} 是 \Tp{const char* const*}；\Tp{paramLengths} 只在二进制格式下起作用；\Tp{paramFormats} 与末位 \Tp{resultFormat} 取 \Tp{PQformat} 的两个枚举 \Tp{FORMAT\_TEXT} 与 \Tp{FORMAT\_BINARY}。
+
+\begin{itemize}
+  \item \textbf{二进制换的是解析与 CPU 成本，不是安全性}：两种格式都在扩展协议里与语句文本分离，注入风险相同。代价是整数要按\emph{网络字节序}（大端）编码，\Tp{bool} 占 1 字节，\Tp{float8} 是 IEEE 位模式。
+  \item \textbf{OID 要写对}：\Tp{int4} 23、\Tp{int8} 20、\Tp{bool} 16、\Tp{bytea} 17、\Tp{text} 25、\Tp{float8} 701、\Tp{timestamp} 1114、\Tp{timestamptz} 1184、\Tp{numeric} 1700、\Tp{uuid} 2950、\Tp{jsonb} 3802。\Tp{numeric} 的二进制布局是变长 digits 数组，实践里只让整数与裸字节走二进制。
+  \item \Fn{PQprepare} 建的是\textbf{会话级}具名语句：重连即失效，池化时要么借出后重新 prepare，要么按连接缓存语句名；\Fn{PQdescribePrepared} 能在执行前取回参数与结果类型。
+  \item 确实必须产出文本时用 \Fn{PQescapeStringConn} 与 \Fn{PQescape\_\allowbreak Bytea\_\allowbreak Conn}：转义规则依赖这条连接的 \Tp{client\_encoding} 与 \Tp{standard\_\allowbreak conforming\_\allowbreak strings}，``在没有连接对象的地方自己写转义'' 正是多起字符集注入的成因。
+\end{itemize}
+
+\subsection{C++ 库层：它们改变了什么}
+
+\textbf{sqlpp11} 把列与类型搬进表达式模板，编译期就检查 ``这一列是不是这个类型''，动态条件靠 \Tp{sqlpp::\allowbreak conditional}；它的真实价值是把注入面从 ``随处可拼'' 收缩到少数显式接受文本的入口。\textbf{soci} 用 \Fn{into} 与 \Fn{use} 挂变量，命名占位符 \Tp{:name} 接近托管语言手感，\Tp{statement} 加 \Tp{row} 的组合仍是手写游标。\textbf{nanodbc} 的 \Fn{bind} 按序号绑定，可空列要绑\emph{指示器缓冲}——这既是 NULL 的正解（第 9 章），也是参数个数与顺序最容易写错的地方。三家的共同后门都是 ``接受一段文本'' 的那几个重载。
+
+\subsection{JDBC 与 ADO.NET：现成对象里藏着的开关}
+
+JDBC 的绑定接口是 \Fn{setInt}、\Fn{setString} 与 \Fn{setNull}(下标, \Tp{Types.X})，下标同样从 1 开始。两处 \CppJava{} 没有的便利：传 \Tp{RETURN\_\allowbreak GENERATED\_\allowbreak KEYS} 或列名数组的 \Fn{prepare\allowbreak Statement} 直接取回自增主键（PostgreSQL 对应 \texttt{RETURNING}，SQLite 要自己调 \Fn{sqlite3\_last\_insert\_rowid}）；服务端游标要先 \Fn{setAutoCommit}(false) 再给 \Fn{setFetchSize}，MySQL 驱动则需 \Tp{Integer.\allowbreak MIN\_\allowbreak VALUE} 这类约定值才逐行流式读。两个与本章相关的开关：MySQL Connector/J 的 \Tp{useServer\allowbreak PrepStmts} \emph{默认关闭}，此时驱动在客户端做转义替换而不是真参数化；pgjdbc 的 \Tp{prepareThreshold}（默认 5）决定第几次执行才切到服务端具名语句。
+
+\CSharp{} 的正写是 \Fn{Parameters.Add} 同时给参数名、\Tp{SqlDbType} 与长度；\Fn{AddWithValue} 按运行时值\emph{推断}类型，字符串会变成 ``长度等于当前值长度'' 的 \Tp{nvarchar}，于是计划缓存堆满同一逻辑查询的变体，还引入隐式转换；表值参数、\Tp{xml}、CLR UDT 只有 \Tp{SqlDbType} 能表达。第二类 ``嗅探'' 是 SQL Server 的 parameter sniffing：用\emph{第一次}执行的参数值挑计划，偏斜数据下表现为 ``同一存储过程时快时慢''。最后一条 \Tp{SqlClient} 专属注：命令文本里的 \texttt{@name} 会被解析成参数占位符，注释或字面量里出现的 \texttt{@} 单词能触发 ``必须声明标量变量'' 这种看着像注入事故的报错。
+
+\section{绑定救不了你的三处}
+
+值可以参数化，\textbf{标识符不行}：占位符代表一个\emph{值}，而表名、列名、排序方向、函数名在编译期就得定下来。\texttt{\$1} 当表名在 PostgreSQL 里是语法错误，把表名当文本参数传进去只会得到一个 ``值''。
+
+\begin{warning}[title=标识符只能白名单，不要手写转义]
+正确顺序永远是：客户端名字、查白名单、命中编译期常量标识符，查不到就\emph{拒绝}，而不是 ``先转义再拼''。确实必须动态构造时（多租户表名、按日期分表）要按\textbf{方言}加引号，而四套规则互不相同：SQLite 用双引号或方括号；PostgreSQL 用双引号、内部引号字符写作两个连续引号，且\emph{不加引号时标识符折叠成小写}；MySQL 用反引号（开 \Tp{ANSI\_QUOTES} 时双引号也变标识符引号）；SQL Server 用方括号、内部右方括号写作两个连续右方括号。所以别自己写转义函数：PostgreSQL 有服务端 \Fn{quote\_ident} 与 \Fn{format} 的 \texttt{\%I}，ADO.NET 有现成 \Fn{Quote\allowbreak Identifier}，而 Java \emph{没有}标准 API——这正是 ``默认值差异'' 的具体形状。
+\end{warning}
+
+排序方向与 IN 列表是同一问题的两个变体：方向只能是 \texttt{ASC} 与 \texttt{DESC} 两个固定串，按枚举映射即可；IN 列表的 arity 决定占位符个数，展开出来的仍\emph{只是占位符}，但要设上限——SQLite 受 \Tp{SQLITE\_MAX\_\allowbreak VARIABLE\_\allowbreak NUMBER} 限制（3.32 之前默认 999，之后默认 32766），SqlClient 单条命令约 2100 个参数，超限就分批或改走临时表。
+
+\begin{lstlisting}[caption={C/C++：只从枚举白名单组合的动态过滤构造器}]
+struct ColDef {
+    const char* json_name;          // 客户端可写的名字
+    const char* sql_ident;          // 真实列名: 编译期常量
+    uint32_t    ops;                // 允许的运算符位掩码
+};
+enum Op { EQ = 1, GT = 2, LT = 4, LIKE = 8, IN = 16 };
+
+static const ColDef kCols[] = {
+    {"name",    "cust_name",     EQ | LIKE},
+    {"balance", "balance_cents", EQ | GT | LT},
+    {"city",    "city_code",     EQ | IN},
+};
+
+// false 表示字段名或运算符不在白名单: 拒绝, 不是转义
+bool append(std::string& where, std::vector<std::string>& arg,
+            const std::string& field, uint32_t op,
+            const std::vector<std::string>& val) {
+    for (const ColDef& c : kCols) {
+        if (c.json_name != field) { continue; }
+        if ((c.ops & op) == 0)    { return false; }
+        if (op == IN) {
+            if (val.empty() || val.size() > 500) { return false; }
+            where += c.sql_ident;
+            where += " IN (";
+            for (size_t i = 0; i < val.size(); ++i) {
+                where += (i ? ", ?" : "?");
+                arg.push_back(val[i]);          // 值仍然走绑定
+            }
+            where += ")";
+            return true;
+        }
+        where += c.sql_ident;
+        where += (op == LIKE) ? " LIKE ? ESCAPE 'x'" : " = ?";
+        arg.push_back(op == LIKE ? escape_like(val[0]) : val[0]);
+        return true;
+    }
+    return false;
+}
+// where 只由常量片段拼成; ORDER BY 方向仍走二元枚举
+\end{lstlisting}
+
+\begin{lstlisting}[style=sqlstyle,caption={值用占位符，标识符用白名单加方言引号}]
+-- 值: SQLite 用 ? , PostgreSQL 用 $1 / $2 , 都不经过文本层
+SELECT id, name FROM customer WHERE city_code = $1 AND balance > $2;
+-- 标识符: 占位符不能当表名, 下面这条是语法错误
+SELECT id FROM $1 WHERE name = $2;
+-- 必须动态表名: 白名单命中后按方言加引号(名字来自常量表)
+SELECT id FROM "订单_2024" WHERE name = $1;
+-- PostgreSQL 让服务端按规则加引号, 内部引号自动翻倍
+SELECT format('SELECT id FROM %I', '订单"2024');
+SELECT quote_ident('MixedCase');       -- 结果是 "MixedCase"
+\end{lstlisting}
+
+\section{二阶注入：值先进库，再变成 SQL}
+
+第一阶注入在请求上，二阶注入在\emph{数据}上：攻击者把 payload 存进某个字段（显示名、文件名、产品编码、配置项），另一个功能在几天之后把这条记录读出来，当成标识符或片段拼进新语句。``入库前校验过了'' 与 ``写进去安全'' 都成立，出事的是后面的读取者。三点结构性观察：
+
+\begin{itemize}
+  \item \textbf{ORM 降低但不消除暴露面}：EF Core 与 Hibernate 生成的语句都走参数，但动态表名列名、\Fn{FromSqlRaw} 与 \Fn{create\_\allowbreak NativeQuery} 仍是日常出口。
+  \item \textbf{迁移层新增一环}：Flyway 的占位符 \texttt{\$\{flyway.table\}} 与 Liquibase 的属性替换会把配置里的字符串写进 DDL；多租户表名取自数据库记录时，二阶注入直接进了 DDL。替换项要按标识符对待，只允许常量来源。
+  \item \textbf{\CppJava{} 的额外暴露}：没有 ORM 兜底，``把配置项当 SQL 片段'' 常见于报表、导出、动态排序三处，唯一防线是取数出口只有一处。
+\end{itemize}
+
+\section{\CppJava{} 才会大量遇到的其它注入面}
+
+SQL 只是注入的一种语法。托管程序也拼 shell，但 \CppJava{} 程序自带 CLI 工具链与扩展机制，命中频率高一个量级。
+
+\begin{warning}[title=五个非 SQL 注入面与其防线]
+\begin{enumerate}
+  \item \textbf{shell 组合}：\Fn{system} 与 \Fn{popen} 把 \Tp{psql} 或 \Tp{sqlite3} 备份命令交给 \Tp{cmd.exe} 与 \Tp{/bin/sh}，于是分号、管道、反引号、变量引用全部生效。正解是\emph{不过 shell}：POSIX 用 \Fn{execve} 或 fork 加 \Fn{execvp} 传 argv 数组；Windows 用 \Fn{Create\allowbreak Process}，并记住命令行会被再解析一次（规则见 \Fn{CommandLine\allowbreak ToArgvW}），含空格参数必须自己加引号。
+  \item \textbf{LIKE 与 GLOB 元字符}：绑定只保证 \texttt{\%}、\texttt{\_}（LIKE）与星号、问号、方括号（GLOB）被当字符存进语句，但 LIKE 语义仍把它们当模式解释。要么加 \texttt{ESCAPE} 子句并先转义，要么改用 ``substr 前缀比较''。PostgreSQL 的正则运算符与 \texttt{ILIKE} 再加一层：恶意模式能把 CPU 打满。
+  \item \textbf{服务端文件访问}：\texttt{COPY \ldots{} FROM PROGRAM} 在服务器侧执行命令，需要超级用户或 \Tp{pg\_read\_server\_files}；\Fn{lo\_import} 与 \Fn{lo\_export} 接收的是\emph{服务器侧}路径。防线是角色权限，不是转义。
+  \item \textbf{扩展装载}：调用 \Fn{sqlite3\_enable\_load\_extension} 之后，\Fn{sqlite3\_load\_extension} 就是任意代码执行入口；SQLCipher 与遗留 see 扩展生态常要求装载扩展，此时路径必须来自常量，并优先用编译选项 \Tp{SQLITE\_OMIT\_LOAD\_\allowbreak EXTENSION} 把入口编掉。
+  \item \textbf{文件路径进语句}：SQLite 的 \texttt{ATTACH DATABASE} 与 SQLCipher 的 \texttt{PRAGMA key} 并用时，密钥以\emph{语句文本}形式存在并可能进日志；SQL Server 的 \texttt{RESTORE DATABASE \ldots{} FROM DISK} 与 \texttt{BULK INSERT} 同理。路径要白名单，密钥改用 \Fn{sqlite3\_key\_v2} 这类不经文本的接口（第 13 章）。
+\end{enumerate}
+\end{warning}
+
+\section{可信边界：连接串权限才是真漏洞}
+
+参数化解决 ``用户输入不该变成语法''，不解决 ``这个身份能做多少事''。应用若只用一条连接串跑所有功能、而它有 DDL 权限，任何一次过滤失败都会从 ``多读了几行'' 升级为 ``删表''。
+
+\begin{itemize}
+  \item \textbf{按功能拆角色}：列表页用只读身份（PostgreSQL 的 \Tp{pg\_read\_all\_data} 或逐表 \Tp{SELECT}），写入用 \Tp{INSERT} 与 \Tp{UPDATE}，迁移用只在发布窗口启用的 DDL 角色。\CppJava{} 里这意味着\textbf{每类操作一条连接串}——比托管语言费事，但它是唯一能挡住二阶缺陷的机制。
+  \item \textbf{存储过程作为边界}：只授 \Tp{EXECUTE}，用户拿不到基表权限。三语言通用，只是 \CppJava{} 还要自己处理返回值与结果集元数据。
+  \item \textbf{RLS 与视图与语言无关}：PostgreSQL 的 \texttt{CREATE\_\allowbreak POLICY}（配合 \texttt{current\_setting} 读会话变量）、SQL Server 的行级安全谓词函数、\texttt{SECURITY DEFINER} 视图，都能把 ``越权读到别人的行'' 变成 ``返回零行''。与连接池配合时，会话变量必须借出即复位（第 10 章）。
+\end{itemize}
+
+\section{驱动侧参数化，服务器侧计划缓存}
+
+``参数化'' 有两层：驱动把值与文本分离（协议层），服务器决定复用哪个计划（优化器层），两层在不同栈上是分开的。PostgreSQL 的具名语句前 5 次执行用 custom plan（带实际参数值），之后由成本比较选 generic plan；数据倾斜时用 \Tp{plan\_cache\_mode} 取 \Tp{force\_\allowbreak custom\_\allowbreak plan} 或 \Tp{force\_\allowbreak generic\_\allowbreak plan} 固定策略。JDBC 侧 \Tp{useServer\allowbreak PrepStmts} 与 \Tp{prepare\_\allowbreak Threshold} 决定何时真服务端预编译，句柄缓存（如 \Tp{cachePrep\_\allowbreak Stmts}）按连接而非全局。\CSharp{} 侧 SqlClient 随命令发送参数信息，SQL Server 的计划缓存按 ``文本加参数类型加会话 SET 选项'' 作键，所以 \Fn{AddWithValue} 的类型抖动会直接放大条目数。
+
+\textbf{N 条 prepared statement 的取舍}：为 IN 列表每种 arity 各留一条语句，等于把缓存条目乘以 arity 换来省掉 parse，而 libpq 的具名语句还占会话内存、重连即失效。结论是 arity 分桶（比如 1、10、100、500）并写进白名单，\emph{不要}给每个长度留一条语句。
+
+\begin{scriptsize}
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.12\textwidth}
+                  >{\raggedright\arraybackslash}p{0.16\textwidth}
+                  >{\raggedright\arraybackslash}p{0.17\textwidth}
+                  >{\raggedright\arraybackslash}p{0.17\textwidth}
+                  >{\raggedright\arraybackslash}p{0.21\textwidth}@{}}
+\caption{注入风险点在三语言里的默认保护与自建部分} \\
+\toprule
+\textbf{风险点} & \textbf{\CppJava{} 的默认保护} & \textbf{Java} &
+\textbf{\CSharp{}} & \textbf{你必须自己做的事} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{风险点} & \textbf{\CppJava{} 的默认保护} & \textbf{Java} &
+\textbf{\CSharp{}} & \textbf{你必须自己做的事} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+值拼进文本 & 无，须调绑定函数 & \Tp{Prepared\allowbreak Statement} 为默认 &
+\Tp{Sql\allowbreak Param\allowbreak Collection} & 只留一个取数入口 \\
+\addlinespace
+表名与列名 & 无 & 无标准 API & \Fn{Quote\allowbreak Identifier} &
+白名单映射到常量标识符 \\
+\addlinespace
+方向、arity 与 LIKE & 变量数上限、须 \texttt{ESCAPE} & 枚举映射加句柄缓存 &
+同左 & 二元枚举、arity 分桶、统一转义函数 \\
+\addlinespace
+二阶注入 & 无 ORM 兜底 & 原生查询仍暴露 & \Fn{FromSqlRaw} 仍暴露 &
+读出后也当不可信输入 \\
+\addlinespace
+shell 与命令行 & \Fn{system}、\Fn{popen} 常见 &
+\Tp{Process\allowbreak Builder} 传数组 &
+\Tp{Process\allowbreak StartInfo} 需引号 & 不过 shell，argv 加白名单 \\
+\addlinespace
+服务端文件与扩展 & \texttt{COPY PROGRAM}、\Fn{lo\_import}、
+\Fn{load\_\allowbreak extension} & 少见 & 少见 & 角色权限与编译选项关入口 \\
+\addlinespace
+计划与性能 & 具名语句会话级 & \Tp{prepare\_\allowbreak Threshold} &
+参数嗅探与缓存抖动 & 倾斜列固定 custom plan \\
+\end{longtable}
+\setlength{\tabcolsep}{6pt}
+\end{scriptsize}
+
+\begin{bestpractice}[title=可信边界最小清单]
+\begin{enumerate}
+  \item 代码：值一律绑定，标识符一律白名单常量，动态片段只能由枚举分支产生。
+  \item 进程：所有 shell 调用改 argv 数组，子进程不继承含密钥的环境。
+  \item 数据库：按功能分角色，发布角色与运行角色分离，多租户隔离交给 RLS 或视图，而不是 ``记得加 where''。
+  \item 验证：把 ``输入含引号、百分号、分号、双引号名'' 做成固定用例，对标识符白名单做穷举测试。
+  \item 观测：语句进日志前把值替换成占位符，绝不记录含密钥的语句文本。
+\end{enumerate}
+\end{bestpractice}
+
+\begin{guideline}[title=本章要点]
+\begin{itemize}
+  \item 三种语言在 ``能否拼出注入'' 上完全相同，差别在默认写法：托管栈的安全路径更短，\CppJava{} 的安全路径要自己搭且必须\emph{唯一}。
+  \item 绑定 API 的形状：SQLite 是 prepare、bind、step、reset 的显式状态机；libpq 是 \Fn{PQexecParams} 的平行数组加 \Tp{PQformat}；库层与 JDBC、ADO.NET 把它藏进一个对象。
+  \item 绑定管不了标识符、方向与 arity；方言引号规则互不相同，所以只能白名单，不能手写转义。
+  \item 别忘了非 SQL 面：shell、LIKE 模式、服务端文件与扩展装载、\texttt{ATTACH} 路径，这些在 \CppJava{} 项目里更常见。
+  \item 最后一层防线是权限：一条带 DDL 的通用连接串会把任何过滤缺陷放大成数据销毁事故。
+\end{itemize}
+\end{guideline}
+% ====================================================================
+
+% ====================================================================
+\chapter{模式迁移与版本管理}
+
+\section{先说实话：三个生态都没有标准迁移工具}
+
+Java 与 \CSharp{} 至少各有一个事实标准（Flyway、Liquibase、EF Core Migrations），而 \CppJava{} 连一个能承担这个角色的库都没有——\textbf{迁移}不在数据库访问库的职责范围里：sqlite3、libpq、libpqxx、nanodbc、soci 全都只管执行你给的语句，不关心 ``这条库应该处在第几号模式''。所以本章的结论提前给出：\CppJava{} 侧的正解不是找一个库，而是\emph{自己建立文件与表的纪律}（第 5 节给出最小实现），并且把这件事的优先级排得和参数化一样高——因为模式漂移是 ``运行期才发现列不存在'' 这类事故的源头（第 11 章）。
+
+\begin{compare}[title=三个生态的迁移现状]
+\begin{itemize}
+  \item \textbf{\CppJava{}}：无标准、无库、无 CLI 约定。可选路径只有三条：自写运行器、把 Flyway 或 Liquibase 当\emph{外部构建步骤}（CI 里起个容器执行）、或让 DBA 手工执行脚本。
+  \item \textbf{Java}：Flyway 与 Liquibase 都是 JVM 工具，能嵌进应用启动（Spring Boot 的 \Tp{flyway.enabled} 与 \Tp{spring.\allowbreak liquibase.enabled}），也能当命令行或 Maven/Gradle 任务。
+  \item \textbf{\CSharp{}}：EF Core Migrations 是内建在工具链里的（\Tp{dotnet ef}），模型快照让它能\emph{生成}脚本而不只是执行脚本。
+\end{itemize}
+\end{compare}
+
+\section{迁移系统真正要保证的五件事}
+
+\textbf{一，版本标记表。}任何方案都要一张表记录 ``已经跑到哪''：Flyway 用 \Tp{flyway\_\allowbreak schema\_\allowbreak history}，Liquibase 用 \Tp{DATABASE\_\allowbreak CHANGELOG} 加一张 \Tp{DATABASE\_\allowbreak CHANGELOG\_\allowbreak LOCK}，EF Core 用 \Tp{\_\_EFMigrations\_\allowbreak History}（列是 \Tp{MigrationId} 与 \Tp{ProductVersion}）。自写运行器的等价物通常叫 \Tp{schema\_version}。没有这张表就没有幂等性可言，也没有 ``这个库能不能被这个二进制打开'' 的判据。
+
+\textbf{二，前进还是可逆。}forward-only 意味着出问题只能前滚修一个（Flyway 社区版\emph{没有} undo 脚本；\CSharp{} 的 \Fn{Down} 与 Liquibase 的 \texttt{rollback} 标签\emph{能}写，但极少被测试过，删列、删表的 \Fn{Down} 在真实数据上必然丢数据）。诚实的工程立场是：把 \Fn{Down} 当作开发期便利，发布环境只走前滚。
+
+\textbf{三，每步的原子性。}这一点三家数据库差异极大，而它决定了崩溃后库处在什么状态。PostgreSQL 支持事务内 DDL，一个迁移脚本可以整体 \texttt{BEGIN} 后 \texttt{COMMIT}；MySQL 的 DDL 会\textbf{隐式提交}（\texttt{ALTER TABLE}、\texttt{CREATE/DROP TABLE}、\texttt{DROP DATABASE} 等都算），所以 ``整个脚本一个事务'' 在 MySQL 上做不到——8.0 的 atomic DDL 只保证\emph{单条} DDL 自身崩溃安全（数据字典与存储引擎不半提交），不是把多条语句打包；SQLite 相反，DDL\emph{可以}放进事务，例外是 \texttt{VACUUM}、\texttt{PRAGMA} 一类不能嵌在事务里的语句，以及需要全表复制的重建（第 3 节）。结论：运行器要按 ``一步一事务'' 实现，并在 MySQL 上退化为 ``一步一提交、失败即停''。
+
+\textbf{四，幂等与崩溃重放。}中途被 \Tp{SIGKILL} 打断后重跑，必须要么继续、要么回到一致状态，绝不能重复执行同一步。常见手段是：\texttt{CREATE TABLE IF NOT EXISTS}、PostgreSQL 的 \texttt{ADD COLUMN IF NOT EXISTS}（MySQL 与 SQLite \emph{都没有}这个形式，要先查 \Tp{PRAGMA table\_info} 或 \Tp{information\_schema}）、以及 ``记录版本号与提交同事务''——把 \texttt{INSERT INTO schema\_version} 放在同一个事务里，才有 ``要么都生效要么都不生效''。
+
+\textbf{五，怎么记录已应用的版本。}两种机制：\emph{文件名排序}（Flyway 的 \Tp{V2\_\_add\_\allowbreak column.sql}、\texttt{R\_\_} 可重复脚本）与\emph{校验和}（Flyway 存 CRC32 或 SHA 摘要，Liquibase 存每个 changeset 的 md5sum，EF Core 靠 \Tp{MigrationId} 的时间戳式命名）。两者都要：文件名给顺序，校验和给 ``脚本被人改过'' 的告警——Flyway 默认对校验和不匹配直接失败，修复手段是 \texttt{flyway repair} 改写历史表，\emph{而不是}放宽检查。反过来，``applied at'' 时间戳\textbf{不能当顺序依据}：多台机器同时发布、时钟回拨、容器里没有 NTP、以及从备份库复制过来的历史表都会让它失真；跨环境的 ``这次发布到底改了什么'' 只能由版本号与文件名决定。
+
+\section{SQLite 的痛点：十二步重建}
+
+SQLite 的 \texttt{ALTER TABLE} 只有四种动作：\texttt{RENAME TABLE}、\texttt{RENAME COLUMN}（3.25 起）、\texttt{ADD COLUMN}、\texttt{DROP COLUMN}（3.35 起，且被索引、外键、视图、生成列引用时失败）。没有 ``改类型''、没有 ``加/删约束''、没有 ``改 NOT NULL''——而 SQLite 又把所有列类型都归成亲和性（第 9 章），所以 ``把这一列改成 INTEGER'' 只能走\textbf{重建}：建新表、带新列拷贝、删旧表、改名，然后\emph{手工恢复}被一起删掉的索引、触发器、视图与 \Tp{sqlite\_sequence} 状态。
+
+\begin{warning}[title=重建的四个真实陷阱]
+\begin{enumerate}
+  \item \textbf{\Tp{PRAGMA foreign\_keys} 在事务内是空操作}：它是连接级、必须在 \texttt{BEGIN} \emph{之前}关掉，否则 \texttt{DROP TABLE} 会因为子表引用而失败，或者更糟——\emph{静默}留下悬空引用。
+  \item \textbf{\Tp{legacy\_alter\_table} 要显式决定}：默认关闭时 \texttt{RENAME} 会连带改写其它表定义里的引用；打开它则不改写，适合 ``旧表删掉、新表用回原名'' 这条路。两步之间别中途切换，并且做完要把它关回默认值。
+  \item \textbf{rowid 与自增会漂}：拷贝时要不要带上 \texttt{rowid} 取决于是否有外键或历史数据引用它；\texttt{AUTOINCREMENT} 还要手工恢复 \Tp{sqlite\_sequence} 里的值。
+  \item \textbf{附属对象不会自动回来}：\texttt{DROP TABLE} 连带删索引、触发器与视图定义，重建后必须逐条 CREATE 回去，最后跑 \Tp{PRAGMA foreign\_key\_check}（输出非空即中止），必要时 \Tp{PRAGMA integrity\_check}，并 ANALYZE 重新收集统计。
+\end{enumerate}
+\end{warning}
+
+\begin{lstlisting}[style=sqlstyle,caption={SQLite：把文本列重建成整型列的完整十二步}]
+PRAGMA foreign_keys = OFF;         -- 1 必须在事务外, 事务内是空操作
+BEGIN IMMEDIATE;                   -- 2 先抢写锁, 别人才写不进来
+CREATE TABLE acct_new (            -- 3 按新定义建表
+    id      INTEGER PRIMARY KEY,
+    owner   TEXT NOT NULL,
+    cents   INTEGER NOT NULL DEFAULT 0
+);                                 -- 4 约束与默认值都写全新表
+INSERT INTO acct_new (id, owner, cents)   -- 5 拷贝并转换
+SELECT id, owner,
+       CAST(round(CAST(balance AS REAL) * 100) AS INTEGER)
+FROM acct;
+DROP TABLE acct;                   -- 6 旧表连同索引触发器一起消失
+PRAGMA legacy_alter_table = ON;    -- 7 改名时不改写别表引用
+ALTER TABLE acct_new RENAME TO acct;
+PRAGMA legacy_alter_table = OFF;   -- 8 立刻关回默认
+CREATE INDEX acct_owner_idx ON acct(owner);        -- 9 重建附属对象
+CREATE TRIGGER acct_touch AFTER UPDATE ON acct     -- 10 触发器与视图
+BEGIN UPDATE audit SET seen = seen WHERE 1; END;
+PRAGMA foreign_key_check;          -- 11 输出非空就要 ROLLBACK 停手
+COMMIT;                            -- 12 提交后再开外键约束
+PRAGMA foreign_keys = ON;
+-- 验证: 用 .schema acct 的转储与仓库里的 golden 文件做 diff
+\end{lstlisting}
+
+第 11 步的 \Tp{PRAGMA foreign\_key\_check} 只报告\emph{违反约束的行}，不修复也不创建约束；它在 \texttt{foreign\_keys=OFF} 时仍可运行，这正是重建期间唯一能拿到全库一致性判断的手段。最后的验证不要用 ``看起来对了''：把 \texttt{.schema}（或 \Tp{sqlite3\_table\_info} 的逐列输出）转储成文本，与仓库里的 golden 文件做 diff，是这个十二步唯一可靠的收尾。
+
+\section{托管生态的做法：可以借的纪律}
+
+\textbf{Java 世界。}Flyway 的约定是三件事：文件名里写版本（\Tp{V1\_\_init.sql}、\Tp{V2\_\_add\_index.sql}，语义化版本也可）、历史表里写校验和、\texttt{baseline} 用来 ``接管已经存在的库''（\Tp{baselineVersion} 之前的脚本被承认但不执行，\Tp{baselineOnMigrate} 让首次运行自动打底）。Liquibase 的抽象更厚一层：changelog 可以是 XML、YAML 或 SQL，单位是 \texttt{changeset}，每个 changeset 有 \texttt{author} 与 \texttt{id}、可写 \texttt{rollback}、可用 \texttt{preConditions} 做环境条件判断，锁在 \Tp{DATABASE\_\allowbreak CHANGELOG\_\allowbreak LOCK} 表里。两者的共同点是\emph{把迁移当代码评审的对象}：一次 PR 里同时出现实体类改动与 \texttt{.sql} 脚本，才允许合并。Spring Boot 的做法值得注意也值得警惕：\texttt{flyway.migrate} 被挂在应用启动流程里，于是 ``每个实例启动都可能去改模式''——多副本同时拉起时依赖它的锁表；\CppJava{} 若照抄 ``启动即迁移''，必须自己有锁（下一节）。
+
+\textbf{\CSharp{} 世界。}EF Core 的 \Tp{dotnet ef migrations add} 不是读你的 SQL，而是把\emph{模型快照}（\Tp{ModelSnapshot.cs}）与当前 \Tp{DbContext} 配置做差，生成一个带 \Fn{Up} 与 \Fn{Down} 的类，其中每句 DDL 是一次 \texttt{migrationBuilder.Sql} 或强类型调用；\Tp{dotnet ef database update} 执行并把 ID 写进 \Tp{\_\_EFMigrations\_\allowbreak History}，\Tp{dotnet ef migrations script} 可以只导出不执行（默认还带幂等包装）。快照文件是关键：删掉或手工改它，之后所有 diff 都会失真。对 \CppJava{} 可借的东西是三件：\emph{一份 ``当前模式长什么样'' 的快照文件}（可以是 \texttt{.schema} 转储）、\emph{按 ID 排序且带校验和的脚本目录}、\emph{一张历史表}。没有一样需要反射或运行时元数据，所以没有借口。
+
+\section{最小可用的 C++ 迁移运行器}
+
+设计目标只有五条：顺序确定、重复安全、失败即停、并发只有一个进程在迁移、跑完能证明模式确实是预期那样。
+
+\begin{lstlisting}[caption={C++：迁移运行器的核心骨架}]
+struct Step {
+    int version; std::string name, sql, digest;
+};
+
+static std::vector<Step> load(const fs::path& dir) {
+    std::vector<Step> v;
+    for (const auto& e : fs::directory_iterator(dir)) {
+        const std::string stem = e.path().stem().string();
+        const auto p = stem.find('_');
+        if (p == std::string::npos) { continue; }   // 忽略杂项文件
+        std::string body = read_file(e.path());
+        Step s;
+        s.version = std::stoi(stem.substr(0, p));
+        s.name    = stem.substr(p + 1);
+        s.sql     = body;
+        s.digest  = sha256_hex(body);
+        v.push_back(std::move(s));
+    }
+    std::sort(v.begin(), v.end(), [](const Step& a, const Step& b) {
+        return a.version < b.version;               // 版本号不得重复
+    });
+    return v;
+}
+
+// 锁: SQLite 用 BEGIN IMMEDIATE 抢写锁, libpq 用咨询锁
+// SELECT pg_try_advisory_lock($1) 返回假值即表示他人在迁移
+bool busy_or_locked(void* h, Backend be) {
+    if (be == BE_PG) {
+        return !pg_try_advisory((PGconn*)h, kLockKey);
+    }
+    const char* q = "BEGIN IMMEDIATE";
+    return sqlite3_exec((sqlite3*)h, q, 0, 0, 0) != SQLITE_OK;
+}
+
+bool migrate(void* h, Backend be, const std::vector<Step>& steps) {
+    if (!ensure_version_table(h, be)) { return false; }
+    if (busy_or_locked(h, be)) {
+        std::fprintf(stderr, "另一进程在迁移, 中止\n");
+        return false;
+    }
+    int cur = current_version(h, be);
+    for (const Step& s : steps) {
+        if (s.version <= cur) {          // 已应用: 只比校验和
+            if (stored_digest(h, be, s.version) != s.digest) {
+                report(h, "历史脚本被改动: ", s.name);
+                return false;
+            }
+            continue;
+        }
+        if (!begin(h, be)) { return false; }
+        if (!run_script(h, be, s.sql)) {  // 失败必须整体回滚
+            rollback(h, be);
+            report(h, "第 ", s.version, " 步失败");
+            return false;
+        }
+        record(h, be, s);                 // 与步骤同事务提交
+        if (!commit(h, be)) { rollback(h, be); return false; }
+        cur = s.version;
+    }
+    release(h, be);
+    return true;
+}
+\end{lstlisting}
+
+``谁来持锁'' 有三种做法，各自的失效模式不同。\textbf{flock}（POSIX \Fn{flock} 加 \Tp{LOCK\_EX} 与 \Tp{LOCK\_NB}，Windows 用 \Fn{LockFileEx}）保护的是\emph{本机}两个进程，跨机器无效，而且锁的是文件描述符而非数据库——容器里同镜像多副本时它挡不住并发。\textbf{pg\_advisory\_lock}（\Fn{pg\_try\_advisory\_lock} 会话级或 \Fn{pg\_try\_advisory\_xact\_lock} 事务级）是跨机器的正确工具，因为锁在服务器上；会话级锁要记得用完释放，事务级随事务结束自动释放。\textbf{SQLite} 没有单独的锁接口：\texttt{BEGIN IMMEDIATE} 就是 ``抢到库级写锁才算拿到迁移权''，配 \Fn{sqlite3\_busy\_timeout} 做退避；\texttt{PRAGMA journal\_mode=WAL} 下仍只有一个写者。MySQL 侧的等价物是 \Fn{GET\_LOCK} 与 \Fn{RELEASE\_LOCK}（命名锁），SQL Server 用 \texttt{sp\_getapplock} 一族。
+
+测试迁移而不是相信迁移，有两条固定动作。其一\textbf{结构等价}：迁移前导出 ``基线模式''，迁移后导出 ``结果模式'' 并与 golden 文件 diff（SQLite 用 \texttt{.schema}，PostgreSQL 查 \Tp{information\_\allowbreak schema.columns}，MySQL 查 \Tp{information\_schema}），列顺序、默认值、索引名都算差异。其二\textbf{行为等价}：准备小份行级 fixture（每种边界值一行，含 NULL、空串、最大值），迁移后断言这些行还在、还在原主键上、转换后的数值符合预期——十二步重建最容易丢的就是触发器写的那张审计表。
+
+\begin{bestpractice}[title=迁移脚本的评审清单]
+\begin{itemize}
+  \item 一条脚本一个关注点；命名带版本号与祈使句（\Tp{0007\_add\_idx}）。
+  \item 不做 ``顺手清理''：删列、删表、改约束各占独立版本号。
+  \item 每个 DDL 都问一次 ``崩溃后重跑会怎样''，答案要么是 IF NOT EXISTS，要么是 ``同事务记录版本''，不能是 ``应该不会崩''。
+  \item 迁移角色与运行角色不同（第 11 章），发布窗口之外收走 DDL 权限。
+  \item 二进制启动时先读 \Tp{schema\_version}：低于要求就带着 ``缺哪几步'' 的信息立刻退出，不要带着旧模式继续跑。
+\end{itemize}
+\end{bestpractice}
+
+\section{数据迁移与 expand-contract}
+
+改结构之外的另一件事是改数据，它的约束来自\emph{部署}而不是数据库：\textbf{并行系统}（新旧代码同时在跑）与 \textbf{多实例滚动发布} 让 ``一条 ALTER 加一次 UPDATE'' 变成停服发布。标准的四步展开（parallel change、expand-contract）是：
+
+\begin{enumerate}
+  \item \textbf{Expand}：加新列（可空、默认值安全），模式版本号加一；旧代码不看它，因此仍然正确。
+  \item \textbf{双写}：写路径同时填新旧两列，读路径仍读旧列。这一步必须在\emph{一次独立发布}里完成并可回滚。
+  \item \textbf{回填}：分批 \texttt{UPDATE}（按主键游标，每批几百到几千行），每批一个事务；大表上一条语句改一千万行等于长时间持锁加 WAL 或 redo 膨胀，回填还要能重入。
+  \item \textbf{切读、再 Contract}：读路径切到新列（一次独立发布），稳定一个发布周期后删旧列与旧代码分支。
+\end{enumerate}
+
+\begin{warning}[title=为什么每一步必须能单独发布]
+因为失败是发生在\emph{步骤之间}的：双写上线后发现回填算错，你要能只回滚读切换，而不是一起退回旧模式。判据很简单：如果某两步合并发布能省一次部署、但拆开就不能回滚，那就必须拆开。另外三条数据库侧细节：PostgreSQL 加带默认值的列在 11 之后不重写表（默认值记在目录里），所以 Expand 便宜；MySQL 的 \texttt{ALTER TABLE} 会全表复制，大表要走 \Tp{pt-online-schema-change} 或 \Tp{gh-ost} 这类外部工具；SQLite 的 Expand 就是十二步重建，代价是全库拷贝，所以 ``先加可空列、回填完成后再补 NOT NULL'' 会走两次重建，要把两次合并成一次或干脆接受约束写在应用层。
+\end{warning}
+
+\section{CI：每个平台一个临时库}
+
+流水线上要做三件事：从\emph{空}库跑全部迁移、从\emph{上一版本}库跑增量迁移、把结果模式与 golden 文件比对。PostgreSQL 用模板库加速：\texttt{CREATE DATABASE ci TEMPLATE app} 拿到已经跑过历史迁移的副本，测完 \texttt{DROP DATABASE}；MySQL 靠一个新的 schema 名（同一实例多库并行），SQL Server 用容器或 LocalDB；SQLite 直接 \texttt{:memory:}——进程内库、无需文件、每个用例一份，迁移全跑完通常只有毫秒级，这也是 CI 里最快的路径。但内存库有\emph{两处}测不到：WAL 与文件级并发（内存库没有多进程语义），以及 \texttt{ATTACH} 与扩展装载涉及的路径。所以 SQLite 的正确 CI 组合是 ``内存库跑迁移与行为断言、加一个文件库跑并发与 WAL 用例''。
+
+\begin{scriptsize}
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+                  >{\raggedright\arraybackslash}p{0.21\textwidth}
+                  >{\raggedright\arraybackslash}p{0.23\textwidth}
+                  >{\raggedright\arraybackslash}p{0.23\textwidth}@{}}
+\caption{迁移能力在三类方案里的落点} \\
+\toprule
+\textbf{能力} & \textbf{\CppJava{}（手工或自写运行器）} &
+\textbf{Java（Flyway、Liquibase）} & \textbf{EF Core Migrations} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{能力} & \textbf{\CppJava{}（手工或自写运行器）} &
+\textbf{Java（Flyway、Liquibase）} & \textbf{EF Core Migrations} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+版本来源 & 文件名排序，自己定义 & 文件名 \Tp{V2\_\_name.sql} & 生成类名带时间戳 ID \\
+\addlinespace
+校验和 & 自算 SHA-256 存历史表 & CRC 或 SHA 存历史表 & 不校验脚本（快照决定内容） \\
+\addlinespace
+接管旧库 & 手工插入基线行 & \Tp{baseline} 系列参数 & \Tp{dotnet ef} 建初始空迁移 \\
+\addlinespace
+每步原子性 & 自己发 \texttt{BEGIN} 与 \texttt{COMMIT} & 按提供方决定是否包事务 & 支持事务的提供方整步包事务 \\
+\addlinespace
+回滚 & 无（前滚修） & 社区版无 undo，Liquibase 有 rollback & 有 \Fn{Down}，但少被测试 \\
+\addlinespace
+生成脚本 & 无，人写 SQL & 可只导出（\texttt{migrate} 与 SQL 模式） & \Tp{migrations script} 可导出幂等脚本 \\
+\addlinespace
+并发保护 & \texttt{flock}、咨询锁、写锁（自证） & 内置锁表或咨询锁 & 历史表加连接串 \Tp{CommandTimeout} \\
+\addlinespace
+数据迁移 & 同一份 SQL 分批写 & Java 回调或 \texttt{.sql} & 强类型 \Fn{Sql} 与 \Fn{UpdateData} \\
+\addlinespace
+启动自检 & \textbf{必须自己写版本号比对} & 可选随应用启动执行 & \Tp{DbContext.\allowbreak Database.\allowbreak Migrate} \\
+\addlinespace
+CI 集成 & 直接调自写二进制 & CLI、Maven、Gradle、容器 & CLI 与 MSBuild 目标 \\
+\end{longtable}
+\setlength{\tabcolsep}{6pt}
+\end{scriptsize}
+
+\begin{guideline}[title=本章要点]
+\begin{itemize}
+  \item \CppJava{} 没有迁移工具是事实，但缺的只是纪律而非能力：一张历史表、一个有序带校验和的脚本目录、一步一事务、一把锁。
+  \item 原子性由数据库决定：PostgreSQL 可整步事务、MySQL 隐式提交、SQLite 可包事务但 \texttt{PRAGMA} 与 \texttt{VACUUM} 例外。
+  \item 顺序看文件名与版本号，永远不要看 ``applied at'' 时间戳。
+  \item SQLite 的改列是十二步重建，外键开关必须在事务外改、收尾必跑 \Tp{foreign\_key\_check} 并与 golden 模式 diff。
+  \item 数据变更走 expand-contract，每步能独立发布与独立回滚。
+\end{itemize}
+\end{guideline}
+% ====================================================================
+
+% ====================================================================
+\chapter{凭据、连接串与密钥的存放}
+
+\section{连接串是一个秘密包裹}
+
+第 5 章把 ``密钥材料'' 当成字节来讨论，那一章的结论在这里全部适用，只是主角换成\emph{数据库凭据}：一段能换取数据访问权的字节。先划清楚连接串里哪些部分敏感。\textbf{口令}当然敏感；\textbf{TLS 相关项}在多数人意料之外——PostgreSQL 的 \Tp{sslmode} 从 \Tp{require} 降到 \Tp{prefer} 或 \Tp{disable}、\Tp{sslrootcert} 被删掉，等价于把口令改成明文传输；SQL Server 侧的经典陷阱是 \Tp{TrustServer\_\allowbreak Certificate=True}（配合 \Tp{Encrypt=True} 时它关掉证书校验，中间人可以直接拿到登录凭据，而连接看起来仍是 ``加密的''）。\textbf{SQLite 没有口令}，它的秘密是\emph{文件路径}加上 SQLCipher 的密钥：\texttt{PRAGMA key} 走语句文本，密钥会进语句日志与崩溃转储（第 5 节展开），正确入口是 \Fn{sqlite3\_key\_v2}。\textbf{云数据库的 IAM token} 是短期凭据（RDS 的签名 token 有效期 15 分钟，Azure AD 令牌更短），它们同样要当秘密存，但\emph{不该}长存——存了也没用，过期即失效，这是把 ``长期口令'' 换成 ``短期凭据'' 的全部意义。
+
+语法上分两派。\textbf{key=value 派}：libpq 的连接串是 \texttt{host=... dbname=... user=... password=... sslmode=...}（值含空格或特殊字符时要单引号包住并把内部单引号翻倍），同一串也可写成 URI \texttt{postgresql://\allowbreak user:pass@\allowbreak host:5432/\allowbreak db?sslmode=\allowbreak require}，此时用户名与口令必须做百分号编码——\texttt{@}、\texttt{:}、\texttt{\%}、\texttt{/} 不编码会把解析结果整个改错，这是 ``连接串能连不能拆'' 的常见成因。SQL Server 的 ADO.NET 串是 \texttt{Data Source=...;Initial Catalog=...; User ID=...;Password=...;Encrypt=True}，ODBC 用 \texttt{Driver=\{ODBC Driver 18 for SQL Server\};...}，注意 18 版驱动默认 \Tp{Encrypt=True}，不写 \Tp{TrustServer\_\allowbreak Certificate} 就连不上自签证书——于是运维文档里出现那句最危险的话：``把 TrustServer\allowbreak Certificate 打开就好了''。MySQL 的 C API 根本没有串：\Fn{mysql\_real\_connect} 按位置传 host、user、passwd、db，因此 ``把密码藏进一个字符串'' 这条路不存在，但 ``藏进配置文件'' 的需求同样存在。
+
+\begin{warning}[title=连接串里的三个假安全]
+\begin{itemize}
+  \item \textbf{``这串里没有密码所以不是秘密''}：只有 \Tp{Integrated Security} 或 \Tp{SSPI}（Windows 单点登录）、socket 加 peer 认证、workload identity 才真的没有秘密；\Tp{Trusted\_Connection=True} 在别的机器上会退化成 ``用当前进程的账户身份''，账户权限往往远大于应用需要。
+  \item \textbf{``口令存在配置文件里而不是代码里就安全了''}：两者对\emph{同一个用户}的可读性没有区别，区别只在于文件会不会被备份、被打进容器镜像、被提交进仓库。
+  \item \textbf{``驱动会把密码清掉''}：libpq 把 \Tp{password} 存进 \Tp{PGconn} 结构（重连与 \Fn{PQsetPassword} 都要用），你清零自己的缓冲并不会清掉它的副本。清副本这件事只能靠 ``让驱动少拿几次口令'' 而不是事后擦。
+\end{itemize}
+\end{warning}
+
+\section{\CppJava{} 的四种经典放法，以及各自漏给谁}
+
+\textbf{一，写死在源码里。}它一定会进 \Tp{.rodata}，于是 \texttt{strings} 一眼可见；即便加一层异或或 ``运行时拼接''，也只是让 grep 失败而不是让攻击者失败；更麻烦的是它\emph{永远}留在版本历史与已经发出去的每个二进制里。结论：这是唯一一种没有 ``正确用法'' 的放法。
+
+\textbf{二，环境变量。}它比源码好在 ``不进二进制''，代价是三个泄漏面：Linux 上 \Tp{/proc/PID/\allowbreak environ} 可被同 uid 的进程与 root 读；它会被\emph{整个子进程树}继承（你的程序 \Fn{system} 一下，密码就在别人的 argv 环境里，第 11 章）；Windows 上环境块可被同权限进程读取，\texttt{Get-Process} 与 \Tp{Get-CimInstance Win32\_Process} 一类的取进程信息入口还会暴露命令行。容器编排里 ``env 注入'' 之所以普遍，是因为它\emph{不落盘}；把它当持久存储仍是错的。
+
+\textbf{三，配置文件。}默认权限是致命的：新建文件通常是 0644，同机任意用户可读；正确做法是创建时就用 0600（POSIX 用 \Fn{open} 加 \Tp{O\_CREAT} 与模式 0600 一次搞定，先 0644 再 \Fn{chmod} 有竞态窗口），Windows 上要靠 ACL 而不是只读属性。配置文件是唯一\emph{可以当兜底}的方式：它能满足 ``只有这个用户读得到、崩溃重启后还在、可被人审阅'' 三条，前提是权限对、路径不被打进镜像与备份。
+
+\textbf{四，命令行参数。}最差：\texttt{ps -ef}、\Tp{/proc/PID/\allowbreak cmdline}、任务调度器日志、shell history 全都留下明文，而且窗口极长（进程活多久它就在多久）。只有一种例外是合理的：\texttt{--password-file} 或从标准输入读，而不是 \texttt{-pSECRET}。
+
+\section{操作系统密钥库：三平台各自能做到什么}
+
+\subsection{Windows：凭据管理器与 DPAPI}
+
+凭据管理器的接口是 \Fn{CredWriteW}、\Fn{CredReadW}、\Fn{CredDeleteW} 与 \Fn{CredEnumerateW}，条目类型用 \Tp{CRED\_TYPE\_GENERIC}，\Tp{TargetName} 是键（约定形如 \Tp{LegacyGeneric:\allowbreak target=MyApp/\allowbreak db/prod}），\Tp{Persist} 分 \Tp{CRED\_PERSIST\_\allowbreak LOCAL\_MACHINE} 与 \Tp{CRED\_PERSIST\_\allowbreak ENTERPRISE}（后者会随域账户漫游），凭据体上限是 512 字节。要点是它的\emph{安全边界}：generic 凭据对\textbf{同一用户的任何进程}都可读，没有应用级 ACL，所以它防的是 ``别人翻你的磁盘''，不防 ``以你的身份跑的恶意代码''。
+
+DPAPI 是另一层：\Fn{CryptProtectData} 与 \Fn{CryptUnprotectData} 用登录口令派生的主密钥（用户域或机器域）加密一段字节。可传 \Tp{CRYPTPROTECT\_UI\_FORBIDDEN} 禁止弹框（服务进程必须加，否则会静默挂住），可用额外 entropy 把密文绑到你的 salts 上——但 entropy 是\emph{附加}条件，不是秘密管理：它通常也存在磁盘上。机器域（\Tp{CRYPTPROTECT\_LOCAL\_MACHINE}）意味着 ``任何能读到主密钥文件的账户都能解''，管理员与 \Tp{SYSTEM} 都可以；用户域则是同用户任意进程可解。DPAPI-NG（\Fn{NCryptProtectSecret}）支持 ACL 与多用户共享，代价是要写安全描述符。诚实结论：DPAPI 让 ``离线拿走这个文件'' 变成拿不走，它\emph{不是}密钥管理系统的替代品，也\textbf{不能}替代第 5 章的数据密钥层级（把 DEK 用 DPAPI 包裹是合理的；把主密钥交给 DPAPI 并宣称 ``密钥不落地'' 是不诚实的）。
+
+\subsection{macOS：Keychain Services}
+
+新写法是 Security framework 的 \Fn{SecItemCopyMatching}、\Fn{SecItemAdd}、\Fn{SecItemDelete}，查询字典里放 \Tp{kSecClassGenericPassword}、\Tp{kSecAttrService}、\Tp{kSecAttrAccount}，并显式带 \Tp{kSecUseData\allowbreak ProtectionKeychain} 走 data-protection keychain。老式 \Fn{SecKeychainItemCreate} 与 \Fn{SecKeychainFind\allowbreak GenericPassword} 一族属于遗留路径，沙盒与 daemon 场景下不要用。三条实践约束：条目 ACL 决定 ``哪个应用能读''，第一次读会弹框，用户点 ``始终允许'' 之后才不打扰；访问组（\Tp{kSecAttrAccessGroup}）要求代码签名，ad-hoc 签名的二进制之间无法共享条目；SSH 或 CI 这类\emph{无图形登录会话}的场景下 keychain 是锁着的，只能靠 \texttt{security unlock-keychain} 之类的外部动作打开——也就是说 macOS 上的 CLI 在服务器环境里照样要退回文件。
+
+\subsection{Linux：三套机制，一个尴尬结论}
+
+\textbf{freedesktop secrets service}（\Tp{org.\allowbreak freedesktop.secrets} over D-Bus，客户端库 libsecret 的 \Fn{secret\_password\_\allowbreak store\_sync}）是桌面标准答案：会话对象可缓存、条目可跨应用共享。但它依赖 session bus 与 \Tp{gnome-keyring} 或 KWallet \emph{在跑}，headless、容器与 CI 里通常没有；D-Bus 接口没有稳定 ABI 承诺，不同实现的属性支持也不一致。\textbf{内核密钥保留服务}（\Fn{add\_key}、\Fn{request\_key}、\Fn{keyctl}，密钥环分 thread、process、session、user 四类）能存短期秘密，但默认随引导或会话消失（只有 user keyring 能活过会话结束），配额与权限模型琐碎，同 uid 可读，历史上有多个提权与泄漏 CVE。\textbf{TPM 侧}用 tss2/ESAPI（\Fn{Esys\_CreatePrimary}、\Fn{Esys\_Unseal}，配 policy 才能解锁）可以把秘密绑到 PCR 度量值上，但 ``谁来跑 daemon、PCR 变化怎么办、恢复密钥放哪'' 三个问题会让项目变成两周的额外工作。结论很直白：\textbf{Linux 上一个普通 CLI 的现实终态是 0600 文件加解锁口令}，或者把这件事外包给外部密钥服务（下一节）。
+
+\section{托管语言这一侧：也并没有标准答案}
+
+Java 的 JDK \emph{没有}凭据存储：\Fn{System.getenv} 与 \Tp{Properties} 文件是事实做法；\Tp{KeyStore}（JCEKS 已废弃、PKCS12 常见）管的是\emph{密钥与证书}，而且 keystore 口令本身又需要一个存放处，鸡生蛋问题原封不动地转移了。第三方方案是 Jasypt 的 \texttt{ENC(...)} 属性（主口令仍要来自 env 或启动参数）与 Spring Cloud Vault。\CSharp{} 侧的对应物更全一些：开发期用 \Tp{Microsoft.\allowbreak Extensions.\allowbreak Configuration.\allowbreak UserSecrets}（\Tp{dotnet user-secrets}，实际落在 \Tp{secrets.json} 明文中，\emph{只}适合本机开发），运行期用 Data Protection（\Fn{CreateProtector} 得到 \Tp{IDataProtector}，密钥环在本机走 DPAPI、分布式部署要放 Redis、数据库或 Azure Blob 并做密钥持久化与轮换），云上用 \Tp{Azure.Security.KeyVault.Secrets}、\Tp{Amazon.SecretsManager} 或 Google Secret Manager 的 SDK。
+
+三边的共同结论：\textbf{生产环境都要一个外部密钥服务}。Vault 的 AppRole（\Tp{role\_id} 加可一次性使用的 \Tp{secret\_id}）或 Kubernetes 服务账户认证解决了 ``引导凭据''（bootstrap）问题；云厂商用 workload identity 把 ``这个 Pod 有权取这个秘密'' 交给 IAM，于是\emph{没有}长期秘密需要保存。\CppJava{} 拿这些服务并不困难——Vault 与云密钥库都有 HTTPS API，一份 libcurl 或 OpenSSL HTTP 客户端就够了，但要自己处理令牌缓存、到期前刷新与失败退避；官方 C++ SDK 通常不存在，这件事的工时在托管语言里是零、在 \CppJava{} 里是一到两天，属于本章唯一 ``只能自己写'' 的结构性差异。
+
+\begin{note}[title=容器里的 Secret 对象不是密钥库]
+\begin{itemize}
+  \item Kubernetes 的 \Tp{Secret} 默认只是 base64 编码而不是加密：etcd 里要拿到密文必须单独开 encryption at rest；RBAC 中能 \texttt{get secrets} 的角色等于握着全部口令。
+  \item 注入方式只有两种，各有漏面：走 env 就进了容器主进程的环境块与 Pod spec（能读 Pod 的人能读值），走挂载文件至少能被同容器的其他进程与 sidecar 读。两者都不回答 ``谁签发、多久轮换''。
+  \item 镜像层里 \texttt{COPY} 进去的配置是永久的：后面那层删掉它，历史层里仍在，\texttt{docker history} 与镜像仓库都能翻出来。
+  \item 对 \CppJava{} 的桌面或嵌入式 CLI 没有直接帮助（那里没有 K8s），但这个误用在三个生态里一模一样：把 ``编排系统能注入'' 当成 ``这就是秘密存储''。
+\end{itemize}
+\end{note}
+
+\section{取出来之后：凭据的内存卫生}
+
+第 5 章关于密钥字节的全部纪律在这里逐条适用，只是更容易忘，因为 ``这只是个口令''。四条：一，\textbf{不要放进 \Tp{std::string} 并到处拷贝}：拷贝构造、\Tp{substr}、异常消息、日志格式化都会留下无痕副本，对外只给 \Tp{std::span} 视图。二，\textbf{用带清零析构的容器}：\Tp{std::vector} 的 \Tp{char} 加 \Fn{OPENSSL\_cleanse}、\Fn{explicit\_bzero}、\Fn{RtlSecureZeroMemory}（\CSharp{} 侧是 \Tp{Cryptographic\_\allowbreak Operations.\allowbreak ZeroMemory}，Java 侧是 \Tp{char[]} 加 \Fn{Arrays.fill}——绝不用 \Tp{String}）。三，\textbf{禁止拷贝、只许移动}，否则清零只是心理安慰。四，\textbf{接受你清不完的事实}：口令一旦交给驱动就成了连接状态的一部分（libpq 存在 \Tp{PGconn} 里，MySQL C API 会复制进 \Tp{MYSQL} 结构，ODBC 由驱动自行保管），你能清的只有自己那一份；再叠加换页与崩溃转储（\Fn{mlock} 或 \Fn{VirtualLock} 有配额限制）。
+
+\begin{lstlisting}[caption={C++：一个会清零、不可拷贝的凭据持有者}]
+class Secret {
+    std::vector<char> b_;
+public:
+    Secret() = default;
+    Secret(const char* p, size_t n) : b_(p, p + n) {}
+    Secret(const Secret&) = delete;
+    Secret& operator=(const Secret&) = delete;
+    Secret(Secret&& o) noexcept : b_(std::move(o.b_)) { o.wipe(); }
+    Secret& operator=(Secret&& o) noexcept {
+        if (this != &o) { wipe(); b_ = std::move(o.b_); o.wipe(); }
+        return *this;
+    }
+    ~Secret() { wipe(); }
+    std::span<const char> view() const noexcept { return b_; }
+    void wipe() noexcept {
+        if (b_.empty()) { return; }
+        OPENSSL_cleanse(b_.data(), b_.size());
+        // 平台替代: explicit_bzero / RtlSecureZeroMemory
+        b_.clear();
+        b_.shrink_to_fit();     // 归零后再把堆内存还给分配器
+    }
+};
+\end{lstlisting}
+
+\begin{lstlisting}[caption={C++：Windows 凭据管理器与 DPAPI、退回文件的读取骨架}]
+Secret load_db_secret(const std::string& slot) {
+#ifdef _WIN32
+    CREDENTIALW* raw = nullptr;                       // 路一
+    const auto target = make_wide(L"MyApp/db/" + slot);
+    if (CredReadW(target.c_str(), CRED_TYPE_GENERIC, 0, &raw)) {
+        Secret s{(char*)raw->CredentialBlob, raw->CredentialBlobSize};
+        SecureZeroMemory(raw->CredentialBlob, raw->CredentialBlobSize);
+        CredFree(raw);
+        return s;                                     // 同用户进程也能读
+    }
+    auto blob = read_file(L"secrets/db-" + utf16(slot) + L".bin");
+    DATA_BLOB in{static_cast<DWORD>(blob.size()), blob.data()};
+    DATA_BLOB out{};
+    if (CryptUnprotectData(&in, nullptr, entropy(), nullptr, nullptr,
+                           CRYPTPROTECT_UI_FORBIDDEN, &out)) {
+        Secret s{(char*)out.pbData, out.cbData};   // 路二: DPAPI
+        SecureZeroMemory(out.pbData, out.cbData);
+        LocalFree(out.pbData);
+        return s;
+    }
+    SetLastError(ERROR_NOT_FOUND);
+    throw secret_missing(slot, "凭据管理器与 DPAPI 都无该项");
+#elif defined(__APPLE__)
+    auto q = dict{kSecClass, kSecClassGenericPassword,
+                  kSecAttrService, "MyApp/db/" + slot,
+                  kSecUseDataProtectionKeychain, kCFBooleanTrue,
+                  kSecReturnData, kCFBooleanTrue,
+                  kSecMatchLimit, kSecMatchLimitOne};   // Keychain
+    CFTypeRef out = nullptr;
+    if (SecItemCopyMatching(q.get(), kSecMatchLimitOne, &out)
+            != errSecSuccess) {
+        throw secret_missing(slot, "keychain 锁定或无该项");
+    }
+    return secret_from_cfdata(out);
+#else
+    return load_file_secret(slot);   // Linux: 0600 文件加口令解锁
+#endif
+}
+\end{lstlisting}
+
+\section{运维规则与 ``缺密钥时该怎么办''}
+
+\begin{itemize}
+  \item \textbf{每环境一套角色与秘密}：开发库的口令不该能连预发；环境切换靠切角色而不是切 \Tp{sslmode}。
+  \item \textbf{短期凭据优于长期口令}：能签 token 就不要发密码，能发证书就不要发口令（PostgreSQL 的 \texttt{cert} 认证、\texttt{scram-sha-256} 加定期轮换），并把 ``口令轮换'' 做成发布流程而不是手工事故。
+  \item \textbf{传统文件各自的权限要求}：libpq 的 \Tp{.pgpass} 格式是 \texttt{hostname:\allowbreak port:\allowbreak database:\allowbreak username:\allowbreak password}，权限必须是 0600 否则被忽略（Windows 上没有等价文件）；MySQL 的 \Tp{my.cnf} 里 \texttt{[client] password=...} 同样要求严格权限，\Fn{mysql\_config\_editor} 生成的 \Tp{mylogin.cnf} 只是\emph{混淆}不是加密；Oracle 的 \Tp{cwallet.sso} 自动登录钱包依赖文件系统权限，且 \Tp{mkstore} 的钱包口令仍是同一个问题。
+  \item \textbf{秘密绝不进日志、错误消息与崩溃报告}：打印连接串前先脱敏（保留字段名，把 \texttt{password} 一类的值换成星号，\texttt{sslrootcert} 这类路径可以留着）。
+\end{itemize}
+
+\begin{bestpractice}[title=CLI 在缺秘密时的正确行为]
+\begin{enumerate}
+  \item \textbf{先查 tty}：\Fn{isatty} 为假就\emph{绝不}提示输入——交互提示在无标准输入的 cron、CI、管道场景里会永久挂起，这是本章排名第一的运维事故（表现为 ``任务卡三小时后超时''）。
+  \item \textbf{读口令要关回显}：POSIX 用 termios 去掉 \Tp{ECHO}（\Fn{getpass} 已废弃且非线程安全），Windows 用 \Fn{ReadConsoleW} 配合模式切换。
+  \item \textbf{失败信息要可执行}：说明查过哪几处（凭据管理器项名、文件路径与它的权限、环境变量名），并给出补齐动作，例如 ``请创建 0600 的 \texttt{./secrets/db-prod.bin} 或设置 APP\_DB\_SECRET\_FILE''。
+  \item \textbf{退出前释放}：把 \Tp{Secret} 交给驱动后就地析构，不要留全局实例（崩溃转储会把它写进文件）。
+\end{enumerate}
+\end{bestpractice}
+
+\begin{scriptsize}
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+                  >{\raggedright\arraybackslash}p{0.22\textwidth}
+                  >{\raggedright\arraybackslash}p{0.20\textwidth}
+                  >{\raggedright\arraybackslash}p{0.25\textwidth}@{}}
+\caption{数据库凭据的存放位置：谁能读到、重启后还在不在、适合什么场景} \\
+\toprule
+\textbf{存放位置} & \textbf{谁能读到} & \textbf{崩溃或重启之后} &
+\textbf{适用场景} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{存放位置} & \textbf{谁能读到} & \textbf{崩溃或重启之后} &
+\textbf{适用场景} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+源码里的字面量 & 任何拿到二进制的人（\texttt{strings}） & 在，且永久留在版本历史 & 无，任何情况都不该用 \\
+\addlinespace
+环境变量 & 同 uid 进程、\Tp{/proc/PID/\allowbreak environ}、子进程树 & 在（取决于编排系统重注入） & 容器一次性注入，不当持久存储 \\
+\addlinespace
+命令行参数 & 同机所有用户（\texttt{ps} 与进程快照） & 进程活着就在 & 只用于 ``传文件路径'' 而不是传值 \\
+\addlinespace
+配置文件（0600） & 仅该用户与 root & 在 & \CppJava{} CLI 的现实兜底 \\
+\addlinespace
+\Tp{.pgpass}、\Tp{mylogin.cnf} & 仅该用户（权限不对则被忽略） & 在 & 手工运维与脚本；后者只是混淆 \\
+\addlinespace
+Windows 凭据管理器 & 同一用户的任何进程 & 在（本地或漫游） & 桌面应用的记住密码 \\
+\addlinespace
+DPAPI 密文 & 同用户（或同机的管理员） & 在 & 本机包裹 DEK 或口令，不是 KMS \\
+\addlinespace
+macOS Keychain & 受条目 ACL 约束的已签名应用 & 在，但无人登录时锁定 & 桌面应用；CI 需先解锁 \\
+\addlinespace
+secret service & 同会话的任意客户端 & 在（守护进程在跑才有） & 桌面 GUI，headless 不可用 \\
+\addlinespace
+内核密钥环 & 同 uid 与 root & 多数随会话或引导消失 & 短期令牌缓存 \\
+\addlinespace
+TPM 密封对象 & 满足 policy 且度量一致的进程 & 在 & 启动时解锁，恢复流程要另想 \\
+\addlinespace
+Vault 或云密钥库 & 由 IAM 与认证方式决定 & 在服务端 & 生产环境的正解，需自写客户端 \\
+\end{longtable}
+\setlength{\tabcolsep}{6pt}
+\end{scriptsize}
+
+\begin{guideline}[title=本章要点]
+\begin{itemize}
+  \item 连接串是秘密包裹：口令、\Tp{sslmode} 与证书校验开关、SQLCipher 密钥、云 token 都算敏感项，URI 形式还要正确百分号编码。
+  \item 四种传统放法里只有 0600 配置文件能当兜底；源码字面量永不可接受，命令行参数最差，环境变量只适合一次性注入。
+  \item OS 密钥库的边界是 ``同一个用户''：Credential Manager、DPAPI、Keychain 都挡不住以你身份运行的代码，Linux 上连 ``有没有守护进程'' 都还是问题。
+  \item 三个生态\emph{都}需要外部密钥服务；\CppJava{} 的额外成本是 SDK 要自己写，但走 HTTPS API 并不比托管语言更难。
+  \item 取出来之后回到第 5 章：不可拷贝、移动时清零、并接受驱动内部那份你擦不掉。
+  \item 缺秘密时要快速失败并给出可执行提示，非 tty 绝不弹输入。
+\end{itemize}
+\end{guideline}
+% ====================================================================
+
+% ====================================================================
+\chapter{实战：三种语言实现同一套数据访问需求}
+
+\section{需求 14-A：离线优先的订单同步}
+
+第 6 章用一份加密需求量出了三种语言的抽象层级；本章把同一把尺子放到数据库侧，
+并且\emph{真的把加解密用起来}——订单同步组件需要一个本地加密的审计日志，
+前一个 part 的成果因此成了本 part 的输入。
+
+\begin{guideline}[title=需求 14-A]
+\begin{enumerate}
+  \item \textbf{本地存储}：桌面进程用 SQLite 存订单，每行带
+        \Tp{version}（本行单调递增，同版本内容不可变）与
+        \Tp{client\_id}（首次创建时生成的 UUID，永不改变）。
+  \item \textbf{服务器存储}：PostgreSQL 的 \Tp{orders} 以 \Tp{client\_id}
+        为主键，另有 \Tp{server\_seq} 与 \Tp{updated\_at} 供多端拉增量。
+  \item \textbf{五个操作}：读本地待同步行；在一个事务里把变更推上去
+        （带版本比较的 upsert）；拉取服务器变更并覆盖本地；
+        追加本地审计日志；审计会话密钥以 AES-256-GCM 落盘保护。
+  \item \textbf{崩溃安全}：中途被杀或断电后，既不丢已确认的本地写入，
+        也不在服务器上留下半批数据，重放同一批不产生重复行。
+  \item \textbf{约束}：一律参数化（第 11 章）；schema 变更走
+        expand-contract（第 12 章）；主密钥与连接串的存放按第 13 章，
+        本章只当 ``已经拿到一把 32 字节包裹密钥''；密钥不进日志。
+\end{enumerate}
+\end{guideline}
+
+\begin{lstlisting}[style=sqlstyle,caption={共享表结构：本地 SQLite 与服务器 PostgreSQL}]
+-- 本地
+CREATE TABLE orders(
+  client_id  BLOB PRIMARY KEY,       -- 16 字节 UUID, 客户端生成
+  payload    TEXT NOT NULL,
+  version    INTEGER NOT NULL,       -- 同版本不改内容
+  updated_ms INTEGER NOT NULL
+);
+CREATE TABLE outbox(                 -- 事务性发件箱
+  client_id BLOB NOT NULL,  version INTEGER NOT NULL,
+  queued_ms INTEGER NOT NULL,  sent INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (client_id, version)
+);
+CREATE TABLE audit(
+  seq INTEGER PRIMARY KEY,  nonce BLOB,  ct BLOB,  tag BLOB
+);
+PRAGMA journal_mode = WAL;   PRAGMA synchronous = FULL;
+-- 服务器
+CREATE TABLE orders(
+  client_id  uuid PRIMARY KEY,   payload text NOT NULL,
+  version    bigint NOT NULL,
+  server_seq bigint GENERATED ALWAYS AS IDENTITY,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX orders_seq_idx ON orders(server_seq);
+\end{lstlisting}
+
+\section{共同契约}
+
+三份实现必须满足同一份契约，否则 ``语言差异'' 与 ``实现走样'' 分不开。
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+                  >{\raggedright\arraybackslash}p{0.17\textwidth}
+                  >{\raggedright\arraybackslash}p{0.14\textwidth}
+                  >{\raggedright\arraybackslash}p{0.21\textwidth}
+                  >{\raggedright\arraybackslash}p{0.15\textwidth}@{}}
+\toprule
+\textbf{操作} & \textbf{输入} & \textbf{输出} & \textbf{错误行为} &
+\textbf{幂等要求} \\
+\midrule
+change\_order & client\_id、新 payload & 新版本号 &
+失败整笔回滚，版本不推进 & 天然幂等（同版本内容不可变） \\
+push\_pending & 库句柄、批量上限 & 已推数、冲突数 &
+本地锁或 40001 类冲突整批重放，其余上抛 &
+\textbf{必须可重放}：同一批推两次，服务器状态与推一次相同 \\
+pull\_changes & 本地已见的 server\_seq & 覆盖后的本地行 &
+连接失败保留游标，下次续拉 & 按 server\_seq 比较，旧值不回退 \\
+append\_audit & 事件文本、序号 & 密文行 & 密封失败则不写 &
+序号唯一约束，重复序号被拒 \\
+seal\_key & 主密钥、会话密钥 & 封装块 & 主密钥不可用则拒绝启动 &
+每次新 nonce，封装块不可复用 \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+
+\begin{note}[title=契约里为什么专门写 ``幂等'']
+崩溃恢复的全部难度都压在 push 这一格：本地事务能靠回滚做到全有或全无，
+``本地已提交、但客户端没看到服务器确认'' 的窗口却一定存在。
+消掉它的唯一办法是\textbf{让重放无害}：行身份由客户端生成、
+比较条件写进 upsert、发送标记与本地写入同事务。
+\end{note}
+
+\section{\CppJava{}：SQLite 加 libpq 加 OpenSSL 的三层手工装配}
+
+\textbf{错误传播选异常}。\cpp{17} 没有 \Tp{std::expected}（那是 \cpp{23}
+的设施），而失败点分散在 SQLite 返回码、libpq 结果状态与 OpenSSL 错误队列
+三套体系里；用返回码就得在每个中间层手写 ``翻译加传递''，最容易漏的恰是
+传递。唯一例外是 ``这次失败该不该重试''：它由 \Fn{sqlite3\_errcode} 与
+SQLSTATE 算出，做成显式枚举 \Tp{Retry}（附录 B 有同构实现），绝不猜异常文本。
+\Fn{local\_err}、\Fn{chk}、\Fn{exec\_or\_throw}、\Tp{ResGuard}
+（析构 \Fn{PQclear}）、\Fn{backoff} 是全项目共用的小工具；
+\Tp{Buf} 与 \Tp{EvpCtxPtr} 沿用第 6 章：句柄靠 RAII，敏感字节靠自清零缓冲。
+
+\begin{lstlisting}[caption={C/C++：语句与事务的薄 RAII 包装}]
+struct SqlStmt {                       // 准备一次, 反复复位复用
+    sqlite3* db_;  sqlite3_stmt* s_ = nullptr;
+    SqlStmt(sqlite3* d, const char* sql) : db_(d) {
+        if (sqlite3_prepare_v2(db_, sql, -1, &s_, nullptr)
+                != SQLITE_OK) { throw local_err(db_); }
+    }
+    ~SqlStmt() { sqlite3_finalize(s_); }     // 漏掉就是泄漏语句
+    SqlStmt(const SqlStmt&) = delete;
+    int step() {
+        int rc = sqlite3_step(s_);
+        if (rc != SQLITE_ROW && rc != SQLITE_DONE) {
+            throw local_err(db_);      // 内含 SQLITE_BUSY 判断
+        }
+        return rc;
+    }
+    void bind(int i, int64_t v) { chk(sqlite3_bind_int64(s_, i, v)); }
+    void bind(int i, const void* p, int n) {
+        chk(sqlite3_bind_blob(s_, i, p, n, SQLITE_TRANSIENT)); }
+    void reset() { sqlite3_reset(s_); sqlite3_clear_bindings(s_); }
+};
+struct SqlTx {                         // 析构即回滚: 不留活事务
+    sqlite3* db_;  bool done_ = false;
+    explicit SqlTx(sqlite3* d) : db_(d) {
+        exec_or_throw(db_, "BEGIN IMMEDIATE;");
+    }
+    void commit() { exec_or_throw(db_, "COMMIT;"); done_ = true; }
+    ~SqlTx() { if (!done_) { sqlite3_exec(db_, "ROLLBACK;",
+                              nullptr, nullptr, nullptr); } }
+};
+\end{lstlisting}
+
+\begin{lstlisting}[caption={C/C++：outbox 与服务器 upsert 的完整一批}]
+struct Item {                            // 一行待推数据
+    std::vector<std::byte> id;           // 16 字节 client_id
+    char id_hex[37] = {};                // 参数用的文本形式
+    std::string body;
+    int64_t version = 0;  int64_t millis = 0;
+};
+// 本地事务取待发行, 服务器逐行 CAS upsert, 成功后同事务标记已发
+PushOutcome push_once(sqlite3* db, PGconn* cn, int batch) {
+    sqlite3_busy_timeout(db, 2000);        // 库级写锁先由驱动退避
+    PushOutcome out{OK, 0};
+    SqlTx tx{db};                          // BEGIN IMMEDIATE
+    SqlStmt sel{db,
+        "SELECT o.client_id, o.version, t.payload, t.updated_ms"
+        "  FROM outbox o JOIN orders t"
+        "    ON t.client_id = o.client_id AND t.version = o.version"
+        " WHERE o.sent = 0 ORDER BY o.queued_ms LIMIT ?1"};
+    sel.bind(1, int64_t(batch));
+    std::vector<Item> items;
+    while (sel.step() == SQLITE_ROW) { items.push_back(read(sel)); }
+    if (items.empty()) { tx.commit(); return out; }
+    pq_exec_or_throw(cn, "BEGIN");
+    for (const Item& it : items) {
+        char vb[24], mb[24];
+        std::snprintf(vb, sizeof vb, "%lld", (long long)it.version);
+        std::snprintf(mb, sizeof mb, "%lld", (long long)it.millis);
+        const char* val[4] = { it.id_hex, it.body.c_str(), vb, mb };
+        PGresult* r = PQexecParams(cn,
+          "INSERT INTO orders(client_id, payload, version,"
+          "                        updated_at)"
+          " VALUES ($1::uuid, $2, $3::bigint,"
+          "         to_timestamp($4::double precision))"
+          " ON CONFLICT (client_id) DO UPDATE"
+          "    SET payload = excluded.payload,"
+          "        version = excluded.version"
+          "  WHERE orders.version <= excluded.version"  // 含重放
+          " RETURNING 1", 4, nullptr, val, nullptr, nullptr, 0);
+        ResGuard g{r};                     // 任何分支都 PQclear
+        ExecStatus st = PQresultStatus(r);
+        if (st == PGRES_COMMAND_OK) { continue; }
+        if (st != PGRES_TUPLES_OK) { throw server_error(cn, r); }
+        if (PQntuples(r) == 0) { ++out.conflicts; }  // 版本落后
+    }
+    pq_exec_or_throw(cn, "COMMIT");        // 服务器侧一批全有或全无
+    SqlStmt mark{db, "UPDATE outbox SET sent = 1"
+                     " WHERE client_id = ?1 AND version = ?2"};
+    for (const Item& it : items) {
+        mark.bind(1, it.id.data(), int(it.id.size()));
+        mark.bind(2, it.version);
+        mark.step(); mark.reset();         // 复用语句, 不重新 prepare
+    }
+    tx.commit();                           // 标记与本地写入同事务
+    out.status = (out.conflicts ? CONFLICT : OK);
+    return out;
+}
+\end{lstlisting}
+
+\textbf{重试的单位是整批而不是单条}（第 10 章），外层因此只判断类别：
+
+\begin{lstlisting}[caption={C/C++：按错误类别决定重放还是上抛}]
+PushOutcome push_pending(sqlite3* db, PGconn* cn, int batch) {
+    for (int attempt = 0; attempt < 5; ++attempt) {
+        try { return push_once(db, cn, batch); }
+        catch (const SqlError& e) {        // 主错误码, 丢掉扩展位
+            int c = e.code() & 0xff;
+            if (c != SQLITE_BUSY && c != SQLITE_LOCKED) { throw; }
+        } catch (const ServerError& e) {
+            auto sv = e.sqlstate();
+            if (sv != "40001" && sv != "40P01") { throw; }
+        }
+        std::this_thread::sleep_for(backoff(attempt));
+    }                                      // 重试单位是整批
+    throw AppError("push retries exhausted");
+}
+\end{lstlisting}
+
+审计密封复用第 6 章的 EVP 路线，但多出一个\emph{数据库侧}决定：
+\textbf{把 \Tp{seq} 当 AAD}，于是任何整行调换顺序、复制或删除审计行的动作
+都会让标签校验失败——认证范围跨过了 ``密文'' 与 ``它在哪一行''。
+\Fn{as\_uchar} 与第 6 章的 \Fn{as\_bytes} 同样是项目自定义的一行式转换。
+
+\begin{lstlisting}[caption={C/C++：AES-256-GCM 密封会话密钥与审计行}]
+Sealed seal(std::span<const std::byte> master,
+            std::span<const std::byte> plain, int64_t seq) {
+    Sealed s;                                  // nonce/ct/tag 三段
+    if (RAND_bytes(s.nonce.data(), int(s.nonce.size())) != 1) {
+        ossl_fail("RAND_bytes");
+    }
+    unsigned char* w = as_uchar(s.ct);  int n = 0;
+    EvpCtxPtr c{EVP_CIPHER_CTX_new()};  if (!c) { ossl_fail("new"); }
+    EVP_EncryptInit_ex(c.get(), EVP_aes_256_gcm(),
+                       nullptr, nullptr, nullptr);
+    EVP_CIPHER_CTX_ctrl(c.get(), EVP_CTRL_AEAD_SET_IVLEN,
+                        NONCE_LEN, nullptr);
+    EVP_EncryptInit_ex(c.get(), nullptr, nullptr,
+                       as_uchar(master), as_uchar(s.nonce));
+    char aad[24];
+    int an = std::snprintf(aad, sizeof aad,
+                           "audit:%lld", (long long)seq);
+    EVP_EncryptUpdate(c.get(), nullptr, &n, as_uchar(aad), an);
+    EVP_EncryptUpdate(c.get(), w, &n, as_uchar(plain),
+                      int(plain.size()));
+    w += n;
+    EVP_EncryptFinal_ex(c.get(), w, &n);  w += n;
+    s.ct_len = size_t(w - as_uchar(s.ct));     // 实际写入长度
+    if (EVP_CIPHER_CTX_ctrl(c.get(), EVP_CTRL_AEAD_GET_TAG,
+                            TAG_LEN, as_uchar(s.tag)) != 1) {
+        ossl_fail("GET_TAG");
+    }
+    return s;
+}
+\end{lstlisting}
+
+\begin{warning}[title=崩溃恢复的三根支柱，缺一根就漏数据]
+\begin{itemize}
+  \item \textbf{WAL 加 \Tp{synchronous}}：WAL 只管读写并发；
+        掉电不丢取决于 \Tp{FULL}（每次提交等 fsync）与
+        \Tp{NORMAL}（提交不等、检查点等）之差，性能敏感时先测再降。
+  \item \textbf{outbox 与业务写入同事务}：``改了数据'' 与
+        ``记住了要发'' 必须一起成功；拆成两步就有静默丢消息的窗口。
+  \item \textbf{服务器端幂等}：\Tp{client\_id} 由客户端生成、
+        比较条件写进 upsert；缺前者会插重复行，缺后者会丢并发更新。
+\end{itemize}
+\end{warning}
+
+\section{Java：JDBC 与 JCE，事务边界由谁决定}
+
+契约落到 JDBC 上，本地改一行并写 outbox 长这样（注意 \Fn{rollback}
+的分支位置，这是与 ``声明式'' 写法的分界）：
+
+\begin{lstlisting}[style=javastyle,caption={Java：手工事务内的业务写入加 outbox}]
+public void changeOrder(UUID id, String payload)
+        throws SQLException {
+    long next;
+    try (Connection cn = ds.getConnection()) {
+        cn.setAutoCommit(false);
+        try {
+            try (PreparedStatement q = cn.prepareStatement(
+                    "UPDATE orders SET payload = ?,"
+                  + "       version = version + 1"
+                  + "  WHERE client_id = ? RETURNING version")) {
+                q.setString(1, payload);
+                q.setObject(2, id, Types.OTHER);   // uuid 列
+                try (ResultSet rs = q.executeQuery()) {
+                    rs.next();  next = rs.getLong(1);
+                }
+            }
+            try (PreparedStatement o = cn.prepareStatement(
+                    "INSERT INTO outbox(client_id, version,"
+                  + "                      queued_ms)"
+                  + " VALUES (?, ?, ?)")) {
+                o.setObject(1, id, Types.OTHER);
+                o.setLong(2, next);
+                o.setLong(3, System.currentTimeMillis());
+                o.executeUpdate();
+            }
+            cn.commit();
+        } catch (SQLException e) {
+            cn.rollback();          // 两条语句要么都算, 要么都不算
+            throw e;
+        } finally {
+            cn.setAutoCommit(true);  // 归还池前把会话状态复位
+        }
+    }
+}
+\end{lstlisting}
+
+同一个方法在 Spring 里的最终形态：
+
+\begin{lstlisting}[style=javastyle,caption={Java：声明式事务下的同一个方法}]
+@Transactional(rollbackFor = Exception.class)
+public void changeOrder(UUID id, String payload) {
+    List<Long> v = jdbc.query(
+        "UPDATE orders SET payload = ?, version = version + 1"
+      + "  WHERE client_id = ? RETURNING version",
+        (rs, n) -> rs.getLong(1), payload, id);
+    jdbc.update("INSERT INTO outbox(client_id, version, queued_ms)"
+              + " VALUES (?, ?, ?)", id, v.get(0), clock.millis());
+}   // BEGIN/COMMIT/ROLLBACK 全部由代理对象负责
+\end{lstlisting}
+
+\textbf{代价与收益要说清楚}：边界从代码搬到注解后少写十几行、
+回滚分支不可能漏；换来的是\emph{看不见的事务}——同类方法内部调用不走代理、
+\Tp{Propagation.\allowbreak REQUIRES\_NEW} 另借一条连接（池不够就自锁）、
+长事务里塞进 HTTP 或远端 KMS 时没有任何语法提醒。
+第 10 章的 ``事务里做外部 I/O'' 事故在声明式写法里\emph{更难发现}，
+因为连 ``事务从哪儿开始'' 都要靠调试才知道。
+\CppJava{} 没有这个选项：\Tp{SqlTx} 已经是能做到的最接近声明式的东西，
+但它至少还写在那里。
+
+推送一批走 JDBC 批处理接口：
+
+\begin{lstlisting}[style=javastyle,caption={Java：addBatch 与 executeBatch 推送}]
+public void pushPending(int batch) throws SQLException {
+    try (Connection cn = ds.getConnection()) {
+        cn.setAutoCommit(false);
+        try {
+            List<Item> items = readOutbox(cn, batch);
+            if (items.isEmpty()) { cn.commit(); return; }
+            int[] done;
+            try (PreparedStatement up = cn.prepareStatement(
+                    "INSERT INTO orders(client_id, payload,"
+                  + "                       version, updated_at)"
+                  + " VALUES (?, ?, ?, now())"
+                  + " ON CONFLICT (client_id) DO UPDATE"
+                  + "    SET payload = EXCLUDED.payload,"
+                  + "        version = EXCLUDED.version"
+                  + "  WHERE orders.version <= EXCLUDED.version")) {
+                for (Item it : items) {
+                    up.setObject(1, it.id(), Types.OTHER);
+                    up.setString(2, it.payload());
+                    up.setLong(3, it.version());
+                    up.addBatch();
+                }
+                done = up.executeBatch();    // 一次往返发完整批
+            }
+            markSent(cn, items, done);        // 同事务里更新 sent
+            cn.commit();
+        } catch (SQLException e) {
+            cn.rollback();              // 整批重来, 不补发单条
+            if (isSerializable(e.getSQLState())) {
+                throw new RetryableSyncException(e);
+            }
+            throw e;
+        } finally { cn.setAutoCommit(true); }
+    }
+}
+\end{lstlisting}
+
+这里有个只属于 JDBC 的细节：\textbf{批处理拿不回 RETURNING}。
+\Fn{executeBatch} 给的是每条的更新计数（PostgreSQL 驱动常返回
+\Tp{Statement.\allowbreak SUCCESS\_NO\_INFO}），带 RETURNING 的语句进批处理时
+结果被丢弃。于是契约里的 ``冲突条数'' 在 Java 侧要靠事后一次 SELECT 对账，
+或改回逐条 \Fn{executeQuery}（拿往返数换语义）。
+\CppJava{} 的 \Fn{PQexecParams} 反而每条都能立刻看到 RETURNING——
+抽象层级在这里换成了 ``一次调用一行的信息量''。
+
+\begin{lstlisting}[style=javastyle,caption={Java：JCE 密封（AES-GCM, AAD 绑序号）}]
+byte[] iv = new byte[12];
+new SecureRandom().nextBytes(iv);
+Cipher c = Cipher.getInstance("AES/GCM/NoPadding");
+c.init(Cipher.ENCRYPT_MODE, wrapKey,
+       new GCMParameterSpec(128, iv));      // 标签长度 128 位
+c.updateAAD(("audit:" + seq).getBytes(StandardCharsets.UTF_8));
+byte[] body = c.doFinal(plainBytes);   // 密文尾部自带 16 字节标签
+// 落库: nonce = iv, ct = 前段, tag = 后 16 字节 (自己切)
+\end{lstlisting}
+
+JCE 把标签拼在密文尾部（\Tp{doFinal} 的行为），但 ``audit 表怎么分列''
+仍要自己决定——和第 6 章的结论一致：语言抽象管得到调用，管不到格式。
+
+\section{\CSharp{}：ADO.NET 与异步形态下的同一套流程}
+
+本地库用 \Tp{Microsoft.\allowbreak Data.\allowbreak Sqlite}，服务器用
+\Tp{Npgsql}。upsert 的写法\emph{取决于目标}：PostgreSQL 用
+\Tp{ON CONFLICT}，SQL Server 用 \Tp{MERGE}（较新版本才提供原生 UPSERT
+子句），SQLite 用 3.24 版之后的 \Tp{INSERT ... ON CONFLICT}。
+本章目标是 PostgreSQL，下面统一 \Tp{ON CONFLICT}，
+但把 ``多值一条语句'' 写成 \CSharp{} 里最省的批量形态。
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：异步推送一批（数组参数展开成多值 upsert）}]
+public async Task<PushOutcome> PushPendingAsync(
+        int batch, CancellationToken ct)
+{
+    await using var cn = new NpgsqlConnection(cs);
+    await cn.OpenAsync(ct);
+    await using var tx = await cn.BeginTransactionAsync(ct);
+    var items = await ReadOutboxAsync(cn, tx, batch, ct);
+    if (items.Count == 0)
+    {   await tx.CommitAsync(ct); return new PushOutcome(0, 0); }
+
+    const string Sql = """
+        INSERT INTO orders (client_id, payload, version, updated_at)
+        SELECT unnest(@ids), unnest(@bodies), unnest(@vers), now()
+        ON CONFLICT (client_id) DO UPDATE
+           SET payload = EXCLUDED.payload,
+               version = EXCLUDED.version
+         WHERE orders.version <= EXCLUDED.version
+        RETURNING client_id
+        """;
+    await using var cmd = new NpgsqlCommand(Sql, cn, tx);
+    cmd.Parameters.AddWithValue("ids",
+        items.Select(i => i.Id).ToArray());      // Guid 数组
+    cmd.Parameters.AddWithValue("bodies",
+        items.Select(i => i.Payload).ToArray());
+    cmd.Parameters.AddWithValue("vers",
+        items.Select(i => i.Version).ToArray());
+
+    var accepted = new HashSet<Guid>();
+    await using (var rd = await cmd.ExecuteReaderAsync(ct))
+    {   while (await rd.ReadAsync(ct))
+        { accepted.Add(rd.GetGuid(0)); } }
+    int conflicts = items.Count - accepted.Count;  // 没返回=版本落后
+
+    await MarkSentAsync(cn, tx, items, ct);         // 同一事务
+    await tx.CommitAsync(ct);
+    return new PushOutcome(items.Count, conflicts);
+}
+\end{lstlisting}
+
+本地侧仍是显式事务：
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：本地 SQLite 的显式事务与 outbox}]
+using var cn = new SqliteConnection(localCs);
+cn.Open();
+using var tx = cn.BeginTransaction();   // 默认是 DEFERRED 事务
+// payload / idBytes / ms 由调用方给出, next 是本方法产出
+try {
+    using (var upd = new SqliteCommand(
+        "UPDATE orders SET payload = $p,"
+      + "       version = version + 1 WHERE client_id = $id"
+      + " RETURNING version", cn, tx))   // RETURNING 需 SQLite 3.35
+    {
+        upd.Parameters.Add("$p", SqliteType.Text).Value = payload;
+        upd.Parameters.Add("$id", SqliteType.Blob).Value = idBytes;
+        next = Convert.ToInt64(upd.ExecuteScalar());
+    }
+    using (var ins = new SqliteCommand(
+        "INSERT INTO outbox(client_id, version, queued_ms)"
+      + " VALUES ($id, $v, $ms)", cn, tx))
+    {
+        ins.Parameters.Add("$id", SqliteType.Blob).Value = idBytes;
+        ins.Parameters.Add("$v", SqliteType.Integer).Value = next;
+        ins.Parameters.Add("$ms", SqliteType.Integer).Value = ms;
+        ins.ExecuteNonQuery();
+    }
+    tx.Commit();
+} catch { tx.Rollback(); throw; }   // using 只管释放, 不管回滚
+\end{lstlisting}
+
+\CSharp{} 也提供 \Tp{TransactionScope}（对应 ``声明式'' 那一档），
+但本项目\textbf{仍选显式事务}：跨两条连接（SQLite 加 Npgsql）的
+\Tp{TransactionScope} 会被提升成分布式事务，Windows 上要走 MSDTC，
+而托管 SQLite 驱动对可登记事务的支持得按版本实测；而且必须打开
+\Tp{Transaction\allowbreak Scope\allowbreak Async\allowbreak FlowOption}
+才能安全 \Tp{await}，这个 ``忘了就静默逃出事务'' 的坑比手写 \Fn{Commit}
+更深。诚实的结论是：\emph{这里 \CSharp{} 与 \CppJava{} 做了同一个决定}——
+框架给了选项，但成本由数据库拓扑决定，而不是由语言决定。
+
+\Tp{async}/\Tp{await} 真正改变的是 outbox 循环的形状：
+
+\begin{itemize}
+  \item \textbf{阻塞点没了，并发约束更强}：\Tp{await} 期间线程被交还，
+        连接却仍被这个事务占着，同一连接上再起第二条命令会报错，
+        所以 ``循环里 await'' 必须严格串行。
+  \item \textbf{取消变成参数而不是信号}：取消令牌一路传到网络层，
+        长批处理能半途退出；\CppJava{} 要自己实现 ``每 N 行查一次原子标志''。
+  \item \textbf{事务跨 \Tp{await} 合法}：\Tp{DbTransaction} 不绑线程但绑连接，
+        于是 ``方法被别处 await 到一半'' 与 ``池里连接被复用'' 的边界
+        要靠 \Tp{using} 钉住。
+  \item \textbf{异常类型不带通用 SQLSTATE}：\Tp{Postgres\allowbreak Exception}
+        才有强类型 SQLSTATE，基类 \Tp{DbException} 只有 \Fn{Number}。
+\end{itemize}
+
+加密侧是三语言里最短的一段，因为 \Tp{AesGcm} 是 span 风格的单次调用：
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：AesGcm 密封（标签天然分离）}]
+byte[] nonce = RandomNumberGenerator.GetBytes(12);
+byte[] ct  = new byte[plain.Length];
+byte[] tag = new byte[16];
+using var aes = new AesGcm(masterKey, 16);   // 标签长度进构造函数
+ReadOnlySpan<byte> aad = $"audit:{seq}"u8;   // 与 C++、Java 同格式
+aes.Encrypt(nonce, plain, ct, tag, aad);
+// 落库: nonce / ct / tag 三列, 顺序由本项目定义
+\end{lstlisting}
+
+\section{差异小结}
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}
+                  >{\raggedright\arraybackslash}p{0.23\textwidth}
+                  >{\raggedright\arraybackslash}p{0.22\textwidth}
+                  >{\raggedright\arraybackslash}p{0.24\textwidth}@{}}
+\toprule
+\textbf{关注点} & \textbf{\CppJava{}（SQLite 加 libpq）} &
+\textbf{Java（JDBC）} & \textbf{\CSharp{}（ADO.NET）} \\
+\midrule
+事务边界 & 手工 BEGIN IMMEDIATE、COMMIT、ROLLBACK，靠 \Tp{SqlTx}
+兜底 & 手工 \Fn{setAutoCommit} 加 \Fn{commit}；Spring 把整段交给注解与代理
+& \Fn{Begin\allowbreak Transaction} 的异步形态；
+\Tp{Transaction\allowbreak Scope} 存在，跨库会升级成分布式事务 \\
+错误传播 & 三套返回码体系在边界转异常，是否重试单独做枚举
+& 受检 \Tp{SQLException}，\Fn{getSQLState} 与 \Fn{getErrorCode} 并列
+& 运行时 \Tp{DbException}，只有 \Tp{Postgres\allowbreak Exception}
+带强类型 SQLSTATE \\
+重试与幂等 & \Tp{SQLITE\_BUSY}、\Tp{SQLITE\_LOCKED} 与 40001
+整批重放，比较条件写进 upsert & 按 SQLSTATE 判断后整批重来，
+批处理里读不回 RETURNING & 同 Java 的思路，取消令牌控制重放时刻 \\
+批量写入 & 逐条 \Fn{PQexecParams}（能看 RETURNING），
+或自己拼多值、走 COPY & \Fn{addBatch} 加 \Fn{executeBatch} 一次往返；
+多值 INSERT 通常更快 & 数组参数加 \Fn{unnest} 的一条语句，
+最省往返也最接近两全 \\
+加密调用 & EVP 五步加标签自取，约 25 行 & \Tp{Cipher} 三行加
+\Tp{GCM\allowbreak ParameterSpec}，标签与密文合体 & \Tp{AesGcm}
+一次 \Fn{Encrypt}，标签与密文天生分离 \\
+并发与阻塞 & 同步阻塞；写锁是库级，\Tp{busy\_\allowbreak timeout}
+或 busy handler 退避 & 同步阻塞（虚拟线程降调度成本），
+并发上限由池决定 & 异步不占线程，但连接被事务独占，
+串行性靠代码形状保证 \\
+崩溃恢复 & WAL 加 \Tp{synchronous} 加同事务 outbox，全套自己装配
+& 池与框架不管 fsync，本地仍是 SQLite 那一套
+& \Tp{using} 只保证释放，不保证 ``标记与写入同事务'' 这个设计 \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+
+\begin{guideline}[title=五件 \CppJava{} 要自己造、另两家白送的零件]
+\begin{enumerate}
+  \item \textbf{事务的失败路径}：\Tp{SqlTx} 一类的 RAII 兜底；另两家是
+        \Fn{commit} 缺失时自动回滚（try-with-resources、\Tp{using}、代理）。
+  \item \textbf{错误体系的合并}：SQLite 返回码、SQLSTATE、OpenSSL 队列
+        翻成一种；JDBC 与 ADO.NET 已给公共异常基类。
+  \item \textbf{重试分类与退避}：\Tp{Retry} 枚举加 \Fn{backoff}；
+        Spring 有 \Tp{@Retryable}、.NET 有 \Tp{Polly}，
+        但事务级重试仍要自己想清楚单位。
+  \item \textbf{池与会话复位}：借出计数、健康检查、归还前清
+        \Tp{search\_path} 与临时表；Java 靠 HikariCP、\CSharp{} 驱动内建。
+  \item \textbf{批量与 RETURNING 的两全}：既要少往返又要逐条读回时，
+        \CppJava{} 只能自己拼多值语句；托管语言要么给批处理（读不回），
+        要么给数组参数。
+\end{enumerate}
+\end{guideline}
+
+\begin{warning}[title=契约里最容易被省掉的一条：比较条件与行身份]
+\begin{itemize}
+  \item \textbf{没有版本比较的 upsert 会丢并发更新}：无条件
+        \Tp{DO UPDATE} 时两个端各推一次就变成 ``后到的赢''，
+        先到的改动静默消失。CAS 必须写进 SQL 而不是写在应用里。
+  \item \textbf{用严格小于还是小于等于，决定重放算不算 ``冲突''}：
+        本清单用 \Tp{<=}，因为同一版本的同一批\emph{必然}是重放
+        （同版本内容不可变是需求 14-A 立的约定）；用 \Tp{<} 的话，
+        崩溃后重放返回 0 行、被误判成版本落后，于是每次都白拉一遍服务器，
+        监控里就是 ``偶发的冲突率 100\%''。
+  \item \textbf{主键必须客户端生成}：若让服务器自增主键标识订单，
+        重放同一批会插入第二行，``已发'' 语义当场失效。
+        行身份是 \Tp{client\_id}，服务器只能附加 \Tp{server\_seq}，
+        这是幂等的前提而不是风格。
+\end{itemize}
+\end{warning}
+
+\begin{bestpractice}[title=把契约写成可测的东西]
+\begin{itemize}
+  \item 契约表逐格变成测试：同一批推两次、推到一半被 \Tp{kill}、
+        服务器版本更领先、审计序号重复——四组用例三种实现都要过。
+  \item 密文格式、列切分、AAD 文本（\Tp{audit:seq}）是三语言必须
+        逐字节一致的部分，用黄金样本（固定密钥、固定 nonce、
+        期望密文）钉住，比任何文档都可靠（第 6 章同一结论）。
+  \item 参数化与方言、schema 迁移、凭据存放分别见第 11 到 13 章；
+        本章刻意把它们当既有输入，免得三个主题混进一份清单。
+\end{itemize}
+\end{bestpractice}
+% ====================================================================
+
+% ====================================================================
+\appendix
+
+\chapter{算法与库速查}
+
+\section{算法选择速查}
+
+下表是 ``拿到一个需求该选哪个构造'' 的第一层判断，参数长度按 \cpp{17}
+时代的通行建议给出；具体强度评估与迁移顺序见第 4 章。
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}
+                  >{\raggedright\arraybackslash}p{0.20\textwidth}
+                  >{\raggedright\arraybackslash}p{0.23\textwidth}
+                  >{\raggedright\arraybackslash}p{0.25\textwidth}@{}}
+\caption{需求到构造的映射}\\
+\toprule
+\textbf{需求} & \textbf{推荐构造} & \textbf{必须避开的遗留选项} &
+\textbf{关键参数长度} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{需求} & \textbf{推荐构造} & \textbf{必须避开的遗留选项} &
+\textbf{关键参数长度} \\
+\midrule
+\endhead
+认证加密（既保密又防篡改） & AES-256-GCM；XChaCha20-Poly1305 &
+``CBC 加 HMAC'' 的手工组合、RC4、3DES、无认证的 CTR 与 OFB &
+密钥 32 字节；nonce 12 字节（GCM）或 24 字节（XChaCha）；标签 16 字节 \\
+仅需完整性（内容可公开） & HMAC-SHA-256；需要来源时用 Ed25519 &
+把裸摘要当 MAC（长度扩展）、CRC、MD5 &
+标签 16 到 32 字节；HMAC 密钥不少于 32 字节；截断到 32 字节以内要写明 \\
+口令哈希（登录凭据） & Argon2id；scrypt；PBKDF2-HMAC-SHA-256 作回退 &
+MD5、SHA-1、单轮 SHA-256、自拼盐流程 &
+盐至少 16 字节随机；Argon2id 内存 64 MiB 起、迭代 2 次、并行 1 到 4；
+PBKDF2 迭代数十万次起 \\
+密钥派生（高熵材料分域） & HKDF-SHA-256，\Tp{info} 绑用途或字段名 &
+直接截断哈希输出、复用同一密钥给加密与 MAC、自造 KDF &
+输入密钥材料至少 32 字节；输出按用途定长；\Tp{info} 必须非空 \\
+数字签名（导出、固件、审计） & Ed25519；ECDSA P-256（兼容旧对端）；
+RSA-PSS（遗留对端要求 RSA 时） & DSA、RSA PKCS\#1 v1.5 旧填充、
+签名时随机数复用或取自弱熵 &
+Ed25519 私钥 32 字节、签名 64 字节；ECDSA 签名约 70 字节（DER）；
+摘要从 SHA-256 起 \\
+TLS 内部使用（不要自造协议） & 平台 TLS 栈：OpenSSL 3.x、
+操作系统的网络框架、\CppJava{} 侧不自己实现握手 &
+跳过证书校验、固定旧版本、自签 CA 进生产、
+把 ``已协商成功'' 当 ``算法够用'' &
+版本 TLS 1.2 起步、优先 1.3；密钥交换 X25519 或 P-256；
+会话票据定期轮换 \\
+随机数与 nonce & 操作系统 CSPRNG：\Fn{RAND\_bytes}、
+\Fn{BCrypt\_\allowbreak Gen\_\allowbreak Random}、\Fn{getrandom} &
+\Fn{rand}、\Fn{random}、时间或进程号做种子、
+自己攒熵池 &
+密钥 32 字节；nonce 长度按算法规定；
+计数器模式的 GCM 要严格单一来源递增 \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+
+\section{\CppJava{} 侧密码学与数据库库一览}
+
+\textbf{形态}一栏区分 ``单头文件加实现文件''（header-only 或
+amalgamation，直接编进目标）与 ``链接库''（要处理动态或静态库、
+运行时 DLL 与 dylib 的部署）。\textbf{许可}只写主许可，
+带双许可或多许可的注明。
+
+\begin{scriptsize}
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}
+                  >{\raggedright\arraybackslash}p{0.11\textwidth}
+                  >{\raggedright\arraybackslash}p{0.13\textwidth}
+                  >{\raggedright\arraybackslash}p{0.08\textwidth}
+                  >{\raggedright\arraybackslash}p{0.10\textwidth}
+                  >{\raggedright\arraybackslash}p{0.24\textwidth}@{}}
+\caption{\CppJava{} 常用库的定位与许可}\\
+\toprule
+\textbf{名称} & \textbf{形态} & \textbf{许可} & \textbf{最低标准} &
+\textbf{平台} & \textbf{一句话定位} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{名称} & \textbf{形态} & \textbf{许可} & \textbf{最低标准} &
+\textbf{平台} & \textbf{一句话定位} \\
+\midrule
+\endhead
+OpenSSL 3.x & 链接库 & Apache-2.0（旧分支另有双许可） & C89 &
+全平台 & 覆盖面最广；\Tp{EVP} 与 provider 是唯一推荐入口（第 2 章） \\
+libsodium & 链接库（一个头文件） & ISC（BSD 同族） & C89 &
+全平台、可编 WASM & 高层默认值；用最少行数换最小可错面 \\
+Botan 3 & 链接库 & BSD-3 & \cpp{11} 起 & 全平台 &
+唯一 ``纯 C++ 风格'' 的密码库；异常报错、算法很全 \\
+mbedTLS 3 & 链接库（可裁剪） & Apache-2.0 与 GPL-2.0+ 双许可 & C99 &
+嵌入式、全平台 & PSA API 是亮点；无强制堆使用 \\
+Windows CNG & 系统 API（BCrypt 与 NCrypt） & 随操作系统 & C &
+Windows & 平台原生；密钥可进 DPAPI、TPM 与证书存储 \\
+Windows CryptoAPI & 系统 API（遗留） & 随操作系统 & C & Windows &
+只用于维护旧代码；新代码走 CNG \\
+Common\allowbreak Crypto & 系统头库 & Apple 双许可 & C & macOS 与 iOS &
+\Tp{CCCrypt} 一族；缓冲全部由调用方提供 \\
+Security\allowbreak .framework & 系统框架 & Apple 双许可 & C &
+macOS 与 iOS & 证书、密钥链与 Secure Enclave 的入口 \\
+SQLite & 单文件源码 & 公有领域 & C & 全平台 &
+嵌入式数据库；准备语句是状态机（第 8 章） \\
+libpq & 链接库 & PostgreSQL License（BSD 风格） & C & 全平台 &
+PG 官方客户端；全量结果对象加 \Tp{COPY} 通道 \\
+libpqxx & 链接库 & BSD-3 & \cpp{17} 起 & 全平台 &
+异常报错、\Tp{pqxx::work} 把事务挂 RAII \\
+soci & 链接库（多后端） & BSL-1.0 & \cpp{11} & 全平台 &
+\Fn{into} 与 \Fn{use} 绑定风格；后端覆盖最宽 \\
+nanodbc & 单头文件（需链接库） & MIT & \cpp{11} &
+全平台（依赖驱动） & ODBC 之上的薄 RAII；跨后端的唯一通用选择 \\
+sqlpp11 & header-only 模板 & 宽松（按仓库核对） & \cpp{14} 起 &
+全平台 & 编译期检查查询与映射；诊断可读性是代价 \\
+mongocxx & 链接库 & Apache-2.0 & \cpp{11} 起 & 全平台 &
+MongoDB 官方驱动；\Tp{bson\_cxx} 文档值对象 \\
+redis-plus-plus & 链接库 & MIT & \cpp{11} & 全平台 &
+hiredis 之上的 C++ 封装；带池、哨兵与集群 \\
+MySQL 与 MariaDB C API & 链接库 & GPL-2.0 加 FOSS 例外 & C &
+全平台 & 参数与结果列都要绑自建缓冲（第 8 章） \\
+unixODBC 或 iODBC & 链接库加 ini 配置 & LGPL-2.x & C &
+Linux 与 macOS & ODBC 驱动管理器；Windows 用系统自带管理器 \\
+\bottomrule
+\end{longtable}
+\setlength{\tabcolsep}{6pt}
+\end{scriptsize}
+
+\begin{guideline}[title=copyleft 什么时候真的影响发布]
+\begin{itemize}
+  \item \textbf{MIT、BSD-3、Apache-2.0、BSL-1.0、ISC、公有领域}：
+        随产品分发只需保留版权声明与许可文本；Apache-2.0 还带专利授权，
+        BSL-1.0 的 ``限制条件''（不许把库本身当产品出售）
+        对使用者几乎不触发。
+  \item \textbf{LGPL}（unixODBC 一类）：\emph{动态链接}使用通常没问题，
+        要允许用户替换该库；\textbf{静态链接}进可执行文件时就得提供
+        重链接手段（给目标文件或给源码）与许可文本，
+        这是发布形态而不是法律偏好。
+  \item \textbf{GPL 与 GPL 例外}（MySQL C API）：FOSS 例外列出的是
+        ``允许哪些许可证的组合''，不是 ``随便用''。要么按例外清单核对
+        自己项目的许可证，要么改走 ODBC、要么走服务端隔离。
+  \item \textbf{双许可}（mbedTLS 的 Apache-2.0 与 GPL-2.0+）：
+        选宽松那一路即可，选哪一路要写进构建说明，
+        别让下一个接手的人重新猜。
+\end{itemize}
+\end{guideline}
+
+\section{Java 与 \CSharp{} 对应物速查}
+
+\begin{scriptsize}
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}
+                  >{\raggedright\arraybackslash}p{0.27\textwidth}
+                  >{\raggedright\arraybackslash}p{0.30\textwidth}@{}}
+\caption{密码学概念的三生态对应}\\
+\toprule
+\textbf{JCA 与 JCE 术语} & \textbf{.NET 对应} &
+\textbf{\CppJava{} 对应} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{JCA 与 JCE 术语} & \textbf{.NET 对应} &
+\textbf{\CppJava{} 对应} \\
+\midrule
+\endhead
+\Tp{Provider}（可插拔实现目录、优先级） &
+无同名概念；靠类型选择实现（第三方库自己提供类型） &
+OpenSSL 3.x 的 provider 与 \Tp{EVP\_DEFAULT}；
+其余各家自带一套入口 \\
+\Tp{KeyStore}（密钥与证书仓库） & \Tp{X509Store}、
+\Tp{ProtectedData}（DPAPI）与云侧 KeyVault &
+NCrypt 密钥存储、CNG key 句柄、PKCS\#11、密钥链 \\
+\Tp{SecretKeyFactory}（口令到密钥） &
+\Tp{Rfc2898DeriveBytes}；Argon2 需第三方 &
+\Tp{EVP\_KDF}（HKDF、PBKDF2、Argon2）、
+libsodium \Fn{crypto\_pwhash} \\
+\Tp{Cipher}（变换名字符串决定模式与填充） &
+\Tp{AesGcm}、\Tp{AesCcm}、\Tp{Aes}（CBC 等） &
+\Tp{EVP\_CIPHER\_CTX} 加一族 \Fn{EVP\_CIPHER\_CTX\_ctrl} \\
+\Tp{KeyGenerator} 与 \Tp{KeyPairGenerator} & \Tp{Aes.Create()}、
+\Tp{ECDiffieHellman}、\Tp{RSA} 与 \Tp{ECDsa} 的 \Fn{Create} &
+\Fn{EVP\_PKEY\_CTX\_keygen}、\Fn{RAND\_bytes} 加自管类型 \\
+\Tp{MessageDigest} 与 \Tp{Mac}（增量计算） &
+\Tp{IncrementalHash}、\Tp{HMACSHA256} &
+\Fn{EVP\_DigestInit\_ex} 一族；HMAC 有一次式入口 \\
+\Tp{Signature}（签名与验签） & \Tp{ECDsa}、\Tp{RSA}（含 PSS） &
+\Fn{EVP\_DigestSign}、\Fn{EVP\_DigestVerify}；
+Ed25519 仅一次性入口 \\
+\Tp{SecureRandom} & \Tp{RandomNumberGenerator} &
+\Fn{RAND\_bytes}、\Fn{BCryptGenRandom}、\Fn{getrandom} \\
+\Tp{MessageDigest.isEqual}（定长比较） &
+\Tp{CryptographicOperations} 的 \Fn{FixedTimeEquals} &
+\Fn{CRYPTO\_memcmp}；其余库要自己写常量时间比较 \\
+密钥与口令的销毁语义（\Fn{destroy}、\Tp{char[]}） &
+\Tp{SecretKey} 加 \Fn{ZeroMemory}、\Tp{MemoryOwner} &
+\Tp{OPENSSL\_cleanse}、\Fn{sodium\_memzero}、锁定页与自清零分配器 \\
+\bottomrule
+\end{longtable}
+\end{scriptsize}
+
+\begin{scriptsize}
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}
+                  >{\raggedright\arraybackslash}p{0.27\textwidth}
+                  >{\raggedright\arraybackslash}p{0.30\textwidth}@{}}
+\caption{数据访问概念的三生态对应}\\
+\toprule
+\textbf{JDBC 概念} & \textbf{ADO.NET 概念} & \textbf{\CppJava{} 对应} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{JDBC 概念} & \textbf{ADO.NET 概念} & \textbf{\CppJava{} 对应} \\
+\midrule
+\endhead
+\Tp{DataSource} 加 \Tp{InitialContext}；池由 HikariCP 等第三方提供 &
+连接池\emph{内建}（连接串 \Tp{Pooling=true}、
+\Tp{Max Pool Size}）；\Fn{Dispose} 即归还 &
+没有通用连接类型，因此没有通用池：
+自己写 \Tp{pool\_} 加借出计数与复位检查（第 10 章） \\
+\Tp{DriverManager} 经 \Tp{ServiceLoader} 发现驱动 &
+\Tp{DbProviderFactory} 由代码显式选择工厂 &
+构建期静态或动态链接具体 C 库；ODBC 才有 ``换驱动'' \\
+\Tp{PreparedStatement} 与 \Tp{CallableStatement}（\texttt{?} 占位） &
+\Tp{SqlCommand}、\Tp{NpgsqlCommand} 加命名参数集合 &
+\Fn{sqlite3\_prepare\_v2}、\Fn{PQprepare} 加
+\Fn{PQexecPrepared}、\Fn{SQLBindParameter} \\
+\Tp{ResultSet} 游标加 \Fn{setFetchSize} &
+\Tp{DbDataReader} 向前流式加 \Fn{GetStream} &
+SQLite 的 \Fn{sqlite3\_step} 状态机；
+libpq 的整表客户端缓冲；ODBC 的 \Fn{SQLFetch} \\
+事务：\Fn{setAutoCommit} 加 \Fn{commit}；Spring 声明式代理 &
+\Tp{DbTransaction}；\Tp{TransactionScope}（跨库会提升） &
+手工 \Tp{BEGIN} 与 \Tp{COMMIT} 语句加自写 RAII 兜底 \\
+批量：\Fn{addBatch} 加 \Fn{executeBatch} &
+\Tp{SqlBulkCopy} 与数组参数（Npgsql） &
+多值参数化语句或 \Tp{COPY}；逐条执行只适合小批 \\
+错误：\Tp{SQLException} 带 SQLSTATE 与厂商码 &
+\Tp{DbException} 带 \Fn{Number}；供应商子类带 SQLSTATE &
+各家返回码加诊断对象（附录 B） \\
+ORM 与 schema 迁移（Hibernate、Flyway、Liquibase） &
+EF Core 与其迁移、FluentMigrator &
+无统一物：逐后端 SQL 脚本加第 12 章的 expand-contract 流程 \\
+\bottomrule
+\end{longtable}
+\end{scriptsize}
+
+\begin{note}[title=两张对照表的读法]
+``对应'' 不等于 ``等价''。左边两列的条目由语言或框架保证存在，
+\CppJava{} 列的条目则是\emph{你或者你的依赖}提供的东西：
+没有标准类型、没有统一错误模型、也没有横在驱动之上的中间件生态。
+判断一个 \CppJava{} 方案是否成熟，看它有没有把这四件事写进项目文档，
+而不是看它有没有 ``像 ORM''。
+\end{note}
+
+% ====================================================================
+
+\chapter{错误处理与诊断入口}
+
+\section{OpenSSL：错误队列是线程局部的}
+
+OpenSSL 不抛异常，用\emph{每线程}的 FIFO 队列记录 ``哪里出了事''。
+\Fn{ERR\_get\_error} 弹出一个打包了库、函数与原因的
+\Tp{unsigned long}；\Fn{ERR\_peek\_error\_line} 与
+\Fn{ERR\_peek\_error\_line\_data} 只看不弹，适合在保留原始码的前提下
+拿到源文件与行号。三个必须遵守的规矩：
+
+\begin{itemize}
+  \item 一次失败可能压入\textbf{多条}（下层的原因先压、上层再压），
+        只取第一条会丢掉真正的现场；
+  \item 队列\emph{会被后续调用污染}，所以要在失败的当场立刻取走；
+        \Fn{throw\_last\_ossl}（第 2 章）就是这一用途的封装。
+  \item 成功路径也可能留下旧值，进入调用前用 \Fn{ERR\_clear\_error}
+        清一次，判据才可信。
+\end{itemize}
+
+线程局部的后果是：工作线程里发生的错误，主线程读不到。
+把 OpenSSL 放在线程池里跑时，``取错误'' 必须发生在\emph{同一个线程}，
+要么立刻转成异常对象、要么塞进任务结果里带回。
+
+\begin{lstlisting}[caption={C/C++：把整条错误队列并成一条消息（弹出, 不泄漏）}]
+std::string ossl_drain(const char* what) {
+    std::string out = what;
+    unsigned long e;
+    int n = 0;
+    while ((e = ERR_get_error()) != 0 && n < 8) {
+        char line[256] = {0};
+        ERR_error_string_n(e, line, sizeof line);
+        out += "; ";  out += line;     // 顺序: 最上层在前
+        ++n;
+    }
+    ERR_clear_error();                 // 剩余脏值一次清掉
+    if (n == 0) { out += "; 队列为空（不是 OpenSSL 侧的失败）"; }
+    return out;
+}
+// 用法: 失败当场转异常, 别把队列留给下一次调用
+\end{lstlisting}
+
+\section{SQLite：主码、扩展码与日志回调}
+
+\Fn{sqlite3\_errmsg} 给人看，\Fn{sqlite3\_errcode} 给代码判断——
+它返回\textbf{主错误码}（\Tp{SQLITE\_BUSY} 是 5、\Tp{SQLITE\_LOCKED}
+是 6），而 \Fn{sqlite3\_extended\_result\_code} 返回带子类的扩展码，
+两者不可混用：重试逻辑只看主码，诊断日志要记扩展码。
+锁相关的家族值得单独记住：\Tp{SQLITE\_BUSY\_SNAPSHOT}
+（WAL 下事务快照过期，\emph{重试无用，必须回滚重来}）、
+\Tp{SQLITE\_BUSY\_RECOVERY}（正在等崩溃恢复）、
+\Tp{SQLITE\_LOCKED\_SHAREDCACHE}（共享缓存模式下的表级冲突）。
+从扩展码取主码的做法就是 \Tp{rc \& 0xff}，库里没有专门的反向转换函数；
+想一次关掉所有扩展码得靠 \Fn{sqlite3\_extended\_\allowbreak result\_\allowbreak codes}
+（连接级开关，别在错误处理里临时改它）。
+
+另一条通道是 \Fn{sqlite3\_log}：库内部的健康告警、编译期 pragmas
+被忽略、WAL 检查点失败等\emph{不会}反映到返回码上，
+只有注册了日志回调（\Tp{sqlite3\_config} 的
+\Tp{SQLITE\_CONFIG\_LOG}）才看得见。生产项目建议把它接到自己的日志器，
+否则 ``库为什么不开心'' 永远只能猜。
+
+\section{libpq：连接级错误与结果级错误不是一套}
+
+\textbf{连接级}：\Fn{PQconnectdb} 之后先看 \Fn{PQstatus}，
+文本来自 \Fn{PQerrorMessage}。这类错误没有 SQLSTATE（还没跟服务器说话），
+常见成因是主机不可达、认证失败、TLS 协商失败与超时。
+异步连接时同一句柄上的错误要用 \Fn{PQconsumeInput} 加 \Fn{PQisBusy}
+驱动出来，别指望一次调用就拿到结论。
+
+\textbf{结果级}：先看 \Fn{PQresultStatus}，再用
+\Fn{PQresultErrorField} 按字段取结构化信息：
+\Tp{PG\_DIAG\_SQLSTATE}（判断用）与 \Tp{PG\_DIAG\_MESSAGE}（给人看），
+另有 \Tp{PG\_DIAG\_MESSAGE\_HINT} 与 \Tp{PG\_DIAG\_DETAIL}，
+约束类失败还有 \Tp{PG\_DIAG\_CONSTRAINT\_NAME} 和
+\Tp{PG\_DIAG\_TABLE\_NAME}。SQLSTATE 是五级十六类字符，前两位就是分类：
+\Tp{08} 连接异常、\Tp{22} 数据异常（类型与转换）、\Tp{23} 约束违背、
+\Tp{25} 不正确的光标状态、\Tp{28} 无效授权、\Tp{40} 回滚（事务冲突）、
+\Tp{42} 语法与结构、\Tp{53} 资源不足、\Tp{55} 锁定可用、\Tp{57} 操作符中断。
+特别注意 \Tp{25P02}：事务里一条语句失败后服务器进入
+``当前事务已中止'' 状态，\textbf{只做 COMMIT 不做 ROLLBACK}
+的连接会把脏状态带回池里（第 10 章的复位检查）。
+
+\section{ODBC：诊断区是一个多条记录的结构}
+
+\Fn{SQLGetDiagRec} 要按\emph{句柄类型}（环境、连接、语句）分别询问，
+并从记录号 1 开始循环，直到返回 \Fn{SQL\_NO\_DATA}：
+
+\begin{lstlisting}[caption={C/C++：ODBC 诊断记录的多条循环取法}]
+void odbc_diag(SQLSMALLINT type, SQLHANDLE h, const char* what) {
+    SQLCHAR state[7], msg[SQL_MAX_MESSAGE_LENGTH];
+    SQLINTEGER native = 0, len = 0;
+    for (SQLUSMALLINT i = 1; ; ++i) {
+        SQLRETURN r = SQLGetDiagRec(type, h, i, state, &native,
+                                    msg, sizeof msg, &len);
+        if (r == SQL_NO_DATA) { break; }
+        if (r != SQL_SUCCESS
+                && r != SQL_SUCCESS_WITH_INFO) { break; }
+        log() << what << " diag[" << i << "] " << (char*)state
+              << " native=" << native << ": " << (char*)msg;
+        // 驱动可能只写满缓冲, len 是截断前的长度
+    }
+}
+\end{lstlisting}
+
+三个坑：一个动作可以产生\emph{多条}记录（第一条最要紧）；
+驱动对 \Tp{SQLSTATE} 的诚实度差别很大（不少只给 \Tp{HY000}）；
+宽字符编译时 \Fn{SQLGetDiagRecW} 的长度单位是\textbf{字符}而不是字节。
+
+\section{Java：三层信息要一起读}
+
+\Tp{SQLException} 给了三样东西：\Fn{getSQLState}（跨库分类，
+JDBC 4 要求驱动尽量填对）、\Fn{getErrorCode}（厂商自定义整数）、
+\Fn{getNextException}（批处理与 \Tp{SQLWarning} 链上的后续错误）。
+批处理失败时 \Tp{BatchUpdateException} 的 \Fn{getLargeUpdateCounts}
+才是 ``哪几条真的落库了'' 的依据。
+
+密码学侧的失败都在 \Tp{GeneralSecurityException} 家族里，常见的几类：
+\begin{itemize}
+  \item \Tp{NoSuchAlgorithmException} 与 \Tp{NoSuchProviderException}：
+        通常是 provider 顺序或 JCE 策略没有对上；
+  \item \Tp{InvalidKeyException} 与
+        \Tp{Invalid\allowbreak Algorithm\allowbreak Parameter\allowbreak Exception}：
+        多半是密钥长度或 nonce 长度不对；
+  \item \Tp{AEADBadTagException} 是唯一的 ``密文不可信'' 信号
+        （不要拿它区分 ``密钥错'' 与 ``数据被改''）；
+  \item \Tp{BadPaddingException} 在 CBC 时代含义模糊，如今看到它
+        就该怀疑格式约定（第 4 章的 padding oracle 讨论）。
+\end{itemize}
+另外还有两类兜不住的：\emph{不受检}的 \Tp{ProviderException}
+与弱 provider 抛出的 \Tp{ArrayIndexOutOfBounds}，
+这类只能靠测试与换 provider，不要指望异常语义。
+
+\section{\CSharp{}：异常类型分供应商，判据看码不看文本}
+
+\Tp{DbException} 提供 \Fn{Number}（供应商定义的整数）与
+\Fn{State}、\Fn{Class}（SqlServer 侧的严重级别）。SQL Server 走
+\Tp{SqlException}，其 \Fn{Number} 是服务器错误号，
+\Tp{Class} 在 11 到 16 之间通常还可救；较新的驱动提供
+\Tp{IsTransient} 直接告诉你 ``能不能重试''。
+Npgsql 走 \Tp{PostgresException.SqlState}，并且有
+\Tp{PostgresErrorCodes} 常量表——写重试判断时应使用常量而不是字符串。
+本地库侧 \Tp{SqliteException} 用 \Fn{SqliteErrorCode} 与
+\Fn{SqliteExtendedErrorCode}，与第 8 章讲的 SQLite 码族一致。
+
+加密侧统一是 \Tp{CryptographicException}：
+它的 \Fn{Message} 依赖区域设置，\textbf{判据用 HRESULT}
+（如 \Tp{NTE\_BAD\_KEY}、\Tp{NTE\_BAD\_MAGIC} 一类的 Windows 错误码）。
+\Tp{CryptographicException} 常常在 ``解密'' 而不是 ``配置错'' 时出现，
+所以先确认参数与格式版本，再怀疑密钥；
+标签校验失败在 \Tp{AesGcm} 上就是它，与 Java 的
+\Tp{AEADBadTagException} 同义。
+
+\section{症状到入口的最小决策表}
+
+\begin{scriptsize}
+\setlength{\tabcolsep}{3pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+                  >{\raggedright\arraybackslash}p{0.17\textwidth}
+                  >{\raggedright\arraybackslash}p{0.17\textwidth}
+                  >{\raggedright\arraybackslash}p{0.15\textwidth}
+                  >{\raggedright\arraybackslash}p{0.17\textwidth}@{}}
+\caption{症状、第一个该看的字段与三语言取法}\\
+\toprule
+\textbf{症状} & \textbf{第一个该看的字段} & \textbf{\CppJava{} 取法} &
+\textbf{Java} & \textbf{\CSharp{}} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{症状} & \textbf{第一个该看的字段} & \textbf{\CppJava{} 取法} &
+\textbf{Java} & \textbf{\CSharp{}} \\
+\midrule
+\endhead
+连不上、握手失败 & SQLSTATE 的 \Tp{08} 类；连接级文本 &
+\Fn{PQ\allowbreak errorMessage}（无 SQLSTATE） &
+\Fn{getSQLState} 以 08 开头 &
+\Tp{SqlException} 或 \Tp{Postgres\allowbreak Exception} 的码 \\
+偶发旧数据、事务串味 & 归还前是否复位会话（第 10 章） &
+池自带借出日志；\Tp{25P02} &
+\Fn{getSQLState} 为 25 类；池的泄漏阈值告警 &
+未 \Fn{Dispose} 的连接；\Tp{Transaction\allowbreak Scope} 逃逸 \\
+死锁、序列化冲突 & \Tp{40001}、\Tp{40P01} &
+\Fn{PQ\_\allowbreak result\_\allowbreak ErrorField} 加 SQLSTATE &
+\Fn{getSQLState} 40 类，整事务重放 &
+常量 \Tp{Serialization\allowbreak Failure}（前缀 40） \\
+主键或唯一约束违背 & \Tp{23505} 与约束名 &
+\Tp{PG\_DIAG\_\allowbreak CONSTRAINT\_\allowbreak NAME} &
+\Fn{getSQLState} 23 类加 \Fn{getMessage} &
+\Tp{SqlException.\allowbreak Number}（2627、2601） \\
+本地库被锁住 & 主码 5 或 6；扩展码看子类 &
+\Fn{sqlite3\_errcode} 加
+\Fn{sqlite3\_\allowbreak extended\_\allowbreak result\_\allowbreak code} &
+SQLite 驱动时 \Fn{getErrorCode} &
+\Fn{Sqlite\_\allowbreak ErrorCode} 与扩展码 \\
+解密直接失败 & 只有一个 ``标签不对'' 可用 &
+\Tp{EVP\_CIPHER\_CTRL} 返回值加错误队列 &
+\Tp{AEAD\allowbreak BadTag\allowbreak Exception} &
+\Tp{Cryptographic\allowbreak Exception}（判据用 HRESULT） \\
+库内部不开心但没报错 & 日志回调与检查点状态 &
+\Fn{sqlite3\_log} 回调 &
+\Fn{Driver\_\allowbreak Manager} 的 \Fn{set\_\allowbreak LogWriter} &
+\Tp{EventSource} 与诊断开关 \\
+\bottomrule
+\end{longtable}
+\end{scriptsize}
+
+\begin{lstlisting}[caption={C/C++：按 SQLSTATE 前缀决定是否重试（整事务为单位）}]
+enum class Retry { None, Backoff, ReplayTx, Abort };
+
+Retry decide(const std::string& sqlstate, int sqlite_primary) {
+    // 本地库锁: 主码为 5(BUSY) 或 6(LOCKED) 才退避
+    if (sqlite_primary == SQLITE_BUSY)   { return Retry::Backoff; }
+    if (sqlite_primary == SQLITE_LOCKED) { return Retry::Backoff; }
+    if (sqlite_primary)                  { return Retry::Abort; }
+    if (sqlstate.empty())                { return Retry::Abort; }
+    const std::string cls = sqlstate.substr(0, 2);
+    if (cls == "40") {                    // 事务冲突: 序列化与死锁
+        return Retry::ReplayTx;           // 整个事务重来, 不补发单条
+    }
+    if (cls == "08" || cls == "57") {     // 连接异常、操作符中断
+        return Retry::Backoff;            // 重连后再来, 需要幂等保证
+    }
+    if (cls == "53" || cls == "58") {     // 资源不足、系统级故障
+        return Retry::Backoff;            // 但要有次数上限
+    }
+    // 22 数据异常、23 约束、42 语法结构、28 授权: 重试无意义
+    return Retry::Abort;
+}
+\end{lstlisting}
+
+\begin{warning}[title=三个 ``取错地方'' 的典型误诊]
+\begin{itemize}
+  \item 用 \Fn{PQerrorMessage} 去解释\emph{结果级}失败：连接级文本可能
+        是上一次动作留下的，判断分支必须走 \Fn{PQresultErrorField}。
+  \item 在另一个线程读 OpenSSL 错误队列：队列线程局部，读到的是
+        ``空''，于是把一个真实失败查成了 ``没报错''。
+  \item 把 \Tp{SQLITE\_BUSY\_SNAPSHOT} 当普通 \Tp{SQLITE\_BUSY} 重试：
+        WAL 快照已过期，重试永远不会成功，必须回滚整个事务再重开。
+\end{itemize}
+\end{warning}
+
+\begin{bestpractice}[title=将诊断变成一行可贴进工单的东西]
+\begin{itemize}
+  \item 每种失败都留三样：分类码（SQLSTATE 或主错误码）、
+        人读的原文、发生位置（函数与行）；缺一项就别称 ``已记录''。
+  \item 重试决策写成一张纯函数表（上面的 \Tp{decide} 就是），
+        单元测试覆盖每条 SQLSTATE 前缀，而不是靠日志学经验。
+  \item 绝不把口令、密钥、连接串密码段进诊断文本；
+        三语言的驱动都可能把连接串写进异常消息，落日志前自己过一遍。
+\end{itemize}
+\end{bestpractice}
+
+% ====================================================================
+
+\chapter{术语表}
+
+\begin{footnotesize}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.21\textwidth}
+                  >{\raggedright\arraybackslash}p{0.60\textwidth}@{}}
+\caption{全书术语与一行释义}\\
+\toprule
+\textbf{术语} & \textbf{释义} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{术语} & \textbf{释义} \\
+\midrule
+\endhead
+AEAD & 带认证的加密：一次调用同时给出保密性与完整性，失败即整体不可信 \\
+nonce & 一次使用的编号：同一密钥下必须唯一，重复即灾难（GCM 尤其敏感） \\
+标签（tag） & AEAD 输出的认证标记，通常 16 字节；校验不过就得丢弃明文 \\
+GCM & 计数器加 CTR 式认证的 AEAD 构造；nonce 12 字节、标签 16 字节是默认 \\
+Poly1305 & 与 ChaCha20 配对的消息认证码；与 Salsa20 类流密码组成 AEAD \\
+CBC-HMAC 组合 & 先加密再算 MAC 的手工构造；顺序或比较写错就前功尽弃 \\
+KDF & 密钥派生函数：把口令或高熵材料摊成指定长度的密钥 \\
+HKDF & 用于高熵输入的两段式 KDF，靠 \Tp{info} 给不同用途分域 \\
+PBKDF2 & 迭代式口令 KDF；强度靠迭代次数，抗 GPU 能力弱于内存硬函数 \\
+scrypt & 内存硬口令 KDF，参数是内存、迭代与并行三重 \\
+Argon2id & 现行推荐的口令哈希，混用数据相关与数据无关访问 \\
+salt 与 pepper & salt 每份唯一且公开存储；pepper 全局保密、不随数据存 \\
+IV & 初始向量：随机化同一密钥下的输出；CBC 需要不可预测、GCM 只需唯一 \\
+padding oracle & 攻击者靠 ``填充对不对'' 的反馈逐字节解密的侧信道 \\
+HMAC & 以密钥为输入的摘要构造，用于仅需要完整性的场合 \\
+数字签名 & 私钥签名、公钥验签，提供来源与不可否认性 \\
+X.509 & 证书格式标准：主体、公钥、有效期、签发者与用途约束 \\
+PEM 与 DER & PEM 是带边界行的 Base64 文本，DER 是二进制编码本体 \\
+PKCS\#8 & 私钥封装语法（可加口令加密），决定不同工具能否读取 \\
+JWK、JWE 与 JWS & 密钥的 JSON 表达、JSON 载荷加密与签名三种 JOSE 规范 \\
+SPI & 服务提供者接口：语言侧只依赖接口、实现在运行时被装载的缝 \\
+Provider & 可插拔的密码实现目录（JCA）；OpenSSL 3.x 用同名机制 \\
+EVP & OpenSSL 的高层信封接口：一次覆盖密码、摘要与密钥协商 \\
+key material & 密钥字节本体；区别于表示它的句柄、编码或封装块 \\
+密钥句柄 & 由平台保管的密钥引用（CNG、PKCS\#11、PSA、TPM），字节不外露 \\
+secure memory 与 zeroize & 用清零与锁定页等手段缩短密钥在内存的暴露时间 \\
+constant-time & 执行时间与秘密无关的比较与运算，避免时序侧信道 \\
+DSN 与连接串 & 定位数据源的一组键值；含凭据时属于敏感数据 \\
+pooling & 连接复用：省握手与认证成本，代价是必须处理会话复位 \\
+会话状态复位 & 连接归还前清掉事务、临时表、会话变量与字符集设置 \\
+prepared statement & 参数化语句：既防注入又省解析（第 11 章） \\
+server-side cursor & 服务器侧游标：分批取回大结果，避免全量客户端缓冲 \\
+upsert & 有则更新、无则插入；PostgreSQL 与 SQLite 用 \Tp{ON CONFLICT} \\
+MERGE & SQL 标准的匹配写入语句，SQL Server 侧承担 upsert 角色 \\
+outbox 模式 & 业务写入与 ``要发的消息'' 同事务落库，靠幂等重放保投递 \\
+expand-contract & 先加后收的 schema 迁移节奏，让新旧代码可同时运行 \\
+schema 迁移 & 版本化、可重放的表结构变更（第 12 章） \\
+SQLSTATE & 五级字符的错误分类码，跨数据库可比较（附录 B） \\
+事务隔离级别 & 读已提交、可重复读、串行化等；默认值三库不一致 \\
+MVCC & 多版本并发控制：读旧快照、写新版本，读写基本不互斥 \\
+WAL & 预写日志：先写日志再改数据页，决定崩溃恢复与并发形态 \\
+fsync & 把操作系统页缓存刷到设备；\Tp{synchronous} 就是在选它何时发生 \\
+最小权限角色 & 按用途拆数据库账号：迁移、应用、只读、备份各一份 \\
+可信边界 & 数据可以被解密的物理与逻辑范围；决定密钥该放在哪里 \\
+\bottomrule
+\end{longtable}
+\end{footnotesize}
+% ====================================================================
+
+\end{document}

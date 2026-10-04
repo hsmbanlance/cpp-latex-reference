@@ -1,6 +1,6 @@
 # C/C++ LaTeX 参考手册合集
 
-本仓库包含 **25 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
+本仓库包含 **31 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
 
 ## 目录结构
 
@@ -38,7 +38,7 @@ C、C++/
 ├── memory leak/                  # C/C++ 内存泄漏：检测与防御
 │   ├── memory_leak.tex
 │   └── build.ps1
-├── NewDelete/                    # C++ new/delete 运算符重载
+├── NewDelete/                    # new/delete 重载与分配器 + 生命周期与指针所有权
 │   ├── new_delete.tex
 │   └── build.ps1
 ├── Operator Overloading/         # C++ 运算符重载：原理、实践与跨语言对比
@@ -83,8 +83,26 @@ C、C++/
 ├── Asm Embedding/                # 汇编嵌入与 volatile 的真实用途：asm volatile / MSVC intrinsics / 跨语言对比
 │   ├── asm_embedding.tex
 │   └── build.ps1
-└── HW Access and Kernels/        # 硬件访问与 GPU/NPU 核函数：MMIO/PCIe/DMA/中断、I2C·SPI·UART、CUDA/SYCL/NPU
-    ├── hw_kernels.tex
+├── HW Access and Kernels/        # 硬件访问与 GPU/NPU 核函数：MMIO/PCIe/DMA/中断、I2C·SPI·UART、CUDA/SYCL/NPU
+│   ├── hw_kernels.tex
+│   └── build.ps1
+├── Lang Levels/                  # 抽象层级之争：C/C++ vs Java/C#，机器模型归属、中级语言辨析与选型
+│   ├── lang_levels.tex
+│   └── build.ps1
+├── Cli App/                      # C/C++ 命令行应用：终端模型/参数解析/彩色与 TUI/进程与路径编码/构建分发与测试
+│   ├── cli_app.tex
+│   └── build.ps1
+├── Crypto Database/              # C/C++ 加解密与数据库：与 Java(JCA/JDBC)、C#(Cryptography/ADO.NET) 的抽象差异
+│   ├── crypto_database.tex
+│   └── build.ps1
+├── Parallel Algorithms/          # C/C++ 并行算法：CPU 并行、GPU/NPU 算子、执行域选型与 pybind11 导出
+│   ├── parallel_algorithms.tex
+│   └── build.ps1
+├── Math Geo DSP/                 # 数学·几何·信号处理库：BLAS/Eigen/FFTW/CGAL/GNU Radio/Meep 与 C/C++ 底层成因
+│   ├── math_geo_dsp.tex
+│   └── build.ps1
+└── LSP and Clang Tools/          # 语言服务器与代码质量工具：LSP/clangd/clang-format/clang-tidy/编译数据库与 CI 质量门
+    ├── lsp_clang_tools.tex
     └── build.ps1
 ```
 
@@ -107,7 +125,7 @@ C、C++/
 ### 编译
 
 ```powershell
-# 编译全部 25 个项目（每个 2 pass + TOC 修复）
+# 编译全部 31 个项目（每个 2 pass + TOC 修复）
 .\workflow.ps1 build-all
 
 # 编译单个项目
@@ -144,7 +162,7 @@ C、C++/
 .\workflow.ps1 list
 ```
 
-显示全部 25 个项目名及其对应的文件夹路径。
+显示全部 31 个项目名及其对应的文件夹路径。
 
 ### 打开 PDF
 
@@ -174,7 +192,7 @@ C、C++/
 | IO | IO | 文件/网络/进程间 I/O |
 | ExternC | extern C use in other language | extern C 跨语言集成 |
 | OpOverload | Operator Overloading | 运算符重载：原理、实践与跨语言对比 |
-| NewDelete | NewDelete | new/delete 运算符重载：内存调试、裸机、外设与分配器 |
+| NewDelete | NewDelete | new/delete 运算符重载：内存调试、裸机、外设与分配器；生命周期与指针所有权（四种存储期限、分配位置不规定、C# struct/class 堆栈对照、auto_ptr 废弃始末、Qt/UE/Android 指针方言、Rust 借用检查对照） |
 | UnitTest | Unit Testing | 单元测试：框架对比、Android/iOS、UE/U++、测试边界、依赖注入、Mock 与覆盖率 |
 | UIFwk | UI Framework | GUI 框架：MFC / WinUI 3 (C++/WinRT) / wxWidgets / Qt / UE 对比与迁移 |
 | ModularBuild | ModularBuild | 模块化构建：Modules vs Headers / BMI / Clang·LSP·三方库困局 / CMake 实战与渐进迁移 |
@@ -183,6 +201,12 @@ C、C++/
 | History | Lang History | C/C++ 历史与 ISO/IEC 治理：从 Multics 到 C++26 时间线 / WG14·WG21 提案投票流程 / 去中心化 vs 中心化 vs 准中心化客观对比 |
 | AsmEmbed | Asm Embedding | 汇编嵌入与 volatile 真实用途：asm volatile / MSVC intrinsics / MMIO·信号·setjmp / FFI 边界 / 四语言 volatile 对比 |
 | HWKernels | HW Access and Kernels | 硬件访问与 GPU/NPU 核函数：MMIO/PCIe BAR/DMA 一致性/中断与 MSI-X、I2C·SPI·UART·GPIO、CUDA SIMT·内存层级·流、SYCL oneAPI queue/nd_range/USM、NPU MAC 阵列与 tile；除核函数外区分 Unix/Windows API（含三平台物理地址对比与 libserialport 示例），附录含传感器驱动-HAL-应用全链与 CUDA 算子-PyTorch 绑定 |
+| LangLevels | Lang Levels | 抽象层级之争：四层参照模型（机器码/汇编/中级/托管）/ 九维判据逐条核对 / ``C 是中级语言''称呼的来历、构成与三大误读 / 零成本抽象 vs 泛型三路线·RAII vs using·元编程 / L3 向下五级逃生舱与 L2 向上高层设施 / GC·元数据·绑定时机等运行时对照 / 选型决策树与五张场景卡 |
+| CliApp | Cli App | C/C++ 命令行应用：TTY/PTY 与 termios vs Windows 控制台/ConPTY / ANSI 与能力探测降级 / getopt·CLI11·cxxopts·argparse 对照与 CLI 设计规范 / 彩色·进度·REPL·ncurses·FTXUI / 子进程管道与信号转发 / 三平台路径·编码与换行 / 配置日志与结构化输出 / 构建静态链接与分发 / CLI 测试与 golden 文件 |
+| CryptoDb | Crypto Database | 加解密与数据库：OpenSSL 3.x EVP·libsodium·Botan·CNG 与 JCA/C# Cryptography 抽象层级差 / 算法选型与密钥内存清零 / SQLite·libpq·libpqxx·ODBC·mongocxx 与 JDBC/ADO.NET 对照 / 类型映射·事务并发·SQL 注入·迁移与凭据管理 |
+| ParAlgo | Parallel Algorithms | 并行算法：ILP/SIMD/TLP 三种刻度与 roofline / CPU·GPU·NPU 硬件画像 / 执行域选型决策树（MLA·GEMM·attention 类算子上卡，分支密集·指针追逐·复杂控制流留 CPU）/ 线程池·TBB·OpenMP·std::execution·无锁与内存序 / CUDA 归约·scan·tiling·MLA 融合算子与 Ascend C·CANN / 显存搬运与 DLPack / pybind11 导出：GIL 规则·numpy 零拷贝·stub·scikit-build-core·cibuildwheel / 混合执行实战库与对拍基准 |
+| MathGDS | Math Geo DSP | 数学·几何·信号处理库：热路径经济学（SIMD·FMA·对齐·无 GC·确定性分配）与 ABI/FFI 四种绑定 / BLAS·LAPACK·Eigen·GSL·Boost.Math·Sundials·Ceres / 几何谓词与鲁棒计算（CGAL·GEOS·PROJ）、网格点云与光线（libigl·Open3D·Embree）、碰撞与刚体 / 声音侧 libsndfile·PortAudio·miniaudio·FFTW·CMSIS-DSP·iir1 / 电磁波侧 FDTD·Meep·openEMS·GNU Radio·SoapySDR·scikit-rf / Python 科学栈的 C/C++ 底层与一条采集-频谱-导出实战链 |
+| LSPTools | LSP and Clang Tools | 语言服务器与代码质量工具：clangd·libclang·LSP 三层解剖 / compile_commands.json 的生成与排错（CMake·compiledb·Bear）/ LSP 生命周期与请求-通知模型 / clangd 架构与 .clangd 配置、索引代价 / ccls·cpptools·CDT·Eclipse JDT 对比 / DAP 调试与 CMake Tools 闭环 / clang-format 机制与 .clang-format 逐字段、CI 门禁与增量格式化 / uncrustify·astyle 与"为什么 C/C++ 没有 go fmt" / clang-tidy 架构、checks 族与 .clang-tidy、apply-fixes 与 clang-rename·clang-move / cppcheck·IWYU·Coverity·CodeQL 与 sanitizer 的分界 / CMakePresets+CI 一键质量门与选型排障手册 |
 
 ## 统一格式规范
 

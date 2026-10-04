@@ -3,7 +3,7 @@
 .SYNOPSIS
     C/C++ LaTeX 参考手册 — 项目工作流
 .DESCRIPTION
-    统一管理 25 个子项目的编译、清理、状态检查。
+    统一管理 31 个子项目的编译、清理、状态检查。
 .PARAMETER Action
     操作类型: build-all, build, clean-all, clean, status, list, open
 .PARAMETER Project
@@ -59,6 +59,12 @@ $projects = [ordered]@{
     'History'       = @{ dir = 'Lang History';                    tex = 'c_cpp_history.tex';                    job = 'c_cpp_history' }
     'AsmEmbed'      = @{ dir = 'Asm Embedding';                   tex = 'asm_embedding.tex';                    job = 'asm_embedding' }
     'HWKernels'     = @{ dir = 'HW Access and Kernels';           tex = 'hw_kernels.tex';                       job = 'hw_kernels' }
+    'LangLevels'    = @{ dir = 'Lang Levels';                     tex = 'lang_levels.tex';                      job = 'lang_levels' }
+    'CliApp'        = @{ dir = 'Cli App';                         tex = 'cli_app.tex';                          job = 'cli_app' }
+    'CryptoDb'      = @{ dir = 'Crypto Database';                 tex = 'crypto_database.tex';                  job = 'crypto_database' }
+    'ParAlgo'       = @{ dir = 'Parallel Algorithms';             tex = 'parallel_algorithms.tex';              job = 'parallel_algorithms' }
+    'MathGDS'       = @{ dir = 'Math Geo DSP';                    tex = 'math_geo_dsp.tex';                     job = 'math_geo_dsp' }
+    'LSPTools'      = @{ dir = 'LSP and Clang Tools';             tex = 'lsp_clang_tools.tex';                  job = 'lsp_clang_tools' }
 }
 
 # ─── 辅助函数 ───
@@ -101,20 +107,32 @@ function Invoke-Build {
     if ($lastText -match 'Overfull: (\d+)')     { $overfull = [int]$Matches[1] }
     if ($lastText -match '\u5927\u5c0f: ([\d.]+) KB') { $sizeKB = $Matches[1] }
 
+    # A dangling \ref/\cite only raises "LaTeX Warning: Reference `x' ... undefined",
+    # which neither Err nor Ov counts. Scan the log of the LAST pass only: earlier
+    # passes legitimately report every cross-reference before the .aux exists.
+    $dangling = 0
+    $logPath = Join-Path $projDir ($Info.job + '.log')
+    if (Test-Path -LiteralPath $logPath) {
+        $raw = Get-Content -LiteralPath $logPath -Raw -Encoding UTF8
+        $lastRun = (@($raw -split 'This is XeTeX') | Select-Object -Last 1)
+        $dangling = ([regex]::Matches($lastRun, '(?:Reference|Citation)[\s\S]{0,40}?undefined')).Count
+    }
+
     $failed = $lastText -match '\u7f16\u8bd1\u5931\u8d25'
     $status = if ($failed -or $errors -gt 0) { 'FAIL' }
               elseif ($overfull -gt 0)       { 'OVERFULL' }
+              elseif ($dangling -gt 0)       { 'BADREF' }
               elseif ($errors -eq 0)         { 'OK' }
               else                           { 'UNKNOWN' }
 
-    $color = switch ($status) { 'OK'{'Green'} 'OVERFULL'{'DarkYellow'} 'FAIL'{'Red'} default{'Gray'} }
-    Write-Host "  [$status] Err=$errors Ov=$overfull ${sizeKB}KB ${elapsed}s" -ForegroundColor $color
+    $color = switch ($status) { 'OK'{'Green'} 'OVERFULL'{'DarkYellow'} 'BADREF'{'DarkYellow'} 'FAIL'{'Red'} default{'Gray'} }
+    Write-Host "  [$status] Err=$errors Ov=$overfull Ref=$dangling ${sizeKB}KB ${elapsed}s" -ForegroundColor $color
 
     if ($status -eq 'FAIL') {
         $output | Select-Object -Last 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkRed }
     }
 
-    return [PSCustomObject]@{ Name=$Name; Status=$status; Errors=$errors; Overfull=$overfull; SizeKB=$sizeKB }
+    return [PSCustomObject]@{ Name=$Name; Status=$status; Errors=$errors; Overfull=$overfull; Refs=$dangling; SizeKB=$sizeKB }
 }
 
 function Invoke-Clean {
@@ -201,16 +219,16 @@ switch ($Action) {
         Write-Host "$sep" -ForegroundColor Cyan
 
         $ok   = @($results | Where-Object { $_.Status -eq 'OK' }).Count
-        $warn = @($results | Where-Object { $_.Status -eq 'OVERFULL' }).Count
+        $warn = @($results | Where-Object { $_.Status -in 'OVERFULL','BADREF' }).Count
         $fail = @($results | Where-Object { $_.Status -eq 'FAIL' }).Count
         $miss = @($results | Where-Object { $_.Status -eq 'MISSING' }).Count
 
         $sc = if ($fail -gt 0 -or $miss -gt 0) {'Red'} elseif ($warn -gt 0) {'DarkYellow'} else {'Green'}
-        Write-Host "  OK: $ok | Overfull: $warn | FAIL: $fail | Missing: $miss" -ForegroundColor $sc
+        Write-Host "  OK: $ok | Warning: $warn | FAIL: $fail | Missing: $miss" -ForegroundColor $sc
 
         foreach ($r in $results) {
-            $c = switch ($r.Status) { 'OK'{'Green'} 'OVERFULL'{'DarkYellow'} 'FAIL'{'Red'} default{'Gray'} }
-            Write-Host ('  {0,-16} {1,-10} Err={2} Ov={3} {4}KB' -f $r.Name,$r.Status,$r.Errors,$r.Overfull,$r.SizeKB) -ForegroundColor $c
+            $c = switch ($r.Status) { 'OK'{'Green'} 'OVERFULL'{'DarkYellow'} 'BADREF'{'DarkYellow'} 'FAIL'{'Red'} default{'Gray'} }
+            Write-Host ('  {0,-16} {1,-10} Err={2} Ov={3} Ref={4} {5}KB' -f $r.Name,$r.Status,$r.Errors,$r.Overfull,$r.Refs,$r.SizeKB) -ForegroundColor $c
         }
 
         $tt = '{0:F1}' -f $totalSw.Elapsed.TotalSeconds

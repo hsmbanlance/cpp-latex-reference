@@ -1,0 +1,1714 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\setmonofont{Consolas}
+
+% ==================== 颜色 ====================
+\usepackage{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharptype}{HTML}{006400}
+\definecolor{javakeyword}{HTML}{B8860B}
+\definecolor{javatype}{HTML}{006400}
+\definecolor{levellow}{HTML}{8C3A00}
+\definecolor{levelhigh}{HTML}{005A8C}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof,if,consteval,constexpr},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,uintptr_t,intptr_t},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+
+\lstdefinelanguage{CLevel}{
+  language=C,
+  morekeywords={alignas,alignof,align_union,atomic_bool,atomic_int,
+    _Atomic,bool,char16_t,char32_t,thread_local,static_assert,
+    _Complex,Restrict,restrict},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint8_t,uintptr_t,intptr_t},
+  emphstyle=\color{teal!80!black},
+}
+\lstdefinestyle{cstyle}{language=CLevel,}
+
+\lstdefinelanguage{Java}{
+  morekeywords={
+    abstract,assert,boolean,break,byte,case,catch,char,class,const,
+    continue,default,do,double,else,enum,extends,final,finally,float,
+    for,goto,if,implements,import,instanceof,int,interface,long,native,
+    new,package,private,protected,public,return,short,static,strictfp,
+    super,switch,synchronized,this,throw,throws,transient,try,void,
+    volatile,while,var,yield,record,sealed,permits,non-sealed,
+    int,volatile,synchronized
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+}
+\lstdefinestyle{javastyle}{
+  language=Java,
+  keywordstyle=\color{javakeyword}\bfseries,
+  emph={String,Integer,List,Map,Set,Optional,Stream,Thread,Runnable,
+    ByteBuffer,int,Object,double,float,long,byte,char,boolean,
+    AutoCloseable,Closeable,VarHandle,MethodHandle,MemorySegment},
+  emphstyle=\color{javatype}\bfseries,
+}
+
+\lstdefinelanguage{CSharpLevel}{
+  morekeywords={
+    abstract,as,base,bool,break,byte,case,catch,char,checked,class,
+    const,continue,decimal,default,delegate,do,double,else,enum,
+    event,explicit,extern,false,finally,fixed,float,for,foreach,
+    goto,if,implicit,in,int,interface,internal,is,lock,long,
+    namespace,new,null,object,operator,out,override,params,
+    partial,private,protected,public,readonly,ref,return,sbyte,
+    sealed,short,sizeof,stackalloc,static,string,struct,switch,
+    this,throw,true,try,typeof,uint,ulong,unchecked,unsafe,
+    ushort,using,virtual,void,volatile,while,
+    var,async,await,yield,dynamic,where,select,from,
+    get,set,init,value,record,with,required,file,global,
+    nint,nuint,notnull,unmanaged,record struct
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]@",
+}
+\lstdefinestyle{csharpstyle}{
+  language=CSharpLevel,
+  keywordstyle=\color{csharpkeyword}\bfseries,
+  emph={int,string,bool,double,float,void,long,byte,char,object,
+    decimal,var,Task,List,Dictionary,Action,Func,IEnumerable,
+    IDisposable,IComparable,EventArgs,Span,Memory,Nullable,
+    ReadOnlySpan,StructLayout,MarshalAs},
+  emphstyle=\color{csharptype}\bfseries,
+}
+\lstset{style=cppstyle}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{levelspectrum}[1][]{
+  enhanced,breakable,
+  colback=gray!4!white,colframe=algheadbg,
+  fonttitle=\bfseries,title=层级标尺,#1,
+  boxed title style={colback=algheadbg},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{float}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+\setlength{\headheight}{14.5pt}
+\emergencystretch=3em
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={C/C++ Reference Library},
+  pdftitle={抽象层级之争: C/C++ 与 Java/C\# 的层级定位},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+\newcommand{\Cv}{C/\Cplus{}}
+\newcommand{\Cplus}[1]{C++\,#1}
+\newcommand{\Java}{Java}
+\newcommand{\CSharp}{C\#}
+\newcommand{\MC}{\textsuperscript{\textregistered}}
+
+% ====================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{3.5cm}
+{\Huge\bfseries 抽象层级之争\par}
+\vspace{0.8cm}
+{\LARGE C/C++ 与 Java/C\# 的层级定位全景对比\par}
+\vspace{0.5cm}
+{\large ---从机器码到托管运行时，为什么 C 被称为``中级语言''---\par}
+\vfill
+{\normalsize 四语言 · 十一维度 · 零成本抽象辨析 · 选型决策树\par}
+\vspace{0.5cm}
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+% ====================================================================
+\part{层级概念与参照系}
+% ====================================================================
+
+\chapter{``低级/中级/高级''：一条光谱的来历}
+
+\section{光谱是如何被定义的}
+
+把编程语言排在一条``离机器远近''的光谱上，是 1960--1980 年代教材与论文留下的习惯。
+这条光谱隐含了三个判据，三者通常同向，但并不必然绑定：
+
+\begin{enumerate}
+  \item \textbf{语义保真度}：语言构造与机器构造（寄存器、内存字、指令）的对应关系
+        由\emph{程序员}掌握，还是由\emph{实现}接管。
+  \item \textbf{可移植性来源}：源码级可移植（换编译器即可），还是二进制级固定
+        （绑定某一种 ISA）。
+  \item \textbf{自动化的负担分配}：内存回收、边界检查、类型验证、调度这些工作，
+        是写在代码里、编译进代码里，还是推迟到运行时由系统代管。
+\end{enumerate}
+
+\begin{note}[title=``级别''不是单值标量]
+一个语言在这三个判据上可以各占一个位置。C 在判据 1 上极低（贴近机器），
+在判据 2 上却极高（史上最成功的源码可移植语言之一）。
+这正是``中级语言''这个称呼既形象又别扭的原因：它试图用一维的词，
+描述一个多维的事实。后续各章将把``级别''拆成可核对的维度逐一比较。
+\end{note}
+
+\section{最低层：机器语言，以及``为什么正常没人直接写''}
+
+机器语言是某个 ISA（指令集架构）的二进制编码。CPU 只``认识''这一层。
+正常不直接编写它，不是因为写不出，而是因为\emph{性价比}在几十年前就已崩盘：
+
+\begin{itemize}
+  \item \textbf{没有任何抽象留存}：循环要手写成``计算地址 + 条件跳转''，
+        函数调用要手工保存/恢复寄存器与栈帧，结构体字段偏移要在脑子里维护一张
+        ``手写布局表''。改一个字段，所有偏移量手工重算。
+  \item \textbf{完全绑定 ISA 与操作系统惯例}：同一段指令换一颗 CPU（x86 到 ARM）
+        或换一套调用约定，全部作废。
+  \item \textbf{现代编译器在此层已系统性胜过人手}：指令调度、寄存器分配、
+        流水线与乱序执行的适配、自动向量化，这些工作以千行为单位的代码空间展开，
+        人工拼装极易出错且难以维护。
+\end{itemize}
+
+机器码今天仍然真实存在，只是``入口''上移了：链接器输出的
+ELF/PE/Mach-O 二进制、固件镜像、CPU 内部微码（microcode，比 ISA 更低的实现层）、
+以及 GPU/NPU 的 ISA（SASS、着色器微指令）。程序员日常通过编译产物、
+反汇编器和 \Tp{objdump}/\Tp{IDA} 与它间接打交道。
+
+\section{低级语言：汇编的真实定位}
+
+汇编（assembly）是 ISA 的``助记符投影''：一条指令大致对应一个机器指令，
+符号标签、伪指令和宏提供了极薄的一层抽象。它被归为``低级''，
+是因为\emph{程序的状态模型就是机器的状态模型}：寄存器、标志位、内存字都是显式的。
+
+汇编并未消亡，而是被收缩到四个``必须或直接收益''的场景：
+
+\begin{enumerate}[label=\textbf{\arabic*.}]
+  \item \textbf{boot 与上下文切换的最初/最后一公里}：启动时缓存与 MMU 尚未建立，
+        只有 PC 与少量通用寄存器可用，任何高级语言运行时都还不存在
+        （Linux \Tp{head.S}、各 MCU 启动文件、\Tp{setjmp} 的底层实现）。
+  \item \textbf{ISA 特殊指令的显式控制}：\texttt{cpuid}、\texttt{syscall}、
+        带类型的\ Tp{movntdq}、缓存操作指令，编译器没有对应的语言表达。
+  \item \textbf{手写内核与向量子程序}：密码学、大数、编解码中确实存在
+        编译器长期打不过的手工内核（本章及《Asm Embedding》分册有完整讨论）。
+  \item \textbf{阅读能力而非写作能力}：现代工程实践中，``看得懂反汇编''
+        比``写得出汇编''重要得多：性能问题、ABI 问题、UB 现场都要靠它定位。
+\end{enumerate}
+
+\begin{compare}[title=``低级语言''与``底层''是两个不同的词]
+中文里``底层''常指\emph{靠近硬件的领域}（驱动、固件、操作系统内核），
+``低级''在教科书语境里指\emph{抽象度低的表示形式}（机器码、汇编）。
+一个用领域驱动设计写得很好的 C++ 服务，``高级''在抽象上、``底层''在部署位置上。
+本书后续统一用：\textbf{抽象层级}（光谱远近）与\textbf{部署领域}（靠近硬件与否）分开表述。
+\end{compare}
+
+\section{``中级语言''：一个称呼的来历与构成}
+
+把 C 称为 ``middle-level / mid-level language''（中级语言）的说法，
+来自 1970--1980 年代系统编程文献的沉淀，其逻辑构成大致如下：
+
+\begin{itemize}
+  \item \textbf{历史坐标}：BCPL 在其文献中就被描述为介于汇编与 ALGOL 之间的
+        ``middle-level'' 语言；C 的谱系（BCPL $\to$ B $\to$ C）继承了这一自我定位。
+        Unix 前四版时代的口号 ``system programming language'' 也暗含此意：
+        它要同时干汇编的活（驱动、内核）和高级语言的活（shell、工具、应用）。
+  \item \textbf{K\&R 的表述}：《The C Programming Language》对 C 的经典描述是
+        ``同时具有低级语言和高级语言的能力''（aspects of a higher level language
+        with the efficiency of assembly）。中文教材把它转述成``中级语言''并广为流传。
+  \item \textbf{双性格的具体内容}：
+\end{itemize}
+
+\begin{longtable}{@{}p{0.30\textwidth}p{0.31\textwidth}p{0.31\textwidth}@{}}
+\toprule
+\textbf{像高级语言的一面} & \textbf{像低级语言的一面} & \textbf{中介机制} \\
+\midrule
+\texttt{while}/\texttt{for}/\texttt{if} 控制流，表达式即语义 &
+每条控制流最终展开为条件跳转与标志位 &
+编译器透明展开，程序员可预测展开结果 \\
+\addlinespace
+类型系统：\texttt{struct}、函数原型 &
+\texttt{struct} 就是内存布局，指针就是地址 &
+类型不隐藏表示，只辅助检查 \\
+\addlinespace
+源码跨 ISA 可移植 &
+\texttt{sizeof}/\texttt{alignof} 仍是机器的量 &
+``可移植的是源码，不是布局假设'' \\
+\addlinespace
+\texttt{int i; a[i]} 可读性好 &
+数组下标就是基址 + 步长 $\times$ 索引 &
+指针算术是语言的一等公民 \\
+\bottomrule
+\end{longtable}
+
+C++ 继承了这一称呼的 C 侧底座，再叠加一套``高级语法 + 低级代价模型''的机制
+（模板、RAII、运算符重载、\texttt{constexpr}），Bjarne Stroustrup 对它的经典
+描述是：``在您希望控制硬件时提供对机器的访问；在您希望抽象时提供抽象机制''。
+``中级语言''用在 C++ 上，指的是这套\emph{两层同时在线}的设计。
+
+\begin{warning}[title=引用规范提醒]
+``C 是中级语言''不是 ISO C 标准、也不是 C++ 标准的规范语句，而是教材与社区
+流传的\emph{描述性标签}。写作与答辩中应把它当观点引用（注明 K\&R 式表述、
+教材说法），而不是当标准定义引用。本书采用同样的谨慎立场：
+第 3 章给出可核对的维度表来支撑这个标签，而不是复述它。
+\end{warning}
+
+\section{最高层：托管语言的位置}
+
+Java（1995）与 C\#（2000）在设计目标上就明确站到了光谱的另一端，
+其共同特征是\textbf{在语言与真实机器之间插入一个规范化的运行时}：
+
+\begin{itemize}
+  \item JVM/CLR 规定的是\emph{虚拟 ISA}（字节码/IL）与\emph{托管执行语义}
+        （类型安全证明、GC、异常、安全边界），而不是物理内存模型。
+  \item 语言规范不再对程序员承诺：对象头大小、字段顺序、对齐、栈帧形状、
+        整数溢出行为的表现形式。这些全部移交实现。
+  \item 程序正确性的一部分（越界、非法向下转型、数据竞争的部分形态）
+        由运行时\emph{在线验证}，代价是每次操作多一段检查代码。
+\end{itemize}
+
+因此更准确的说法不是``Java/C\# 比 C 高级''，而是：
+\textbf{C/C++ 把机器模型暴露给程序员，Java/C\# 把机器模型隐藏给运行时。}
+暴露与隐藏，正是``中级''与``高级''的分界线。
+
+\section{本书的四层参照模型}
+
+\begin{levelspectrum}[title=四层参照模型（后续章节的坐标系）]
+\begin{description}
+  \setlength{\itemsep}{3pt}
+  \item[L0 机器语言] ISA 二进制编码；正常不直接编写，由编译器输出。
+  \item[L1 低级语言] 汇编；符号化的机器模型，程序员全权掌管寄存器/内存/标志位。
+  \item[L2 中级语言] \Cv{}：源码可移植 + 机器模型可见可预测；
+       程序员掌管内存与布局，编译器掌管指令选择。
+  \item[L3 高级/托管语言] Java/C\#：虚拟 ISA + 托管运行时；
+       运行时掌管内存、布局、验证与调度，程序员掌管业务抽象。
+  \item[L4 超高层] SQL/Shell/Make 等\emph{声明式}语言：只说``要什么''。
+       它们与 L2/L3 不在同一维度上（面向的``机器''是查询引擎/进程），
+       本书不把它们计入光谱比较。
+\end{description}
+\end{levelspectrum}
+
+\section{本章小结}
+
+\begin{guideline}
+\begin{itemize}
+  \item ``低级/中级/高级''是一条有历史出处的\emph{启发式光谱}，判据有三
+        （语义保真、可移植来源、自动化负担），不可化约为单值。
+  \item 机器语言没人直接写，是性价比问题而非能力问题；汇编收缩到四个场景，
+        其中``读汇编''比``写汇编''更常用。
+  \item ``C 是中级语言''的实质内容是：高级的语法外壳 + 低级的状态模型
+        （内存即布局、指针即地址），且这层对应关系\emph{对程序员透明可预测}。
+  \item Java/C\# 的``高级''来自插入规范化运行时：机器模型被隐藏，
+        正确性被在线验证，内存与布局被移交实现。
+  \item 分界线不是强弱，而是\textbf{谁掌管机器模型}。后续九章把这条分界线
+        拆成八个维度逐一定量比较。
+\end{itemize}
+\end{guideline}
+
+% ====================================================================
+\chapter{层级判据逐维拆解}
+
+第 1 章给出了光谱的历史画像；本章把它拆成可以逐条核对的判据。
+每个维度都回答同一个问题：\textbf{这件事由程序员、编译器，还是运行时说了算？}
+
+\section{维度一：内存模型与对象表示}
+
+\begin{longtable}{@{}p{0.16\textwidth}p{0.255\textwidth}p{0.255\textwidth}p{0.24\textwidth}@{}}
+\toprule
+\textbf{判据} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\midrule
+对象的内存布局 & 语言规定：\texttt{sizeof}/\texttt{alignof} 可查，
+  \texttt{struct} 成员顺序即布局（填充规则可预测） &
+  实现规定：对象头、字段顺序、对齐均不在规范中 &
+  默认同 Java；显式布局需 \texttt{struct Layout} + \texttt{[StructLayout]}
+  或 \texttt{[MarshalAs]} \\
+\addlinespace
+直接地址操作 & 指针一等公民；\texttt{memcpy}、\texttt{bit\_cast}、union 均合法 &
+  无指针；堆外内存走 \texttt{ByteBuffer} 或 FFM API &
+  \texttt{unsafe} + 指针 + \texttt{fixed} + \texttt{stackalloc}，
+  \texttt{Span<T>} 中默认禁用指针 \\
+\addlinespace
+分配位置的选择 & 程序员显式选择：栈/堆/静态/自定义分配器 &
+  几乎全在托管堆（逃逸分析由 JIT 决定） &
+  栈或托管堆二选一显式可控：\texttt{stackalloc}、\texttt{ref struct}
+  强制栈上 \\
+\addlinespace
+物理地址/MMIO & 一等支持（裸机、驱动、内核） &
+  语言层无直接支持，需 JNI 或内核驱动代理 &
+  内存映射文件可到设备映射，但只是``字节视图''而非地址语义 \\
+\bottomrule
+\end{longtable}
+
+这一维度的结论最硬：\textbf{C/\Cplus{} 的对象模型是机器模型的忠实投影}，
+所以它``看得见硬件的形状''；Java/C\# 的对象模型是运行时为了
+GC 与验证而构造的\emph{虚拟布局}，硬件形状被刻意抹掉。
+这就是``中级''地位的第一块基石。
+
+\begin{lstlisting}[language=C++,caption={C++ 中``布局即语言承诺''的典型三件套}]
+struct Packet {
+  uint8_t  type;    // 偏移 0
+  uint8_t  flags;   // 偏移 1
+  uint32_t seq;     // 对齐 4 -> 偏移 4（前两个字段后填充 2 字节）
+  uint64_t ts;      // 偏移 8
+};
+static_assert(sizeof(Packet) == 16);          // 语言层可验证
+// 与线上协议逐字节对应：可直接把收包缓冲区重解释为该结构
+auto p = std::bit_cast<PacketHeader>(raw);    // C++20，显式、良定义
+\end{lstlisting}
+
+\begin{lstlisting}[language=C++,caption={同一条协议线：把字节流``看成''结构（C 的传统优势）}]
+void dump(const uint8_t* buf, size_t len) {
+  const Packet* it = reinterpret_cast<const Packet*>(buf);
+  size_t n = len / sizeof(Packet);            // 布局契约在程序员手里
+  for (size_t i = 0; i < n; ++i) {
+    printf("[%zu] t=%u seq=%u\n", i, it[i].type, it[i].seq);
+  }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=javastyle,caption={Java 的等价物：没有布局假设，只有逐字段解码}]
+record Packet(byte type, byte flags, int seq, long ts) {
+  static Packet decode(ByteBuffer b) {        // 显式按字节序解码
+    return new Packet(b.get(), b.get(), b.getInt(), b.getLong());
+  }
+}
+// 规范不承诺 Packet 在内存中的字段顺序与大小；
+// 想零拷贝读取大块缓冲，只能显式维护 ByteBuffer 的 index。
+\end{lstlisting}
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：默认布局交给运行时，想要 C 式布局必须显式``申请''}]
+[StructLayout(LayoutKind.Sequential, Pack = 1)]   // 显式接管布局与填充
+internal struct Packet {
+  public byte Type;
+  public byte Flags;
+  public int  Seq;
+  public long Ts;
+}
+
+// 零拷贝解码仍需 unsafe：把 Span 重新解释为结构序列
+static Span<Packet> View(Memory<byte> buffer) =>
+  MemoryMarshal.Cast<byte, Packet>(buffer.Span);   // 信任布局契约
+\end{lstlisting}
+
+\section{维度二：类型系统的强度与``何时验''}
+
+三条常见误解需要先排掉：``静态类型 = 强类型''、``有 GC = 更安全''、
+``弱类型 = 容易写出 bug''。类型系统真正要比的是\textbf{检查内容与检查时刻}。
+
+\begin{longtable}{@{}p{0.215\textwidth}p{0.245\textwidth}p{0.245\textwidth}p{0.21\textwidth}@{}}
+\toprule
+\textbf{检查项} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\midrule
+静态检查范围 & 类型匹配、重载决议、模板约束（concept） &
+  同左 + 更强的初始化 definite assignment &
+  同左 + nullable 参考类型（\texttt{string?}，可开关） \\
+\addlinespace
+运行时类型验证 & 几乎为零（\texttt{dynamic\_cast} 可选） &
+  \texttt{instanceof}、向下转型检查、数组协变在线检查 &
+  \texttt{as}/\texttt{is}、数组协变在线检查 \\
+\addlinespace
+类型双关（重新解释表示） & 合法且有规则（\texttt{bit\_cast}、\texttt{char*} 别名） &
+  语言层禁止 & 需 \texttt{unsafe} 或 \texttt{MemoryMarshal}，并自行承担正确性 \\
+\addlinespace
+越界访问 & UB，不检查（可关闭/开启沙箱工具） &
+  恒检查，必抛 \texttt{IndexOutOfBounds} & 恒检查，必抛越界异常 \\
+\addlinespace
+空值 & 裸指针可为空，解引用即 UB（\texttt{-fsanitize} 可捕捉） &
+  \texttt{null} 解引用为单步异常 & 值类型不可空；参考类型可空，
+  nullable warnings 编译期提示 \\
+\bottomrule
+\end{longtable}
+
+\begin{note}[title=``Java 静态强类型 / C 弱类型''的说法错在哪]
+C 的类型系统在\emph{编译时}做的事并不少，只是它管的范围止于语言层：
+指针别名、布局假设、整数溢出都不归它管。把``管的少''说成``弱''，
+混淆了``检查覆盖面''与``检查时机''。
+Java/C\# 的``更强''主要强在\emph{运行时在线验证}那一层，这恰是层级判据维度二
+与维度一（布局）共同的根源：验证需要一个``知道对象真实形状''的运行时。
+\end{note}
+
+\section{维度三：泛型/模板的表示策略}
+
+这是四语言间\textbf{最能体现抽象代价差异}的机制之一，详细拆解见第 6 章；
+此处只给层级视角的一句话定位：
+
+\begin{itemize}
+  \item C++ 模板：编译期单态化，生成的是``为该类型手写''的机器码，
+        运行时零开销、零元数据。
+  \item Java 泛型：类型擦除，运行时只认对象、不认类型参数，
+        值类型进容器必装箱。
+  \item C\# 泛型：运行时保留类型参数元数据，JIT 对值类型单态化、
+        对参考类型共享代码，介于两者之间。
+\end{itemize}
+
+抽象层级上：C++ 把泛型``编译掉了''，Java 把泛型``运行掉了''，
+C\# 一半编译一半运行。同一个语法位置，三种实现负担分配。
+
+\section{维度四：资源生命周期由谁驱动}
+
+\begin{longtable}{@{}p{0.18\textwidth}p{0.27\textwidth}p{0.225\textwidth}p{0.24\textwidth}@{}}
+\toprule
+\textbf{机制} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\midrule
+内存回收 & 程序员：RAII 作用域结束即析构、即释放 &
+  GC（分代、并发、可移动） &
+  GC + \texttt{IDisposable} 显式提前释放非托管资源 \\
+\addlinespace
+确定性 & 完全确定（离开作用域那一刻） &
+  不确定（\texttt{Cleaner} 只保 ``最终会''） &
+  内存不确定；\texttt{using} 语句确定调用 \texttt{Dispose} \\
+\addlinespace
+锁/文件/句柄 & RAII（\texttt{lock\_guard}、\texttt{unique\_fd}） &
+  try-with-resources（\texttt{AutoCloseable}） &
+  \texttt{using}/\texttt{await using}（编译为 try/finally） \\
+\addlinespace
+时间敏感资源 & 天然友好（析构可绑硬件时序） &
+  困难：GC 暂停与 finalize 时机不可预算 &
+  同 Java，\texttt{SafeHandle} 缓解但不保证时刻 \\
+\bottomrule
+\end{longtable}
+
+生命周期是``中级 vs 高级''最容易被感知到的维度：
+\textbf{谁决定一行清理代码在什么时刻执行}。
+C/\Cplus{} 里是语言（作用域规则），Java/C\# 里是运行时（GC 线程与句柄表）。
+
+\section{维度五至维度八：执行、溢出、异常与互操作}
+
+\begin{longtable}{@{}p{0.17\textwidth}p{0.22\textwidth}p{0.225\textwidth}p{0.215\textwidth}@{}}
+\toprule
+\textbf{维度} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\midrule
+五：编译目标与绑定时机 &
+  静态本机码（AOT），链接完成即定型；可 LTO/PGO &
+  字节码 $\to$ 解释 $\to$ 分层 JIT $\to$ 可 AOT（GraalVM、native-image） &
+  IL $\to$ 分层 JIT（tiered）$\to$ R2R 预备码 $\to$ NativeAOT \\
+\addlinespace
+六：整数溢出语义 &
+  有符号溢出 = UB；无符号 = 模回绕 &
+  概念上无有/无符号之分，恒二进制补码回绕 &
+  默认回绕；\texttt{checked} 上下文抛溢出异常 \\
+\addlinespace
+七：异常模型 &
+  零成本表（.eh\_frame），抛出时才展开栈；\texttt{noexcept} 可关 &
+  检查异常进类型签名（\texttt{throws}）；运行时保证状态一致 &
+  非检查异常为主；\texttt{finally} 保证执行；栈展开由运行时接管 \\
+\addlinespace
+八：跨语言互操作 &
+  本身就是 ABI：导出 \texttt{extern "C"} 即全平台可用 &
+  JNI 显式桥；JEP 454 FFM 取代大部分 JNI &
+  P/Invoke 声明式直调；源生成消除 Marshal 开销 \\
+\bottomrule
+\end{longtable}
+
+维度六和维度七看起来琐碎，其实是层级判据：
+C/\Cplus{} 把``溢出后怎么办''交给程序员与硬件（所以能贴着 ALU 写），
+Java/C\# 把它收编进语言承诺（所以能在任意硬件上得到同一行为）。
+
+\section{维度九：优化者可见的信息量}
+
+抽象层级还决定``编译器知道什么''。这直接影响生成码质量：
+
+\begin{itemize}
+  \item C/\Cplus{} 里编译器知道：完整类型、对象大小、对齐、无 GC 干扰的栈帧、
+        指针别名假设（\texttt{restrict}/\texttt{\_\_restrict} 可显式承诺）。
+        于是可以向量化、栈上替换、内联、循环展开。
+  \item Java/C\# 里 JIT 知道：运行时类型 profile、对象图、内联缓存命中的实际类。
+        于是可以做基于概率的去虚化、逃逸分析、OSR 替换；
+        但它\emph{永远不能假设}对象地址稳定（GC 会移动），
+        \texttt{final} 字段也不保证不被反射改写（安全管理器/模块边界内例外）。
+\end{itemize}
+
+一句话概括：AOT 编译器优化的是``程序员承诺的静态世界''，
+JIT 优化的是``运行时观察到的统计世界''。这是两种不同的抽象层契约，
+没有绝对优劣，只有在不同负载下的适配度。
+
+\section{维度十：谁控制``何时执行什么''（确定性）}
+
+把前面所有维度收拢成一个词：\textbf{控制权的归属}。
+
+\begin{itemize}
+  \item C/\Cplus{}：程序员决定分配位置、释放时刻、内存布局、调用约定；
+        编译器决定指令选择；OS 决定页与调度。
+  \item Java/C\#：运行时决定对象布局与移动、回收时刻、编译时机（解释/JIT/AOT）、
+        以及大部分内联与去虚化决策；程序员决定业务结构与显式边界
+        （\texttt{unsafe}、\texttt{stackalloc}、GC 模式、GC 暂停点提示）。
+\end{itemize}
+
+\begin{guideline}[title=本章小结：一张判据表]
+\subsection{第 2 章判据速览（八个可核对维度）}
+
+\begin{longtable}{@{}p{0.285\textwidth}p{0.22\textwidth}p{0.14\textwidth}p{0.14\textwidth}@{}}
+\toprule
+\textbf{判据} & \textbf{问题} & \textbf{C/\Cplus{}} & \textbf{Java/C\#} \\
+\midrule
+内存模型 & 布局由谁规定 & 程序员（语言层） & 运行时 \\
+类型验证 & 何时验、验什么 & 编译期为主 & 编译期 + 运行时在线 \\
+泛型表示 & 编译掉还是运行掉 & 编译掉 & 擦除/共享（各有代价） \\
+生命周期 & 释放时刻由谁决定 & 作用域（确定） & GC（非确定，除 \texttt{using}） \\
+编译目标 & 绑定物理机器吗 & 是，AOT 本机码 & 否，虚拟 ISA 再 JIT \\
+溢出/异常 & 语义归谁管 & 程序员 + 硬件 & 语言承诺 + 运行时 \\
+优化信息 & 编译器能知道什么 & 静态承诺 & 运行时 profile \\
+互操作 & 谁是中心 & C ABI 是通用汇合点 & 需桥接层（JNI/P-Invoke） \\
+\bottomrule
+\end{longtable}
+
+九个维度上，\textbf{C/\Cplus{} 全部落在``程序员掌管''一侧}，
+Java/C\# 全部落在``运行时掌管''一侧。这就是``中级 vs 高级''的可核对定义：
+中级 = 机器模型暴露且可预测；高级 = 机器模型隐藏并由运行时代管。
+\end{guideline}
+
+% ====================================================================
+\part{层级差异的显形与代价}
+% ====================================================================
+
+\chapter{抽象层级如何在日常代码里``显形''}
+
+前三节讨论的是规范与承诺；本章讨论\emph{写代码时的体感}：
+层级差异不是论文里的分类，而是每天几十次微观决策的总和。
+
+\section{显形一：``这个对象住在哪''是一个问题}
+
+在 C/\Cplus{} 中，下面四行都是合法且语义明确的选择：
+
+\begin{lstlisting}[language=C++,caption={C++：同一类型的四种居住方式}]
+Widget a;                    // 自动存储期（栈帧内，析构随作用域）
+Widget* b = new Widget;      // 堆，手动/智能指针管理
+static Widget c;             // 静态存储期，进程全程
+alignas(64) Widget d[8];     // 栈上数组，强制 64 字节对齐（cacheline 起点）
+\end{lstlisting}
+
+在 Java 中只有一种回答：\texttt{new} 出来的对象在托管堆，
+JIT 的逃逸分析可能把它``拆''到栈上或寄存器，但那是实现的优化，不是程序员的承诺。
+C\# 提供了介于两者之间的显式旋钮：
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：值类型给出部分``居住权''}]
+var a = new Point(1, 2);          // struct：内联在当前存储位置（栈/字段内）
+var b = new Point[1024];          // struct 数组：一块连续缓冲，无逐元素指针
+Span<Point> s = stackalloc Point[16]; // 显式栈上分配，逃逸被编译器禁止
+var c = new List<Point>();        // 元素仍是值类型，但 List 本体在堆
+\end{lstlisting}
+
+\subsection*{三档控制权的谱系}
+
+\begin{center}
+\begin{tabular}{@{}l l l@{}}
+\textbf{C/\Cplus{}} & \textbf{C\#} & \textbf{Java} \\
+全显式（位置/对齐/布局） & 结构体与 \texttt{stackalloc} 可控 & 全交给运行时 \\
+\end{tabular}
+\end{center}
+
+\section{显形二：``复制一个对象''的成本由谁定义}
+
+\begin{itemize}
+  \item C++：复制 = 拷贝构造（可重载、可禁止、可改为移动）；
+        移动让``按值返回大对象''成为常数成本；\texttt{memcpy} 层面可推理。
+  \item C\#：\texttt{struct} 赋值 = 逐字节复制（\texttt{MemoryBlock.Copy} 级别），
+        \texttt{class} 赋值 = 复制引用；``复制还是引用''在类型声明时就定死。
+  \item Java：赋值永远是复制引用；对象内容共享，\texttt{clone}/复制构造需自行实现。
+\end{itemize}
+
+层级视角的结论：\textbf{``赋值语句生成什么机器动作''在 C/C++ 和 C\# 里是可推理的，
+在 Java 里是固定的引用复制}。一个 \texttt{Vector3} 类型在三种语言里的
+性能人格完全不同，这正是第 6--8 章反复出现的母题。
+
+\section{显形三：并发代码里的``谁负责一致性''}
+
+\begin{longtable}{@{}p{0.20\textwidth}p{0.26\textwidth}p{0.26\textwidth}p{0.20\textwidth}@{}}
+\toprule
+\textbf{问题} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\midrule
+缓存一致性/可见性 & \texttt{std::atomic} + 内存序手选
+  （\texttt{memory\_order} 六档） &
+  \texttt{volatile} 与 \texttt{synchronized} 隐含 acquire/release &
+  \texttt{volatile}（仅可见性）+ \texttt{Interlocked} 系列 \\
+\addlinespace
+数据竞争定性 & 未定义行为（TSan 可查） &
+  良定义但不保证原子（除 \texttt{volatile long/double} 特例） &
+  良定义，原子性另需保证 \\
+\addlinespace
+引用更新与回收 & 风险最高：无 GC 时指针更新需
+  hazard pointer/RCU 自备 & GC 保证``对象不会被提前回收'' &
+  GC 同左；\texttt{unsafe} 指针需显式 pin 住对象 \\
+\bottomrule
+\end{longtable}
+
+注意第三行：GC 在并发章节也会``显形''。它实际上替程序员解决了
+``指针指向的对象还活着吗''这一 C/\Cplus{} 并发最难的问题，
+代价是第 4 章将量化的暂停与布局控制权的丧失。
+
+\begin{levelspectrum}[title=层级显形的判读法]
+拿到一段陌生代码，问三个问题即可判断它的层级立场：
+(1) 作者是否谈论/依赖对象的\emph{地址与布局}；
+(2) 清理代码是否写在\emph{与获取同一作用域}的位置（RAII），
+    还是写在\emph{显式调用}（Dispose/close）甚至\emph{根本没写}（GC 兜底）；
+(3) 越界/溢出/空引用出现时，代码依赖的是\emph{硬件行为}还是\emph{运行时抛出的异常}。
+三个``是硬件/作者''越多，层级越接近 L2；三个``是运行时''越多，越接近 L3。
+\end{levelspectrum}
+
+\chapter{中级层的收益与代价}
+
+本章量化 L2 立场：把机器模型暴露给程序员，换到了什么，赔上了什么。
+
+\section{收益一：可预测性（时间与时钟）}
+
+没有 GC 暂停、没有 JIT 预热、没有``首次调用慢''的档位切换：
+函数编译后的指令序列就是它每次运行执行的指令序列（忽略 CPU 自身的缓存效应）。
+这使 C/\Cplus{} 成为以下场景的默认选项：
+
+\begin{itemize}
+  \item 硬实时控制：电机 PWM 环路、音频回调（128 帧 $\times$ 4 批次，超时即爆音）、
+        工业总线（EtherCAT 周期抖动预算常在微秒级）。
+  \item 延迟敏感服务：交易系统的尾延迟预算（p99.9 在数十微秒量级时，
+        GC 的 STW 或并发标记再分配都会直接击穿预算）。
+  \item 容量规划：``堆大小 = 对象数量 $\times$ 可计算的布局''是能做纸面推演的；
+        托管堆的对象头与对齐则要求实测。
+\end{itemize}
+
+\begin{note}[title=``可预测''的前提是程序员不滥用]
+裸指针 + UB 的世界里，可预测性是\emph{契约}：你遵守规则，硬件就兑现行为。
+一次 \texttt{memcpy} 重叠、一次类型双关违规，换来的``确定性''立刻变成
+``每次编译器版本升级后行为不同''。收益与责任同价，见第 4.6 节。
+\end{note}
+
+\section{收益二：布局控制与``和硬件共享数据结构''}
+
+\begin{lstlisting}[language=C++,caption={与 DMA 环形缓冲共享的结构：位域、对齐、缓存行三面都要控制}]
+struct __attribute__((packed, aligned(8))) Desc {  // 与网卡寄存器定义逐字节一致
+  uint64_t addr;      // 物理地址，由驱动填写
+  uint32_t len : 16;  // 硬件手册规定：16 bit 长度域
+  uint32_t rsvd : 12;
+  uint32_t eom  : 1;  // 消息结束位
+  uint32_t sol  : 1;  // 请求发起位
+};
+static_assert(sizeof(Desc) == 12);
+static_assert(alignof(Desc) == 8);
+
+// 每个队列独占一条缓存行，避免多核伪共享
+struct alignas(64) QueueSlot { Desc head, tail; uint64_t counter; };
+\end{lstlisting}
+
+这样的代码在 L3 语言里没有对应物：不是``写起来更绕''，而是语言层
+根本不提供\texttt{packed}/\texttt{alignas}/物理地址这些概念。
+Java 的 FFM API 与 C\# 的 \texttt{MemoryMappedFiles} 可以搬运字节，
+但布局契约的``类型化表达''仍需自行维护一张字段偏移表。
+
+\section{收益三：零运行时依赖与最小 footprint}
+
+静态链接的二进制可以只依赖内核 ABI：没有 JVM/CLR 进程、没有 GC 堆下限、
+没有运行时版本兼容矩阵。这带来三类独特能力：
+
+\begin{enumerate}
+  \item \textbf{能跑在``没有运行时''的地方}：裸机 MCU（几十 KB RAM、无 MMU）、
+        bootloader、操作系统内核本体、UEFI 应用。
+  \item \textbf{能被任何语言调用}：C ABI 是全行业的汇合点，
+        Python/Rust/Go/Swift/Kotlin 都``向下''对接 C 而不是相反
+        （见《ExternC》《Script》分册）。
+  \item \textbf{可审计面小}：依赖树、内存映像、启动时序都可以完整列出，
+        安全认证（DO-178C、IEC 61508）语境下这是硬要求。
+\end{enumerate}
+
+\section{收益四：给编译器的信息更多，优化上限更高}
+
+第 2.9 节已经说明：编译器知道布局、大小、别名假设，才可能做
+连续访存向量化、返回值替换、循环展开。举一个具体的小例子：
+
+\begin{lstlisting}[language=C++,caption={编译器``知道一切''时的产物：连续布局 + restrict 承诺}]
+void scale(float* __restrict__ out, const float* __restrict__ in, size_t n) {
+  for (size_t i = 0; i < n; ++i) out[i] = in[i] * 0.5f;
+}
+// GCC/Clang 生成 4/8 路 SIMD（mulps / mul），无逐元素边界检查
+\end{lstlisting}
+
+\begin{lstlisting}[style=javastyle,caption={Java 的热循环：同样的算术，多两层``必须证明''的工作}]
+static void scale(float[] out, float[] in, int n) {
+  for (int i = 0; i < n; i++) out[i] = in[i] * 0.5f;
+}
+// JIT 需先证明：i+1 < in.length 且 out.length >= n（边界检查，可整体证明后消除）
+// 且 out 与 in 不重叠（别名分析），才能向量化；证明失败则回退标量并保留检查
+\end{lstlisting}
+
+\begin{warning}[title=这不是``C 一定快于 Java'']
+现代 JIT 在``证明得出来''的热路径上常与 AOT 打平，甚至因为
+运行时 profile（实际分支命中率、实际虚调用目标）而在多态代码上反超。
+本章只主张：\textbf{L2 的优化上限由程序员承诺决定，L3 的优化上限由
+JIT 的证明能力决定}。前者的天花板更高，后者的地板更高。
+\end{warning}
+
+\section{代价一：UB 与内存安全的举证责任}
+
+把布局与生命周期交给程序员，等于把\emph{整类安全性质}的举证责任也交给程序员。
+工业统计的共识是：微软与 Chromium 团队长期公布的缺陷分类中，
+内存安全类漏洞约占全部安全漏洞的 60\%--70\%，且几乎全部落在 C/C++ 代码。
+
+\begin{lstlisting}[language=C++,caption={三行典型的``合法但错误''：编译器不报错，硬件不兜底}]
+int* p = (int*)malloc(10 * sizeof(int));
+p[10] = 0;              // 越界写：UB，可能破坏堆元数据，也可能``看起来正常''
+free(p);
+// 悬空读、二次 free、读取未初始化内存同属此类：调试期不复现、
+// 优化版崩溃、或安静地泄露相邻堆内容（Heartbleed 即``安静泄露''形态）
+\end{lstlisting}
+
+防御手段是工程性的而非语言性的：编译器开关
+（\texttt{-fsanitize} 的 address 与 undefined 两档、MSVC \texttt{/GS}）、
+静态分析（clang-tidy、PVS-Studio）、模糊测试、以及
+Core Guidelines 的 F-profile 约定（拥有者用 \texttt{T*}，借用用
+\texttt{span}/引用）。每一样都要额外成本，这是 L2 的``隐形税负''。
+
+\section{代价二：交付与迭代成本}
+
+\begin{itemize}
+  \item 构建复杂度：ABI/工具链/头文件路径/宏定义矩阵，跨平台项目尤其明显
+        （见《ModularBuild》《Configure》分册）。
+  \item 生态复用：没有``运行时统一元数据''意味着反射、序列化、依赖注入
+        都要自建（见《Reflect》《Serialization》分册），轮子密度高。
+  \item 人员门槛：需要同时掌握语言规则、实现行为、平台 ABI 三层知识，
+        团队培养周期以年计。
+\end{itemize}
+
+\chapter{高级层的收益与代价}
+
+镜像的一章：L3 把机器模型收走之后，兑现了什么，欠下了什么。
+
+\section{收益一：可验证的安全性}
+
+Java/C\# 的类型系统 + 运行时验证共同保证一条可陈述的性质：
+\textbf{在没有显式逃生舱（\texttt{unsafe}/JNI/序列化后门）的程序里，
+类型安全与内存安全是运行时不变量}。具体表现为：
+
+\begin{itemize}
+  \item 越界、空引用、非法向下转型：全部变成异常，携带栈信息，可恢复。
+  \item 整数溢出不再是 UB 也不是静默回绕的歧义地带（Java 恒回绕但良定义，
+        C\# 默认回绕、\texttt{checked} 可声明意图）。
+  \item 加载时验证（CLR verifier / JVM \texttt{-Xverify}）：字节码本身先证明
+        ``每个操作数栈位置在每种执行路径上类型正确''，恶意/损坏的二进制进不了运行时。
+\end{itemize}
+
+\section{收益二：生产力与统一生态}
+
+GC 消灭了 ``new/delete 配对'' 这一整类缺陷与全部书写负担；
+反射/元数据让框架层（Spring、ASP.NET、EF、序列化、ORM）可以在
+``不理解业务类型''的情况下操作任意类型；统一运行时意味着
+一次编译到处运行（相对于 C 的``为每个平台重编''）、
+热修复/诊断工具（attach、jcmd、dotnet-counters）这类基础设施的存在。
+
+\begin{compare}[title=``少写的代码''清单]
+\begin{tabular}{@{}p{0.30\textwidth}p{0.30\textwidth}p{0.30\textwidth}@{}}
+\toprule
+\textbf{程序员少做的事} & \textbf{由谁代做} & \textbf{对价} \\
+\midrule
+配对释放内存 & GC & 暂停、堆放大、非确定性 \\
+声明字段布局 & 运行时对象模型 & 无法与硬件共享结构 \\
+边界/空值/转型检查 & 每次操作的检查代码或 JIT 消除 & 指令数与代码密度 \\
+跨平台二进制 & 虚拟 ISA + 各平台 JIT & 运行时安装与预热成本 \\
+类型信息留存 & 运行时元数据 & 体积与启动时加载成本 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+\section{收益三：安全边界与多租户}
+
+L3 运行时天然提供``不可信代码''的隔离单位：ClassLoader/模块系统、
+AppDomain（历史）到 \texttt{AssemblyLoadContext}、Wasm 沙箱。
+沙箱曾经建立在 JVM 的验证器之上；今天的容器/插件生态仍受益于
+``代码不能伪造指针、不能越界读''。L2 程序要获得同等性质需要
+进程边界 + seccomp/独立地址空间，粒度更粗、成本更高。
+
+\section{代价一：GC 的三重税}
+
+\begin{enumerate}
+  \item \textbf{时间税}：暂停与并发标记的 CPU 份额。分代/区域收集器
+        （G1、ZGC、.NET LOH/工作负载 GC）把它摊薄，但摊不平：
+        分配速率越高，回收工作量越大。
+  \item \textbf{空间税}：对象头（HotSpot 典型 12--16 字节，含 mark word 与
+        压缩 klass 指针）、对齐填充、GC 读写屏障（card table 更新）、
+        堆预留水位。小而多的对象图最吃亏。
+  \item \textbf{布局税}：对象可移动，因此任何``原生指针''语义都必须被禁止或
+        钉住（\texttt{fixed}、\texttt{GCHandle}、JNI \texttt{GetPrimitiveArrayCritical}），
+        钉住时间越长，GC 越退化。
+\end{enumerate}
+
+\section{代价二：启动、预热与部署形态}
+
+解释执行 $\to$ 分层编译 $\to$ 稳定热点，这条曲线是 L3 的运行税：
+冷启动毫秒到秒级（取决于运行时规模），预热期内性能可能只有稳态的一半。
+对短生命周期任务（CLI 工具、Serverless 冷启动）这是硬伤，
+所以两个阵营都发展了 AOT 出路：native-image、ReadyToRun、NativeAOT。
+
+\section{代价三：与硬件之间隔着一层}
+
+L3 程序接触物理内存、DMA 描述符、MMIO 寄存器、精确中断时序的路径是
+``绕行''而非``直连''：驱动代理、内存映射文件、JNI 垫片。
+每一层绕行都有转换成本与语义损耗（例如把设备字节序转成托管字段再转回）。
+这不是``能不能''的问题（第 7.1 节的逃生舱能到很近），而是``每一行都要付费''。
+
+\section{代价四：互操作边界的翻译税}
+
+跨 L2/L3 边界时，``谁掌管表示''的分界线显形为\textbf{编组（marshalling）成本}：
+字符串编码转换、数组拷贝或 pin、生命周期错配（C 侧回调持有托管对象需 GCHandle）。
+边界窄则无感，边界宽（每个 RPC 都穿一次）时，
+L3 侧的性能问题清单上``marshal 开销''会排在 GC 前面。
+解法见第 7.3 节与《ExternC》分册：把边界收敛到``指针 + 长度''的扁平 ABI。
+
+\chapter{同一任务的四语言对照实验}
+
+以下四个小实验把抽象层级的差异落到可对照的代码上。
+结论不``分胜负''，重点读\textbf{每层多写/少写了什么}。
+
+\section{实验一：热循环求和与边界检查}
+
+\begin{lstlisting}[language=C++,caption={C++：无检查；越界是程序员的罪}]
+long sum(const std::vector<int>& v) {
+  long s = 0;
+  for (int x : v) s += x;          // 区间 for 展开为指针扫过连续缓冲
+  return s;                         // -O2: 可能向量化为 paddq/psadbw 系列
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=javastyle,caption={Java：语义相同，字节码里带着每次迭代的两条边界检查}]
+long sum(int[] a) {
+  long s = 0;
+  for (int x : a) s += x;          // 字节码: arraylength + 迭代中 i < length 检查
+  return s;                         // C2 证明循环不变量后整体消除检查并向量化
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：与 Java 几乎同构（RyuJIT 同样做边界检查消除）}]
+long Sum(int[] a) {
+  long s = 0;
+  foreach (var x in a) s += x;     // foreach(int[]) 特判为索引循环，不产生枚举器
+  return s;
+}
+\end{lstlisting}
+
+\textbf{读法}：三者的稳态机器码在成熟的编译器手里可以完全一致
+（一次求和向量化）。差别在于\emph{到达``正确代码''所需的信任链}：
+C++ 靠程序员承诺（const、容器不变式），Java/C\# 靠 JIT 证明
+（循环不变量分析）。承诺失败代价是 UB；证明失败代价是慢，不是错。
+
+\section{实验二：解析线上协议（布局假设的三种立场）}
+
+\begin{lstlisting}[language=C++,caption={C++：类型即布局，一次显式拷贝 + 游标推进}]
+struct Head { uint16_t ver; uint16_t len; uint32_t flags; };  // 12 字节，契约来自协议文档
+std::optional<Head> parse(std::span<const uint8_t> buf) {
+  if (buf.size() < sizeof(Head)) return std::nullopt;
+  Head h;
+  std::memcpy(&h, buf.data(), sizeof h);      // 显式拷贝避开对齐/别名问题
+  if (h.len > MAX_PDU) return std::nullopt;
+  return h;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=javastyle,caption={Java：没有布局假设可用，逐字段 + 显式字节序}]
+record Head(short ver, short len, int flags) {
+  static Optional<Head> parse(ByteBuffer b) {
+    if (b.remaining() < 8) return Optional.empty();
+    b.order(ByteOrder.BIG_ENDIAN);            // 字节序是显式状态，不靠硬件
+    short ver = b.getShort();
+    short len = b.getShort();
+    int   flg = b.getInt();
+    return len > MAX_PDU ? Optional.empty() : Optional.of(new Head(ver, len, flg));
+  }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：System.Buffers.Binary 逐字段；unsafe 路径才``重解释''}]
+record struct Head(ushort Ver, ushort Len, uint Flags);
+
+static Head Parse(ReadOnlySpan<byte> buf) {          // 默认路径：逐字段、可内联
+  ushort ver = BinaryPrimitives.ReadUInt16BigEndian(buf);
+  ushort len = BinaryPrimitives.ReadUInt16BigEndian(buf[2..]);
+  uint   flg = BinaryPrimitives.ReadUInt32BigEndian(buf[4..]);
+  return new Head(ver, len, flg);
+}
+// unsafe 路径（信任布局 + 协议）：MemoryMarshal.Read<Head>（需 StructLayout）
+\end{lstlisting}
+
+\textbf{读法}：同一个任务，C++ 的抽象是``一块内存的两个名字''，
+Java/C\# 的抽象是``一个缓冲区的读取位置''。前者少一层翻译、
+多一整份布局举证责任（packed、对齐、字节序全靠程序员核对文档）；
+后者代码略长但每步良定义。这是 L2/L3 分界最典型的切片。
+
+\section{实验三：临时对象与缓存局部性}
+
+\begin{lstlisting}[language=C++,caption={C++ 链表节点：每个元素一次 new，指针跳跃}]
+struct Node { int key; Node* next; };      // 典型 16 字节 + 分配器头
+// 遍历 = 依赖指针追逐，缓存不友好；插入/删除 O(1) 但分配器可能成为热点
+\end{lstlisting}
+
+\begin{lstlisting}[style=csharpstyle,caption={同一算法在 C\# 的两种写法体现两种层级}]
+class Node  { public int Key; public Node? Next; }        // 每次 new 一个堆对象
+struct Entry { public int Key, Next; }                     // 下标即``指针''
+Entry[] pool = new Entry[1024];                            // 一块连续缓冲（arena）
+// 后者把 C 的``手管内存''翻译成``手管下标''：布局友好，安全由数组边界兜底
+\end{lstlisting}
+
+\textbf{读法}：分代假设让托管语言``大部分时候''为短命对象付很小的代价，
+但对象图一旦庞大（几百万小对象），布局税与追踪税同时到账。
+有趣的对称现象：L3 性能工程师的调优手册
+（数组化、池化、避免指针追逐、SOA）读起来像一本 C/\Cplus{} 优化手册。
+层级改变了默认成本，没改变缓存层次结构的物理学。
+
+\section{实验四：泛型容器与表示选择}
+
+\begin{lstlisting}[language=C++,caption={vector 的 int：就是 C 数组，无任何额外元数据}]
+std::vector<int> v;         // 一块 int 连续缓冲 + 三个指针
+v.push_back(42);            // 无装箱、无对象头、遍历即指针扫过
+\end{lstlisting}
+
+\begin{lstlisting}[style=javastyle,caption={Java：两种容器是两个极端}]
+ArrayList<Integer> a;        // Integer 对象数组：每个元素 16 字节对象 + 引用
+int[] b = new int[1024];     // 原始类型数组：连续 int，但失去泛型 API（无 List 方法）
+// 值类型泛型（Valhalla 项目）至今未发布：a 与 b 的鸿沟仍在
+\end{lstlisting}
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：泛型 reified，值类型免装箱}]
+List<int> a = new();          // 内部就是一块 int[]，与 std::vector<int> 同形
+IEnumerable<int> e = a;       // 接口枚举器路径才出现装箱/结构枚举器的选择
+Span<int> s = CollectionsMarshal.AsSpan(a); // 拿到连续视图，直接按布局遍历
+\end{lstlisting}
+
+\textbf{读法}：三种答案对应第 2.3 节的三种泛型策略：
+编译掉（C++）、擦除（Java）、运行时代单态化（C\#）。
+``一个 int 容器里 int 到底住在哪''，恰好是抽象层级在库层最直接的显形。
+
+\begin{guideline}[title=四个实验的共同读法]
+\begin{itemize}
+  \item 每一处差异的根源都是同一个分界：\textbf{表示（representation）归谁管}。
+  \item C++ 的快是``承诺换来的上限''；Java/C\# 的稳是``验证换来的下限''；
+        C\# 的两面性（struct/unsafe 与 GC 并存）说明层级是可协商的。
+  \item 性能结论强烈依赖负载与成熟度：把``哪层更快''当作运行时问题去实测，
+        把``哪层适合''当作契约问题去设计。第 10 章给出选型流程。
+\end{itemize}
+\end{guideline}
+
+% ====================================================================
+\part{抽象机制的双向运动}
+% ====================================================================
+
+\chapter{中级层之上如何生长高级抽象：零成本抽象}
+
+C++ 没有停在``中级''：它的核心主张是\textbf{在低层底座上叠高层语法，
+且每层抽象的代价可审计}。本节把它与 Java/C\# 的对应机制逐条对照。
+
+\section{零成本抽象的准确含义}
+
+Bjarne Stroustrup 的原话拆成两半：
+
+\begin{enumerate}
+  \item \textbf{你没用到的东西，不为你付费}（no overhead for unused features）：
+        虚函数表只在真正多态的类上生成；异常表不抛出就几乎不占热路径；
+        模板未被实例化的成员不编译。
+  \item \textbf{你合理使用的东西，不比手写等效代码差}：
+        一个 \texttt{vector} 遍历不应慢于手写裸指针循环。
+\end{enumerate}
+
+\begin{warning}[title=两个流行的误读]
+零成本 $\neq$ 无成本（抽象的编译时间、模板报错长度、维护心智都是真实成本）；
+零成本 $\neq$ 一定比托管语言快（它只对``等效手写代码''负责，而 L3 的 JIT
+可能在另一处做了更聪明的特化）。比较层级时请始终问：
+\textbf{这笔成本付在编译期、运行期，还是程序员头上？}
+\end{warning}
+
+\section{泛型的三条技术路线}
+
+\subsection*{C++ 模板：编译期单态化}
+
+\begin{lstlisting}[language=C++,caption={模板在链接后已``消失''：每个实例各得一份机器码}]
+template <typename T>
+T clamp(T v, T lo, T hi) { return v < lo ? lo : (v > hi ? hi : v); }
+// clamp<int> 与 clamp<double> 是两份独立函数体，无类型检查、无装箱、无间接调用
+// 代价：代码膨胀（i-cache 压力）、编译期错误信息、需要头文件可见实现
+\end{lstlisting}
+
+\subsection*{Java 泛型：类型擦除}
+
+\begin{lstlisting}[style=javastyle,caption={擦除的三重后果}()]
+List<Integer> a = new ArrayList<>();
+a.add(1);                       // (1) 装箱：Integer 对象 + 16 字节头
+Object o = a;
+List<String> b = (List<String>) o;  // (2) 编译期unchecked，运行期不报错
+b.add("x");                     // (3) 直到取出并当 String 用才可能 CCE
+// 擦除还禁止：new T()、T.class、T[] 协变数组、原生类型参数的 instanceof
+\end{lstlisting}
+
+\subsection*{C\# 泛型：reified + 选择性单态化}
+
+\begin{lstlisting}[style=csharpstyle,caption={类型参数在运行时真实存在}]
+List<int> a = new();            // 内部就是 int[]，无装箱（JIT 为值类型特化代码）
+typeof(T)                       // 合法：运行时可查询类型参数
+int[] arr = new int[10];        // 原生值类型数组，与 C++ vector 同形
+// 参考类型泛型则共享同一份机器码（按指针宽度统一），换的是启动速度与代码体积
+\end{lstlisting}
+
+\begin{compare}[title=泛型三路线的成本分配]
+\begin{tabular}{@{}p{0.22\textwidth}p{0.23\textwidth}p{0.23\textwidth}p{0.22\textwidth}@{}}
+\toprule
+\textbf{成本项} & \textbf{C++ 模板} & \textbf{Java 擦除} & \textbf{C\# reified} \\
+\midrule
+值类型进容器 & 无成本 & 装箱 + 间接 & 无成本 \\
+运行时类型查询 & 无（RTTI 另计） & 无 & 完整 \\
+代码体积 & 每实例一份 & 一份 + 桥方法 & 共享代码或特化 \\
+编译/启动 & 编译期变慢 & 运行期桥接 & JIT 期变长 \\
+跨模块边界 & 需头可见 & 天然二进制兼容 & 天然二进制兼容 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+\section{RAII 与作用域绑定协议的代际差}
+
+\begin{lstlisting}[language=C++,caption={C++：获取即初始化，释放挂在作用域语法上}]
+{
+  std::lock_guard g(mu);          // 构造时加锁
+  do_work();                      // 任何出口（含异常）都触发 ~lock_guard
+}                                 // 释放点写在代码形状里，不靠调用者记得
+\end{lstlisting}
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：using 是语法糖，糖纸下是 try/finally}]
+using (var fs = File.OpenRead(path)) {   // 编译为:
+  Read(fs);                               //   fs = File.OpenRead(path);
+}                                         //   try { Read(fs); } finally { fs.Dispose(); }
+// 语义等价，但两点本质不同：
+// (1) 类型必须实现 IDisposable（协议是库层的，不是语言层的）
+// (2) 忘记 using 不会被编译器强制（分析工具提醒），C++ 无此选择
+\end{lstlisting}
+
+\begin{lstlisting}[style=javastyle,caption={Java try-with-resources：同族方案，异常抑制规则另有细节}]
+try (var in = Files.newInputStream(p); var out = Files.newOutputStream(q)) {
+  transfer(in, out);
+}   // close() 在 finally 中调用；主异常存在时次异常被 addSuppressed 而非丢弃
+\end{lstlisting}
+
+\begin{note}[title=层级视角下的生命周期语法]
+三者表面上都是``作用域结束即释放''，但\textbf{约束强度不同}：
+C++ 的类型系统保证每个局部对象都有析构（无法跳过）；
+C\#/Java 依赖开发者\emph{选择}正确类型（\texttt{Stream} 不实现
+\texttt{IDisposable} 就没人能强制释放）。语言层协议 vs 库层协议，
+这是``抽象由类型系统承载''与``抽象由惯例承载''的典型分野。
+\end{note}
+
+\section{值语义 vs 引用语义：同一个赋值的两种人格}
+
+\begin{longtable}{@{}p{0.22\textwidth}p{0.25\textwidth}p{0.23\textwidth}p{0.22\textwidth}@{}}
+\toprule
+\textbf{场景} & \textbf{C++} & \textbf{C\#} & \textbf{Java} \\
+\midrule
+结构体赋值/传参 & 复制（可定义为移动） & 逐字段复制 & 不存在值类型 \\
+\addlinespace
+容器元素 & 对象本体连续存放 & struct 连续、class 为引用 & 恒为对象引用 \\
+\addlinespace
+共享可变状态 & 显式选择（指针/引用/shared\_ptr） & 类型声明时定死 & 默认共享 \\
+\addlinespace
+``改了副本会不会动原件'' & 看类型（可推理） & 看 struct/class（可推理） & 一定是原件被动 \\
+\bottomrule
+\end{longtable}
+
+\section{元编程：编译期计算 vs 运行时反射 vs 源生成}
+
+\begin{itemize}
+  \item C++：\texttt{constexpr}/\texttt{consteval}（C++20 起图灵完备的编译期执行）、
+        模板元编程、C++26 静态反射（\texttt{std::meta}）方向。
+        产物是代码本身，运行时看不见元编程。
+  \item C\#：反射（运行时读元数据）、\texttt{dynamic}、源生成器
+        （Roslyn Source Generator，编译期生成 C\# 代码，把运行时反射成本前移）。
+  \item Java：反射 + 注解处理器（APT）、MethodHandle/invokedynamic、
+        GraalVM 关闭动态反射的 native-image 配置。
+\end{itemize}
+
+一个有意思的趋同：C\# 源生成器与 Java APT 都在``把运行时反射挪到编译期''，
+方向正是 C++ 一直站着的``让代价在构建时结账''。层级光谱在工程压力下会局部折叠。
+
+\section{小结：C++ 的高级层是``可审计的''}
+
+C++ 的高级机制（模板/RAII/constexpr/概念）与 L3 的高级机制
+（泛型/using/反射/特性）语法意图相近，差别在\textbf{代价的位置}：
+前者把账单摊在编译期与可检查的代码生成上，后者摊在运行时与库协议上。
+所以 C++ 程序的性能问题通常在``读代码 + 读反汇编''中解决，
+L3 程序的性能问题通常在``profiler + GC 日志''中解决。这是层级差异的
+工程侧显形，而不是语言优劣。
+
+\chapter{高级层向下的逃生舱与中级层向上的高层语法}
+
+层级不是牢笼。四个语言都有``越层''手段，越层成本恰好标定了层级本身。
+
+\section{托管语言向下的五级台阶}
+
+\begin{longtable}{@{}p{0.13\textwidth}p{0.36\textwidth}p{0.37\textwidth}@{}}
+\toprule
+\textbf{台阶} & \textbf{手段} & \textbf{典型约束} \\
+\midrule
+1 无装箱抽象 & C\# \texttt{Span<T>}/\texttt{ref struct}/\texttt{stackalloc}；
+  Java \texttt{int[]} 原始类型数组 & \texttt{ref struct} 不能进泛型/捕获/字段；
+  Java 无值类型泛型，API 断成两套 \\
+\addlinespace
+2 显式布局 & C\# \texttt{StructLayout} 显式布局 + 手工 \texttt{Pack}；
+  Java 无（只能手工字段偏移表） & 与托管堆仍隔着对象头；
+  布局契约靠单元测试守护 \\
+\addlinespace
+3 直接指针 & C\# \texttt{unsafe} + \texttt{fixed} + \texttt{NativeMemory}；
+  Java \texttt{sun.misc.Unsafe}（逐步弃用）$\to$ FFM \texttt{MemorySegment} &
+  需信任标记/编译开关；GC 可移动性靠 pin 对抗 \\
+\addlinespace
+4 本机互操作 & JNI/JNA/FFM；P/Invoke/\texttt{[LibraryImport]} &
+  编组税、生命周期跨边界、调试混合栈 \\
+\addlinespace
+5 直接生成本机码 & .NET NativeAOT；Java \texttt{gcc} 时代产物/GraalVM native &
+  反射需登记、启动体积换预热、动态性下降 \\
+\bottomrule
+\end{longtable}
+
+\begin{lstlisting}[style=csharpstyle,caption={台阶 3：C\# 的 mmap 风格零拷贝读取（unsafe + Span 的混合体）}]
+using System.IO.MemoryMappedFiles;
+using var mmf = MemoryMappedFile.CreateFromFile("index.bin");
+using var acc = mmf.CreateViewAccessor(0, len, MemoryMappedFileAccess.Read);
+Span<byte> span = acc.SafeMemoryMappedViewHandle.AsSpan<byte>(0, len);
+// 之后所有读取都是边界检查的 Span 操作；只有这一行``接触了裸内存''
+\end{lstlisting}
+
+\begin{lstlisting}[style=javastyle,caption={台阶 3 的 Java 现代版：FFM API（Java 21+）}]
+try (Arena arena = Arena.ofConfined()) {
+  MemorySegment seg = Linker.nativeLinker()
+      .defaultLookup().find("mmap").handle()   // 调本机函数
+      .invoke(MAP_SHARED, ...);
+  int v = seg.get(ValueLayout.JAVA_INT_UNALIGNED, 0);  // 显式未对齐读
+}   // arena 关闭即释放；生命周期写成代码，而非交给 GC
+\end{lstlisting}
+
+\section{C++ 向上的高层设施}
+
+镜像方向：L2 同样有完整的高级层，只是实现方式不同。
+
+\begin{itemize}
+  \item 高层集合/算法库：STL/ranges 的声明式管道
+        （\texttt{views::transform} 串 \texttt{views::filter}），表达力对齐 LINQ。
+  \item 结构化并发/协程：\texttt{std::generator}（C++23）、
+         asio/awaiter 生态，抽象掉线程与回调。
+  \item 托管化惯用法：\texttt{shared\_ptr}（引用计数，近乎迷你 GC）、
+        RAII 句柄类、\texttt{std::move} 语义的对象所有权 DSL。
+  \item 脚本级动态性：解释器嵌入（Lua/Python）、反射库（见《Script》《Reflect》分册）。
+\end{itemize}
+
+\section{混部与边界收敛：把层级差异工程化}
+
+真实系统常见的不是``选一门''，而是\textbf{按层级分工 + 稳定边界}：
+
+\begin{itemize}
+  \item \textbf{C/\Cplus{} 核心 + 托管外壳}：游戏引擎（Unreal 核心 + C\#/蓝图脚本层）、
+        数据库（PG 核心 + 各语言驱动）、浏览器（C++ 引擎 + JS/V8 应用层）、
+        Unity（C++ 原生层 + C\# 脚本层）是同一模式的四个变体。
+  \item \textbf{边界设计的层级含义}：好的边界是``扁平、批量化、无生命周期跨调用''
+        （一次调用传指针 + 长度，而不是每字段 marshal 一次）。
+        边界即层级税的税基，收窄边界就是降税。
+  \item \textbf{反向选择}：把性能关键逻辑上移到 L3（托管）以换安全性，
+        同时用 Span、struct、\texttt{unsafe} 这些台阶保留布局控制权。
+        .NET 的 Kestrel、Java 的 Netty（其本身是 JNI 层优化的产物）都是这条路线。
+\end{itemize}
+
+\begin{bestpractice}[title=边界规则]
+跨层边界应满足：(1) 参数为定长结构或``指针 + 长度''；
+(2) 调用方向以 L3 $\to$ L2 为主（L2 持有资源）；
+(3) 禁止在边界上传递需要析构的复合对象；
+(4) 边界两侧的失败模式分开陈述（异常 vs 错误码），在边界处显式转换。
+\end{bestpractice}
+
+\chapter{运行时模型与绑定时机}
+
+\section{执行管线对照}
+
+\begin{longtable}{@{}p{0.15\textwidth}p{0.26\textwidth}p{0.26\textwidth}p{0.235\textwidth}@{}}
+\toprule
+\textbf{阶段} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\midrule
+前端 & 编译器（Clang/GCC/MSVC） & javac & Roslyn(csc) \\
+中间产物 & 目标文件（本机码+重定位） & 字节码 class & IL + 元数据 dll \\
+链接 & 静态/动态链接期符号解析 & 类加载 + 验证 & 程序集加载 + 验证 \\
+本机化 & 已是本机码 & 解释 $\to$ C1 $\to$ C2（分层） & 解释/预备码 $\to$ 分层 JIT \\
+进阶优化 & LTO/PGO/BOLT & JIT 内联、OSR、逃逸分析 & Tier0--8、R2R、动态 PGO \\
+可选 AOT & 默认即 AOT & GraalVM native-image & R2R、NativeAOT \\
+\bottomrule
+\end{longtable}
+
+\section{GC 作为一种抽象层}
+
+GC 不只是``自动释放''，它重新定义了语言的基本操作语义：
+赋值复制的是句柄、相等比较默认是身份、``取地址''变成非法操作、
+对象可以在任意时刻``搬家''而程序无感。逐条对照：
+
+\begin{itemize}
+  \item \textbf{指针语义改写}：托管引用不是地址（可能是句柄/压缩指针），
+        因此不能算术、不能比较大小、不能跨边界保存。
+  \item \textbf{屏障（barrier）}：写引用时悄悄更新卡表/标记位，
+        这是每写一次多出的几条指令，也是 L3 访存成本公式里常被忽略的项。
+  \item \textbf{可移动性}：所以 \texttt{fixed}/pin 存在；所以 C\# 禁止
+        \texttt{ref struct} 进堆；所以 Java 的 \texttt{MemorySegment} 是
+        ``区段''而不是``地址''。
+\end{itemize}
+
+C/\Cplus{} 阵营的``部分 GC''对应物是引用计数（\texttt{shared\_ptr}）
+与池/arena 分配器：它们不提供可移动性与全局可见对象图的推理，
+因此不能免除程序员对环与生命周期的责任。
+
+\section{元数据留存：层级差异的``档案学''维度}
+
+\begin{longtable}{@{}p{0.225\textwidth}p{0.235\textwidth}p{0.23\textwidth}p{0.23\textwidth}@{}}
+\toprule
+\textbf{信息} & \textbf{C++ 产物} & \textbf{Java class} & \textbf{C\# assembly} \\
+\midrule
+类型层次/成员名 & 仅调试符号（可剥离） & 完整保留 & 完整保留 \\
+\addlinespace
+泛型类型参数 & 编译后消失 & 签名保留、运行擦除 & 保留且可用 \\
+\addlinespace
+反射可行否 & 需自建/第三方/符号表 & 标准库自带 & 标准库自带 \\
+\addlinespace
+序列化基础 & 字段布局（需手工/宏/代码生成） & 反射 + \texttt{Serializable} &
+  反射 + 源生成两种形态 \\
+\bottomrule
+\end{longtable}
+
+``编译后还留下多少关于自身的知识''决定了框架能替你做什么：
+依赖注入、ORM、路由、热重载全部建立在留存元数据之上。
+C++ 生态里同类设施要写代码生成器或宏，这不是生态落后，
+而是层级立场一致的必然结果。
+
+\section{启动、预热与规模}
+
+\begin{itemize}
+  \item L2：启动 = 加载 + 重定位，毫秒甚至微秒级；无预热；
+        二进制体积靠 -Oz/链接期裁剪可控到 KB 级（嵌入式）。
+  \item L3：冷启动包含运行时自举、类/程序集加载、验证、解释预热；
+        AOT 变体用体积/动态性换启动（native-image 单二进制数十 MB 起）。
+  \item 规模效应：JIT 的 profile 驱动优化在服务端长驻进程里通常
+        5--30 秒后追平甚至超过 AOT（热点特化、去虚化基于真实类型）。
+\end{itemize}
+
+\section{谁在决定执行：调试、诊断与``可观测性''的层级根源}
+
+L3 运行时是一个``自知对象图''的进程：attach 协议、堆转储、
+分布式采样（.NET 的 \texttt{dotnet-trace}/Java 的 JFR）都因为元数据与
+安全点（safepoint）的存在而可能。L2 的等价工具建立在调试符号、
+eBPF 采样与显式埋点上，能力相当但每次都要``自己搭''。
+这同样不是能力差距，而是层级契约差别：运行时代管了对象图，
+也替你保留了它的档案。
+
+\begin{guideline}[title=Part III 小结]
+\begin{itemize}
+  \item C++ 的高级抽象（模板/RAII/constexpr）的代价在\textbf{编译期与可审计代码}，
+        L3 的高级抽象（泛型/using/反射）的代价在\textbf{运行时与库协议}。
+  \item 两个方向都能``越层''：L3 有五级向下台阶（Span 到 NativeAOT），
+        L2 有整套高层设施；但越层成本（pin、编组、配置登记）正是层级的价格标签。
+  \item 元数据留存与``谁决定执行''是常被忽略的两个层级判据，
+        它们解释了为什么框架生态在 L3 繁荣、在 L2 以库和代码生成为主。
+\end{itemize}
+\end{guideline}
+
+% ====================================================================
+\part{回到``中级语言''：辨析、定位与选型}
+% ====================================================================
+
+\chapter{``中级语言''的正名与辨析}
+
+前三部分给出了判据与机制；本章回到题目本身：为什么是``中级''，
+这个说法哪里对、哪里容易被误用。
+
+\section{称呼的词源：系统实现语言的双层性格}
+
+``中级语言''不是官方分类，而是三段历史沉积物的合成词：
+
+\begin{enumerate}
+  \item \textbf{BCPL 的自我定位}（1960 年代末）：BCPL 的手册把自己描述为
+        ``介于汇编与 ALGOL 之间''的语言，用于编写编译器与系统；
+        C 的谱系直接继承了这一生态位。
+  \item \textbf{Unix 的工程实践}（1970 年代）：内核与 shell 用同一门语言书写，
+        驱动代码里出现\texttt{*(int *)0x10004 = 1;} 这样的``可移植的绝对地址赋值''
+        并不违和。语言同时服务两个历来分开的领域，
+        ``介于两层之间''成为观察事实而非修辞。
+  \item \textbf{教材的凝练表述}（1978/1988）：K\&R 对 C 的经典描述是
+        ``兼具低级语言的能力与高级语言的便利''（aspects of a lower-level
+        and higher-level language）；中文教材体系将其转述为``中级语言''并沿用至今。
+\end{enumerate}
+
+\begin{note}[title=与本书前八章的呼应]
+这三段历史在判据上分别是：语义保真度（判据 1）、可移植性来源（判据 2）、
+自动化负担分配（判据 3）。``中级语言''这个标签之所以流传，
+是因为三个判据在 C 上罕见地\emph{同时}给出了中间值：
+保真度贴机器、可移植性靠源码、自动化负担主要留给程序员。
+\end{note}
+
+\section{C 的两层性：面向过程 + 面向系统}
+
+1970 年代的分类里还有一对术语：``procedure-oriented''（面向过程）
+与 ``system implementation language''（系统实现语言，如 BLISS/PL360）。
+C 被贴``中级''标签时，隐含的定义是：
+
+\begin{itemize}
+  \item \textbf{对下}：保留机器可寻址性（指针、位操作、字节可数内存模型），
+        足以重写过去只能用汇编写的东西，且性能损失可预期；
+  \item \textbf{对上}：控制流、类型、函数、独立编译，使应用逻辑得以结构化；
+  \item \textbf{中间}：两层不互相抵消，指针可以在函数调用与结构体之间自由穿行。
+\end{itemize}
+
+Dennis Ritchie 后来的自我总结是：C 的``刻意低级（deliberately low level）''
+恰是其成功要素之一，因为编译器与程序员都以同一套内存模型推理，
+语言没有``假装硬件不存在''。这是``中级''定位最有力的一句辩护。
+
+\section{C++ 叠加的第三层：通用抽象层}
+
+C++ 继承 C 的底座后，在同一个程序里叠加了可与``高级语言''掰手腕的表达层
+（第 6 章全部）：模板泛型、RAII 资源抽象、运算符重载、概念约束、编译期计算。
+于是 C++ 的``中级''比 C 多一层含义：\textbf{它同时是两种语言的工作方式}
+（Stroustrup 所谓 ``faithful to C 的上层抽象、又贴近机器的代价模型''），
+而且选择哪一种是\emph{逐语句}的决定，不是逐项目、逐团队的。
+
+\begin{levelspectrum}[title=``中级''在四个语言上的标定]
+\begin{tabular}{@{}p{0.125\textwidth}p{0.265\textwidth}p{0.27\textwidth}p{0.24\textwidth}@{}}
+\toprule
+\textbf{语言} & \textbf{贴近机器的一面} & \textbf{高层表达的一面} & \textbf{标定} \\
+\midrule
+C & 指针/布局/无运行时 & 结构化控制流、类型 & L2 下缘（几乎无高级设施） \\
+C++ & 同 C + 可预测代码生成 & 模板/RAII/概念/constexpr & L2 全域 + 上探 L3 语法 \\
+Java & 无（默认） & 完整 OOP + 泛型 + 反射 & L3 上缘（逃生舱最窄） \\
+C\# & unsafe、Span、struct 可达 L2 & 泛型、LINQ、async 全套 & L3 主体 + 制度化 L2 侧门 \\
+\bottomrule
+\end{tabular}
+\end{levelspectrum}
+
+\section{辨析：``级别''不等于什么}
+
+\subsection*{不等于难度}
+
+学习曲线由\emph{失败模式}决定：C/\Cplus{} 入门难在 UB 与手动生命周期，
+但语言规则本身很小；Java/C\# 入门易，精通难在运行时行为
+（GC 调优、JIT 反优化、类加载、编组）。``高级语言更容易写出能跑的代码，
+中级语言更容易写出知道为什么跑的代码。''
+
+\subsection*{不等于性能}
+
+层级决定的是\emph{成本的上限与下限归属}（第 4/5 章），不是名次。
+实测中：向量化良好的 Java 数值循环快于保守的 C++ 构建；
+精心调优的 C\# \texttt{Span} 代码在解析任务上快于同算法的 C；
+带大堆的服务 GC 暂停短于某些 malloc 竞争风暴。
+把``级别''当性能预测器用，是这一术语最大的误用。
+
+\subsection*{不等于抽象能力}
+
+反例即第 6 章：C++ 的模板是编译期多态的完整抽象机器，
+C++20 概念系统表达能力不弱于任何类型类系统；
+而 L3 的``更高级''更多指\emph{默认自动化程度}（GC、验证、反射），
+不是抽象表达力。一个用 CRTP + ranges 写的数据流库，
+在抽象语法层面比一个用继承体系写的 Java GUI 应用``高级''得多。
+
+\section{更准确的表述方式}
+
+如果要在论文或答辩中表述这个区别，建议放弃单轴``级别''，改用可防守的句子：
+
+\begin{itemize}
+  \item ``C/\Cplus{} 是\textbf{暴露机器模型的源码可移植语言}：
+        程序员对布局、生命周期与溢出负责，编译器负责指令选择。''
+  \item ``Java/C\# 是\textbf{以规范化运行时为中间层的托管语言}：
+        运行时对布局、回收与验证负责，并以此换取可移植的执行与在线安全。''
+  \item ``所谓``中级''，指其\textbf{默认承诺}停在汇编与托管之间：
+        比汇编保留了可移植源码与类型，比托管语言保留了可预测的对象表示。''
+\end{itemize}
+
+这三句都可以被第 2 章的判据表逐条核验，且不依赖任何语言阵营立场。
+
+\section{一个思想实验：把四门语言同时``剥层''}
+
+想象同一套代码在四个层级被重写：内核态驱动（L1/L2）用 C 加少量汇编，
+用户态高性能服务（L2 上层）用 C++ 模板与 ranges，
+托管服务（L3）用 C\# 把性能热点下沉到 \texttt{Span}/\texttt{unsafe}，
+最后用 Java 通过 FFM 调用同一套 C ABI。
+你会发现：真正迁移的是\textbf{控制权}（谁掌管布局/回收/验证），
+而不是语法。语法层四门语言能互相模仿得惟妙惟肖，
+层级契约永远模仿不了。这正是全书的核心论点。
+
+\chapter{如何选择合适的抽象层级}
+
+\section{从光谱到决策空间}
+
+前文反复说明：层级是多维的。选型时应把``选语言''改写为
+\textbf{在哪些维度上接受运行时代管、在哪些维度上坚持程序员掌管}。
+
+\begin{center}
+\begin{tabular}{@{}p{0.30\textwidth}p{0.30\textwidth}p{0.30\textwidth}@{}}
+\toprule
+\textbf{必须程序员掌管的维度} & \textbf{可以交给运行时的维度} & \textbf{决策提示} \\
+\midrule
+内存布局/对齐/物理地址 & 业务对象建模 & 有硬件共享结构 $\to$ L2 核心 \\
+释放时刻（时钟级约束） & 一般生命周期 & 硬实时 $\to$ L2 或 L3+显式池 \\
+启动与尾部延迟预算 & 吞吐量与迭代速度 & 冷启动敏感 $\to$ L2 或 AOT 化 L3 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{决策树}
+
+\begin{enumerate}[label=\textbf{Q\arabic*.}]
+  \item \textbf{目标环境存在运行时吗？} 裸机/内核/受限固件 $\to$ C（或受限 C++）。
+        有 OS + 可部署运行时 $\to$ Q2。
+  \item \textbf{延迟预算触碰 GC/JIT 抖动吗？} 是（p99.9 $\le$ 百微秒级、
+        周期任务、音频回调）$\to$ L2 或 L3+AOT+池化实测验证。否 $\to$ Q3。
+  \item \textbf{需要与硬件/其他语言共享二进制表示吗？}
+        DMA 描述符、协议头、跨团队 ABI $\to$ L2 核心 + 边界扁平化（第 7.3 节）。
+  \item \textbf{团队规模与迭代速率主导吗？} 业务 CRUD/胶水/快速原型
+        $\to$ L3（生态与安全性默认值占优）。
+  \item \textbf{两者都要？} $\to$ 混合架构：L3 外壳 + L2 核心，
+        用第 7.3 节边界规则隔离层级税。
+\end{enumerate}
+
+\section{场景卡}
+
+\subsection*{卡 A：嵌入式 / 内核 / 驱动}
+
+层级被迫为 L1/L2。关键工程点：无动态分配或仅 arena、
+MISRA/CERT 子集、静态分析全覆盖。C++ 在此场景需禁用异常/RTTI
+（或 -fno-exceptions 风格），用零成本抽象换可读性
+（《HW Access and Kernels》分册有完整讨论）。
+
+\subsection*{卡 B：互联网后端服务}
+
+默认 L3：开发速率、生态（Web/RPC/ORM/可观测性）、人员供给全面占优。
+性能问题优先在 L3 内解决（分配瘦身、池化、Span 化、GC 模式调优），
+只有证明层级契约本身是瓶颈（如全局暂停无法摊薄）才下沉。
+
+\subsection*{卡 C：移动 / 桌面应用}
+
+Android 历史上有过``L3 在资源受限设备''的争论，ART 的 AOT/AOT+JIT 混合
+与压缩 GC 实际上把 L3 适配进了 L2 的设备预算；iOS 的 .NET for iOS
+则相反（禁止 JIT $\to$ 全 AOT）。结论：这一场景的层级选择越来越像
+\textbf{部署形态选择}（解释/JIT/AOT 档位），而非语言阵营选择。
+
+\subsection*{卡 D：低延迟（交易、音视频、机器人控制）}
+
+L2 或 L3 的``无暂停子集''（C++ 全程；C\#/Java 需
+off-heap + 对象池 + 禁分配热路径，工程门槛显著更高）。
+决策变量是\textbf{预算能否承受层级税}：能付则 L2，
+不能付则必须自建``L2 纪律''（内存冻结、时钟对齐、预热常驻）。
+
+\subsection*{卡 E：语言实现 / 数据库 / 基础设施软件}
+
+历史上是 L2 的传统领地（运行时本身就是别的项目的``底层''）。
+新趋势：基础软件开始出现 L3 实现（Kafka/Cassandra/Elastic 长期占据 Java、
+ClickHouse/Doris 走 C++、Rust 入局），层级选择让位于
+\textbf{目标运行环境与可贡献社区}的生态变量。
+
+\section{迁移与下沉/上移的方向性}
+
+\begin{itemize}
+  \item \textbf{L2 $\to$ L3}：常见于业务加速期。风险点：把 C++ 的
+        所有权思维直译成 C\#/Java（到处 new、到处共享可变对象），
+        GC 与并发缺陷会以``偶发停顿''和``偶发 NPE/CCE''形态回归。
+  \item \textbf{L3 $\to$ L2}（下沉）：常见于性能危机期。风险点：
+        只搬热循环不搬契约（边界编组、异常翻译、生命周期归属没重设计），
+        层级税从 GC 账单变成 bug 账单。
+  \item \textbf{健康的混合}：以稳定 ABI 为界，L2 核心无托管依赖，
+        L3 外壳不假设 L2 的对象存活期；每个边界有单一责任文档
+        （谁分配、谁释放、失败如何翻译）。
+\end{itemize}
+
+\begin{bestpractice}[title=层级自检三问（季度回顾可直接用）]
+(1) 我们的线上事故里，有多少是``程序员掌管''维度的失职
+（越界、悬垂、溢出、未审计的生命周期）？多少是``运行时代管''维度的意外
+（GC 暂停、预热、编组）？前者指向 L2 纪律，后者指向 L3 调优预算。
+(2) 我们是否为同一件事在两侧都写了防御（又手动池化又依赖 GC）？
+(3) 边界调用穿过了几个类型系统？跨层调用链每增加一跳，
+    就应多一分``扁平化''的冲动。
+\end{bestpractice}
+
+\chapter{总结}
+
+\begin{enumerate}
+  \item ``中级语言''是历史标签，实质内容 = \textbf{暴露且可预测的机器模型}
+        加上源码级可移植性；它的反面``高级/托管''= \textbf{隐藏机器模型}
+        并由运行时在线代管（验证、回收、编译）。
+  \item 这条分界在九个维度上可逐条核验（布局、验证时机、泛型表示、
+        生命周期、绑定时机、溢出、异常、互操作、优化信息量），
+        C/\Cplus{} 与 Java/C\# 在每个维度上都落在相反的一侧。
+  \item 层级决定\textbf{成本归属与控制权归属}，不决定难度、不决定性能名次。
+  \item 两个阵营都在向对方移动：C++ 长出一等高级抽象（零成本、代价可审计），
+        L3 制度化向下逃生舱（Span/struct/FFM/AOT）。层级是\emph{默认立场}，
+        不是\emph{能力上限}。
+  \item 工程上的正确问法不是``哪门语言更高级''，而是：
+        \textbf{在这个模块、这个热路径、这个失败模式下，
+        谁应当掌管布局、生命周期与验证？}选一侧就要接受那一侧的税单。
+  \item 混合架构是常态而非妥协；层级税可见、可算、可通过边界设计摊薄。
+\end{enumerate}
+
+\appendix
+
+\chapter{十一维度四语言对照总表}
+
+{\small
+\begin{longtable}{@{}p{0.17\textwidth}p{0.23\textwidth}p{0.22\textwidth}p{0.22\textwidth}@{}}
+\toprule
+\textbf{维度} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\midrule
+机器模型可见性 & 直接可见（布局/对齐/地址） & 不可见 & 默认不可见，可申请 \\
+对象头与开销 & 无强制头，布局=声明 & 运行时决定（典型 12--16B/对象） & 同 Java，struct 可免 \\
+内存回收 & RAII/手动，确定时刻 & GC 非确定 & GC 非确定 + \texttt{using} 确定协议 \\
+边界检查 & 无（UB 风险区） & 恒有，JIT 可消除 & 恒有（Span/unsafe 显式路径除外） \\
+泛型表示 & 编译期单态化 & 类型擦除 & 运行时 reified，值类型特化 \\
+空值/类型安全 & 编译期为主，运行时无保护 & 运行时异常兜底 & 编译期 nullable + 运行时兜底 \\
+溢出语义 & 有符号 UB/无符号回绕 & 恒二进制回绕 & 默认回绕，\texttt{checked} 抛 \\
+编译产物 & 本机码（AOT） & 字节码 $\to$ 分层 JIT & IL $\to$ 分层 JIT/R2R/AOT \\
+运行时元数据 & 基本无（RTTI 受限） & 完整类型信息 & 完整类型信息 \\
+互操作方向 & 被全体调用（C ABI 中心） & JNI/FFM 调用外部 & P/Invoke 调用外部 \\
+确定性（时刻可控） & 高（无后台线程代管内存） & 低（GC/JIT/安全点介入） & 中低（可配 GC 模式） \\
+\bottomrule
+\end{longtable}
+}
+
+\chapter{术语对照}
+
+{\footnotesize
+\begin{longtable}{@{}p{0.24\textwidth}p{0.34\textwidth}p{0.36\textwidth}@{}}
+\toprule
+\textbf{术语} & \textbf{英文} & \textbf{本书用法约定} \\
+\midrule
+中级语言 & middle-level / mid-level language & 历史标签，实质见第 9.5 节三句表述 \\
+系统实现语言 & system implementation language & 1970 年代同义术语，强调用途而非位置 \\
+机器模型 & machine model & 地址、布局、对齐、溢出、原子性等硬件语义的集合 \\
+托管执行 & managed execution & 由规范运行时负责验证、回收与编译的执行模式 \\
+零成本抽象 & zero-overhead abstraction & 未用不付费；用则不劣于等效手写（第 6.1 节两半定义） \\
+类型擦除 & type erasure & Java 泛型编译后丢弃类型参数 \\
+具化泛型 & reified generics & 运行时保留类型参数（C\#） \\
+单态化 & monomorphization & 每类型实例生成一份代码（C++ 模板、C\# 值泛型） \\
+安全点 & safepoint & GC/运行时可安全暂停线程的代码位置 \\
+编组 & marshalling & 跨 ABI/层级边界的表示转换 \\
+逃生舱 & escape hatch & 托管语言接近机器的制度化手段（第 7 章表） \\
+UB & undefined behavior & 未定义行为，C/\Cplus{} 标准保留的实现自由度 \\
+\bottomrule
+\end{longtable}
+}
+
+\end{document}

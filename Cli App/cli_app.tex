@@ -1,0 +1,5559 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\usepackage{iffont}
+\IfFontExistsTF{Consolas}{\setmonofont{Consolas}}{\setmonofont{DejaVu Sans Mono}}
+
+% ==================== 颜色 ====================
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+\lstdefinestyle{cppstyle}{
+  language=C++,
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,FILE,wchar_t},
+  emphstyle=\color{teal!80!black},
+  escapeinside={(*@}{@*)},
+}
+\lstset{style=cppstyle}
+
+% ---- Shell / bash（CLI 用法示例）----
+\lstdefinelanguage{ShellLD}{
+  morekeywords={if,then,else,elif,fi,for,in,do,done,while,case,esac,
+    function,return,local,export,source,echo,cd,set,exec,trap,read,
+    printf,test,exit,shift,eval,alias},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[d]',
+}
+\lstdefinestyle{shellstyle}{
+  language=ShellLD,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  emph={curl,git,docker,cargo,vcpkg,conan,cmake,make,ninja,msbuild,
+    dotnet,java,pip,npm,pwsh,bash,zsh,sh,cmd,find,grep,sed,awk,xargs,
+    tar,zip,unzip,mkdir,rm,cp,mv,cat,touch,ls,which,chmod,chown,ssh,
+    apt,brew,winget,choco,pacman,systemctl,journalctl,netstat,tasklist,
+    reg,powershell,cl,clang,gcc,g++,lldb,gdb,ctest,clang-tidy},
+  emphstyle=\color{teal!80!black}\bfseries,
+}
+
+% ---- Windows 批处理 ----
+\lstdefinelanguage{BatchLD}{
+  morekeywords={@echo,echo,on,off,set,setlocal,endlocal,if,else,for,
+    in,do,goto,call,exit,pause,rem,shift,cd,pushd,popd,choice,where},
+  sensitive=false,
+  morecomment=[l]{::},
+  morecomment=[l]{rem},
+  morestring=[b]",
+}
+\lstdefinestyle{batchstyle}{
+  language=BatchLD,
+  keywordstyle=\color{cppkeyword}\bfseries,
+}
+
+% ---- CMake ----
+\lstdefinelanguage{CMakeLD}{
+  morekeywords={cmake_minimum_required,project,add_executable,
+    add_library,target_link_libraries,target_include_directories,
+    target_compile_definitions,target_compile_options,set,if,elseif,
+    else,endif,find_package,option,message,install,file,
+    target_sources,add_subdirectory,FetchContent_Declare,
+    FetchContent_MakeAvailable,list,string},
+  sensitive=false,
+  morecomment=[l]{\#},
+  morestring=[b]",
+}
+\lstdefinestyle{cmakestyle}{
+  language=CMakeLD,
+  keywordstyle=\color{cppkeyword}\bfseries,
+}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{float}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+\setlength{\headheight}{14.5pt}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+\emergencystretch=3em
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={C++ Reference},
+  pdftitle={C/C++ 命令行应用参考手册},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+\newcommand{\Opt}[1]{\texttt{-\/-#1}}
+\newcommand{\Short}[1]{\texttt{-#1}}
+% 零宽断行点：用于表格里的长 API 名，避免 overfull
+\newcommand{\Bk}{\allowbreak}
+
+% ====================================================================
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C/C++ 命令行应用参考手册\par}
+\vspace{1cm}
+{\LARGE 终端模型、参数解析、彩色输出与 TUI 库全景\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+\cleardoublepage
+
+% ====================================================================
+\part{终端运行时（模型层）}
+% ====================================================================
+
+本书的第一部分不谈任何一个参数解析库，而是回到最底层的问题：当你写下
+\Tp{printf} 时，字节究竟流向何处，谁在解释它们，以及为什么同一段代码在
+终端里表现正常、接到管道里就面目全非。命令行程序（CLI, Command Line
+Interface）表面上是最简单的程序形态——没有窗口、没有事件循环、没有图形
+资源——但它面对的运行时恰恰是最含混的一层：一个被称为``终端''的东西，
+在 POSIX 上是一台伪终端设备加一套 \Tp{termios} 状态机，在 Windows 上则是
+两套互相冲突的 API 加上十余年的历史包袱。不理解这一层，所有上层的彩色输出、
+进度条、全屏界面都只能靠试错来拼凑。
+
+本部分包含三章：第 1 章建立终端的模型（设备、驱动、终端模拟器、转义序列谱系）；
+第 2 章处理字节流本身（缓冲、重定向、信号、argv 的取得、编码与字符宽度）；
+第 3 章给出工程化的能力探测与降级策略。三章读完后，你应当能够回答：
+程序如何知道自己``正在被人类观看''。
+
+% ====================================================================
+\chapter{终端到底是什么}
+% ====================================================================
+
+``终端''（terminal）一词来自电传打印机（teletype，缩写 TTY）时代。1970
+年代的计算机没有屏幕，用户坐在一台机械设备前，敲下的字符通过串行线路送进
+主机，主机的输出被打印在纸带上。今天的终端是软件，但整条抽象链完整地保留
+了那段历史的痕迹：内核里仍然有 TTY 驱动子系统，设备节点仍然叫 \Tp{/dev/tty}，
+``原始模式''仍然叫 raw mode。理解 CLI 程序的第一课，就是接受一个事实：
+\emph{终端不是一个窗口，而是一条被两端软件共同约定的字节通道}。
+
+\section{POSIX 视角：字符设备与 PTY 模型}
+
+在 Linux 与 macOS 上，终端的抽象是分层实现的。最底层是一个伪终端设备对
+（pseudo-terminal，PTY），它由两部分组成：
+
+\begin{itemize}
+\item \textbf{master 端}（也叫 pty 端）：由终端模拟器进程持有，例如
+      Terminal.app、iTerm2、konsole、alacritty、Windows Terminal 或 \Tp{sshd}。
+      它是一块由内核实现的双向缓冲区，POSIX 规定通过 \Tp{/dev/ptmx}
+      （Linux 还有 \Tp{/dev/pts/ptmx}）打开并配对。
+\item \textbf{slave 端}（也叫 tty 端）：呈现为一个设备节点，路径形如
+      \Tp{/dev/pts/0}、\Tp{/dev/pts/17}，macOS 上则是 \Tp{/dev/ttys000}
+      这类 BSD 命名。用户在 shell 里执行 \Tp{tty} 命令看到的就是这个路径。
+\end{itemize}
+
+CLI 程序的三个标准文件描述符（0、1、2）在启动时被指向这个 slave 节点。
+关键在于：slave 节点不是一块纯粹的透明管道，它是\emph{有状态的字符设备}，
+内核在它上面实现了一层叫 line discipline（行规程）的处理逻辑。这层逻辑会：
+
+\begin{enumerate}
+\item 把 master 方向收到的输入按行累积，直到看到换行才交给读进程（规范模式）；
+\item 处理擦除字符（\Short{h} 退格）与行删除字符；
+\item 把收到的输入字符原样``回声''写回输出方向，让用户看见自己敲了什么；
+\item 识别中断、挂起、退出等特殊控制字符（\Tp{VINTR} 对应 Ctrl-C，
+      \Tp{VSUSP} 对应 Ctrl-Z，\Tp{VQUIT} 对应反斜杠键），
+      并向整个前台进程组发送信号；
+\item 在输出方向把 \Tp{ONLCR} 之类的映射打开时，把 \Tp{\textbackslash n}
+      改写为 \Tp{\textbackslash r\textbackslash n}。
+\end{enumerate}
+
+这意味着``按一个键程序就立刻收到''在默认配置下\emph{不会发生}。输入被内核
+缓冲，回显也是内核做的，而不是你的程序做的。因此当 CLI 需要读取单个按键
+（比如方向键、比如密码输入），必须显式关掉行缓冲和回显，这就是所谓的
+原始模式（raw mode）。
+
+\subsection{termios：终端状态的唯一入口}
+
+POSIX 用 \Tp{struct termios}（定义在 \Tp{termios.h}）描述一个 tty 的全部
+状态，它由四个成员域加若干控制字符组成：
+
+\begin{center}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+                 >{\raggedright\arraybackslash}p{0.10\textwidth}
+                 >{\raggedright\arraybackslash}p{0.55\textwidth}@{}}
+\toprule
+字段 & 位宽 & 含义 \\
+\midrule
+\Tp{c\_iflag} & input flags  & 输入侧的字符解释规则，例如是否把 \Tp{CR} 映射为
+\Tp{NL}（\Tp{ICRNL}）、是否启用 parity \\
+\Tp{c\_oflag} & output flags & 输出侧的改写规则，最常见的是 \Tp{ONLCR} 与
+\Tp{OPOST}（总开关） \\
+\Tp{c\_lflag} & local flags  & 行规程行为：\Tp{ICANON}（规范模式）、
+\Tp{ECHO}（回显）、\Tp{ISIG}（把控制字符转成信号）、\Tp{IEXTEN} \\
+\Tp{c\_cflag} & control flags & 硬件参数：波特率、数据位、停止位；现代 PTY
+上基本无意义 \\
+\Tp{c\_cc[]} & 数组 & 特殊字符表：\Tp{VINTR}、\Tp{VERASE}、
+\Tp{VEOF}、\Tp{VMIN}、\Tp{VTIME} 等 \\
+\Tp{c\_ispeed} 与 \Tp{c\_ospeed} & 速度 & 输入输出波特率 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+访问接口是三个函数：\Fn{tcgetattr} 读取当前状态，\Fn{tcsetattr} 写入新状态，
+\Fn{cfmakeraw}（BSD 与 glibc 扩展，非 POSIX 标准）一步设置成原始模式。
+\Fn{tcsetattr} 的第二个动作参数决定何时生效：\Tp{TCSANOW} 立即、
+\Tp{TCSADRAIN} 等输出排空、\Tp{TCSAFLUSH} 排空输出并丢弃未读输入。
+改模式前把原状态保存下来、退出时精确恢复，是使用 \Tp{termios} 的铁律；
+任何``只改了一部分然后忘了改回来''的 bug 都会让用户得到一个坏掉的 shell。
+
+\begin{lstlisting}[style=shellstyle,caption={用 stty 观察与修改当前 tty 状态}]
+$ stty -a -F /dev/pts/3        # 打印当前 termios 全部字段
+speed 38400 baud; rows 42; columns 132; ...
+iflag: icrnl ixon ixany
+oflag: opost onlcr
+lflag: isig icanon echo echoe echok
+cc:    lnext ^v quit ^\ erase ^? intr ^c
+
+$ stty raw -echo -F /dev/pts/3 # 一键进入"原始且无回显"
+$ stty sane                   # 恢复合理默认值（终端被打乱时自救）
+\end{lstlisting}
+
+\Tp{stty sane} 是每个 CLI 开发者都该知道的用户侧救命命令：当程序崩溃后
+终端不再回显、输出乱成一行时，凭记忆敲下它即可恢复（因为回显被关闭，
+屏幕上什么都看不见，所以必须盲打）。
+
+\section{规范模式与原始模式：行为差异的本质}
+
+很多文章把``原始模式''描述成``关闭缓冲''，这个说法不准确。规范模式与
+原始模式的区别不在于\emph{有没有}缓冲，而在于\emph{谁}在读到多少数据时
+被允许返回。规范模式下，\Fn{read} 在遇到行结束符之前不会返回，因此任何
+行编辑（退格、Ctrl-U 删行）都能在内核层实现，程序只需处理完整行。
+原始模式下 \Fn{read} 只要有一字节可用就返回，于是：
+
+\begin{itemize}
+\item 方向键与 \Tp{Esc} 序列会以碎片形式到达。终端模拟器发送的是三字节
+      \Tp{ESC [ A}，但网络或 PTY 不保证一次读到一个完整序列。
+      \emph{任何正确的按键解析器都必须带超时重组逻辑}。
+\item 回显消失（若同时清掉 \Tp{ECHO}），程序必须自己把用户输入的字符画出来，
+      自己维护光标列号，自己处理宽字符占两列的事实。
+\item Ctrl-C 不再产生 \Tp{SIGINT}（若清掉 \Tp{ISIG}），程序要自己识别
+      \Tp{0x03} 字节。这一点在全屏 TUI 里通常是想要的，否则每次 Ctrl-C
+      都会直接终止程序而不给清理终端的机会。
+\item \Tp{VMIN}/\Tp{VTIME} 的组合决定读取的阻塞语义：两者皆为 0 表示完全
+      非阻塞，读不到就返回 0；\Tp{VMIN}=1、\Tp{VTIME}=0 表示阻塞直到一字节；
+      \Tp{VMIN}=0、\Tp{VTIME}=n 表示最多等 n 个十分之一秒。
+\end{itemize}
+
+\begin{lstlisting}[caption={POSIX 原始模式的最小正确实现（保存与恢复）}]
+// raw_mode.hpp  -- C++17, Linux/macOS/WSL
+#include <termios.h>
+#include <unistd.h>
+#include <cstdlib>
+
+class RawMode {           // RAII: 构造进入原始模式, 析构精确恢复
+  termios saved_{};
+  bool    active_{false};
+public:
+  explicit RawMode(int fd = STDIN_FILENO) {
+    if (::isatty(fd) == 0) return;         // 不是 tty: 什么都不做
+    if (::tcgetattr(fd, &saved_) != 0) return;
+    termios raw = saved_;
+    ::cfmakeraw(&raw);                     // BSD/glibc 扩展
+    // 若追求可移植, 手工清位更可靠:
+    raw.c_lflag &= ~(ICANON | ECHO | ISIG | IEXTEN);
+    raw.c_iflag &= ~(IXON | ICRNL | BRKINT | INPCK | ISTRIP);
+    raw.c_oflag &= ~(OPOST);
+    raw.c_cc[VMIN]  = 0;                   // 非阻塞读取
+    raw.c_cc[VTIME] = 1;                   // 100ms 超时, 用于序列重组
+    if (::tcsetattr(fd, TCSAFLUSH, &raw) == 0) active_ = true;
+  }
+  ~RawMode() { reset(); }
+  RawMode(const RawMode&) = delete;
+  RawMode& operator=(const RawMode&) = delete;
+  bool active() const { return active_; }
+  void reset() {
+    if (active_) { ::tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_);
+                   active_ = false; }
+  }
+};
+\end{lstlisting}
+
+\begin{warning}[title={把 \Tp{termios} 结构体直接整体保存}]
+不要写成``先记住几个位，退出时再把这几个位改回来''。正确的做法是
+\emph{整体保存整个 \Tp{termios} 结构，退出时整体写回}。原因有两点：其一，
+同一进程内可能有第三方库（readline、curses）也在改模式，逐位恢复会互相覆盖；
+其二，\Tp{c\_cc} 数组里存的是当前用户配置的特殊字符，逐位恢复不会碰它，
+但如果程序异常退出（比如未捕获异常穿过析构），恢复动作可能根本没有执行。
+所以还要配合 \Fn{atexit} 或信号处理器做兜底，见第 9 章的终端状态恢复。
+\end{warning}
+
+\section{Windows 的双轨制：Console API 与虚拟终端}
+
+Windows 从来没有 POSIX 那样的``字符设备加行规程''模型。它历史上提供的是
+一套\emph{结构化事件}API：控制台输入是一个带类型和坐标的 \Tp{INPUT\_RECORD}
+队列（按键事件、鼠标事件、窗口大小事件分开存放），控制台输出是一块位于
+内核显存区域的\emph{屏幕缓冲区}（screen buffer），程序通过坐标写入字符与
+属性字节。两者是完全不同的抽象，也因此 Windows 上的 CLI 有两套并存的 API。
+
+\subsection{传统 Console API}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.28\textwidth}
+                 >{\raggedright\arraybackslash}p{0.51\textwidth}@{}}
+\caption{常用传统 Console API 及其语义} \\
+\toprule
+函数 & 语义 \\
+\midrule
+\endfirsthead
+\toprule
+函数 & 语义 \\
+\midrule
+\endhead
+\Fn{GetConsoleMode} & 读取当前模式位。常用位：\Tp{ENABLE\_PROCESSED\_INPUT}
+（等价于行缓冲，关掉即近似原始模式）、\Tp{ENABLE\_QUICK\_EDIT}、
+\Tp{ENABLE\_VT\_INPUT}（Windows 10 1703+） \\
+\Fn{SetConsoleMode} & 写回模式位；对输入句柄与输出句柄分别调用 \\
+\Fn{ReadConsole\Bk InputA/W} & 读取 \Tp{INPUT\_RECORD} 数组。要拿到单个按键，
+需在事件里检查 \Tp{KEY\_EVENT}、\Tp{wVirtual\Bk KeyCode} 与 \Tp{bKeyDown} \\
+\Fn{ReadConsoleA/W} & 带行编辑的文本读取，行为接近规范模式 \\
+\Fn{WriteConsoleA/W} & 直接写屏幕缓冲区，绕过 CRT 缓冲 \\
+\Fn{SetConsole\Bk TextAttribute} & 用 4 位前景色加 3 位背景色加 1 位
+闪烁（共 8 个前景色，\Tp{BACKGROUND\Bk \_INTENSITY} 提供 8 个背景色）设置颜色，
+即经典的 16 色 \\
+\Fn{SetConsole\Bk CursorPosition} & 按 \Tp{COORD} 移动光标，等价于
+CUP 转义序列的 API 形式 \\
+\Fn{GetConsole\Bk ScreenBuffer\Bk Info} & 取得缓冲区尺寸与可见窗口矩形，
+即终端行列数的 Windows 来源 \\
+\Fn{FillConsole\Bk Output\Bk Attribute} & 批量改属性，用于``清屏'' 与
+``整行高亮'' \\
+\Fn{SetConsole\Bk CtrlHandler} & 注册控制事件回调，见第 2 章 \\
+\bottomrule
+\end{longtable}
+
+这条路径的优点是能力齐全且历史久远（Windows 95 就能用），缺点是它与
+\Tp{stdout} 字节流\emph{不在一个层面}：CRT 的 \Tp{printf} 最终也是调用
+写句柄，颜色、坐标类 API 却要求你持有控制台句柄（\Fn{GetStdHandle}
+\Tp{STD\_OUTPUT\_HANDLE}）并自行处理 CRT 缓冲区的排空顺序。混用两者时，
+输出会出现``颜色先出现、文字后出现''的错位。
+
+\subsection{虚拟终端（VT）与 ConPTY}
+
+现代路径是让 Windows 也变成``字节流加转义序列''的世界。有两个关键机制：
+
+\begin{enumerate}
+\item \textbf{Virtual Terminal processing}（VTM）。对输出句柄调用
+      \Fn{SetConsoleMode} 并加上 \Tp{ENABLE\_VIRTUAL\_TERMINAL\_PROCESSING}，
+      控制台驱动就会在字节流里解析 ANSI/VT 转义序列，包括 CSI 颜色、
+      光标移动、清行等。24 位真彩需要 Windows 10 1709 及以上；更早的宿主
+      会把 \Tp{38;2;r;g;b} 误解析成 256 色形式，导致颜色完全错乱。
+      对输入句柄加上 \Tp{ENABLE\_VT\_INPUT}，方向键之类的键就会被翻译成
+      与 xterm 一致的转义序列写进输入流。
+\item \textbf{ConPTY}（pseudo console，Windows 10 1809 起）。它把``屏幕
+      缓冲区''这一内部表示重新序列化为一对管道：一端接受旧程序的 API 调用，
+      另一端吐出 VT 字节流。ConPTY 是为\emph{终端模拟器作者}设计的，
+      它让 Windows Terminal、VS Code 集成终端、\Tp{ssh} 会话能够运行完全不
+      认识 VT 的老程序。普通 CLI 一般不需要直接调用 \Fn{CreatePseudoConsole}。
+\end{enumerate}
+
+\begin{note}[title={Windows Terminal 与 conhost 的关系}]
+默认情况下，双击 exe 或由 shell 启动的控制台程序会挂在一个 \Tp{conhost.exe}
+宿主上。装了 Windows Terminal 并将其设为默认终端后，\Tp{conhost} 会通过
+``默认终端''机制把会话委托给 Windows Terminal 进程，此时你得到的是真正的
+现代终端模拟器（真彩、连字字体、GPU 渲染、\Tp{OSC} 8 超链接）。
+但注意：程序自己并不知道这一层，它只看到控制台缓冲区加一组模式位。
+因此能力探测必须以 \Fn{GetConsoleMode} 的结果为准，不能以``我认为用户
+在用 Windows Terminal''为准。
+\end{note}
+
+\begin{lstlisting}[caption={Windows 侧启用 VT 解析的正确写法}]
+// vt_win32.cpp   需要 -DWIN32_LEAN_AND_MEAN
+#ifndef WIN32_LEAN_AND_MEAN
+# define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+
+namespace cli {
+
+struct WinStd {
+  bool is_console;    // 句柄确实是控制台
+  bool vt_ready;      // 已开启 VT 解析(可安全输出转义序列)
+  bool want_truecolor;// 由环境变量提示推断, 不是 API 事实
+};
+
+static bool set_mode(DWORD add) {
+  HANDLE h = ::GetStdHandle(STD_OUTPUT_HANDLE);
+  if (h == nullptr || h == INVALID_HANDLE_VALUE) return false;
+  DWORD mode = 0;
+  if (!::GetConsoleMode(h, &mode)) return false;   // 重定向时必然失败
+  return ::SetConsoleMode(h, mode | add) != 0;
+}
+
+inline WinStd probe_win_std() {
+  WinStd r{};
+  HANDLE h = ::GetStdHandle(STD_OUTPUT_HANDLE);
+  r.is_console = (h != nullptr && h != INVALID_HANDLE_VALUE
+                  && ::GetFileType(h) == FILE_TYPE_CHAR);
+  r.vt_ready = set_mode(ENABLE_VIRTUAL_TERMINAL_PROCESSING
+                        | DISABLE_NEWLINE_AUTO_RETURN);
+  r.want_truecolor = r.vt_ready && (::GetEnvironmentVariableA(
+                       "WT_SESSION", nullptr, 0) > 0);
+  return r;
+}
+
+} // namespace cli
+\end{lstlisting}
+
+这段代码体现了 Windows 能力探测的三个要点。其一，判定 ``是不是控制台'' 要用
+\Fn{GetConsoleMode} 是否成功，或 \Fn{GetFileType} 是否为
+\Tp{FILE\_TYPE\_CHAR}；\Fn{isatty} 在 Windows 上只对 CRT 打开过的
+\Tp{conio} 句柄有效，对重定向结果并不可靠。其二，能力\emph{只有设置成功
+才算拥有}——老宿主可能直接拒绝 \Tp{SetConsoleMode}。其三，
+\Tp{DISABLE\_NEWLINE\_AUTO\_RETURN} 与 VT 模式配套，它让 \Tp{\textbackslash n}
+只做换行而不做回车，避免与 VT 序列里的光标控制打架。
+
+至于真彩，必须承认一个事实：\textbf{Windows 没有查询真彩能力的 API}。
+唯一可靠的途径是\emph{发出去然后祈祷}，或者读取宿主自己设置的环境变量作为
+提示（\Tp{WT\_SESSION} 表示 Windows Terminal，\Tp{TERM} 在 WSL 里由 Linux
+侧决定），并把真彩当作可选增强：调色时优先给出 256 色与 16 色的等价近似值，
+这样即使猜错也只是颜色朴素而不是显示成乱码。第 3 章的 \Tp{tty\_probe}
+参考实现把这条策略固化了下来。
+
+\section{转义序列的谱系：ANSI、ECMA-48、VT100 与 terminfo}
+
+今天 CLI 输出的``ANSI 转义序列''其实是一部互相缠绕的标准史：
+
+\begin{itemize}
+\item \textbf{DEC VT100}（1978）：定义了 ESC 开头的控制序列实际形态，
+      包括 CSI（\Tp{ESC [}）、光标寻址、清行、以及 \Tp{DECSET} 私有模式
+      （\Tp{ESC [ ? 25 h} 显示光标这类带 \Tp{?} 的）。
+\item \textbf{ECMA-48}（1976 首版，现与 ISO 6429 同步）：欧洲计算机
+      制造商协会的控制函数标准，把 C0 控制字符与 CSI 参数序列规范化。
+\item \textbf{ANSI X3.64}：美国对应版本，1980 年代被俗称为``ANSI 转义码''，
+      这个称呼沿用至今。
+\item \textbf{xterm control sequences}：不是一份标准，而是一份事实参照文档。
+      它扩充了 256 色调色板（\Tp{ESC [ 38 ; 5 ; n m}）、真彩
+      （\Tp{ESC [ 38 ; 2 ; r ; g ; b m}）、鼠标追踪、\Tp{OSC} 序列
+      （窗口标题、超链接、颜色查询）等。绝大多数现代终端实现它的子集。
+\item \textbf{terminfo / termcap}：把``终端 \Tp{xterm-256color} 支持哪些
+      能力''外置成数据库。文件位于 \Tp{/usr/share/terminfo}，由环境变量
+      \Tp{TERM} 选择条目。
+\item \textbf{curses / ncurses}：terminfo 之上的可移植屏幕抽象层，
+      是 1.5 节能力矩阵问题的``标准答案''。
+\end{itemize}
+
+它们的关系可以一句话概括：\emph{转义序列是``怎么写''，terminfo 是``谁能懂''，
+curses 是``替你查谁能懂''}。硬写转义序列意味着绕过 terminfo，赌用户终端
+认识 xterm 方言；这个赌注在 2026 年的胜率极高，但仍有 \Tp{TERM=dumb} 的
+Emacs shell、\Tp{/dev/tty} 上的串口控制台、以及被管道吞掉的场景会输。
+
+\section{为什么``终端类型''决定能力矩阵}
+
+把前面所有内容合起来，一个 CLI 程序在面对``终端''时真正需要确定的是
+六个互相独立的能力维度。它们各自有不同的探测手段，不能互相推导：
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.14\textwidth}
+                 >{\raggedright\arraybackslash}p{0.23\textwidth}
+                 >{\raggedright\arraybackslash}p{0.22\textwidth}
+                 >{\raggedright\arraybackslash}p{0.22\textwidth}@{}}
+\caption{三平台终端能力对照（以 CLI 程序视角）} \\
+\toprule
+能力维度 & Linux/macOS 终端模拟器 & Windows Console API & Windows VT \\
+\midrule
+\endfirsthead
+\toprule
+能力维度 & Linux/macOS 终端模拟器 & Windows Console API & Windows VT \\
+\midrule
+\endhead
+是否 tty & \Fn{isatty} 直接判定 & \Fn{Get\Bk Console\Bk Mode} 成功即控制台 &
+同左 \\
+原始模式 & \Tp{ICANON} 清位加 \Tp{VMIN} 与 \Tp{VTIME} &
+清 \Tp{ENABLE\Bk \_PROCESSED\Bk \_INPUT} &
+加 \Tp{ENABLE\Bk \_VT\Bk \_INPUT}，仍可读键 \\
+行回显 & \Tp{ECHO} 位，内核负责 & 清 \Tp{ENABLE\Bk \_PROCESSED\Bk \_INPUT}
+后自己处理 & 同左 \\
+颜色深度 & 16 色、256 色、真彩，看 terminfo & 固定 16 色（属性字节） &
+256 与 24 位，取决于宿主版本 \\
+光标定位 & CUP 转义序列 & \Fn{Set\Bk Console\Bk Cursor\Bk Position} &
+CUP 转义序列 \\
+窗口尺寸 & \Tp{TIOCGWINSZ} ioctl & \Fn{Get\Bk Console\Bk Screen\Bk Buffer\Bk Info} &
+同 Console API \\
+尺寸变化通知 & \Tp{SIGWINCH} & \Tp{RESIZE\_EVENT} 记录，
+无转义流 & \Tp{RESIZE\_EVENT} 或轮询 \\
+备用屏幕 & \Tp{?1049h}（可保存主屏） & 无对应概念 &
+\Tp{?1049h}，Win10 起支持 \\
+\bottomrule
+\end{longtable}
+
+这张表解释了 CLI 开发里最顽固的一类问题：\emph{同一个视觉效果在三个平台上
+有三套完全不同的实现路径}。也正因如此，第 3 章的能力探测必须是
+``一组独立布尔量''，而不是一个 enum 表示``我在哪种终端上''。
+
+\begin{bestpractice}[title={先问``能不能''，再问``怎么写''}]
+任何输出装饰代码都应当经过能力判定这一层，而不是在调用点写
+\Tp{\#ifdef \_WIN32}。推荐的结构是一个只读的能力快照（\Tp{Terminal}
+结构体），程序启动时填一次，之后所有输出函数只查询它的字段。
+好处有三：单元测试可以伪造快照；\Opt{no-color} 一类的开关只需改一个
+字段；将来支持``强制彩色''时不需要改任何调用点。
+\end{bestpractice}
+
+% ====================================================================
+\chapter{输入输出与缓冲}
+% ====================================================================
+
+第 1 章讲的是``谁在解释字节''，本章讲的是``字节如何离开你的进程''。CLI 程序
+99\% 的诡异现象——进度条在管道里消失、输出顺序错乱、被 \Tp{less} 气死、
+参数里的引号莫名其妙散架、中文路径在 Windows 上变成问号——都出自这一层。
+本章按顺序处理五件事：流与缓冲、管道与写错误、信号、\Tp{argv} 的取得、
+编码与显示宽度。
+
+\section{三个标准流与三种缓冲模式}
+
+C 运行时给每个进程准备三条流：\Tp{stdin}、\Tp{stdout}、\Tp{stderr}。
+它们的\emph{缓冲策略}不同，而不是``有没有缓冲''不同：
+
+\begin{itemize}
+\item \Tp{stdout}：如果连接到终端则\textbf{行缓冲}，否则\textbf{全缓冲}
+      （通常 4096 或更大的整数倍，取决于实现）。这是\emph{运行时自己
+      \Fn{isatty} 判定}的结果，你的代码什么都没做。
+\item \Tp{stderr}：按 C 标准，错误流在程序开始执行时是\textbf{不缓冲}的。
+      glibc、MSVC CRT、musl 都遵守。因此诊断信息几乎总是先出现。
+\item \Tp{stdin}：取决于底层设备；终端上是行缓冲（内核 tty 已经帮你缓冲了），
+      管道上是一次读多少拿多少。
+\end{itemize}
+
+显式改写缓冲用 \Fn{setvbuf}：
+
+\begin{lstlisting}[caption={setvbuf 的三种模式与正确调用时机}]
+// buf_demo.c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(void) {
+  // 必须在对该流做任何读写之前调用, 否则行为未定义
+  // 模式: _IOFBF 全缓冲 / _IOLBF 行缓冲 / _IONBF 不缓冲
+  static char mybuf[8192];
+
+  if (setvbuf(stdout, mybuf, _IOLBF, sizeof mybuf) != 0) {
+    perror("setvbuf stdout");        // 失败时保持原状态继续
+  }
+  setvbuf(stderr, NULL, _IONBF, 0);  // NULL buf + _IONBF 是合法组合
+
+  printf("这一行会立刻出现在终端上\n");
+  printf("但如果 stdout 接的是文件, 整块要等满 8192 或 fflush\n");
+  fflush(stdout);                    // 手工排空
+  return 0;
+}
+\end{lstlisting}
+
+C++ 一侧还有三个必须知道的开关：
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.28\textwidth}
+                 >{\raggedright\arraybackslash}p{0.51\textwidth}@{}}
+\toprule
+名字 & 实际语义 \\
+\midrule
+\endfirsthead
+\toprule
+名字 & 实际语义 \\
+\midrule
+\endhead
+\Fn{std::endl} & 写入 \Tp{'\textbackslash n'} \emph{再} \Fn{flush}。
+循环里滥用它是性能杀手 \\
+\Fn{std::flush} & 只排空，不换行 \\
+\Tp{std::unitbuf} & 流标志位；置位后每次输出操作结束都自动排空，
+相当于 C++ 世界的 \Tp{stderr}。开关成对：操纵子 \Fn{std::unitbuf} 置位，
+\Fn{std::nounitbuf} 复位 \\
+\Fn{sync\_with\_stdio} & 默认为 \Tp{true}，把 \Tp{std::cout} 与 C 的
+\Tp{stdout} 绑定，代价是每次输出都要走一层同步。关掉可以加速，
+但\textbf{混用两套输出 API 时顺序不再可预测} \\
+\Fn{std::cout.tie} & 默认绑定到 \Tp{std::cin}，即在写 \Tp{cout} 之前先排空它，
+保证``提示先出现再等输入'' \\
+\bottomrule
+\end{longtable}
+
+\begin{note}[title={为什么 \Tp{cin} 之后的提示语有时不显示}]
+如果你调用 \Fn{sync\_with\_stdio} 传入 \Tp{false}，\Tp{std::cout} 与
+\Tp{std::cin} 的绑定关系也一并不可靠了。此时
+\lstinline|cout << "Continue? "| 可能滞留在缓冲区里，而程序已经卡在读取输入。
+稳妥做法是显式
+\lstinline|cout << "Continue? " << std::flush|，或者用第 7 章的
+\Fn{prompt\_line} 封装。
+\end{note}
+
+\section{行缓冲只在 tty 生效：进度条为什么消失}
+
+把上面两条事实合起来，就得到一个著名的现象：
+
+\begin{lstlisting}[style=shellstyle,caption={进度条在终端里正常，接到管道里就消失}]
+$ ./build --progress                 # stdout 是 tty: 行缓冲, 每帧可见
+$ ./build --progress | tee log.txt   # stdout 变成管道: 全缓冲
+$ ./build --progress > log.txt       # 同上, 且 \r 不再被解释, 只剩一行
+\end{lstlisting}
+
+两个独立的机制叠加导致这个结果：
+
+\begin{enumerate}
+\item \textbf{缓冲变化}：全缓冲意味着进度帧在 4 KB 缓冲区里被反复覆盖写，
+      直到程序结束才一次吐出。用户看到的是``什么都没有，然后全部出现''。
+\item \textbf{终端宽度变化}：管道没有``行''的概念，但真正致命的是
+      \Tp{stdout} 被重定向后，\emph{程序对终端的一切假设失效}。
+      如果进度条宽度取自``默认 80 列''以外的缓存值，输出会拖出大片空白。
+\end{enumerate}
+
+因此正确写法不是``想办法保持刷新''，而是\emph{先判定再决定输出什么}：
+tty 上画动画，非 tty 上只打印里程碑。第 3 章的能力探测就是为这句话服务的。
+如果确实需要在非 tty 上强制彩色或动画（CI 日志、\Tp{docker run} 里想看进度），
+应当提供 \Opt{color}=\Tp{always|auto|never} 与 \Opt{progress}=\Tp{auto|bar|none}
+这样的显式开关，而不是让程序猜。
+
+\begin{lstlisting}[caption={手动把 stdout 改回行缓冲的跨平台写法}]
+// force_line_buffered.cpp
+#include <cstdio>
+#include <iostream>
+#include <ios>
+
+void force_line_buffered() {
+#if defined(_WIN32)
+  // MSVC CRT: 对二进制流做行缓冲需要自带给缓冲区
+  // 更可靠的做法是每次 printf 后 fflush
+  std::setvbuf(stdout, nullptr, _IOLBF, 0);
+#else
+  std::setvbuf(stdout, nullptr, _IOLBF, 0);
+#endif
+}
+
+// C++ 流等价物: 让每次输出操作自带 flush
+void unitbuf_stdout() { std::cout << std::unitbuf; }
+\end{lstlisting}
+
+\section{管道、重定向与写失败}
+
+Unix 管道有个残酷的传统：当读端关闭后，写端进程收到 \Tp{SIGPIPE}，
+默认动作是\emph{终止进程}，而且没有任何错误信息。于是
+\Tp{yes | head -1} 里的 \Tp{yes} 安静地死掉——这在 1980 年代被认为是
+正确行为，但对今天的 CLI 来说是灾难：用户执行
+\Tp{mytool list | grep foo}，\Tp{grep} 提前退出，你的程序被 SIGPIPE
+打死，退出码变成 141，于是 \Tp{mytool list \&\& echo ok} 里的 \&\&
+判定为失败。
+
+处理方式有两种，取决于你想要哪种控制：
+
+\begin{lstlisting}[caption={接管 SIGPIPE 并把 EPIPE 变成可控错误}]
+// pipe_guard.cpp  (POSIX; Windows 分支见文末说明)
+#include <csignal>
+#include <cerrno>
+#include <cstdio>
+#include <unistd.h>
+
+void install_pipe_guard() {
+  // 让 write 返回 EPIPE 而不是直接杀死进程
+  std::signal(SIGPIPE, SIG_IGN);
+}
+
+bool write_all(int fd, const char* p, size_t n) {
+  while (n > 0) {
+    ssize_t w = ::write(fd, p, n);
+    if (w > 0) { p += w; n -= static_cast<size_t>(w); continue; }
+    if (w < 0 && errno == EINTR) continue;      // 被信号打断, 重试
+    if (w < 0 && errno == EPIPE) {
+      std::fputs("reader went away\n", stderr); // 诊断走 stderr
+      return false;                             // 由 main 决定退出码
+    }
+    perror("write"); return false;
+  }
+  return true;
+}
+\end{lstlisting}
+
+\begin{warning}[title={SIGPIPE 与退出码 141}]
+忽略 \Tp{SIGPIPE} 之后，你必须自己把``读端走了''转换成合理的退出码。
+Unix 惯例是：如果下游主动关闭管道（\Tp{head}、\Tp{grep -m1}、\Tp{less}
+翻页到底），这不算错误，应当退出码 0 或至少不打印吓人的错误信息。
+一个可用的判别是：只对 \Tp{EPIPE} 静默，其他 \Tp{errno} 照常报错。
+另外注意 \Tp{SIGPIPE} 是被\emph{继承为忽略}还是恢复默认，各实现细节不同，
+fork 出的子进程可能重新拿到默认动作。
+\end{warning}
+
+Windows 上没有 \Tp{SIGPIPE} 这个东西，因此也不存在``安静地被杀掉''。
+管道读端关闭后，写操作的失败以\emph{返回值}的形式出现：内核返回
+\Tp{ERROR\_NO\_DATA}（错误码 232），部分运行时会把它包装成自己的异常类型，
+在文档与调试输出里你还会看到 \Tp{STATUS\_INVALID\_PARAMETER}
+这类 NTSTATUS 值出现在同一条失败路径上。工程结论只有一条：
+\textbf{Windows 上必须逐次检查 \Fn{WriteFile} 或 CRT 写函数的返回值}，
+没有任何默认机制替你处理。
+
+\section{信号：中断、终止、挂断与窗口尺寸}
+
+POSIX 信号是异步通知，但 CLI 只需要关心四个：
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+                 >{\raggedright\arraybackslash}p{0.25\textwidth}
+                 >{\raggedright\arraybackslash}p{0.38\textwidth}@{}}
+\toprule
+信号 & 触发时机 & CLI 里应当怎么做 \\
+\midrule
+\endfirsthead
+\toprule
+信号 & 触发时机 & CLI 里应当怎么做 \\
+\midrule
+\endhead
+\Tp{SIGINT} & 终端驱动的 \Tp{VINTR} 字符（Ctrl-C），发给整个
+\emph{前台进程组} & 置一个 \Tp{volatile std::sig\_atomic\_t} 标志，
+让主循环在下一个检查点优雅收尾。不要在其中调用 \Fn{printf} \\
+\Tp{SIGTERM} & \Fn{kill} 的默认信号，服务管理器与 \Tp{timeout} 命令使用 &
+同上，但通常应当直接退出并保留退出码约定 \\
+\Tp{SIGHUP} & 控制终端关闭；某些实现里 shell 退出时也发给后台任务 &
+前台交互程序一般让它走默认动作（终止）；守护化程序改为重载配置 \\
+\Tp{SIGWINCH} & 终端窗口尺寸变化（非 POSIX 必需但普遍存在） &
+重新读取尺寸、重排进度条与表格。Windows 无对应信号 \\
+\bottomrule
+\end{longtable}
+
+关于 \Tp{SIGINT} 有三点特别容易被误解：
+
+\begin{enumerate}
+\item Ctrl-C 打给的是\emph{前台进程组}，不是``你启动的那个程序''。
+      所以 \Tp{prog | tee log} 里的两个进程都会收到。如果你的程序用
+      \Fn{exec} 系列拉起了子进程，子进程也会收到，这正是期望行为；
+      但如果你在子进程运行期间把进程组迁移过，就要小心。
+\item 信号处理器里能做的事极少。安全列表只有 async-signal-safe 函数，
+      \Fn{write} 在列，\Fn{printf} 与 \Fn{malloc} 不在列。想打印日志就把
+      标志位置起来，在主循环里做。
+\item 全屏 TUI 里 \Tp{SIGINT} 往往\emph{不该}终止程序（见第 8 章），
+      但如果程序被 \Tp{SIGKILL} 或崩溃杀死，终端状态一定坏掉，
+      所以必须有第 9 章的恢复机制。
+\end{enumerate}
+
+Windows 提供的是另一套模型：控制台控制事件（control event）。
+\Fn{Set\Bk Console\Bk Ctrl\Bk Handler} 注册的回调运行在\emph{单独的线程}上，
+收到的事件类型包括 \Tp{CTRL\_C\_EVENT}、\Tp{CTRL\_BREAK\_EVENT}、
+\Tp{CTRL\_CLOSE\_EVENT}（用户点了窗口关闭按钮）、
+\Tp{CTRL\_LOGOFF\_EVENT} 与 \Tp{CTRL\_SHUTDOWN\_EVENT}。
+回调有超时限制（历史上约 5 秒），所以``在回调里慢慢清理''是不行的：
+置标志、唤醒主线程、必要时阻塞等待。
+MSVC CRT 会为 \Tp{CTRL\_C\_EVENT} 额外触发 \Tp{SIGINT} 的
+\Fn{signal} 处理器，但两套机制并存时行为依赖 CRT 版本，建议只用一种。
+
+\begin{lstlisting}[caption={中断处理的双平台骨架}]
+// interrupt.cpp
+#include <atomic>
+
+namespace cli {
+
+// 用 atomic 而不是 volatile(sig_atomic_t), C++ 里更直观
+inline std::atomic<bool> g_cancel{false};
+
+#if defined(_WIN32)
+# ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+# endif
+# include <windows.h>
+
+BOOL WINAPI ctrl_handler(DWORD type) {
+  switch (type) {
+    case CTRL_C_EVENT:
+    case CTRL_BREAK_EVENT:
+    case CTRL_CLOSE_EVENT:          // 只剩几秒时间, 必须立刻返回
+      g_cancel.store(true);
+      return TRUE;                  // 已处理, 阻止默认终止
+    default:
+      return FALSE;
+  }
+}
+void install_interrupt() {
+  ::SetConsoleCtrlHandler(ctrl_handler, TRUE);
+}
+
+#else
+# include <csignal>
+extern "C" void on_sigint(int) { g_cancel.store(true); }
+void install_interrupt() {
+  struct sigaction sa{};
+  sa.sa_handler = on_sigint;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = SA_RESTART;         // 让 read 被自动重启, 少写一层 EINTR
+  ::sigaction(SIGINT, &sa, nullptr);
+}
+#endif
+
+} // namespace cli
+\end{lstlisting}
+
+上面这段在 POSIX 分支缺少 \Tp{sigaction} 的头文件包含，实际工程里
+应当把 \Tp{signal.h} 与 \Tp{unistd.h} 一并包含；这里为了突出结构做了省略。
+
+\textbf{Windows 没有 \Tp{SIGWINCH}}。替代方案有两条：其一是用
+\Fn{ReadConsoleInput} 读 \Tp{WINDOW\_BUFFER\_SIZE\_EVENT} 记录，
+但这要求你持有控制台输入句柄并消费事件，和``从 stdin 读文本''互斥；
+其二是\emph{轮询}：以 100 到 250 ms 的间隔调用
+\Fn{GetConsoleScreenBufferInfo}，比较尺寸是否变化。对进度条这种
+本来就按帧驱动的东西，轮询完全够用；对全屏 TUI，则应该把尺寸检查
+挂在按键读取的空隙上，而不是新建定时器线程。
+
+\section{argv 的取得：POSIX 的礼物与 Windows 的诅咒}
+
+在 POSIX 上，参数是\emph{已经切好}的：shell 完成分词与引号处理后，
+\Fn{execve} 接收的是一个 \Tp{char*[]} 数组，每个元素是一个以 NUL 结尾的
+字节串，外加一个独立的 \Tp{envp} 数组。程序不需要理解任何引号语法，
+argv 里出现什么就是什么。
+
+Windows 完全是另一个故事。\Fn{CreateProcessW} 的 \Tp{lpCommandLine}
+参数是\emph{一整条字符串}，内核不做任何分词。约定是：被调用的程序自己决定
+怎么切。MSVC CRT 用一套公开记录的规则把这条字符串切成 \Tp{argv}，
+其要点是：
+
+\begin{itemize}
+\item 空格与制表符分隔参数；双引号内的部分算一个参数。
+\item 反斜杠只有在紧邻双引号时才有魔法：连续 \(2n\) 个反斜杠加一个引号
+      产生 \(n\) 个反斜杠并\emph{开启或关闭}引号状态；连续 \(2n+1\) 个
+      反斜杠加引号产生 \(n\) 个反斜杠和一个\emph{字面}引号。
+\item 参数末尾的引号必须成对出现，否则解析结果不符合直觉。
+\item 引号在解析后被\emph{剥掉}，也就是说程序拿到的 argv 里默认没有引号。
+\end{itemize}
+
+\Fn{CommandLineToArgvW} 实现了同一套规则并返回宽字符串数组，
+它只做切分，不做通配符展开，也不做环境变量替换。想复刻 POSIX 的
+通配符展开，MSVC 提供 \Tp{setargv.obj}（链接时加入即可让 \Tp{*.txt}
+在 argv 里展开）；想复刻 shell 变量替换则另有一个同族的 \Tp{setenv.obj}。
+MinGW 与 Cygwin 各自实现了等价行为，这也是``同一个参数在不同构建下结果不同''
+的来源之一。
+
+\begin{warning}[title={参数里带引号就散架}]\mbox{}\\
+经典事故链条是这样的：你的程序输出了一条带空格的值，用户把它抄回命令行；
+或者你的程序用 \Fn{system}、\Fn{\_wsystem}、\Tp{Start-Process} 重新调用自己；
+又或者脚本把参数拼成字符串再交给 shell。三种情况下引号都要\emph{穿过}
+一层 shell 解析。后果是：\lstinline|prog --msg "say ""hi""""| 在不同 shell
+里会得到不同结果；PowerShell 传统版本向原生 exe 传参时会丢掉内嵌引号，
+于是 \lstinline|--msg & "a b"| 变成三个参数。
+\end{warning}
+
+对策不是``更聪明的转义函数''，而是三条工程纪律：
+
+\begin{enumerate}
+\item \textbf{永远不要通过字符串拼接来调用自己}。用数组式 API：
+      \Tp{subprocess.run([...])}、\Fn{posix\_spawn}、Windows 上自己调用
+      \Fn{CreateProcessW} 并\emph{自己按 CRT 规则}构造命令行，
+      然后写单元测试验证。
+\item \textbf{为``含空格的单个值''提供不走 argv 的通道}：
+      \Opt{msg-file} 从文件读取，或 \Opt{msg}=- 从 stdin 读取。
+      这是 Git、GNU \Tp{tar}（\Tp{-T}）、\Tp{javac}（响应文件）的通用做法。
+\item \textbf{打印诊断时把参数逐条编号输出}，例如
+      \Tp{argv[3] = 'say hi'}，让用户一眼看到切分结果而不是猜。
+\end{enumerate}
+
+\section{UTF-8 与宽字符：三种互不兼容的世界}
+
+\begin{compare}[title={三平台的文本表示约定}]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+               >{\raggedright\arraybackslash}p{0.29\textwidth}
+               >{\raggedright\arraybackslash}p{0.33\textwidth}@{}}
+\toprule
+维度 & POSIX 世界 & Windows 世界 \\
+\midrule
+\Tp{wchar\_t} 宽度 & 4 字节（UTF-32） & 2 字节（UTF-16） \\
+\Tp{char*} 的含义 & 取决于 locale，通常是 UTF-8 & 系统 ANSI 代码页
+（GBK、CP1252 等） \\
+程序入口 & \Fn{main}，argv 是本地化字节串 & \Fn{main} 或 \Fn{wmain}，
+后者拿 UTF-16 \\
+文件系统 API & 字节串直通 & 只有宽字符版才有完整 Unicode 语义 \\
+终端输出 & 写 UTF-8 字节即可 & 需 \Fn{SetConsoleOutputCP} 或 \Fn{WriteConsoleW} \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+Windows 上有三条可选路径，各自的坑不同：
+
+\begin{enumerate}
+\item \textbf{窄字符路径}：\Fn{main}、\Fn{printf}。代码页不是 UTF-8 时，
+      非 ASCII 参数会先在 ANSI 代码页上``过一遍''，出现不可映射字符就变成
+      \Tp{?}。这条路只适合纯 ASCII 的工具。
+\item \textbf{宽字符路径}：\Fn{wmain} 或 \Fn{GetCommandLineW} 加
+      \Fn{CommandLineToArgvW}，内部统一用 UTF-16 处理，写文件用宽字符 API。
+      这是与 Windows 内核语义最契合的做法。输出到控制台时要用
+      \Fn{WriteConsoleW}，或者用 \Fn{\_setmode} 把 \Tp{stdout} 设成
+      \Tp{\_O\_U16TEXT}（MSVC 扩展，此后 \Tp{std::wcout} 直接吐 UTF-16 字节）。
+\item \textbf{UTF-8 字节路径}：内部全用 UTF-8，输出前调用
+      \Fn{SetConsole\Bk OutputCP} 传入 \Tp{CP\_UTF8}。这是最省心的方案，
+      但读文件名时必须显式转换到 UTF-16 才能调用宽字符 API，
+      否则中文路径仍然坏。
+\end{enumerate}
+
+\Tp{chcp 65001} 的历史坑值得一提，因为大量旧文档仍在推荐它。
+在 Windows 7 与 Windows 8 时代，把控制台代码页设为 65001 会导致
+行绘制字符错乱、某些程序输出中断，以及著名的``写大块文本时
+\Fn{WriteFile} 报告写入 0 字节''问题。到 Windows 10 之后这些大多修好了，
+但代码页 65001 下的 \Tp{dir} 与旧版批处理仍有边角问题。今天正确的说法是：
+\emph{不要依赖用户设置代码页}，程序自己调用 \Fn{SetConsoleOutputCP}
+并准备好宽字符回退。
+
+Linux 侧的坑更隐蔽：字节能写出去不代表能显示出来。终端模拟器只负责渲染，
+字体缺字就是豆腐块。而 \Tp{LANG=C} 或 \Tp{LC\_ALL=C} 的环境下，
+\Fn{setlocale} 会把流切到单字节模式，\Fn{iswgraph} 与 \Fn{mbrtowc}
+对多字节序列返回``不可打印''，于是程序自己先把中文过滤掉了。
+跨平台 CLI 的标准起手式是：在 \Fn{main} 最前面调用
+\lstinline|setlocale(LC_ALL, "")|，然后按 UTF-8 假定处理，
+并在 \Opt{encoding} 上提供有限的覆盖选项。
+
+\section{东亚宽度与 wcwidth：对齐为什么总是歪}
+
+\verb|printf| 与 \Tp{std::setw} 数的是\emph{码点或码元}，不是终端列格。
+一个中文``词''在 UTF-8 里是 3 个字节、1 个码点、\textbf{2 个显示列}。
+于是 \Tp{\%-12s} 排出来的两列中文表格永远错位。POSIX/XSI 提供了
+\Fn{wcwidth}（声明在 \Tp{wchar.h}）来回答``一个码点占几列''：
+返回 \Tp{-1} 表示不可打印，\Tp{0} 表示组合字符（零宽），
+\Tp{1} 或 \Tp{2} 表示占一或两列。它依赖当前 locale，在
+\Tp{LC\_ALL=C} 下会退化成全部返回 \Tp{1}。
+
+必须清楚 \Fn{wcwidth} 的两个系统性缺陷：其一，East Asian Width 属性为
+Ambiguous 的字符（正负号一类、方块绘制字符、带圈数字）在不同终端里
+实际宽度不同，取决于终端模拟器的``ambiguous 算宽还是算窄''设置；
+其二，emoji 序列（带 ZWJ、变体选择符、区域指示符的）作为整体通常占 2 列，
+但按码点逐个调用 \Fn{wcwidth} 求和会得出 4 甚至更多。
+所以工程上不要把 \Fn{wcwidth} 当真理，而是当成``带修正表的近似''：
+
+\begin{lstlisting}[caption={显示列宽计算：wcwidth 加 emoji 修正}]
+// disp_width.cpp  (POSIX; Windows 需自行实现窄表)
+#include <cwchar>
+#include <clocale>
+#include <string>
+#include <utf8.h>        // 或自写 UTF-8 解码器
+
+namespace cli {
+
+// 把一个 UTF-8 串折算成终端列数
+int display_width(std::string_view s) {
+  std::setlocale(LC_ALL, "");            // 让 wcwidth 按 locale 工作
+  int cols = 0;
+  std::mbstate_t st{};
+  for (size_t i = 0; i < s.size();) {
+    wchar_t wc = 0;
+    const char* from = s.data() + i;
+    size_t used = std::mbrtowc(&wc, from, s.size() - i, &st);
+    if (used == static_cast<size_t>(-1) ||
+        used == static_cast<size_t>(-2)) { ++i; continue; }
+    i += used;
+    if (wc == 0x200B || wc == 0xFE0F) continue;  // 零宽: 跳过分隔与变体
+    int w = ::wcwidth(wc);
+    if (w < 0) w = 0;
+    // 经验修正: 一个 emoji 序列整体按 2 列, 不再累加其后续码点
+    if (wc >= 0x1F000) { if (cols % 2 == 0) cols += 2; }
+    else               cols += w;
+  }
+  return cols;
+}
+
+// 截断到不超过 cols 列, 且不切碎多字节序列
+std::string truncate_cols(std::string_view s, int cols);
+
+} // namespace cli
+\end{lstlisting}
+
+\begin{bestpractice}[title={把``列数''当作唯一的排版单位}]
+任何需要横向对齐的输出（表格、进度条、双栏 help）都应当经过
+一个``按终端列数截断或填充''的函数，绝不在调用点用 \Tp{setw}
+或 \Tp{printf \%-Ns} 直接凑。理由：中文、emoji、组合字符会让
+字节数、码点数、列数三者互不相等，而只有列数是终端认的。
+Windows 上没有可用的 \Fn{wcwidth}，需要自带一张窄表或用
+\Fn{GetCharacterPlacementW} 一类近似手段——自己维护一张
+``占两列码点区间表''在实践中更简单也更可预测。
+\end{bestpractice}
+
+% ====================================================================
+\chapter{终端能力探测与降级策略}
+% ====================================================================
+
+前两章把事实摊开了：终端是一组互相独立的能力，而不是一种``有或没有''的
+状态。本章把这些事实收敛成一段可以抄进项目的代码。核心原则只有一句——
+\textbf{程序应当在``不确定''时选择最保守的输出}，并把``确定''的权力
+交给用户（显式开关）与环境（约定变量）。
+
+\section{探测目标：六个独立布尔量}
+
+一个合格的 CLI 在 \Fn{main} 的第二行（第一行是 \Fn{setlocale}）就应当
+填好下面这张快照。注意每一项都必须能独立关闭：
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.21\textwidth}
+                 >{\raggedright\arraybackslash}p{0.19\textwidth}
+                 >{\raggedright\arraybackslash}p{0.39\textwidth}@{}}
+\toprule
+字段 & 决定什么 & 判定依据 \\
+\midrule
+\endfirsthead
+\toprule
+字段 & 决定什么 & 判定依据 \\
+\midrule
+\endhead
+\Tp{stdout\_is\_tty} & 要不要动画、颜色、进度条 &
+POSIX 用 \Fn{isatty}，Windows 用 \Fn{Get\Bk Console\Bk Mode} \\
+\Tp{stderr\_is\_tty} & 诊断信息能不能着色 & 同上，作用于句柄 2 \\
+\Tp{color} & 无、16、256、真彩 & 约定变量加 terminfo 加平台版本 \\
+\Tp{width} & 排版可用列数 & ioctl 或控制台 API，失败则默认值 \\
+\Tp{resize\_events} & 能不能被动得知宽度变化 & POSIX 有 \Tp{SIGWINCH}，
+Windows 只能轮询 \\
+\Tp{raw\_input} & 单键读取与关闭回显是否可行 & 输入端是 tty
+且能改写 \Tp{termios} \\
+\bottomrule
+\end{longtable}
+
+\Tp{stdin} 是不是 tty 要单独判定：\Tp{mytool | other} 里 \Tp{mytool} 的
+stdout 不是 tty 但 stdin 可能是；而 \Tp{mytool < data.txt} 反过来。
+把三者的判定合并成一个``是不是交互式''是最常见的探测 bug。
+
+\section{环境变量约定：谁定的规矩，谁在用}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.21\textwidth}
+                 >{\raggedright\arraybackslash}p{0.23\textwidth}
+                 >{\raggedright\arraybackslash}p{0.35\textwidth}@{}}
+\toprule
+变量 & 语义 & 需要知道的历史 \\
+\midrule
+\endfirsthead
+\toprule
+变量 & 语义 & 需要知道的历史 \\
+\midrule
+\endhead
+\Tp{TERM} & terminfo 条目名，如 \Tp{xterm-256color} &
+\Tp{dumb} 与 \Tp{unknown} 必须当作``无颜色、无光标控制''；
+\Tp{TERM} 未设置常见于 \Tp{cron} 与某些 CI \\
+\Tp{COLORTERM} & 取值 \Tp{truecolor} 或 \Tp{24bit} 表示支持真彩 &
+由终端模拟器自己设置，是事实标准而非规范 \\
+\Tp{NO\_COLOR} & \textbf{非空即关闭颜色} & 来自 no-color.org，
+注意是``非空''而不是``等于 1''：\Tp{NO\_COLOR=} 是空值，不算设置 \\
+\Tp{FORCE\_COLOR} & 非假值即强制开色 & 常见取值约定：\Tp{0}、\Tp{false}
+与空串视为假，其余为真。用于 CI 里想看彩色日志 \\
+\Tp{CLICOLOR} & \Tp{0} 关、\Tp{1} 允许（仅在 tty 上） &
+BSD 与 macOS 的 \Tp{ls} 一路沿用的约定，语义比 \Tp{NO\_COLOR} 弱 \\
+\Tp{CLICOLOR\_FORCE} & 非 \Tp{0} 就无条件开色 & 与 \Tp{FORCE\_COLOR} 目的相同，
+生态不同 \\
+\Tp{TERM\_PROGRAM} & \Tp{Apple\_Terminal}、\Tp{vscode}、\Tp{wt} 等 &
+适合做``已知宿主白名单''，不要当作唯一依据 \\
+\Tp{WT\_SESSION} & 存在即 Windows Terminal 会话 & Windows 上真彩的
+最强提示，但仍只是提示 \\
+\Tp{COLUMNS} & 用户显式指定列数 & GNU 工具链的通用退路，
+优先级应当高于探测值 \\
+\bottomrule
+\end{longtable}
+
+\begin{note}[title={为什么 NO\_COLOR 是``非空即生效''}]
+这个设计常被写错。它继承自 \Tp{LD\_PRELOAD} 一类变量的 Unix 习惯：
+只看变量有没有被设置成非空字符串，不看它等于什么。这样用户在
+shell 里写 \Tp{export NO\_COLOR}（不带值）也能生效。如果你的实现要求
+\Tp{NO\_COLOR=1}，那么大量现存的用户配置就 悄悄失效了。
+\end{note}
+
+\section{色深探测与回退阶梯}
+
+颜色的判定必须构成一条\emph{单向降级}的阶梯，任何一级失败就落到下一级：
+
+\begin{lstlisting}[style=shellstyle,caption={用外部工具观察终端自报的能力}]
+$ echo "$TERM"                      # xterm-256color
+$ tput colors                       # 256  (terminfo 数据库的回答)
+$ tput cols; tput lines             # 132 ; 43
+$ echo "$COLORTERM"                 # truecolor
+$ printf '\e[38;5;208m oracle \e[0m\n'   # 256 色前景
+$ printf '\e[38;2;255;120;0m oracle \e[0m\n'  # 真彩前景
+\end{lstlisting}
+
+程序里不要真的靠``打印一个色块看用户反应''来探测。合理的顺序是：
+
+\begin{enumerate}
+\item 显式命令行开关（\Opt{color}=\Tp{always} 或 \Tp{never}）——最高优先级，
+      任何环境变量都不得覆盖它；
+\item \Tp{FORCE\_COLOR} 与 \Tp{CLICOLOR\_FORCE} 为真，则强制给色，
+      并且此时\emph{跳过} tty 判定；
+\item \Tp{NO\_COLOR} 或 \Tp{CLICOLOR}=\Tp{0} 则一律无色，
+      即使 stdout 是 tty；
+\item 不是 tty 则无色；
+\item \Tp{COLORTERM} 命中 \Tp{truecolor} 或 \Tp{24bit} 给真彩；
+\item \Tp{TERM} 以 \Tp{-256color} 结尾，或读 terminfo 得到 256，给 256 色；
+\item \Tp{TERM} 是 \Tp{dumb}、\Tp{unknown} 或未设置，给 16 色或无色；
+\item 其余情况给 16 色。Windows 上 VT 开启失败则退到
+      \Fn{Set\Bk Console\Bk TextAttribute} 的 16 色路径。
+\end{enumerate}
+
+真彩向 256 色的回退要用\emph{可预测}的算法而不是最近邻搜索：标准 256
+色调色板的前 16 位是 ANSI 系统色（由用户主题决定实际色值），
+第 17 到 232 位是 \(6\times6\times6\) 的立方体，最后 8 位是灰阶。
+把 RGB 映射到立方体用``每通道除以 51 取整再组合''即可，误差肉眼几乎看不出，
+但胜在结果稳定、可单元测试。
+
+\begin{warning}[title={不要向终端发查询指令}]
+存在一种``主动 interrogate''的技巧：写入 \Tp{ESC [ ? 1 s}（XTVERSION）、
+\Tp{ESC [ 1 0 t}（DECRQM）或 kitty 键盘协议的查询序列，再从 stdin
+读回答。它在实践中不可靠：回答与用户按键混在同一个输入流里，
+管道重定向时根本没有回答，某些终端对未知序列\emph{沉默}从而使你的超时
+逻辑把用户输入吃掉。真需要精确能力时，用第 7 章的原始模式加显式超时，
+并且只在交互式命令里做一次。
+\end{warning}
+
+\section{降级输出的三条具体规则}
+
+\subsection{非 tty 时输出什么}
+
+把 tty 上的装饰去掉之后，剩下的输出必须仍然有用。三条具体规则：
+
+\begin{itemize}
+\item \textbf{进度条改为里程碑行}：每完成一个阶段打印一行
+      \Tp{[3/12] parsing src/...}，而不是打印 200 行同样的进度。
+      判断标准是``\Tp{cat} 出来是否可读''。
+\item \textbf{spinner 完全关闭}：转圈字符在非 tty 上会堆积成
+      一行乱码，而且没人能在日志里读出它转了几圈。
+\item \textbf{清行序列（\Tp{ESC [ 2K} 与 \Tp{\textbackslash r}）不发}：
+      重定向到文件时，这些字节会永久留在文件里。第 5 章会把它列为典型陷阱。
+\end{itemize}
+
+\subsection{宽度未知时用 80 列}
+
+\Fn{ioctl} 失败、\Tp{COLUMNS} 未设、\Tp{TERM} 是 \Tp{dumb}——这些情况下
+不要输出无限长的行。80 列是这一行的历史锚点：man 页面、
+\Tp{git} 的 help 输出、\Tp{curl} 的 \Tp{--help} 都在这个宽度下做过验证。
+更好的做法是把 80 当成\emph{兜底}，同时读 \Tp{COLUMNS}，
+并在 \Tp{SIGWINCH}（或轮询）后重算。
+
+对``输出会被别的程序解析''的场景，宽度问题应当以\emph{不折行}为原则：
+机器可读格式（\Tp{--json}、\Tp{--porcelain}）一行一条记录，
+绝不因为宽度而插入换行。
+
+\subsection{动画由时间驱动而非次数驱动}
+
+降级不只关于``有没有''，也关于``多快''。第 7 章会展开，这里只给结论：
+帧与终端重绘必须绑定到墙上时钟（例如每 16 到 60 ms 一帧），
+而不是绑定到``每处理 100 个文件刷新一次''。否则任务快时完全不刷新、
+任务慢时刷出上千帧把管道塞满。
+
+\section{跨平台参考实现}
+
+下面这份 \Tp{tty\_probe} 是本章的收敛点，可直接作为项目里的
+\Tp{terminal.cpp}。它刻意不使用任何第三方库，只依赖标准库与两个平台的
+系统头文件。
+
+\begin{lstlisting}[caption={能力快照的数据结构（terminal.hpp）}]
+// terminal.hpp   C++17, Linux / macOS / Windows
+#pragma once
+#include <cstdint>
+#include <string>
+
+namespace cli {
+
+enum class ColorLevel { None, Ansi16, Ansi256, TrueColor };
+
+struct Terminal {
+  bool stdout_is_tty  = false;
+  bool stderr_is_tty  = false;
+  bool stdin_is_tty   = false;
+  bool vt_enabled     = false;   // Windows 上 VT 是否已开启
+  bool can_raw_input  = false;
+  ColorLevel color    = ColorLevel::None;
+  int  cols           = 80;      // 未知时保守值
+  int  rows           = 24;
+  bool width_known    = false;
+
+  bool color_on() const { return color != ColorLevel::None; }
+  const char* color_name() const;
+};
+
+struct ProbeOptions {
+  // 由参数解析层填入, 优先级最高
+  enum class Tri { Auto, On, Off } force_color = Tri::Auto;
+  bool plain = false;            // 等价于 --no-color
+};
+
+Terminal probe(const ProbeOptions& opt = {});
+void apply_workarounds(Terminal& t);   // Windows: 尝试开 VT
+
+} // namespace cli
+\end{lstlisting}
+
+\begin{lstlisting}[caption={POSIX 分支的实现要点（terminal\_posix.cpp）}]
+// terminal_posix.cpp
+#include "terminal.hpp"
+#include <cerrno>
+#include <cstdlib>
+#include <cstring>
+#include <unistd.h>
+#include <termios.h>
+#include <sys/ioctl.h>
+
+namespace cli {
+
+static const char* env_nz(const char* k) {
+  const char* v = std::getenv(k);
+  return (v && *v) ? v : nullptr;       // 空串按"未设置"处理
+}
+
+static bool truthy(const char* v) {
+  if (!v) return false;
+  if (!std::strcmp(v, "0") || !std::strcmp(v, "false")
+      || !std::strcmp(v, "no")) return false;
+  return true;
+}
+
+static ColorLevel pick_color(bool is_tty, bool force,
+                             bool no_color) {
+  if (no_color || !is_tty) return ColorLevel::None;
+  const char* ct = env_nz("COLORTERM");
+  if (ct && (!std::strcmp(ct, "truecolor")
+             || !std::strcmp(ct, "24bit")))
+    return ColorLevel::TrueColor;
+  const char* term = env_nz("TERM");
+  if (!term)
+    return force ? ColorLevel::Ansi256 : ColorLevel::Ansi16;
+  bool dumb = !std::strcmp(term, "dumb")
+           || !std::strcmp(term, "unknown");
+  if (dumb) return ColorLevel::None;
+  if (std::strstr(term, "256color")) return ColorLevel::Ansi256;
+  return ColorLevel::Ansi16;
+}
+
+Terminal probe(const ProbeOptions& opt) {
+  Terminal t{};
+  t.stdout_is_tty = ::isatty(STDOUT_FILENO) == 1;
+  t.stderr_is_tty = ::isatty(STDERR_FILENO) == 1;
+  t.stdin_is_tty  = ::isatty(STDIN_FILENO)  == 1;
+  const char* cli = std::getenv("CLICOLOR");
+  bool no_color = (env_nz("NO_COLOR") != nullptr)
+               || (cli && !std::strcmp(cli, "0"));
+  bool force = truthy(env_nz("FORCE_COLOR"))
+            || truthy(env_nz("CLICOLOR_FORCE"));
+  if (opt.force_color == ProbeOptions::Tri::On)  force = true;
+  if (opt.force_color == ProbeOptions::Tri::Off) no_color = true;
+  if (opt.plain) no_color = true;
+  t.color = pick_color(t.stdout_is_tty || force, force, no_color);
+
+  struct winsize ws{};
+  int fd = t.stdout_is_tty ? STDOUT_FILENO :
+           (t.stderr_is_tty ? STDERR_FILENO : STDIN_FILENO);
+  if (::ioctl(fd, TIOCGWINSZ, &ws) == 0 && ws.ws_col > 0) {
+    t.cols = ws.ws_col; t.rows = ws.ws_row; t.width_known = true;
+  }
+  if (const char* c = env_nz("COLUMNS")) t.cols = std::atoi(c);
+  t.can_raw_input = t.stdin_is_tty;
+  return t;
+}
+
+} // namespace cli
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Windows 分支的实现要点（terminal\_win.cpp）}]
+// terminal_win.cpp
+#include "terminal.hpp"
+#ifndef WIN32_LEAN_AND_MEAN
+# define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <cstdlib>
+#include <cstring>
+
+namespace cli {
+
+static bool handle_is_console(DWORD which) {
+  HANDLE h = ::GetStdHandle(which);
+  return h && h != INVALID_HANDLE_VALUE
+      && ::GetFileType(h) == FILE_TYPE_CHAR;
+}
+
+void apply_workarounds(Terminal& t) {
+  HANDLE h = ::GetStdHandle(STD_OUTPUT_HANDLE);
+  DWORD mode = 0;
+  if (h && ::GetConsoleMode(h, &mode)) {
+    DWORD want = mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING
+                     | DISABLE_NEWLINE_AUTO_RETURN;
+    t.vt_enabled = ::SetConsoleMode(h, want) != 0;
+  }
+  CONSOLE_SCREEN_BUFFER_INFO si{};
+  if (::GetConsoleScreenBufferInfo(h, &si)) {
+    t.cols = si.srWindow.Right - si.srWindow.Left + 1;
+    t.rows = si.srWindow.Bottom - si.srWindow.Top + 1;
+    t.width_known = true;
+  }
+  // 只有 VT 成功才允许 256 以上, 否则退回属性字节
+  if (!t.vt_enabled && t.color > ColorLevel::Ansi16)
+    t.color = ColorLevel::Ansi16;
+}
+
+Terminal probe(const ProbeOptions& opt) {
+  Terminal t{};
+  t.stdout_is_tty = handle_is_console(STD_OUTPUT_HANDLE);
+  t.stderr_is_tty = handle_is_console(STD_ERROR_HANDLE);
+  t.stdin_is_tty  = handle_is_console(STD_INPUT_HANDLE);
+  const char* nc = std::getenv("NO_COLOR");
+  bool no_color = (nc && *nc) || opt.plain
+                || opt.force_color == ProbeOptions::Tri::Off;
+  const char* fc = std::getenv("FORCE_COLOR");
+  bool force = (fc && *fc && std::strcmp(fc, "0"))
+            || opt.force_color == ProbeOptions::Tri::On;
+  if (t.stdout_is_tty || force) {
+    t.color = force ? ColorLevel::Ansi256 : ColorLevel::Ansi16;
+    if (!no_color && std::getenv("WT_SESSION"))
+      t.color = ColorLevel::TrueColor;
+    if (no_color) t.color = ColorLevel::None;
+  }
+  apply_workarounds(t);
+  t.can_raw_input = t.stdin_is_tty;
+  return t;
+}
+
+} // namespace cli
+\end{lstlisting}
+
+\begin{bestpractice}[title={把快照变成只读的全局单例}]
+\Fn{probe} 只在 \Fn{main} 里调用一次，结果放进一个 \Tp{const} 引用
+或全局只读对象，之后所有输出代码只读它。任何``输出时再判一次''的写法
+都会导致同一个程序里不同模块对能力的认知不一致——最常见的症状是
+表格带颜色而标题不带，或者进度条画了但颜色被剥掉。
+另外给 \Opt{color} 开关做一次``覆盖后重新填色''，
+不要把覆盖逻辑散落在每个打印点。
+\end{bestpractice}
+
+\begin{guideline}[title={探测的三条不可协商底线}]
+一、\textbf{永远不能让探测失败导致程序退出}：拿不到宽度就用 80，
+拿不到色深就用 16 色，任何一步 ioctl 失败都不是用户的错。
+二、\textbf{\Tp{stderr} 的诊断永远着色，\Tp{stdout} 的数据永远干净}：
+即使 stdout 被重定向，错误信息仍然可以带颜色，因为它走的是另一个句柄。
+三、\textbf{提供逃生口}：\Opt{no-color}、\Opt{color}=\Tp{never}、
+\Tp{NO\_COLOR} 三者至少要有一个，并且要在 \Opt{help} 里写明优先级。
+\end{guideline}
+
+% ====================================================================
+\part{参数解析与 CLI 设计}
+% ====================================================================
+
+参数解析是 CLI 领域里唯一``人人都会、人人写错''的环节。它的代码量通常
+不到程序的 5\%，但它决定了用户对你整个工具的第一印象：错误信息是否指明
+了是哪个参数的哪个值不合法、\Opt{help} 是否值得被阅读、混合长短选项时
+行为是否可预测。
+
+本部分先用一章把可用的解析方案摆全，并用同一个 CLI 做四段代码对照；
+再用一章讨论规范层面的东西：退出码、流的分野、机器可读输出、补全脚本、
+版本信息。这两章的建议与库的选择无关——换成任何库都应当遵守。
+
+% ====================================================================
+\chapter{参数解析库全景}
+% ====================================================================
+
+写 CLI 的第一行代码往往就是那个 \Tp{for (int i = 1; i < argc; ++i)} 循环。
+本章的立场是：\textbf{你应当先理解手写循环要解决的所有问题，然后再决定
+是否把这件事交给库}。因为库只替你切分参数，不替你决定接口语义。
+
+\section{从手写 argv 循环开始}
+
+POSIX 交给你的 \Tp{argv} 已经是切好的字符串数组（Windows 的情形见第 2 章）。
+手写解析需要处理的最小问题集是：长选项与短选项、带值与不带值、
+短选项合并、值附着与分离、负数参数、\Tp{--} 终止符、位置参数、子命令、
+以及出错时的信息组织。一个诚实的实现长这样：
+
+\begin{lstlisting}[caption={手写 argv 循环：能用的最小骨架}]
+// manual_parse.cpp  (示意, 不含全部规则)
+#include <cstring>
+#include <cstdio>
+#include <string>
+#include <vector>
+
+struct Parsed {
+  int width = 0, quality = 90, verbosity = 0;
+  bool no_cache = false;
+  std::vector<std::string> files;
+};
+
+bool parse(int argc, char** argv, Parsed& out, std::string& err) {
+  for (int i = 1; i < argc; ++i) {
+    std::string a = argv[i];
+    auto need_value = [&](const char* name) -> const char* {
+      if (i + 1 >= argc) { err = std::string(name) + " 缺少参数值";
+                           return nullptr; }
+      return argv[++i];
+    };
+    if (a == "--") {                          // 终止符: 其余全是位置参数
+      for (++i; i < argc; ++i) out.files.push_back(argv[i]);
+      break;
+    }
+    if (a.rfind("--", 0) == 0) {              // 长选项
+      auto eq = a.find('=');
+      std::string key = a.substr(0, eq);
+      std::string val = (eq == std::string::npos)
+                          ? "" : a.substr(eq + 1);
+      if (key == "--width") {
+        const char* v = (eq == std::string::npos)
+                        ? need_value("--width") : argv[i];
+        if (!v) return false;
+        out.width = std::atoi(v);
+      } else if (key == "--no-cache") {
+        out.no_cache = true;
+      } else { err = "未知选项 " + key; return false; }
+    } else if (a.size() > 1 && a[0] == '-' && a[1] != '-') {
+      // 短选项: 可能合并 -wq, 也可能附着值 -w128
+      for (size_t j = 1; j < a.size(); ++j) {
+        char c = a[j];
+        if (c == 'v') { ++out.verbosity; continue; }
+        if (c == 'q') {
+          const char* v = (j + 1 < a.size()) ? a.c_str() + j + 1
+                                             : need_value("-q");
+          if (!v) return false;
+          out.quality = std::atoi(v); break;
+        }
+        err = std::string("未知短选项 -") + c; return false;
+      }
+    } else {
+      out.files.push_back(a);                 // 位置参数, 含负数
+    }
+  }
+  return true;
+}
+\end{lstlisting}
+
+这份代码故意留下两处``你一定会踩''的细节：\Tp{-5} 这样的负数位置参数会被
+误认为短选项（多数工具靠``先试转数字''或要求 \Tp{-- -5} 绕过）；
+附着值 \Tp{-w128} 与分离值 \Tp{-w 128} 的语义必须逐选项决定，因为
+``合并短选项''与``附着值''在同一段字符里语法上是重叠的。
+
+\section{getopt 与 getopt\_long：能拿到但不完整}
+
+glibc、musl、macOS 与 FreeBSD 都提供 \Fn{getopt} 与 \Fn{getopt\_long}
+（\Tp{unistd.h} 与 \Tp{getopt.h}）。它们的状态通过全局变量交换：
+\Tp{optarg}（当前选项的值）、\Tp{optind}（下一个待处理 \Tp{argv} 下标）、
+\Tp{optopt}（出错的字符）、\Tp{opterr}（是否打印错误消息）。
+
+几个必须掌握的语义细节：
+
+\begin{itemize}
+\item \textbf{GNU 会重排 argv}。默认行为是\emph{置换}（permutation）：
+      遇到第一个非选项参数后继续解析后面的选项，最后把非选项参数集中到
+      \Tp{argv} 尾部，\Tp{optind} 指向它们中的第一个。
+      这意味着你读过的 \Tp{argv[i]} 可能已经被改写。
+\item \textbf{optstring 前缀 \Tp{+}}：遇到第一个非选项就停止，
+      不置换。这是 POSIX 严格语义（等价于设置 \Tp{POSIXLY\_CORRECT}），
+      做``子命令后接自己的选项''这类结构时几乎必需。
+\item \textbf{前缀 \Tp{-}}：把非选项参数当作``码值为 1 的选项''返回，
+      于是可以一边解析选项一边按原顺序收集位置参数。
+\item \textbf{optstring 里的 \Tp{:}}：缺值时返回字符 \Tp{:} 而不是
+      \Tp{?}，从而能区分``未知选项''与``缺少值''这两种错误。
+\item 长选项表以 \Tp{option} 结构数组给出，\Tp{flag} 为 \Tp{nullptr} 时
+      返回 \Tp{val}，否则把 \Tp{val} 写进 \Tp{*flag}；
+      \Tp{has\_arg} 取 \Tp{no\_argument}、\Tp{required\_argument}、
+      \Tp{optional\_argument} 三值，其中``可选值''必须用 \Tp{--opt=val}
+      形式附着，分离写法会得到错误结果。
+\item \Fn{getopt\_long\_only} 让 \Tp{-width} 也按长选项处理，
+      适合兼容``单一横杠哲学''的用户。
+\end{itemize}
+
+\begin{warning}[title={Windows 上没有 getopt\_long}]
+MSVC CRT 只提供 \Fn{getopt} 吗？不——它\emph{两者都不提供}。
+MinGW-w64 附带 \Tp{unistd.h} 与 \Fn{getopt}，但 \Fn{getopt\_long} 的
+可用性取决于 msvcrt 还是 ucrt 与 mingw-runtime 的组合；
+Cygwin 有完整实现。结论：跨平台项目若要用 getopt 家族，
+就把 GNU 的实现（\Tp{getopt.c}、\Tp{getopt1.c}、\Tp{getopt\_int.h}）
+作为源文件带进仓库，并在系统已提供时不编译它。
+注意 \Tp{getopt.h} 的头文件宏保护与 GNU 版本完全一致，
+检测函数存在比检测头文件存在更可靠。
+\end{warning}
+
+\Fn{argp}（glibc 特有，源自 GNU libc）走的是另一条路：你声明一个
+\Fn{argp\_parser} 回调和一个 \Tp{argp\_options} 描述表，它自动产出
+符合 GNU 风格的 \Opt{help}、\Opt{usage}、\Opt{version}，并支持
+``按文档串分组的选项''。代价是它不可移植（macOS 与 Windows 没有），
+回调式的状态机写起来也不如声明式直观。今天的新项目基本不再选它，
+但读 GNU 核心工具的源码时绕不开。
+
+\section{候选库一览}
+
+表 \ref{tab:clilibs} 按``你会在 GitHub 上遇到的频率''排列。
+列名做了缩写：\emph{仅头} 指只支持头文件引入；\emph{子命} 指原生支持
+子命令分组；\emph{帮助} 指能自动生成 \Opt{help} 文本；\emph{校验} 指
+能把值约束到枚举、范围或自定义谓词；\emph{错误} 是对错误信息质量的主观
+评分（三星最佳）。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.17\textwidth}
+                 >{\raggedright\arraybackslash}p{0.09\textwidth}
+                 >{\raggedright\arraybackslash}p{0.09\textwidth}
+                 >{\raggedright\arraybackslash}p{0.085\textwidth}
+                 >{\raggedright\arraybackslash}p{0.085\textwidth}
+                 >{\raggedright\arraybackslash}p{0.085\textwidth}
+                 >{\raggedright\arraybackslash}p{0.085\textwidth}
+                 >{\raggedright\arraybackslash}p{0.085\textwidth}@{}}
+\caption{C++ 参数解析方案对比（写作时的观察）}
+\label{tab:clilibs} \\
+\toprule
+库 & 仅头 & 子命 & 帮助 & 校验 & 错误 & 许可 & 维护 \\
+\midrule
+\endfirsthead
+\toprule
+库 & 仅头 & 子命 & 帮助 & 校验 & 错误 & 许可 & 维护 \\
+\midrule
+\endhead
+手写 \Tp{argv} 循环 & --- & 自定 & 自定 & 自定 & 手写 & --- & --- \\
+\Fn{getopt\Bk\_long} & 系统 & 否 & 否 & 否 & 一星 & 随系统 & 冻结 \\
+\Fn{argp} & 系统 & 是 & 是 & 弱 & 二星 & 随系统 & 冻结 \\
+\Tp{Boost\Bk.Program\Bk\_options} & 否 & 弱 & 半 & 半 & 一星 & BSL-1 & 稳定 \\
+CLI11 & 是 & 是 & 是 & 强 & 三星 & BSD-3 & 活跃 \\
+cxxopts & 是 & 弱 & 半 & 中 & 二星 & MIT & 活跃 \\
+argparse（p-ranav） & 是 & 是 & 是 & 中 & 二星 & MIT & 活跃 \\
+lyra & 是 & 是 & 半 & 中 & 二星 & MIT & 缓慢 \\
+Args（Taylor\Bk Richards） & 是 & 是 & 是 & 弱 & 三星 & MIT & 个人 \\
+docopt.cpp & 否 & 弱 & 是 & 弱 & 二星 & MIT & 停滞 \\
+\bottomrule
+\end{longtable}
+
+\begin{note}[title={读这张表的三个正确姿势}]
+一、``仅头文件''在 \cpp{17} 项目里价值极大：它意味着无需 CI 里准备库产物、
+无需处理 ABI、无需和用户自己引入的同名库打架。二、\Tp{Boost\Bk.Program\Bk\_options}
+的\emph{配置文件解析}能力是这批库里最完整的（支持嵌套节、值重复、
+未注册键的容错），如果你的工具需要真正的配置文件，它的分量会上升。
+三、许可证与活跃度请以仓库当前的 LICENSE 与提交记录为准，
+本表只是帮你缩小候选集。
+\end{note}
+
+\section{同一个 CLI 的四种写法}
+
+下面用一个虚构但典型的工具做对照：\Tp{imgres} 的子命令 \Tp{resize}，
+接受 \Short{w}（必需，像素宽）、\Short{q}（0 到 100，默认 90）、
+\Short{v}（可重复，控制详细程度）、\Opt{no-cache}（布尔），
+以及任意数量的位置参数（输入文件）。
+
+\begin{lstlisting}[caption={写法一：getopt\_long（可移植性最差但零依赖）}]
+// imgres_getopt.cpp   POSIX; Windows 需自带 GNU getopt 源文件
+#include <getopt.h>
+#include <cstdio>
+#include <cstdlib>
+
+enum { OptNoCache = 1000 };
+
+int main(int argc, char** argv) {
+  static option longs[] = {
+    {"width",    required_argument, nullptr, 'w'},
+    {"quality",  required_argument, nullptr, 'q'},
+    {"verbose",  no_argument,       nullptr, 'v'},
+    {"no-cache", no_argument,       nullptr, OptNoCache},
+    {"help",     no_argument,       nullptr, 'h'},
+    {nullptr,    no_argument,       nullptr, 0},
+  };
+  int width = 0, quality = 90, verbosity = 0, no_cache = 0;
+  opterr = 0;                                  // 自己接管错误消息
+  int c;
+  while ((c = ::getopt_long(argc, argv, "+w:q:vh",
+                            longs, nullptr)) != -1) {
+    switch (c) {
+      case 'w': width = std::atoi(optarg); break;
+      case 'q': quality = std::atoi(optarg);
+                if (quality < 0 || quality > 100) {
+                  std::fprintf(stderr,
+                      "error: --quality 需要在 0..100 之间, 收到 %d\n",
+                      quality);
+                  return 2;
+                }
+                break;
+      case 'v': ++verbosity; break;
+      case OptNoCache: no_cache = 1; break;
+      case 'h': usage(argv[0]); return 0;
+      case ':': std::fprintf(stderr, "error: -%c 缺少值\n", optopt);
+                return 2;
+      default:  std::fprintf(stderr, "error: 未知选项 -%c\n", optopt);
+                return 2;
+    }
+  }
+  if (width == 0) {
+    std::fprintf(stderr, "error: 必须给出 --width\n");
+    return 2;
+  }
+  for (int i = optind; i < argc; ++i)
+    resize_one(argv[i], width, quality, verbosity, no_cache);
+  return 0;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption={写法二：cxxopts（短小，风格接近 getopt）}]
+// imgres_cxxopts.cpp   #include <cxxopts.hpp>
+#include <cxxopts.hpp>
+#include <iostream>
+
+int main(int argc, char** argv) {
+  cxxopts::Options op("imgres", "图像缩放工具");
+  // cxxopts 无原生子命令: resize 由第一个位置参数自行分派
+  op.add_options()
+    ("w,width", "像素宽度",
+     cxxopts::value<int>()->default_value("0"))
+    ("q,quality", "0..100 质量",
+     cxxopts::value<int>()->default_value("90"))
+    ("v,verbose", "详细程度, 可重复",
+     cxxopts::value<int>()->default_value("0"))
+    ("no-cache", "禁用缓存")
+    ("h,help", "打印帮助")
+    ("inputs", "输入文件", cxxopts::value<std::vector<std::string>>());
+
+  op.parse_positional({"inputs"});  auto res = op.parse(argc, argv);
+  if (res.count("help")) { std::cout << op.help(); return 0; }
+  int q = res["quality"].as<int>();
+  if (q < 0 || q > 100) {                  // 校验仍要自己写
+    std::cerr << "imgres: --quality 越界: " << q << "\n";
+    return 2;
+  }
+  if (res["width"].as<int>() == 0 && res.count("width") == 0) {
+    std::cerr << "imgres: 缺少必需选项 --width\n";
+    return 2;
+  }
+  return run(res["inputs"].as<std::vector<std::string>>(),
+             res["width"].as<int>(), q,
+             res["verbose"].as<int>(), res.count("no-cache") != 0);
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption={写法三：CLI11（表达力与错误信息最好）}]
+// imgres_cli11.cpp   #include <CLI/CLI.hpp>
+#include <CLI/CLI.hpp>
+#include <vector>
+
+int main(int argc, char** argv) {
+  CLI::App app{"图像缩放工具", "imgres"};
+  app.set_help_flag("-h,--help", "打印帮助并退出");
+  app.require_subcommand(1);                 // 必须且只给一个子命令
+
+  int width = 0, quality = 90, verbosity = 0;
+  bool no_cache = false;
+  std::vector<std::string> inputs;
+
+  auto* sub = app.add_subcommand("resize", "缩放一批图片");
+  sub->add_option("-w,--width", width, "像素宽度")->required();
+  sub->add_option("-q,--quality", quality, "质量 0..100")
+     ->check(CLI::Range(0, 100))
+     ->capture_default_str();
+  sub->add_flag("-v,--verbose", verbosity, "详细程度, 可重复");
+  sub->add_flag("--no-cache", no_cache, "禁用缓存");
+  sub->add_option("inputs", inputs, "输入文件")->required();
+
+  CLI11_PARSE(app, argc, argv);              // 出错即打印并返回退出码
+  return work(inputs, width, quality, verbosity, no_cache);
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption={写法四：argparse（p-ranav，类 Python 风格）}]
+// imgres_argparse.cpp   需要 C++17
+#include <argparse/argparse.hpp>
+
+int main(int argc, char** argv) {
+  argparse::ArgumentParser app("imgres", "1.2.0",
+                               argparse::default_arguments::help);
+  app.add_description("图像缩放工具");
+  auto* sub = app.add_subparser("resize");
+  sub->add_description("缩放一批图片");
+  sub->add_argument("-w", "--width").scan<'i', int>().required()
+     .help("像素宽度");
+  sub->add_argument("-q", "--quality").scan<'i', int>()
+     .default_value(90)
+     .help("质量 0..100");
+  sub->add_argument("-v", "--verbose").action("count")
+     .default_value(0).help("详细程度");
+  sub->add_argument("--no-cache").flag()
+     .help("禁用缓存");
+  sub->add_argument("inputs").nargs("+").help("输入文件");
+  try {
+    app.parse_args(argc, argv);
+  } catch (const std::exception& e) {
+    std::cerr << "imgres: " << e.what() << "\n";
+    return 2;
+  }
+  auto* used = app.get_subcommand("resize");
+  return work(used->get<std::vector<std::string>>("inputs"),
+              used->get<int>("width"), used->get<int>("quality"),
+              used->get<int>("verbose"),
+              used->get<bool>("no-cache"));
+}
+\end{lstlisting}
+
+\begin{compare}[title={四段代码的实际差异}]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+               >{\raggedright\arraybackslash}p{0.60\textwidth}@{}}
+\toprule
+维度 & 观察 \\
+\midrule
+代码行数 & getopt 61，cxxopts 33，CLI11 26，argparse 30 \\
+校验位置 & getopt 与 cxxopts 需要手写 \Fn{check}；
+CLI11 有 \Tp{CLI::Range} 与 \Tp{CLI::IsMember}；
+argparse 靠 \Tp{.scan\textless\textgreater{}} 与自定义 \Tp{checked\_value} \\
+错误信息 & getopt 默认消息不带程序名，需要 \Tp{opterr=0} 自写；
+CLI11 与 argparse 都带程序名、选项名与期望值 \\
+必需选项 & getopt 只能在解析后手工判定；其余三家有 \Tp{required()} \\
+\Opt{help} 质量 & getopt 全部手写；CLI11 与 argparse 自动生成含默认值、
+枚举可选值与行宽折行的文本 \\
+新增一个选项 & getopt 改两处（长表与 optstring）；库版改一处 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+\section{必须搞清楚的十个接口语义}
+
+这一节与库无关，但会决定你换库时用户是否会抱怨。
+
+\begin{enumerate}
+\item \textbf{\Tp{--} 终止符}：\Tp{prog -- -rf} 里的 \Tp{-rf} 必须是位置参数。
+      任何实现都要支持它，且 \Tp{--} 自身不出现在位置参数里。
+\item \textbf{短选项合并}：\Short{abc} 应当等价于 \Short{a} \Short{b} \Short{c}，
+      但\emph{只有}不带值的短选项才能这样合并。若 \Short{a} 带值，
+      则 \Tp{-a} 之后的全部字符都算它的值。
+\item \textbf{附着值}：\Tp{-w128}、\Tp{--width=128} 都要支持；
+      \Tp{--width=}（空值）建议报错而不是转成 0。
+\item \textbf{长选项缩写}：GNU 允许 \Tp{--verb} 唯一匹配
+      \Opt{verbose} 时展开。这很好，但意味着你新增选项时
+      可能把用户原有的缩写变成歧义而破坏兼容。要么明确支持、
+      要么明确禁用，别让它随缘。
+\item \textbf{重复选项}：数值型默认``后者覆盖''，集合型默认``累积''，
+      详细程度型用计数。三者要在 \Opt{help} 里写清楚。
+\item \textbf{位置参数顺序}：\Tp{tar -x -f a.tar} 与 \Tp{tar -xvf a.tar}
+      都合法，但只有不置换的解析模式才保证顺序与命令行一致。
+\item \textbf{布尔选项的否定形式}：\Opt{color} 与 \Opt{no-color} 成对提供
+      比 \Opt{color}=\Tp{true} 或 \Opt{color}=\Tp{false} 更符合肌肉记忆；
+      若同时提供，需明确后者优先级。
+\item \textbf{子命令的选项归属}：\Tp{prog --global sub --local} 里
+      \Opt{global} 属于全局、\Opt{local} 属于子命令，这是通行约定；
+      \Tp{git} 严格如此。允许交叉会立刻产生同名冲突。
+\item \textbf{三级优先序}：命令行显式给出 $>$ 环境变量 $>$ 配置文件 $>$
+      内置默认值。实现要点是\emph{知道哪些值是被显式给出的}——
+      这就是为什么每个库都需要``是否出现''的查询接口。
+\item \textbf{响应文件}：\Opt{file}=\Tp{@list.txt}（或独立的
+      \Opt{@file}）表示``把文件内容按行当作参数读进来''，
+      Windows 上的 \Tp{javac}、\Tp{link.exe} 与 GNU \Tp{ld}
+      用它绕开命令行长度上限。这是能力而不是语法糖：
+      \Tp{cmd.exe} 的命令行上限约 8191 个字符。
+\end{enumerate}
+
+\begin{bestpractice}[title={怎么选}]\mbox{}\\
+三行结论。若你的工具只有一个子命令、不超过十个选项，用
+CLI11 或 argparse，五分钟写完且错误信息比你手写的更好。
+若你在一个不允许引入第三方代码的环境里，带进 GNU 的
+\Tp{getopt.c} 而不是自己写循环——自己写的版本一定会在
+``\Tp{--} 之后的负数''这类细节上出错。若你的工具需要配置文件、
+命令行与配置文件的键位同名映射、以及``未知键警告''这类严格模式，
+\Tp{Boost\Bk.Program\Bk\_options} 的能力上限最高，代价是它不是只支持头文件、
+并且错误信息质量明显低于两个后起之秀。
+\end{bestpractice}
+
+% ====================================================================
+\chapter{CLI 设计规范与用户体验}
+% ====================================================================
+
+参数解析解决``怎么读''，这一章解决``读成什么样''。CLI 的设计规范不是审美
+问题：它决定了你的程序能否被另一个程序安全地调用。一个不打印到正确流上、
+或者退出码含义混乱的工具，在管道与脚本里就是 bug 源。
+
+\section{帮助文本的版式}
+
+GNU 的 \Tp{man} 约定给出了一套稳定的 \Opt{help} 形状：
+
+\begin{lstlisting}[style=shellstyle,caption={一个合规的 --help 输出骨架}]
+$ imgres --help
+Usage: imgres [GLOBAL-OPTIONS] COMMAND [ARGS...]
+
+Commands:
+  resize      缩放一批图片
+  info        打印元信息, 不写任何文件
+  completions 生成 shell 补全脚本
+
+Global Options:
+  -h, --help              显示本帮助并退出
+  -V, --version           显示版本信息并退出
+      --config <path>     覆盖配置文件路径
+      --color <when>      always, auto 或 never [默认: auto]
+  -q, --quiet             只输出错误
+
+Use "imgres COMMAND --help" for more information about a command.
+\end{lstlisting}
+
+六条硬要求：用法行以实程序名开头（用 \Tp{argv[0]} 的 basename，不要写死）；
+命令与选项分组，每组各自缩进两格；短选项与长选项写在同一列，用
+\Tp{, } 分隔；带值的选项用 \Tp{<name>} 标注；有默认值的把它写在末尾方括号里；
+最后一行提示``子命令还能再看一次帮助''。子命令各自有 \Opt{help}
+是硬性要求，因为没人能把全部选项读进脑子。
+
+\section{POSIX 指南与两条不可同时满足的期望}
+
+POSIX Utility Syntax Guidelines 的核心是：选项以 \Tp{-} 引导、
+由一个字母或一个加连字符的单词构成；只有明确声明接受值的选项才读下一个
+参数；\textbf{非选项参数一旦出现，其后的内容不再按选项解析}；
+\Tp{--} 结束选项识别。
+
+最后这条与 GNU 习惯（选项可以穿插在操作数之间）直接冲突。glibc 的
+置换模式默认满足 GNU 习惯，而 \Tp{POSIXLY\_CORRECT} 或 \Tp{optstring}
+前置 \Tp{+} 会退回 POSIX 严格模式。设计上的结论是：
+\emph{如果你的工具有子命令，就必须采用严格模式}，否则
+\Tp{prog sub --flag} 里的 \Tp{sub} 会被当成非选项参数从而提前终止选项解析，
+而 \Opt{flag} 又可能被全局层抢走。
+
+\section{退出码}
+
+\begin{compare}[title={退出码的分层约定}]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.10\textwidth}
+               >{\raggedright\arraybackslash}p{0.17\textwidth}
+               >{\raggedright\arraybackslash}p{0.49\textwidth}@{}}
+\toprule
+值 & 名称 & 语义 \\
+\midrule
+0 & \Tp{EXIT\Bk\_SUCCESS} & 成功 \\
+1 & 一般失败 & 干活了但失败了（I/O、网络、被取消） \\
+2 & 用法错误 & 参数不合法，用户改命令行就能修 \\
+64 到 78 & \Tp{sysexits.h} & 细分：\Tp{EX\Bk\_USAGE}=64、\Tp{EX\Bk\_DATAERR}=65、
+\Tp{EX\Bk\_NOINPUT}=66、\Tp{EX\Bk\_CANTCREAT}=73、\Tp{EX\Bk\_IOERR}=74、
+\Tp{EX\Bk\_TEMPFAIL}=75、\Tp{EX\Bk\_CONFIG}=78 \\
+128 以上 & 信号 & shell 约定 \(128+n\) 表示被信号 n 终止，
+Ctrl-C 的 \Tp{SIGINT}=2 于是对应 130 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+三条注意。其一，Unix 的退出码只有低 8 位有语义，超过 255 会被截断；
+Windows 的退出码是 32 位，异常终止时你甚至会看到
+\Tp{0xC0000005} 这类值，跨平台脚本不能假设小整数区间。
+其二，\Tp{sysexits.h} 的价值在于``让调用方区分可重试与不可重试''：
+\Tp{EX\_TEMPFAIL} 应当重试，\Tp{EX\_DATAERR} 不该重试。
+其三，``用法错误用 2''这条约定极其重要，因为自动补全与包装脚本常常
+用退出码 2 来判定``这个选项不存在''。
+
+\section{数据的流与诊断的流}
+
+铁律只有一句：\textbf{stdout 只放被请求的数据，stderr 放一切其他东西}
+（进度、警告、日志、提示、\Opt{help} 除非被显式请求）。
+它的唯一存在理由是管道：\Tp{imgres info a.png | jq .size} 能不能工作，
+完全取决于你有没有把一句``正在读取 a.png''写进 stdout。
+
+\begin{lstlisting}[style=shellstyle,caption={流的分野如何被验证}]
+$ imgres info a.png > out.json            # stdout 只有 JSON
+$ imgres info a.png 2>/dev/null | jq .    # 屏蔽诊断后仍是合法 JSON
+$ imgres info a.png 1>/dev/null           # 只留诊断, 便于看日志
+$ imgres --help > /dev/null               # 显式请求帮助, 走 stdout
+\end{lstlisting}
+
+\Opt{help} 与 \Opt{version} 的输出流存在争议：传统 GNU 工具把它们发到
+\Tp{stdout}（因为是用户显式要求的），而有些项目坚持发 \Tp{stderr}
+以免污染 \Tp{prog --help | grep} —— 后者是错的，
+显式请求的信息本身就是``被请求的数据''。
+
+\section{机器可读输出}
+
+给人看的输出与给程序看的输出必须\emph{分开实现}，共用同一段渲染代码
+迟早会崩。三个常用开关：
+
+\begin{itemize}
+\item \Opt{json}：结构化输出。要求字段名稳定、时间戳用 RFC 3339、
+      错误也走同一种信封（例如带 \lstinline|{"error"}| 字段），并且
+      \textbf{整个输出是一个可被 \Tp{jq} 一次解析的文档}。
+\item \Opt{porcelain}：git 风格的极简稳定行格式，字段以制表符分隔，
+      版本化在文档里，明确承诺永不改动。适合被脚本逐行消费。
+\item \Opt{null-delimited} 或 \Opt{print0}：文件名列表用 \Tp{NUL} 分隔。
+      这不是可选项而是正确性问题——文件名可以含换行。
+\end{itemize}
+
+\begin{warning}[title={三个最常见的输出污染}]
+一、\textbf{把颜色写进 \Tp{stdout} 却忘了 \Tp{NO\_COLOR}}：结果是 CI 日志里
+满是转义码，或 \Tp{grep -c} 数出错乱行。判定顺序见第 3 章。
+二、\textbf{用 \Fn{system} 调 \Tp{cls}}：清屏应当用 \Tp{ESC [ 2J}
+加 \Tp{ESC [ H}，而且要确认是 tty；在 Windows 上 \Tp{cls} 依赖 cmd.exe，
+你的程序可能根本没有它。三、\textbf{把 ANSI 转义发给重定向文件}：
+\Tp{prog > log} 之后文件里留着 \Tp{ESC [ 2K}，
+\Tp{cat} 出来是一行被覆盖过的怪字符。转义序列只在 tty 上生成，
+这是第 3 章快照里 \Tp{stdout\_is\_tty} 唯一的、绝对的用途。
+\end{warning}
+
+\section{幂等、dry-run 与取消}
+
+\Opt{dry-run} 的定义应当写成文档：\emph{读取一切、计算一切、写出计划，
+但不产生任何外部副作用}。它不写文件、不发网络请求（若必须读远端，
+在帮助里说明）、不创建分支。输出格式最好与真实执行的报告同构，
+这样用户可以 diff 它。
+
+幂等性意味着``同一命令执行两次，第二次不报错也不重复副作用''。
+常见手法是给操作一个身份键（内容哈希或用户提供的 \Opt{id}），
+或提供 \Opt{force} 显式跨越。进度信息在 \Opt{dry-run} 下仍然要打印，
+否则用户不知道你到底检查了什么。
+
+取消（Ctrl-C）的语义是``回到一个一致的状态''：写完当前文件再退、
+临时文件删掉、终端状态恢复。第 2 章的原子标志位与第 9 章的 RAII
+守卫就是为此服务。退出码上，被信号终止时不要返回 0，
+即使你已经优雅收尾——很多调用方靠非零来判断``这件事没做完''。
+
+\section{补全脚本}
+
+三家 shell 的补全是三个不同的世界：bash 用 \Fn{complete} 注册回调或
+静态词表，zsh 用 \Tp{compdef} 与 \Tp{\_arguments} 描述规格，
+fish 用 \Tp{complete -c prog -l option} 直接声明。手写三份脚本会立刻过期，
+所以正确做法是\textbf{让解析库从选项表自己生成}：
+
+\begin{lstlisting}[style=shellstyle,caption={补全脚本的产物链}]
+$ DIR=~/.local/share/bash-completion/completions
+$ mkdir -p "$DIR" && cd "$DIR"
+$ imgres completions bash > imgres
+$ imgres completions zsh  > ~/.zfunc/_imgres
+$ imgres completions fish > ~/.config/fish/completions/imgres.fish
+$ imgres completions bash | head -5      # 便于在 CI 里做快照测试
+\end{lstlisting}
+
+CLI11 的做法是在程序里加一个补全安装器（\Tp{CLI::CompletionInstaller}，
+v2.4 起），它会给主 App 自动追加 \Opt{generate-completion}，
+输出的就是对应方言的脚本；类 Python 风格的 argparse 通常让你自己注册一个
+\Tp{completions} 子命令。需要动态补全（列真实文件名、列远端资源）时，
+再加一个隐藏子命令（约定名如 \Tp{\_\_complete}），让脚本回调它，
+并把它的输出严格限制在换行分隔的候选词上。
+
+\section{版本信息与构建可复现性}
+
+\Opt{version} 至少应当给出：程序名、语义化版本、目标平台与架构、
+编译器与标准库、以及依赖库版本。常见的坑是用 \Tp{\_\_DATE\_\_} 与
+\Tp{\_\_TIME\_\_} 生成``构建时间''：它们是\emph{该翻译单元}被编译的时刻，
+增量构建下不同源文件的时间会不一致，而且它让构建不可复现
+（同一个 commit 两次构建产物不同，缓存与产物指纹全部失效）。
+
+正确做法是让版本成为配置期注入的数据：CMake 里用
+\Fn{configure\_file} 把一个 \Tp{version.hpp.in} 展开成头文件，
+填入 \Tp{PROJECT\_VERSION} 与外部传入的提交标识（配置期执行
+\Tp{git describe} 拿到，或由 CI 显式给值）；
+发布构建里再传入 \Tp{-DVERSION\_STRING=...}，
+使 CI 成为唯一的事实来源。
+
+\begin{note}[title={Windows 的两个遗留坑}]
+一是长路径：默认上限 260 个字符，超出时 \Fn{CreateFileW} 报
+\Tp{ERROR\_PATH\_NOT\_FOUND}。出路有三条——让用户启用组策略或清单里的
+\Tp{longPathAware}（Windows 10 1607 起）、在路径前加
+\Tp{\textbackslash\textbackslash?\textbackslash{}} 前缀绕过规范化（代价是必须给绝对
+已规范化路径、不能用正斜杠、也不再屏蔽 \Tp{CON} 与 \Tp{NUL}
+这类保留名）、或者干脆拒绝并给出清楚的提示。
+二是 ANSI 代码页残留：任何还在用窄字符 CRT 函数处理路径的代码，
+在非 UTF-8 代码页机器上都会把中文路径变成 \Tp{?}。
+判定办法很简单——在 \Tp{chcp 936} 与 \Tp{chcp 65001} 下各跑一次同一命令。
+\end{note}
+
+\begin{bestpractice}[title={发布前用这十条自查}]
+1 有 \Opt{help} 且每个子命令都有；2 有 \Opt{version}；
+3 支持 \Tp{--}；4 支持 \Tp{NO\_COLOR}；5 非 tty 时不画动画；
+6 \Tp{stdout} 只有数据；7 退出码有文档；8 破坏性操作有 \Opt{dry-run}；
+9 文件名输出可选 \Tp{NUL} 分隔；10 长选项改名时检查过缩写歧义。
+十条里任何一条不满足，都会在用户升级到下一个版本时变成 issue。
+\end{bestpractice}
+
+% ====================================================================
+\part{输出与界面}
+% ====================================================================
+
+有了能力快照与参数，接下来的问题是``把结果漂亮地摆出来''。本部分的三章
+按复杂度递增：单行的彩色与表格、动态的进度与提示、整屏的交互界面。
+三者共享同一套底层约束（列宽、帧率、终端状态的可恢复性），
+所以请把它们当成同一件事的三个尺度来看。
+
+% ====================================================================
+\chapter{彩色与样式输出}
+% ====================================================================
+
+颜色是 CLI 里最容易写、也最容易写坏的功能。写坏的表现通常不是不好看，
+而是\emph{破坏了输出流的可解析性}。本章从 SGR 序列本身讲起，
+然后给出手写与用库两条实现路径。
+
+\section{SGR 序列解剖}
+
+所有着色都走同一条 CSI 序列：\Tp{ESC [ p1 ; p2 ; ... m}，其中参数列表
+称为 SGR（Select Graphic Rendition）。把它拆开看：
+
+\begin{lstlisting}[style=shellstyle,caption={SGR 参数的四种常用形态}]
+printf '\e[31m红字\e[0m\n'              # 31 = 前景红, 0 = 全部复位
+printf '\e[1;31m粗红\e[0m\n'            # 参数可并列, 顺序无关
+printf '\e[38;5;208m前景 208 号\e[0m\n'  # 38;5;n = 调色板索引
+printf '\e[48;5;17m背景 17 号\e[0m\n'    # 48;5;n = 背景调色板
+printf '\e[38;2;255;120;0m真彩\e[0m\n'   # 38;2;r;g;b = 24 位
+printf '\e[3;4;9m斜体 下划线 删除线\e[0m\n'
+\end{lstlisting}
+
+必须记住的五组参数：
+
+\begin{itemize}
+\item 前景 \Tp{30} 到 \Tp{37}（基本 8 色）、\Tp{90} 到 \Tp{97}
+      （高亮 8 色）、\Tp{39}（恢复默认前景）。
+      背景同理是 \Tp{40} 到 \Tp{47}、\Tp{100} 到 \Tp{107}、\Tp{49}。
+\item 样式：\Tp{1} 加粗、\Tp{2} 暗淡、\Tp{3} 斜体、\Tp{4} 下划线、
+      \Tp{7} 反色、\Tp{9} 删除线。复位要成对：\Tp{22} 取消加粗与暗淡、
+      \Tp{23} 斜体、\Tp{24} 下划线、\Tp{27} 反色。
+\item \Tp{0} 是``一切复位''，不是``取消加粗''。在一段长输出里反复用
+      \Tp{0} 会把你在上一行刚设过的模式一并清掉。
+\item \textbf{加粗不等于变亮}。很多配色方案把 \Tp{1} 解释成
+      ``前景改用高亮色系''，于是 \Tp{1;31}（粗红）和 \Tp{91}（亮红）
+      在同一个终端里可能显示成同一个颜色，而 \Tp{31} 与 \Tp{91}
+      是两种不同的红。别把 \Tp{1} 当作唯一的强调手段，
+      需要语义区分时同时改颜色或加下划线。
+\item 256 号调色板的编号规则：0 到 15 是系统色（实际色值由用户主题决定，
+      你的程序无法假定 1 号是纯红）；16 到 231 是
+      \(6\times6\times6\) 立方体，编号为 \(16+36r+6g+b\)，
+      其中每通道的量化值取自 0、95、135、175、215、255；
+      232 到 255 是从 8 到 238 步长 10 的灰阶。
+\end{itemize}
+
+\section{手写着色工具与三个库}
+
+最小可用的实现只有二十行，而且它比任何依赖都更可控：
+
+\begin{lstlisting}[caption={二十行着色工具（terminal.hpp 的下游）}]
+// styler.hpp   依赖第 3 章的 Terminal 快照
+#pragma once
+#include "terminal.hpp"
+#include <string>
+#include <string_view>
+
+namespace cli {
+
+inline const char* esc(const char* code) { return code; }
+
+inline std::string wrap(const Terminal& t, const char* on,
+                        std::string_view s) {
+  if (!t.color_on()) return std::string(s);
+  return std::string(esc(on)) + std::string(s) + "\e[0m";
+}
+
+inline std::string bold(const Terminal& t, std::string_view s)
+  { return wrap(t, "\e[1m", s); }
+inline std::string dim(const Terminal& t, std::string_view s)
+  { return wrap(t, "\e[2m", s); }
+
+// 语义色: 只在这里做一次色深降级, 调用点不再关心
+inline std::string ok(const Terminal& t, std::string_view s) {
+  switch (t.color) {
+    case ColorLevel::TrueColor: return wrap(t, "\e[38;2;0;170;80m", s);
+    case ColorLevel::Ansi256:   return wrap(t, "\e[38;5;34m", s);
+    default:                    return wrap(t, "\e[32m", s);
+  }
+}
+
+} // namespace cli
+\end{lstlisting}
+
+库这一侧有三个常见选择：
+
+\begin{itemize}
+\item \textbf{fmt}（\Tp{{fmt} 或 std::format 的替代}）提供
+      \Tp{fmt::emphasis} 与 \Tp{fg()}、\Tp{bg()}，可以把样式作为
+      格式说明里的常量组合进 \Tp{format} 调用；
+      这套能力需要较新的语言标准支持。
+\item \textbf{rangy} 是只支持头文件的老牌小库：它给出一组字符串常量
+      （形如 \Tp{colors::RED}）并在 Windows 上自动改走传统 API
+      或在无能力时剥掉转义。功能恰好对应本节全部内容，
+      但活跃度已经很低，读它的设计比用它更有价值。
+\item \textbf{indicators} 提供 \Tp{ProgressBar}、\Tp{Block}、
+      \Tp{Spinner} 与终端尺寸探测，主要服务于第 7 章，
+      但它的样式接口同样可以拿来做颜色。
+\end{itemize}
+
+\section{Windows 的两条着色路径}
+
+传统路径是 \Fn{Set\Bk Console\Bk TextAttribute}：给它一个
+\Tp{WORD}，低三位是前景的 R、G、B，第四位是前景强度，
+高四位对背景，另外还有若干 \Tp{COMMON\_LVB\_} 前缀的行属性位。
+它只有 16 色，并且需要你自己维护``当前属性''以便在程序退出时恢复，
+因为控制台句柄的属性是\emph{全局可变状态}。
+
+VT 路径就是第 1 章的 \Tp{ENABLE\_VIRTUAL\_TERMINAL\_PROCESSING}：
+一旦开启，你写的转义序列与在 Linux 上完全等价。工程上正确的组合是：
+
+\begin{enumerate}
+\item 先尝试开 VT；成功则走统一的序列生成代码；
+\item 失败（老宿主或被拒绝）则退化到 16 色的属性路径，
+      把 256 与真彩请求映射到最近的 16 色；
+\item 若 \Tp{stdout} 根本不是控制台，则不输出任何样式。
+\end{enumerate}
+
+把这三条分支封在 \Fn{wrap} 里，调用点就永远是同一句
+\Tp{cli::ok(term, \textquotedbl done\textquotedbl)}。
+
+\section{对齐、千分位与本地化}
+
+\Tp{std::format} 与 \Tp{fmt} 在 CLI 里的价值主要不是颜色而是排版：
+宽度与填充、对齐、数值分组、精度。
+
+\begin{lstlisting}[caption={排版能力速览}]
+#include <format>
+std::format("{:>12}", "右对齐");           // 宽 12, 右对齐
+std::format("{:<12}|\n", "左对齐");        // 加竖线可看出填充
+std::format("{:^8}", "居中");
+std::format("{:*<8}", "用星号填充");       // 任意填充字符
+std::format("{:,}", 1234567);              // 千分位分组
+std::format("{:.3f}", 3.14159);            // 固定小数
+std::format("{:>8.1%}", 0.4265);           // 百分比
+std::format("{:d}", 0xFF);                 // 十进制输出 255
+std::format("{0} ({0})", "重复引用同一参数");
+\end{lstlisting}
+
+两个 CLI 专属注意事项。其一，\Tp{fmt} 的宽度按\emph{码元或码点}计，
+不感知东亚宽度，所以 \Tp{:12} 对中文一样会错位——必须先经第 2 章的
+\Fn{display\_width} 折算，再决定用不用 \Tp{<} 填充。
+其二，千分位与小数点符号依赖 locale，而工具输出常常需要跨机器可比。
+结论：给\emph{人}看的表格可以用分组的默认 locale；
+给\emph{机器}看的数字（尤其 \Opt{json} 路径）必须不受 locale 影响，
+宁可自己格式化或用 \Tp{std::format} 的显式 locale 参数。
+
+\section{表格输出}
+
+三条路径：用库（\Tp{tabulate} 一类提供边框与对齐的表格渲染器，
+或 indicators 的 \Tp{Block}）、自己按列渲染、或者干脆不画框
+（只用两列加对齐，最容易被复制粘贴）。自写的核心只有两件事：
+先算每列的显示宽度，再逐行填充。
+
+\begin{lstlisting}[caption={手写表格渲染：列宽来自 display\_width}]
+// table.hpp  (片段) 依赖 display_width() 与 styler.hpp
+#include <string>
+#include <string_view>
+#include <vector>
+#include "../terminal/disp_width.hpp"
+
+namespace cli {
+
+struct Col { std::string title; int align; };  // 0 左, 1 右
+
+inline std::vector<int> measure(const std::vector<std::string>& head,
+                                const std::vector<std::vector<
+                                  std::string>>& rows) {
+  std::vector<int> w(head.size());
+  for (size_t c = 0; c < head.size(); ++c) {
+    w[c] = display_width(head[c]);
+    for (const auto& r : rows)
+      w[c] = std::max(w[c], display_width(r[c]));
+  }
+  return w;
+}
+
+// 把 s 填到 cols 列: 按显示宽度补空格, 超宽则按列截断
+std::string pad(std::string_view s, int cols, int align);
+
+} // namespace cli
+\end{lstlisting}
+
+\begin{warning}[title={表格最常见的三个错误}]
+一、\textbf{把宽度算在着色后的字符串上}：带转义序列的单元格会把宽度
+撑爆，永远先算裸文本宽度、再套颜色。
+二、\textbf{不处理超宽内容}：某一行数据特别长时必须截断加省略号，
+否则整表在你的 210 列终端上好看、在 80 列终端上散架。
+三、\textbf{忘了表头也参与列宽}：\Tp{measure} 里漏掉表头会让标题被截。
+\end{warning}
+
+\begin{guideline}[title={样式的语义优先于观感}]
+颜色只在能承载信息时才值得用：绿色表示成功、黄色表示警告、
+红色表示错误，粗体表示用户必须读的那一行。除此之外不要用。
+更稳的做法是同时提供文本标记（例如行首的 \Tp{OK}、\Tp{WARN}、
+\Tp{FAIL}），颜色作为附加。理由很硬：色盲用户、
+被 \Tp{NO\_COLOR} 关掉的 CI、以及只剩 16 色的老终端，
+都只能看见文本标记。
+\end{guideline}
+
+% ====================================================================
+\chapter{进度反馈与交互提示}
+% ====================================================================
+
+进度条是 CLI 里唯一``做得好没人夸、做坏了人人骂''的功能。它的难点不在
+画图，而在于：它必须在流上可关掉、在快慢两端都不失焦、
+并且与日志共处一行而不打架。
+
+\section{单行进度：\Tp{\textbackslash r} 的正确写法}
+
+\Tp{\textbackslash r} 只把光标移回行首，\emph{不清除任何字符}。
+所以新旧两帧长度不同时，旧帧的尾巴会残留：
+
+\begin{lstlisting}[style=shellstyle,caption={清行的三种写法与各自的坑}]
+printf '\r%-40s' "new frame"              # 残留旧帧尾部字符
+printf '\r\033[K%s' "new frame"           # 回到行首并清到行尾  (推荐)
+printf '\033[2D\033[K%s' "new frame"      # 依赖光标位置, 不要这样
+printf '\r\033[0K\033[?25l%s' "frame"     # 顺带隐藏光标, 收尾要恢复
+\end{lstlisting}
+
+配套的三条纪律：其一，内容必须先按\Fn{display\_width} 截断到
+\Tp{cols - 1}，否则自动换行使 \Tp{\textbackslash r} 只能回到
+最后一行的行首，屏幕变成楼梯。其二，最后一帧要显式输出 \Tp{\textbackslash n}
+并恢复光标，否则用户接下来的输入会接在你的进度后面。
+其三，非 tty 时整段代码直接不执行（第 3 章的快照）。
+
+\section{帧率：时间驱动而不是次数驱动}
+
+\begin{lstlisting}[caption={时间驱动的单行进度}]
+// progress.hpp  (片段)
+#include <chrono>
+#include <string>
+
+namespace cli {
+
+class Bar {
+  int total_, done_{0};
+  std::chrono::steady_clock::time_point last_{std::chrono::
+      steady_clock::now()};
+  std::chrono::milliseconds min_{std::chrono::milliseconds(80)};
+  int cols_;
+
+ public:
+  Bar(int total, int cols) : total_(total < 1 ? 1 : total), cols_(cols) {}
+
+  void tick(int n = 1) {
+    done_ += n;
+    auto now = std::chrono::steady_clock::now();
+    if (now - last_ < min_ && done_ != total_) return;  // 限帧
+    last_ = now;
+    render();
+  }
+  void render() {
+    int pct = static_cast<int>(100LL * done_ / total_);
+    int fill = (cols_ - 12) * pct / 100;
+    std::string s = " [" + std::string(fill, '#')
+                  + std::string(std::max(0, cols_ - 12 - fill), '.')
+                  + "] " + std::to_string(pct) + "%";
+    std::printf("\r\033[0K%s", s.c_str());
+    std::fflush(stdout);
+  }
+  void finish() { render(); std::printf("\n"); std::fflush(stdout); }
+};
+
+} // namespace cli
+\end{lstlisting}
+
+80 ms 是个经验值：再快终端重绘的开销会盖过实际工作，再慢则用户觉得卡死。
+\textbf{绝对不要``每处理一项就刷新一次''}——那会让 10 万条小任务的
+输出量比任务本身还大，接到管道上时能把磁盘写满。
+spinner 同理：它只在``无法量化进度''时使用，帧序列用
+\Tp{| / - \textbackslash{}} 或点阵，按时间推进，
+并且必须给出已经耗费的秒数，否则转圈本身不构成任何信息。
+
+\section{并发任务与日志的混排}
+
+多线程下每个任务一个进度条，最常见的问题是互相覆盖。两条可行方案：
+
+\begin{itemize}
+\item \textbf{单渲染者}：工作线程只更新原子计数，
+      一个专门的线程每 80 ms 重绘一次全部行。
+      这是 \Tp{indicators} 的 \Tp{MultiBar} 与多数 Rust 工具采用的模型。
+\item \textbf{固定区域}：预留 N 行，用绝对光标定位
+      （\Tp{ESC [ row ; col H}）逐行覆写，日志则打印在这 N 行之上。
+\end{itemize}
+
+与日志混排的正确处理只有一种：先把进度区域整段擦掉、打印日志、
+再重绘进度。任何``在进度条末尾追加一行''的做法都会在换行时留下
+半截旧帧。擦多行用 \Tp{ESC [ n A}（上移）配合 \Tp{ESC [ 0K}
+（清到行尾）循环完成，注意最后一行不要用 \Tp{ESC [ 2K}
+以免把用户已经输入的行弄掉。
+
+\section{库与自写：60 行的取舍}
+
+\Tp{indicators} 提供了进度条、多行、spinner、终端尺寸探测与光标控制，
+接口直观，也是只支持头文件的。它的短板有两个：不感知东亚宽度
+（中文标签会把行撑爆），以及默认把每一帧都写到 \Tp{std::cout}——
+这与第 5 章``\Tp{stdout} 只放数据''的铁律冲突，必须改到 \Tp{stderr}。
+自写版本（上面那 35 行）在功能上够用，代价是要自己处理 \Tp{SIGWINCH}。
+
+\begin{note}[title={进度条写 stderr 的三种流}]
+若 \Tp{stdout} 承载数据（\Tp{prog | jq}），进度必须写 \Tp{stderr}。
+但如果 \Tp{stderr} 也被重定向（\Tp{prog 2>log}），进度就变成日志里的
+大量 \Tp{ESC [ 0K} 噪声。所以判定要分两次做：
+\Tp{stderr\_is\_tty} 决定画不画，\Tp{stdout\_is\_tty} 决定
+数据与诊断的分派。两者都非 tty 时，只保留里程碑行。
+\end{note}
+
+\section{交互提示与密码输入}
+
+\begin{lstlisting}[caption={confirm 提示：默认值与 EOF 处理}]
+// prompt.hpp  (片段)
+#include <cstdio>
+#include <string>
+
+// 返回 true / false; default_yes 决定直接回车时的答案
+bool confirm(const std::string& q, bool default_yes, bool is_tty) {
+  if (!is_tty) return default_yes;        // 非交互: 用默认, 绝不等输入
+  std::printf("%s [%s] ", q.c_str(), default_yes ? "Y/n" : "y/N");
+  std::fflush(stdout);
+  std::string line;
+  int c;
+  while ((c = std::fgetc(stdin)) != '\n' && c != EOF)
+    line.push_back(static_cast<char>(c));
+  if (c == EOF) return false;             // Ctrl-D 视为"不作决定"
+  if (line.empty()) return default_yes;
+  return line[0] == 'y' || line[0] == 'Y';
+}
+\end{lstlisting}
+
+密码输入需要关闭回显。POSIX 侧是第 1 章那个 RAII 骨架的窄化版本：
+临时清掉 \Tp{ECHO}，逐字符读，遇到退格自己把已存字符串缩一格，
+遇到 \Tp{\textbackslash n} 结束，退出时整体写回保存的 \Tp{termios}。
+Windows 侧有两条：\Fn{ReadConsole} 拿到句柄后清掉
+\Tp{ENABLE\_PROCESSED\_INPUT} 再自行处理按键；
+或者用 \Tp{conio.h} 的 \Fn{\_getch}——它一次返回一个字符且不回显，
+但它是 CRT 扩展，在部分非 MSVC 工具链上要么缺失要么行为不同，
+所以只适合小工具，不适合当作跨平台方案的基石。
+
+\section{行编辑与历史：四个可选层}
+
+需要``像 shell 一样可编辑''的输入时，自己实现是不划算的。可选层次：
+
+\begin{itemize}
+\item \textbf{GNU readline}：能力最全（ Emacs 风格按键、历史搜索、
+      可编程补全），代价是 GPL 许可——静态链接到闭源工具前必须确认。
+\item \textbf{libedit}：BSD 许可的实现，API 与 readline 近似但子集更小，
+      macOS 系统自带。
+\item \textbf{linenoise}：千行左右的小实现，历史、左右移、简易补全都有，
+      适合直接抄进仓库。
+\item \textbf{replxx}：功能介于 readline 与 linenoise 之间，
+      带语法着色回调与更完整的按键映射。
+\end{itemize}
+
+Tab 补全的机制在各家里都是同一形状：注册一个回调，运行时给它
+``当前词''，它返回候选列表，库负责显示与公共前缀补全。
+把候选词的生成\emph{复用}给 shell 补全脚本（见第 5 章的
+\Tp{\_\_complete} 隐藏子命令），可以让交互内与命令行外的补全行为一致。
+
+\section{REPL 最小骨架}
+
+\begin{lstlisting}[caption={REPL 的四条控制语义}]
+// repl.cpp  (片段, POSIX)
+#include <cstdio>
+#include <linenoise.h>
+
+int main(int argc, char** argv) {
+  std::printf("imgres 交互模式, Ctrl-D 退出, Ctrl-C 取消当前行\n");
+  linenoiseHistoryLoad("imgres_history");           // 历史持久化
+  linenoiseSetCompletionCallback(complete_cb);      // Tab 补全回调
+  for (;;) {
+    char* line = linenoise("imgres> ");
+    if (line == nullptr) break;                     // Ctrl-D => 返回空
+    if (*line != '\0') linenoiseHistoryAdd(line);
+    if (!std::strcmp(line, "exit")) { std::free(line); break; }
+    int rc = dispatch(line);                        // 解释执行
+    if (rc != 0) std::printf("error: %d\n", rc);
+    std::free(line);
+  }
+  linenoiseHistorySave("imgres_history");
+  return 0;
+}
+\end{lstlisting}
+
+四条语义值得单独列出来，因为它们经常被搞混：
+Ctrl-C 在 readline/linenoise 里\emph{只丢弃当前行}并把提示符重画一遍，
+不退出程序；Ctrl-D 在行首表示 EOF，退出循环；
+历史要\emph{显式}读写文件，库不会替你存；
+补全回调必须是纯函数式的（给定前缀返回候选），不要在里面做交互输出。
+若你的 REPL 里跑着长任务，务必让 Ctrl-C 走第 2 章的取消标志而不是默认动作，
+否则整个进程组会一起收到信号。
+
+\begin{bestpractice}[title={进度的六条实现纪律}]
+1 判定 \Tp{stdout\_is\_tty} 或 \Tp{stderr\_is\_tty} 之后再画；
+2 时间驱动限帧，最短 80 ms；3 内容按显示宽度截断到 \Tp{cols-1}；
+4 结束必须换行并恢复光标；5 与日志共用输出区时先擦后写；
+6 提供 \Opt{no-progress} 或 \Opt{quiet} 让用户彻底关掉它。
+进度是\emph{可选}的信息，任何情况下都不该成为正确性依赖。
+\end{bestpractice}
+
+% ====================================================================
+% ====================================================================
+\part{全屏界面与外部进程}
+% ====================================================================
+
+前两部分解决了``怎么收参数''与``怎么出一行''。本部分处理两个重量级场景：
+接管整块屏幕（TUI），以及把活儿交给另一个进程（子进程）。它们共同点是都
+触及终端运行时的最深一层——前者要把 tty 状态机整个占住并且精确归还，
+后者要把进程模型、参数引用规则与两套完全不同的杀进程语义同时摆平。
+
+% ====================================================================
+\chapter{TUI：全屏界面的四条实现路线}
+% ====================================================================
+
+单行进度与全屏界面的本质区别不是颜色数量，而是\emph{屏幕状态的归属权}。
+行式程序往流里追加字节，滚动由终端负责；TUI 则假设自己拥有每一行每一列，
+任何一处状态错漏都会以残影、错位、终端被毁的形式直接呈现给用户。本章先
+拆开``一个 TUI 必须自己做的事''，再对比四条现实的库路线。
+
+\section{全屏程序必须自己做的六件事}
+
+\begin{enumerate}
+\item \textbf{进入与离开}：切换到备用屏幕缓冲、进入原始模式、退出时按
+      逆序精确恢复，且崩溃路径也要恢复（第 1 章的 \Tp{termios} 教训在
+      全屏模式下放大十倍）；
+\item \textbf{重绘}：维护一份逻辑上的单元格网格，每帧与上一帧比对，
+      只将变化写成转义序列；
+\item \textbf{尺寸}：跟踪行列数变化并重排，POSIX 靠 \Tp{SIGWINCH}，
+      Windows 只能轮询；
+\item \textbf{输入}：把按键与鼠标转义序列流重组成离散事件，处理
+      \Tp{ESC} 的歧义；
+\item \textbf{光标}：绘制期间隐藏，需要输入法候选词时精确定位；
+\item \textbf{降级}：非 tty、\Tp{TERM=dumb} 时拒绝进入或以行式输出退场。
+\end{enumerate}
+
+\section{屏幕切换：备用缓冲与守卫对象}
+
+进入全屏的第一条序列是 \Tp{?1049h}：保存光标位置、切换到备用屏幕缓冲、
+清屏。它的价值在退出时才显现——\Tp{?1049l} 把主屏幕连同\emph{滚动历史}
+原样归还，用户在 TUI 里按 Q 退出后还能往上翻出程序启动前的输出。
+旧变体 \Tp{?47h} 与 \Tp{?1047h} 要么不保存光标要么不保存回滚，已无
+使用的理由。Windows 侧，Windows Terminal 与传统 conhost（Win10 起）
+都解析 1049；走纯 Console API 的路线没有备用屏概念，只能靠读写
+屏幕缓冲区尺寸自行模拟，不建议。
+
+原始模式的进入条件与第 1 章一致，但 TUI 对 \Tp{VMIN}/\Tp{VTIME} 的取值
+不同：需要``睡在 \Fn{read} 里等按键、但要周期性醒来重绘''时，
+\Tp{VMIN}=0、\Tp{VTIME}=1（100 ms 粒度）或改用 \Fn{poll} 显式超时。
+下面这个守卫对象把两件事合成一个 RAII 单元，并额外挂了 \Fn{atexit}
+兜底：
+
+\begin{lstlisting}[caption={备用屏与原始模式的进入/退出守卫（tui\_guard.hpp）}]
+// tui_guard.hpp   POSIX/WSL; Windows 见 8.3 节末
+#pragma once
+#include <cstdio>
+#include <cstdlib>
+#include <termios.h>
+#include <unistd.h>
+
+namespace cli {
+
+class TuiGuard {
+  termios saved_{};
+  bool    active_{false};
+  static void leave() {              // atexit 兜底用的裸函数
+    std::fputs("\x1b[?25h\x1b[?1049l", stdout);
+    std::fflush(stdout);
+  }
+ public:
+  TuiGuard() {
+    if (!::isatty(STDIN_FILENO)) return;        // 非 tty: 拒绝进入
+    if (::tcgetattr(STDIN_FILENO, &saved_) != 0) return;
+    termios raw = saved_;
+    ::cfmakeraw(&raw);
+    raw.c_cc[VMIN] = 0; raw.c_cc[VTIME] = 1;    // 100ms 超时
+    if (::tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) != 0) return;
+    std::atexit(leave);
+    std::fputs("\x1b[?1049h\x1b[?25l", stdout); // 备用屏+隐光标
+    std::fflush(stdout);
+    active_ = true;
+  }
+  ~TuiGuard() {
+    if (!active_) return;
+    leave();                                    // 先还屏幕
+    ::tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved_);
+  }
+  TuiGuard(const TuiGuard&) = delete;
+  TuiGuard& operator=(const TuiGuard&) = delete;
+};
+
+} // namespace cli
+\end{lstlisting}
+
+\begin{warning}[title={崩溃不会执行析构，终端却已经坏了}]
+段错误、未捕获异常穿过 \Fn{main}、\Tp{SIGSEGV} 走默认动作，都不会跑完
+RAII 链——用户得到的是一个吞回显、把后续所有输出写成坐标乱窜的坏 tty。
+兜底三件套：守卫对象里的 \Fn{atexit}（覆盖 \Fn{exit} 与正常异常展开）；
+对 \Tp{SIGSEGV}、\Tp{SIGABRT} 注册``打印恢复序列后重新以默认动作死掉''
+的处理器（第 2 章的 async-signal-safe 规则在这里仍然适用，所以只能
+\Fn{write} 常量串）；以及告诉用户 \Tp{reset} 与 \Tp{stty sane} 这两个
+自救命令。\Tp{SIGKILL} 无解，任何程序都一样。
+\end{warning}
+
+\section{重绘循环：双缓冲单元格网格与脏区}
+
+\subsection{为什么是网格}
+
+TUI 的最小正确抽象是一张 \Tp{rows $\times$ cols} 的单元格网格，每格存
+码点、前景、背景与样式位，外加``本帧是否已写''的行推进状态。程序每帧
+\emph{从零填充}一张新网格（写入缓冲），与上一帧真正发到屏幕上的网格
+（显示缓冲）逐格比对，只为不同的格子生成定位与写字符序列。好处有三：
+应用层不再关心终端状态机；输出量与信息变化量成正比而不是与屏幕大小成
+比；任何一帧出错最多脏一屏，下一帧自动收敛。
+
+\subsection{一个能用的最小实现}
+
+\begin{lstlisting}[caption={双缓冲网格与差异刷新（cell\_screen.cpp，约 45 行）}]
+// cell_screen.cpp   256 色调色板, 完整 diff, 无第三方依赖
+#include <algorithm>
+#include <cstdint>
+#include <cstdio>
+#include <string>
+#include <vector>
+
+namespace cli {
+
+struct Cell {
+  char32_t ch{U' '};
+  uint8_t fg{7}, bg{0};
+  bool operator==(const Cell& o) const {
+    return ch == o.ch && fg == o.fg && bg == o.bg;
+  }
+};
+
+class Screen {
+  int rows_{0}, cols_{0};
+  std::vector<Cell> draw_, shown_;   // 在画 / 已在屏上
+  std::string out_;                  // 整帧输出缓冲
+ public:
+  void resize(int r, int c) {
+    rows_ = r; cols_ = c;
+    draw_.assign(size_t(r) * c, Cell{});
+    shown_.assign(size_t(r) * c, Cell{U'@'}); // 投毒: 全量重绘
+  }
+  Cell& at(int r, int c) { return draw_[size_t(r) * cols_ + c]; }
+  void clear() { std::fill(draw_.begin(), draw_.end(), Cell{}); }
+
+  void flush() {
+    out_.clear();
+    int lr = -1, lc = -1;            // 上一落点, 连续则免 CUP
+    for (int r = 0; r < rows_; ++r)
+      for (int c = 0; c < cols_; ++c) {
+        size_t i = size_t(r) * cols_ + c;
+        if (draw_[i] == shown_[i]) continue;
+        if (r != lr || c != lc)
+          out_ += "\x1b[" + std::to_string(r + 1)
+                + ";" + std::to_string(c + 1) + "H";
+        out_ += sgr(draw_[i]);       // 变色序列, 自行拼接
+        out_ += utf8(draw_[i].ch);   // UTF-8 编码, 见第 2 章
+        lr = r; lc = c + 1;
+      }
+    std::fwrite(out_.data(), 1, out_.size(), stdout);
+    std::fflush(stdout);
+    shown_.swap(draw_);              // 交换后 draw_ 即旧帧
+  }
+};
+
+} // namespace cli
+\end{lstlisting}
+
+\subsection{脏区跟踪与帧预算}
+
+80 $\times$ 24 共 1920 格，全量比对在 Release 构建里是微秒级——
+\emph{绝大多数 TUI 不需要真正的脏矩形}，全网格 diff 已经是最优策略：
+它天然合并了任意局部失效，且 resize 后把显示缓冲``投毒''（填入不可能
+出现的码点）就自动退化成全量重绘，不需要额外路径。脏矩形只有在网格
+达到数万格（超大表格、终端内嵌图形）且局部性极强时才值得引入：给变更
+区域记包围盒，比对只扫盒内。
+
+比``要不要脏矩形''更重要的是\textbf{写出合并}：一帧的所有字节先进内存
+串，最后一次 \Fn{fwrite}（或 \Fn{write}）。逐格系统调用会让一帧变成
+几百次 PTY 写，慢一个数量级。循环骨架是：\Fn{poll} 输入（带帧预算
+超时）$\to$ 一次性消化所有已到达事件 $\to$ 重建 \Tp{draw\_} $\to$
+\Fn{flush}。输入事件永远先于重绘消费完，否则快速按键会产生中间帧。
+
+\subsection{尺寸变化：SIGWINCH 与 RESIZE\_EVENT}
+
+POSIX 侧，\Tp{SIGWINCH} 到达时处理器只置标志位（第 2 章的规则），
+阻塞中的 \Fn{read}/\Fn{poll} 以 \Tp{EINTR} 返回，主循环重查
+\Tp{TIOCGWINSZ}、\Fn{resize} 两张缓冲、下一帧全量重绘。别在处理器里
+调 ioctl 再直接重绘——那不是 async-signal-safe 的做法。Windows 侧没有
+信号：控制台输入队列里有 \Tp{RESIZE\_EVENT} 记录，但只有当你持有并
+消费 \Fn{ReadConsoleInput} 时才看得见；与字节流输入混合的程序退化为
+轮询，在每次读按键的空隙查一次 \Fn{GetConsoleScreenBufferInfo} 是
+最省事的正确方案，不需要定时器线程。
+
+\subsection{光标处理}
+
+重绘期间保持 \Tp{?25l}（隐藏），避免用户看到 CUP 序列定位瞬间的
+闪烁残点。两类时刻需要恢复光标：需要输入法候选框跟随（中文 TUI 的
+行内编辑——候选窗挂在\emph{硬件光标}处，藏在光标藏久了输入法会跳到
+屏幕左上角），以及焦点落在输入框时按单元格坐标执行 \Tp{CUP} 定位后
+\Tp{?25h}。退出时无论如何都要 \Tp{?25h}，上面的守卫已经做了。
+
+\section{输入：鼠标序列与 ESC 的超时歧义}
+
+\subsection{鼠标}
+
+鼠标是纯订阅制：默认终端把点击渲染成字符传给 shell，程序不发序列就
+什么都收不到。四档粒度：\Tp{?1000h} 按下/松开；\Tp{?1002h} 按住拖动；
+\Tp{?1003h} 任意移动；\Tp{?1006h} SGR 坐标编码，事件形如
+\Tp{ESC [ < b ; x ; y M}（按下）与 \Tp{m}（松开），滚轮借 b=64/65。
+不开 1006 的话走 X10 编码，坐标超过 223 就截断——1080p 全屏终端的
+横向列数是够触到这条线的。开启的必须关：退出前按逆序发
+\Tp{?1003l}、\Tp{?1002l}、\Tp{?1000l}，否则用户的终端选择粘贴会坏掉。
+
+\subsection{按键解码与那个绕不开的超时}
+
+原始模式下 \Fn{read} 返回的是碎片：上箭头是 \Tp{ESC [ A} 三个字节，
+它们\emph{可能}分两次到达。解码器是一个状态机，而它有一个无解的二义性：
+收到单字节 \Tp{ESC} 时，``用户按了 Esc''与``Alt+键或序列的前缀刚到''
+在字节层面完全相同。唯一的判别手段是超时：收到 \Tp{ESC} 后再等 50 ms
+左右（守卫里 \Tp{VTIME}=1 的 100 ms 粒度偏粗，精细做法是 \Fn{poll}
+自管超时），有后续字节就按序列解，没有就判为 Esc 键。这决定了 Esc
+作为退出键的延迟下限，vim 用户对此习以为常。想绕开它只能依赖新协议：
+kitty 键盘协议与 \Tp{modifyOtherKeys} 把组合键编码进带分号的序列里，
+但支持面还不足以当作基线。Windows 侧要么清掉
+\Tp{ENABLE\Bk \_PROCESSED\Bk \_INPUT} 后消费结构化的
+\Tp{KEY\_EVENT} 记录（自带虚拟键码，天然没有序列歧义），要么开
+\Tp{ENABLE\Bk \_VT\Bk \_INPUT} 后走与 POSIX 完全相同的状态机。
+
+\section{四条库路线}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}
+                 >{\raggedright\arraybackslash}p{0.18\textwidth}
+                 >{\raggedright\arraybackslash}p{0.17\textwidth}
+                 >{\raggedright\arraybackslash}p{0.17\textwidth}
+                 >{\raggedright\arraybackslash}p{0.17\textwidth}@{}}
+\caption{四个 TUI 库的能力对照（只比能力，不比许可与体积）} \\
+\toprule
+维度 & ncurses & termbox2 & FTXUI & Notcurses \\
+\midrule
+\endfirsthead
+\toprule
+维度 & ncurses & termbox2 & FTXUI & Notcurses \\
+\midrule
+\endhead
+抽象层 & 窗口对象加 terminfo & 公开的双缓冲单元格网格 &
+容器树加布局（Flex） & 多平面加单元格位块传输 \\
+颜色 & 8/16/256，真彩视 terminfo & 256 与真彩（输出模式可选） &
+16/256/真彩自动降级 & 24 位为主，附带调色板 \\
+宽字符与 CJK & 宽字符版加 \Fn{setlocale}，需自行确认 &
+格内存 4 字节 UTF-8，宽度自定 & 内置宽度表，中文可用 &
+强制 UTF-8 语言环境 \\
+现成控件 & 无（panels、menus、forms 另装） & 无 &
+按钮、输入框、菜单、表格等 & 部分（文件选择、进度等） \\
+鼠标 & \Fn{mousemask}，依赖 terminfo & 事件队列内置 & 事件流内置 &
+事件流内置 \\
+尺寸变化 & 自动 \Tp{SIGWINCH} 加 \Fn{resizeterm} & 事件队列内置 &
+事件流内置 & 自行查询 \\
+Windows & 需移植层（PDCurses 系） & 原生控制台后端 & 原生支持 &
+实际依赖 WSL \\
+适合 & 已有 curses 生态、嵌入式 & 想自写控件只要底座 & \cpp{17}
+项目快速出界面 & 终端图形与超高刷新场景 \\
+\bottomrule
+\end{longtable}
+
+\subsection{ncurses：能力最全，脾气最大}
+
+ncurses 是 terminfo 之上的完整屏幕抽象：窗口与面板叠加、软功能键、
+延迟初始化都有。宽字符要用带 W 的构建与 \Fn{addwstr} 一族，且必须先
+\Fn{setlocale}。它的 API 生命周期规则是四家里最古怪的：全局状态挂在
+``当前窗口''上， getch 族会阻塞且不能两个线程同时进入 curses 调用；
+混合等待``按键与其他 fd''要靠 \Fn{nodelay} 加主循环轮询，而不是它
+真的支持 fd 多路复用。\Fn{endwin} 的语义尤其容易被误读：多逻辑屏
+（\Fn{newterm}）时它弹回上一层；只剩 \Tp{stdscr} 时它\emph{挂起}
+curses 模式、恢复普通输出——这反而是个有用的技巧：TUI 里要输出大段
+日志时 \Fn{endwin}、照常打印、再 \Fn{refresh} 恢复 curses 层，但恢复
+前必须重新 \Fn{wmove}，因为硬件光标已经被你的打印挪走了。
+代价清单：terminfo 数据库依赖（\Tp{TERM} 缺条目直接起不来）、
+跨平台要靠移植层、以及五十年的历史包袱（部分行为仍以 1980 年代的
+调制解调器终端为假想敌）。
+
+\subsection{termbox2：两千行的底座}
+
+termbox2 是 termbox 的活跃分支，单文件编译，API 十几枚：
+\Fn{tb\Bk\_init}、\Fn{tb\Bk\_set\Bk\_cell}、\Fn{tb\Bk\_present}、
+\Fn{tb\Bk\_peek}/\Fn{tb\Bk\_dequeue\Bk\_event}（带超时的输入队列）。
+它把 8.3 节的双缓冲网格\emph{直接作为公开接口}：你每帧逐格写，
+\Fn{present} 负责 diff 与输出。没有控件、没有布局、没有颜色管理策略，
+全部自己来。对``只想甩掉转义序列细节、控件自己写''的需求这是最干净的
+底座；Windows 有原生后端，不要求 VT。
+
+\subsection{FTXUI：现代 C++ 的默认答案}
+
+\cpp{17}，DOM 式组件树，声明式组合：\Tp{Filler}、\Tp{Flex}、
+\Tp{vbox}/\Tp{hbox}、输入框与菜单等组件开箱即用，渲染器每帧做布局
+与 diff，支持活动帧率与定帧两种模式。事件流统一为字符、鼠标、
+终端三色等价物。要点是它的成本模型：\emph{界面是一棵每帧重建的树}
+——回调里返回新 DOM，库负责比对。写起来极舒服，但帧帧重建树意味着
+堆分配与闭包求值，网格大了（几千行列表）会先感觉到库的开销而不是
+终端的。对多数中小界面，这笔开销远小于开发成本，值得。
+
+\subsection{Notcurses：能力上限与表面积}
+
+Notcurses 面向``终端当作位图用''的场景：24 位色、alpha 合成、
+多平面、内嵌图片（kitty 像素协议、Sixel、帧缓冲），自带差异渲染与
+性能剖析。API 面积极大（C 接口加 C++ 包装，上千符号），学习曲线
+按周计；平台重心在 Linux，Windows 走 WSL 是现实路径。除非你真的需要
+图形、动画或每帧数万格的刷新，它属于``用不满''的那类选择。
+
+\section{选择之外：一切自己写时要补齐的清单}
+
+\begin{guideline}[title={裸 VT 路线的六项自备件}]
+不用库（或只用守卫类）意味着以下每一项都是你的代码：
+一、按键状态机加 50 ms 超时重组（8.4 节）；二、8.3 节的 diff 渲染器
+加 CUP 复用；三、框线字符：Unicode U+2500 到 U+257F 的制表符优先，
+但 vt100 一系的老终端只有 DEC 绘字符集，terminfo 的
+\Tp{acsc} 表给出映射，再不行退 \Tp{+|-} 的 ASCII 框——三级回退；
+四、东亚宽度：单元格网格必须支持``一格占两列''的宽字符与零宽组合符
+（第 2 章的 \Fn{display\_width} 正是为此准备的）；五、尺寸与信号处理；
+六、退出路径的完整逆操作。六项齐了再评估：通常这就是一个 termbox2。
+\end{guideline}
+
+\begin{note}[title={60 fps 的 TUI 是个谎言}]
+终端模拟器不是合成器：每个字节要经过 PTY 队列、解析器、重排与字体
+栅格化。多数终端模拟器自己会把重绘节流到屏幕刷新率，GPU 渲染的
+（alacritty、kitty）也只是不卡，解析带宽仍有限。实测把全屏重绘压到
+每帧几 KB 时，超过 30 fps 的帧几乎必然被合并或丢弃。工程结论：
+主循环帧预算取 33 ms（约 30 fps）起步，动画密集再考虑 16 ms，
+并把``有输入才重绘''作为默认，定帧动画只在真有需要时打开。
+\end{note}
+
+\begin{bestpractice}[title={把 TUI 做成可选外观而非唯一形态}]
+同一份数据模型，两种渲染：TUI 走本通道，非 tty 走第 5 章的
+\Opt{porcelain} 行式输出。好处不止降级：脚本化测试可以在非 tty 下
+断言输出，而 TUI 层用注入假事件的方式单测。进入条件用第 3 章的快照
+判定（stdin 与 stdout 都必须是 tty 且 \Tp{TERM} 不是 \Tp{dumb}），
+不满足就打印一行解释再走行式路径——而不是在管道里画坐标。
+\end{bestpractice}
+% ====================================================================
+
+% ====================================================================
+% ====================================================================
+\chapter{启动外部程序：管道、进程组与信号转发}
+% ====================================================================
+
+CLI 程序常常不是干活的进程，而是\emph{指挥别的进程干活的进程}。git 调用
+ssh、构建工具调用编译器、你的格式化器调用 diff。这件事表面看是一行
+\Fn{system}，实际上摊开的是两个操作系统各自的进程模型：POSIX 的
+fork-exec-wait 三元组与 Windows 的 CreateProcess 单调用。本章把两条路
+都走到底，包括所有``知道但没人写对''的部分：参数引用、进程组、
+信号转发、管道死锁、以及子进程陪你死这个 POSIX 根本没有的需求。
+
+\section{标准库的现状：等到 \cpp{26} 也没有}
+
+先把最容易被文档误导的一条说清楚：\textbf{C 与 C++ 标准到今天为止
+没有启动子进程的 API}。C++26 收了进程与执行的提案（\Tp{std::execution}
+族，头文件 \Tp{<process>}），但截至本书写作，主流编译器\emph{没有}
+提供可用的实现，也没有可依赖的测试宏——不要在新代码里为它预留分支，
+等它真正进入编译器再迁移。你现在能用的标准设施只有一个 \Fn{std::system}
+（9.5 节会撕开它的语义），剩下全部是平台 API。
+
+\section{POSIX：fork、exec 与 wait 的完整功课}
+
+\subsection{三元组的正确形状}
+
+\Fn{execvp} 不是``启动新进程''，而是\emph{替换当前进程的映像}，所以
+必须先 \Fn{fork}。子进程侧的纪律：exec 族全部失败时要 \Fn{\_exit}
+而不是 \Fn{exit}（后者会 flush 父进程继承来的 stdio 缓冲，输出双份）；
+约定俗成的失败码是 127。exec 家族按能力拼：\Tp{p} 后缀查 \Tp{PATH}，
+\Tp{l} 后缀收数组，\Tp{v} 后缀收 \Tp{argv} 指针，\Tp{e} 后缀收显式
+环境块——``为子进程设置环境''只有 \Fn{execve} 与带 e 的变体做得到，
+参数是新的 \Tp{envp} 整块替换而不是合并。在 fork 与 exec 之间调用
+\Fn{setenv}、\Fn{malloc}、任何带锁的库函数都是错误的：多线程父进程里
+那个锁可能正被另一个线程持有，子进程永远等不到（exec 失败时）。
+文件描述符的功课同样在子进程侧做完：\Fn{dup2} 把管道口搬到 0/1/2，
+其余要关的 fd 必须在打开时就带 \Tp{O\_CLOEXEC}（或管道用 \Fn{pipe2}），
+指望遍历 \Tp{/proc/self/fd} 清理是 Linux-only 的补救。
+
+\subsection{带进程组与信号转发的完整示例}
+
+下面这段是本章 POSIX 部分的主干：子进程搬进独立进程组，父进程把自己
+收到的中断转发过去，并区分``子进程自己被打断''与``被我杀''。
+
+\begin{lstlisting}[caption={fork+exec、setpgid 与信号转发（spawn\_posix.cpp）}]
+// spawn_posix.cpp   子进程独立进程组, 父进程转发中断
+#include <cerrno>
+#include <csignal>
+#include <unistd.h>
+#include <sys/wait.h>
+
+static pid_t g_child{0};
+static volatile sig_atomic_t g_pending{0};
+
+extern "C" void fwd(int sig) { g_pending = sig; }
+
+int run_child(const char* prog, char* const argv[]) {
+  g_child = ::fork();
+  if (g_child == 0) {                    // 子进程侧
+    ::setpgid(0, 0);                     // 脱离前台组: Ctrl-C 不再直达
+    execvp(prog, argv);
+    _exit(127);                          // exec 失败
+  }
+  ::setpgid(g_child, g_child);           // 父侧也调: 防 exec 后失去时机
+  struct sigaction sa{};
+  sa.sa_handler = fwd;                   // 故意不设 SA_RESTART:
+  sigaction(SIGINT, &sa, nullptr);       // 让 waitpid 以 EINTR 返回
+  sigaction(SIGTERM, &sa, nullptr);
+  int status = 0;
+  for (;;) {
+    if (::waitpid(g_child, &status, 0) > 0) break;
+    if (g_pending) {                     // 等待中被中断
+      ::kill(-g_child, g_pending);       // 转发给子进程整组
+      g_pending = 0;
+    } else break;
+  }
+  return status;                         // 交调用方 WIFEXITED 等宏解读
+}
+\end{lstlisting}
+
+\subsection{为什么还要 posix\_spawn}
+
+\Fn{posix\_spawn} 的存在理由有两个，都跟 fork 的代价有关。其一，
+\Fn{fork} 语义上要复制整个地址空间——现代内核用写时复制把成本压到
+页表项级别，但一个 RSS 数 GB 的父进程 fork 一次的毫秒级开销依然真实
+存在（页表复制与 TLB 刷新）；\Fn{posix\_spawn} 允许实现直接
+vfork 加辅助线程 exec，常数项小得多。其二，也是更重要的：多线程父进程
+里 fork 之后、exec 之前是合法调用极度贫瘠的雷区（上一节说的锁问题），
+\Fn{posix\_spawn} 把这个窗口从你的代码里拿走了：重定向用
+\Fn{posix\_\-spawn\_\-file\_\-actions\_\-addchdir}、
+\Fn{posix\_\-spawn\_\-file\_\-actions\_\-adddup2} 声明，进程组用
+\Fn{posix\_\-spawnattr\_\-setpgid} 配合
+\Tp{POSIX\_\-SPAWN\_\-SETPGID} 标志，信号掩码同样有属性可设，
+全部在内核/运行时侧原子完成。新代码在两者之间选时，
+默认 \Fn{posix\_spawn}，只有需要``exec 前按业务逻辑决定环境''这类
+灵活度时才回到 fork 加 exec。
+
+\subsection{popen：一行便利与三行账单}
+
+\Fn{popen} 做的是``起 shell、跑你拼的字符串、给你一根管道''。账单：
+一，\textbf{有 shell}——用户提供的文件名里出现 \Tp{;}、\Tp{\textbar}、
+反引号就是注入，Windows 侧还要面对 cmd 的完全另一套元字符；
+二，\textbf{单向}——要么读子进程 stdout 要么写它的 stdin，
+双向得两根管道加小心调度（回到 9.3 节的死锁问题）；
+三，退出状态要 \Fn{pclose} 才拿得到，而且是 shell 的状态——
+子进程被信号杀时你看到的常是 shell 包装过的 128+N（第 5 章的约定）；
+写的过程中子进程先退出，迎头就是一发 \Tp{SIGPIPE}（第 2 章的规则
+在这里照样生效）。
+它的正当用途只剩一个：你\emph{就是}需要 shell 语法（glob、环境变量
+展开、管道串联），且输入完全可信。
+
+\subsection{僵尸、SIGCHLD 与 reap 的责任}
+
+子进程退出后，它的退出状态占着进程表槽位直到父进程 \Fn{waitpid}——
+这期间的状态叫僵尸（zombie）。长寿命父进程（服务、监视器）忘了 reap
+会耗尽 pid；\Tp{SIGCHLD} 的默认动作在 Linux 上是\emph{忽略}而不是
+终止（某些 Unix 上如此），所以``什么都不做就自然回收''不成立。
+三种正解：主循环里定期调 \Fn{waitpid}（pid 取 $-1$）并带
+\Tp{WNOHANG}，收干
+为止（注意 ECHILD 与多线程下互相抢孩子的竞争）；或注册 \Tp{SIGCHLD}
+处理器只做``置标志''；或明确不需要状态时把 \Tp{SIGCHLD} 设为忽略
+加 \Tp{SA\_NOCLDWAIT}（Linux 语义：自动 reap）。
+
+\subsection{kill 整组，还是把决定权外包给 timeout(1)}
+
+杀子进程要连它起的子孙一起杀，才有意义：\Fn{kill} 负 pid（等价
+\Fn{killpg}）打到整组。另一个常见做法是外包——exec 系统的
+\Fn{timeout} 工具包装你的命令。区别在于语义归属：\Fn{timeout} 的 124
+退出码、它对组与信号的选择（TERM 后跟 KILL 的宽限期）都是\emph{它的}
+策略，你只能透传；而且多了一个外部依赖与一份引用负担（见 9.3 节）。
+程序内实现超时并不难：自己的进程组加一个定时器（\Fn{timerfd} 或
+\Fn{poll} 超时）到点 \Fn{killpg}。只有在``给人类用的脚本胶水''里，
+exec 外部工具才占优。
+
+\section{Windows：CreateProcessW 与那条字符串}
+
+\subsection{命令行是一个字符串，这是一个决定}
+
+\Fn{CreateProcessW} 的第一个半参数是 \Tp{lpCommandLine}：\emph{一整条
+字符串}，内核不做分词，程序自己按约定再切一遍（第 2 章）。这意味着
+``传参''的正确性问题在 Windows 上是两问：你怎么把 \Tp{argv} 数组
+\emph{拼}成字符串（MSVC CRT 的规则），子进程怎么\emph{拆}
+（\Fn{CommandLineToArgvW} 是标准解码器，但 MinGW、Rust、Go 各自
+实现，规则有出入）。只要你的参数里有空格、引号或反斜杠，就必须
+按规则拼。永远用 W 族：A 族先过 ANSI 代码页，非 ASCII 路径当场损坏。
+
+\begin{lstlisting}[caption={按 MSVC CRT 规则拼单个参数（quote\_win.cpp）}]
+// quote_win.cpp   规则: 2n 个反斜杠+引号 -> n 反斜杠+边界引号
+                  //       2n+1 个反斜杠+引号 -> n 反斜杠+字面引号
+#include <string>
+#include <string_view>
+#include <vector>
+
+namespace cli {
+
+std::string quote_arg(std::string_view a) {
+  const auto npos = std::string_view::npos;
+  if (!a.empty() && a.find_first_of(" \t\"") == npos)
+    return std::string(a);               // 无需引用, 原样
+  std::string out(1, '"');
+  size_t bs = 0;                         // 积攒的反斜杠数
+  for (char c : a) {
+    if (c == '\\') { ++bs; continue; }
+    if (c == '"')   out.append(bs * 2 + 1, '\\');
+    else           out.append(bs, '\\');
+    bs = 0;
+    out += c;                            // 引号本身保持字面量
+  }
+  out.append(bs * 2, '\\');              // 尾部反斜杠加倍,
+  out += '"';                            // 否则吃掉收尾引号
+  return out;
+}
+
+std::string quote_argv(const std::vector<std::string>& args) {
+  std::string s;                          // 逐个 quote_arg, 空格相连
+  for (const auto& a : args) { if (!s.empty()) s += ' ';
+                               s += quote_arg(a); }
+  return s;                               // 即 lpCommandLine
+}
+
+} // namespace cli
+\end{lstlisting}
+
+\begin{warning}[title={引用规则的两个常见破坏现场}]
+第一个现场：用 \Fn{std::system} 或拼字符串调自己的程序——第 2 章的
+``抄回命令行就散架''在这里是同一颗雷的引爆版。第二个现场：值里带
+嵌套引号的文本。你的 CRT 拼法与目标程序解码器
+不匹配时（Go 程序的引用规则和 MSVC 就不同），参数会错位而不是报错。
+防御手段不变：能给文件路径就别给内容（响应文件 \Tp{@file} 约定，
+第 4 章），
+必须给内容时给完参数后把\emph{解析结果}逐条打印回去让用户自检。
+\end{warning}
+
+\subsection{重定向：三根句柄与一次必须的关闭}
+
+Windows 的 stdio 重定向不是 dup2 而是``造管道、声明可继承、塞进
+启动信息''。骨架如下：
+
+\begin{lstlisting}[caption={CreateProcessW 重定向 stdout（spawn\_win.cpp 核心）}]
+STARTUPINFOW si{}; si.cb = sizeof(si);
+SECURITY_ATTRIBUTES sa{}; sa.nLength = sizeof(sa);
+sa.bInheritHandle = TRUE;                // 只有管道口可继承
+HANDLE rd = nullptr, wr = nullptr;
+::CreatePipe(&rd, &wr, &sa, 0);
+::SetHandleInformation(rd, HANDLE_FLAG_INHERIT, 0);
+si.hStdOutput = wr;                      // 子 stdout 指向写端
+si.dwFlags |= STARTF_USESTDHANDLES;      // 不置位则 hStd* 被忽略
+PROCESS_INFORMATION pi{};
+BOOL ok = ::CreateProcessW(exe, cmd.data(), nullptr, nullptr,
+        TRUE,                            // TRUE: 允许句柄继承
+        CREATE_NO_WINDOW,                // 不弹第二个控制台窗口
+        nullptr, nullptr, &si, &pi);
+::CloseHandle(wr);                       // 必须关, 否则读端永无 EOF
+\end{lstlisting}
+
+\begin{warning}[title={bInheritHandles=TRUE 的泄漏面}]
+``允许句柄继承''是\emph{全有或全无}的开关：置 TRUE 时子进程继承
+父进程\emph{所有}标记可继承的句柄，不只是你的管道。后果轻则文件
+占用不释放（子进程替你拿着日志文件），重则 socket 端口被扣住。
+缓解：Vista 起可改用 \Fn{CreateNamedPipeW} 配
+\Tp{PIPE\Bk\_INHERIT\Bk\_CAN} 显式声明，
+或干脆在创建管道后立刻按上面的写法
+\Fn{SetHandleInformation} 收窄可继承集合。\Fn{hStdInput}、
+\Fn{hStdError} 各自同理。
+\end{warning}
+
+\subsection{读管道：不并发就是死锁}
+
+管道缓冲默认约 4 KB 到 64 KB。父进程``先等子进程结束、再读它的
+输出''是新手死锁的标准配方：子进程写满管道阻塞在 \Fn{WriteFile}，
+父进程阻塞在 \Fn{WaitForSingleObject}，双方都在等对方。正解只有两条：
+stdout 与 stderr 各派一个线程并发读（两端都要！stderr 缓冲满了同样
+死锁），读尽再 wait；或单线程用 \Fn{PeekNamedPipe} 轮询加超时，
+但两条管道加自身任务的三方轮询很快就不可维护。POSIX 同理：
+两根读管道要 \Fn{read} 到 \Tp{EAGAIN} 再统一 \Fn{poll}。
+
+\subsection{等待与退出码：259 与调试断点}
+
+\Fn{WaitForSingleObject} 返回 \Tp{WAIT\_OBJECT\_0} 后
+\Fn{GetExitCodeProcess} 才可信，但 \Tp{STILL\_ACTIVE}（259）既是
+合法等待结果也可能是程序自己的退出码，判断``还在跑''要谨慎。
+子进程停在调试器断点上时等待返回 \Tp{WAIT\_DEBUG\_EVENT}（127 号）
+——``没死，但也没在跑''是 Windows 独有的第三态。退出码本身是 32 位：
+0 到 255 之外还有 \Tp{0xC0000005} 这类异常码，脚本化消费时要
+文档化你透传哪几位。POSIX 侧对应的是 \Fn{WIFEXITED}、
+\Fn{WEXITSTATUS}（只有低 8 位）、\Fn{WIFSIGNALED} 与 \Fn{WTERMSIG}
+三分天下——``子进程被打断''与``我杀了子进程''从状态上无法区分，
+只能靠你在转发信号时自己记下的标志位（9.2 节例子里 \Tp{g\_pending}
+清空前正是你该置位的时刻），再把结果映射成第 5 章的 128+N 约定。
+
+\subsection{让子进程陪你死：Job Object}
+
+POSIX \textbf{没有}``父死子亡''的任何保证：父进程被 \Tp{SIGKILL}
+后子进程被 init 收养继续跑，这是设计而非缺陷；实践答案只剩进程组
+加信号，以及会话清理，接受它不完美。Windows 给了真解：Job Object。
+\Fn{CreateJobObjectW} 建作业，设
+\Tp{JOB\_OBJECT\Bk\_LIMIT\Bk\_KILL\Bk\_ON\Bk\_JOB\Bk\_CLOSE}，
+\Fn{AssignProcessToJobObject} 把子挂进去，再开
+\Tp{JOB\_OBJECT\Bk\_LIMIT\Bk\_JOB\Bk\_BREAKAWAY\Bk\_OK}——最后一项是防弹衣：
+没有它，带 BREAKAWAY 标志启动的后代（不少安装器与任务计划相关进程）
+会跳出作业，留下孤魂。作业内核对象引用计数归零时杀光圈内进程：
+父进程正常退出、异常退出、被 taskkill，子都陪葬。Windows 8 起
+作业可嵌套，宿主进程本身在作业里也能再建子作业；Vista 时代
+``已在作业中就不能再 Assign''的限制是大量旧代码不写作业的原因。
+
+\section{同一件事，三条路}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.14\textwidth}
+                 >{\raggedright\arraybackslash}p{0.22\textwidth}
+                 >{\raggedright\arraybackslash}p{0.22\textwidth}
+                 >{\raggedright\arraybackslash}p{0.22\textwidth}@{}}
+\caption{启动外部程序的六个动作在三条实现路径上的对应物} \\
+\toprule
+动作 & fork+exec（POSIX） & posix\_spawn（POSIX） & Windows \\
+\midrule
+\endfirsthead
+\toprule
+动作 & fork+exec（POSIX） & posix\_spawn（POSIX） & Windows \\
+\midrule
+\endhead
+启动 & \Fn{fork} 后子侧 \Fn{execvp}；失败 \Fn{\_exit} 127 &
+\Fn{posix\_spawn} 一步（argv 与 envp 数组） &
+\Fn{Create\Bk ProcessW}（命令行是\emph{单字符串}） \\
+重定向 stdio & \Fn{pipe} 加 \Fn{dup2} 加关多余 fd &
+file\_actions 的 addopen/adddup2 & \Fn{CreatePipe} 加
+\Tp{hStdInput} 等三字段加 \Tp{STARTF\Bk\_USESTDHANDLES} \\
+独立进程组 & \Fn{setpgid} 父子两侧都调 &
+\Tp{POSIX\Bk\_SPAWN\Bk\_SETPGID} 属性 &
+\Tp{CREATE\Bk\_NEW\Bk\_PROCESS\Bk\_GROUP} \\
+等待与状态 & \Fn{waitpid} 加 WIF 宏族（信号可辨） & 同左 &
+\Fn{WaitFor\Bk SingleObject} 加 \Fn{GetExit\Bk CodeProcess}（259 陷阱） \\
+杀整组 & \Fn{kill} 负 pgid（TERM 再 KILL） & 同左 & 无组概念；
+逐 pid 或作业整体 \\
+父死子亡 & 无保证；pgroup 加信号近似 & 同左 & 作业对象加
+\Tp{KILL\Bk\_ON\Bk\_JOB\Bk\_CLOSE} \\
+\bottomrule
+\end{longtable}
+
+\section{跨平台封装层：钱能解决的问题}
+
+\subsection{boost::process：能力强，税也重}
+
+Boost.Process 是目前最完整的跨平台答案：v2 代（Boost 1.85 起，
+\Tp{boost\Bk::process\Bk::v2}）围绕 Asio 重构，支持异步等待与流运算符的
+管道组合，环境、工作目录、
+进程组都有接口，内部在 Windows 替你处理引用拼接。代价是实打实的：
+拖入 Boost 依赖树（Asio 等）、模板重代码的编译时间、以及 v1 到 v2
+的命名空间与 API 断裂。已有 Boost 的项目闭眼选它；否则为启进程
+引入整个 Boost 值得掂量。
+
+\subsection{std::system：标准的那一行到底干了什么}
+
+\Fn{std::system}（\Tp{<cstdlib>}）把\emph{一整条字符串}交给
+\Tp{/bin/sh -c}（Windows：\Tp{cmd /c}），返回值只保证``环境相关''：
+POSIX 实现下是 \Fn{wait} 风格的 status（取退出码要 \Fn{WEXITSTATUS}，
+启动 shell 失败返回 -1），标准不承诺更多。它\emph{没有}引用工具、
+\emph{没有}管道控制、\emph{无法}不带 shell。适用清单极短：你确实
+需要 shell 的 glob、变量展开或管道串联，且输入可信。其余场景它是
+注入漏洞的生产者。
+
+\subsection{subprocess.h 与自研薄封装}
+
+单头文件的 \Tp{subprocess.h}（C 风格，\Fn{proc\Bk\_spawn}、
+\Fn{proc\Bk\_wait}、\Fn{proc\Bk\_kill}、\Fn{proc\Bk\_close} 十余枚）
+内部正是本章两条路径的整理版：POSIX 走 fork/exec 加 CLOEXEC 纪律，
+Windows 走 CreateProcessW 加引用拼接，管道与句柄生命周期都封好了。
+适合不允许依赖 Boost 的工程直接抄进仓库。再往上的``声明式''封装
+（CLI11、lyra 那种子命令树映射到进程调用的风格）多是项目自建——
+注意这类封装\emph{解析库}本身不管进程，把参数树与拼好的命令行对接
+时，9.3 节的引用测试一个都不能省。
+
+\begin{note}[title={子进程继承了你的什么}]
+被继承的不只是 fd：子进程继承打开的文件、信号掩码（exec 后被处置
+改回默认的只有``忽略''保持）、进程组（除非你改）、控制终端、
+资源上限、当前目录、以及\emph{环境变量}。Windows 额外继承控制台
+窗口（所以 \Tp{CREATE\_NO\_WINDOW} 与 \Tp{DETACHED\_PROCESS} 是两种
+不同的语义，别混用）。写封装层时``继承什么''应当是显式清单，
+而不是默认行为的副产品。
+\end{note}
+
+\begin{bestpractice}[title={封装层的验收清单}]
+一个合格的进程封装（自写或第三方）必须能回答：参数含空格、引号、
+反斜杠、非 ASCII 时的行为（Windows 尤其——跑 9.3 节
+\Fn{quote\_argv} 的单元测试）；stdout 与 stderr 并发读取不死锁；
+子进程被信号终止时退出状态可区分；超时能杀\emph{整组}而不是单点；
+父进程被强杀时子进程去向有明确策略（Windows 作业对象，POSIX 文档化
+为已知限制）；所有句柄与 fd 在异常路径关闭。六条缺一条，
+都会在 CI 或用户机器上以``偶发挂死''或``僵尸堆积''的形式还债。
+\end{bestpractice}
+
+\begin{guideline}[title={转发信号的四条纪律}]
+一、子进程默认\emph{在}你的前台进程组里，Ctrl-C 直达它——想自己
+控制节奏就先 \Fn{setpgid} 再转发，两者不可兼得，别半吊子。
+二、SIGTERM 与 SIGINT 都转发，但``我转发的''要记录，否则 9.2 节
+``谁杀的''无法回答。三、\Tp{SIGHUP}（终端关闭）一般不转发，让子
+随会话自然处理。四、退出码透传规则成文：子以码 c 正常退出则我
+退出码 c；子被信号 n 杀则我 128+N（第 5 章）；我杀了子则用
+自己的错误码表，不借 shell 的约定。
+\end{guideline}
+% ====================================================================
+
+% ====================================================================
+% ====================================================================
+\chapter{路径、文件系统与文本编码}
+% ====================================================================
+
+第 2 章管\emph{流上的字节}，这一章管\emph{名字}。一个路径串从 argv 来、穿过数据结构、抵达内核，路上可能被重新编码三次；任何一次约定不一致都得到同一症状——``文件不存在''，而它明明存在。崩溃几乎从不发生在中文路径上，它发生在你\emph{假设}三平台的路径是同一种东西的那行代码上。
+
+\section{三套原生表示：路径不是 \Tp{std::string}}
+
+\textbf{Linux：字节串，没有编码承诺。} POSIX 对路径分量只提两条禁令：不含 NUL、不含
+\Tp{/}；此外\emph{任意}字节合法，包括 \Tp{0x80} 到 \Tp{0xFF}、换行、制表符、半个 UTF-8
+序列、以连字符开头的名字。ext4 与 XFS 只把字节原样存进目录项，既不校验也不解释；``文件名
+是 UTF-8''是发行版的\emph{约定}，不是内核属性。于是 \Tp{std::string} 能无损承载 Linux
+路径，前提是你\textbf{从未}对它做``解成码点再编回字节''的往返——一次往返就足以毁掉那个半截
+序列，这正是 naive 实现的死因；而文件名的编码与\emph{内容}的编码完全正交，字符探测帮不了
+前者。另一个连带后果：换行是合法字符，所以\emph{任何}按行分隔的路径列表都是错的——这是第 5 章 \Opt{null-delimited} 存在的全部理由。
+
+\textbf{Windows：UTF-16 码元，内核没有字节路径 API。} NTFS 目录项存 UTF-16LE，内核的路径
+解析是 \Tp{ntdll} 里那族以 Wide 结尾的函数，换言之\textbf{只有宽字符路径才有完整 Unicode
+语义}，窄入口一律是转换层（10.3 节）。增补平面（emoji、生僻汉字）必须成对代理项；孤立代理
+项校验函数判它无效，NTFS 却照收。上限 \Tp{MAX\_PATH} 是 260 个\emph{字符}而非字节，解法是
+加 \Tp{\textbackslash\textbackslash?\textbackslash} 直通道前缀，代价是内核不再把正斜杠当
+分隔符、不折叠 \Tp{..}、不接受相对路径——前缀只能你在规范化\emph{之后}加上，绝不能由用户
+输入拼出。另有一批 Linux 上合法但打包必须防的名字：尖括号、冒号、双引号、竖线、问号、星号、
+结尾的点与空格、设备名 \Tp{CON} 与 \Tp{COM1} 到 \Tp{LPT9}（\Tp{CON.txt} 一样非法）；凡名字由\emph{外部数据}决定都要 sanitize。
+
+\textbf{macOS：字节串加两处归一化。} 路径同样是字节串，上面的结论全部成立；差别在内核之下
+的文件系统层：HFS+ 把名字归一化成 NFD，APFS 保留原样但把\emph{查找}做成归一化无关。于是
+``é'' 无论按 \Tp{U+00E9} 还是 \Tp{U+0065 U+0301} 提交都打开同一个文件——直到你把路径当串
+做集合去重（漏）、把 NFC 与 NFD 混合的同名条目写进同一个归档（解包时互相覆盖）、或拿
+\Tp{dir} 的输出做字节比对（永远不等）。大小写另算一档：APFS 默认卷不区分大小写但保留书写
+形式，敏感卷是\emph{可选}格式，所以 \Tp{Readme.txt} 与 \Tp{README.txt} 是否同一文件取决于
+用户当年勾了什么。结论：``两个路径串是否指向同一文件''只能问文件系统（\Fn{equivalent} 或比较文件身份），不能问 \Tp{path::operator==}。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+                 >{\raggedright\arraybackslash}p{0.21\textwidth}
+                 >{\raggedright\arraybackslash}p{0.21\textwidth}
+                 >{\raggedright\arraybackslash}p{0.21\textwidth}@{}}
+\caption{同一段路径在三平台上的表示与陷阱} \\
+\toprule
+输入 & Linux & macOS & Windows \\
+\midrule
+\endfirsthead
+\toprule
+输入 & Linux & macOS & Windows \\
+\midrule
+\endhead
+\Tp{notes.txt} & 三平台安全子集 & 同左 & 同左 \\
+\Tp{报告.txt} & 存 UTF-8 字节（约定） & 同左 & 仅 W 族能表达 \\
+含 \Tp{0xFF} 或换行 & 合法 & 合法 & 非法字符，创建失败 \\
+带组合符的字母 & 原样存字节 & 归一化无关的查找 & 原样存码元 \\
+大小写两种写法 & 两个不同文件 & 默认同一个 & 默认同一个 \\
+长度 300 字符 & 分量 255 字节内 & 同左 & \Tp{MAX\_PATH} 拒绝 \\
+\Tp{nul.txt} 与 \Tp{a/../b} & 都合法 & 同左 & 保留名非法；前缀下不折叠 \\
+\bottomrule
+\end{longtable}
+
+\section{\Tp{std::filesystem}：path 装的是原生串}
+
+\Tp{path} 内部保存\emph{原生格式串}：POSIX 上是字节，Windows 上是 \Tp{wchar\_t}。三个取值
+语义不同，bug 全在挑错的那个：\Fn{native} 返回 \Tp{value\_type}，唯一无损的形式，交 API、
+当 map 的键、跨进程传递都用它；\Fn{u8string} 返回 UTF-8 串，是内部与序列化层的交换格式；
+\Fn{string} 走当前 locale 的窄化面，把它当\emph{数据}用是错的。另两条：构造与赋值\emph{不}
+解码，只按分隔符切分，\Fn{generic\_string} 也只换分隔符；\Fn{filename}、\Fn{stem}、
+\Fn{extension} 全是词法操作——\Tp{archive.tar.gz} 的 \Fn{extension} 是 \Tp{.gz}、 \Fn{stem} 是 \Tp{archive.tar}。
+
+\begin{warning}[title={\Fn{string} 是 Windows 上丢信息的那一个}]
+标准对窄化转换只保证``可能失败''，失败时替换成 \Tp{?} 还是抛 \Tp{std::system\_error} 由实现
+决定：前者把中文用户名下的目录静默变成 \Tp{????} 再报``不存在''，后者让一个只读文件名的
+函数带上异常路径。判据只有一条：要字节用 \Fn{u8string}，要交给 API 用 \Fn{native}。
+\end{warning}
+
+词法规范化（\Fn{weakly\_normal}、\Fn{lexically\_normal}）\textbf{不接触文件系统}：它只折叠
+\Tp{.} 与 \Tp{..}，所以不能用于安全判断——\Tp{../../etc/passwd} 规范化后照样穿越，符号链接
+更完全不看。要唯一身份只有 \Fn{canonical}（POSIX 的 \Fn{realpath}，Windows 上还会解析重析
+点），代价是\emph{目标必须存在}。安全场景就用三步：基目录与目标各自 \Fn{canonical}，再用
+\Fn{lexically\_relative} 判断是否逃出基目录，全程走带 \Tp{std::error\_code} 的重载。被反复
+违反的一条：\Tp{exists} 与随后 \Tp{open} 之间永远是竞态窗口（10.4.2）——\Tp{exists} 只配写诊断，不配进控制流。
+
+\subsection{\Fn{u8path} 的废弃与 \Tp{char8\_t} 的摩擦}
+
+\cpp{17} 没有表示 UTF-8 的字符类型，从 UTF-8 字节构造 Windows 上的 \Tp{path} 只能用
+\Fn{std::filesystem::u8path}。\cpp{20} 引入 \Tp{char8\_t} 与 \Tp{std::u8string}，并把
+\Tp{path} 的构造与赋值扩展到直接接受 UTF-8 串，于是 \Fn{u8path} 在同版本被废弃——理由不是
+它坏，是不再必要。纪律：\cpp{20} 起直接 \Tp{fs::path\{u8\_view\}}，\cpp{17} 里保留
+\Fn{u8path} 但把调用点集中到一两个转换函数，内部交换串不要两种类型混用。
+
+\begin{note}[title={char8\_t 的三处编译期摩擦}]
+一、\Tp{p.u8string()} 的返回类型在 \cpp{17} 是 \Tp{std::string}、在 \cpp{20} 是
+\Tp{std::u8string}，于是 \Tp{std::string s = p.u8string();} 会在升级语言标准时编译失败。
+二、两者之间只有 \Fn{reinterpret\_cast} 一条桥，哪怕字节完全相同。三、\Fn{strlen} 与一切
+只吃 \Tp{const char*} 的 C 接口都拒绝 \Tp{char8\_t*}。这三处摩擦正是它的价值：类型里从此写着``这串字节是 UTF-8''。
+\end{note}
+
+\section{Windows 的 A/W 分裂、代码页与 argv}
+
+\subsection{为什么 \Fn{fopen} 拿着中文路径静默失败}
+
+把一段 UTF-8 的 \Tp{const char*} 交给 \Fn{fopen}，UCRT 落到 \Fn{\_open}，而 A 族的路径参数
+按\emph{进程 ACP} 解释，简体中文构建下就是 CP936（GBK）。于是两步有损转换：先有人把 UTF-8
+字节\emph{当作} GBK 字节（``报告''的 6 个字节被两两拼成三个无关汉字），再由内核去打开那个不
+存在的名字；字节恰好不构成合法 GBK 序列时退化成 \Tp{?}。给你的只有 \Tp{errno = ENOENT}，
+没有一句``编码不对''，所以这类 bug 平均花半天定位，且只在中文用户名下复现。同一机制适用于
+\Fn{CreateFileA}：它内部就是 \Fn{MultiByteToWideChar} 配 CP\_ACP 而不是 CP\_UTF8，所以``A
+族也能处理中文''的准确说法是``你的字节恰好是那个代码页时才行的''。
+
+\begin{warning}[title={四条出路与各自的边界}]
+\begin{enumerate}[label=\arabic*.,leftmargin=2.2em]
+\item \textbf{显式加宽再调 W 族}：\Fn{MultiByteToWideChar} 以 \Tp{CP\_UTF8} 配
+      \Tp{MB\_ERR\Bk \_INVALID\_CHARS} 转 UTF-16，之后只调 \Tp{*W}。唯一在任何构建、任何用户
+      locale 下都成立的做法，代价是每条 API 自己包一层（10.3.2）。
+\item \textbf{清单声明 UTF-8 作为进程 ACP}：manifest 的 \Tp{<application>} 元素下写
+      \Tp{<activeCodePage>UTF-8</activeCodePage>}，Windows 10 1903 起生效，于是 \Tp{*A} 族、
+      CRT 窄函数\emph{和} \Tp{argv} 一起变成 UTF-8。省事，但只对本进程有效；同进程的第三方
+      DLL 若假定 \Fn{GetACP} 不等于 65001 就会行为反常；旧系统静默忽略它，所以必须留第 1 条
+      作退路。
+\item \textbf{内部全程 UTF-16}：边界加宽一次。中文团队代码库里成本最低的一致选择，缺点是把
+      UTF-16 带进了跨平台层。
+\item \Tp{SetConsoleOutputCP(CP\_UTF8)}：\emph{只影响控制台如何解释你写出的字节}，对路径、
+      ACP、\Tp{argv} 一无所改——把它当路径修复手段是本章最高频的误诊。
+\end{enumerate}
+\end{warning}
+
+码页 65001 的三个陷阱：一是\emph{混淆四个码页}，进程 ACP（\Fn{GetACP}）、控制台输入码、
+控制台输出码、locale 转换码互不相干，\Tp{chcp 65001} 只动第三个，所以``我 chcp 了为什么
+\Fn{fopen} 还是坏''是必然结论；二是输出侧的历史缺陷，早期 Windows 10 在 65001 下写大块文本
+会报 0 字节或失败，今天大多修好但传统 \Tp{conhost} 与批处理仍有边角，真要稳就备一条
+\Fn{WriteConsoleW} 退路（第 2 章）；三是上面那段的镜像：把 GBK 字节 \Fn{printf} 进 65001 的
+窗口，中文从``能用''变成``必坏''。顺带拆一个误会：\Tp{\_O\_U8TEXT} 与 \Tp{\_O\_WTEXT} 是
+\Fn{\_open} 系列的\emph{流翻译模式}标志，管\emph{数据}怎么编解码，与路径编码无关；拿它们修中文路径，结果是既打不开文件也拿不到正确换行。
+
+\subsection{一个把字节保持不透明的读写助手}
+
+\begin{lstlisting}[caption={跨平台字节读写助手：只在边界转换一次（fs\_bytes.cpp）}]
+// fs_bytes.cpp  内部只有 UTF-8 字节, 唯一转换点在 Windows 分支
+#include <cstdio>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <vector>
+#if defined(_WIN32)
+# include <windows.h>
+// UTF-8 到 UTF-16: 绝不经过 ACP, 非法序列报失败而不是猜
+static std::wstring widen(std::string_view u8) {
+  std::wstring w(u8.size(), L'\0');     // 码元数不超过字节数
+  const int n = ::MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS,
+      u8.data(), int(u8.size()), w.data(), int(w.size()));
+  if (n <= 0) return {};
+  w.resize(size_t(n));
+  return w;
+}
+#endif
+// 读全部: 不按 file_size 预分配, 一律读到 EOF, 见 10.4.1
+std::optional<std::vector<char>> read_all(std::string_view p) {
+#if defined(_WIN32)
+  const std::wstring w = widen(p);
+  if (w.empty()) return std::nullopt;   // 非法 UTF-8: 报错
+  std::FILE* h = ::_wfopen(w.c_str(), L"rb");
+#else
+  std::FILE* h = ::fopen(std::string(p).c_str(), "rb");  // 字节直通
+#endif
+  if (!h) return std::nullopt;
+  std::vector<char> out;
+  char buf[65536];
+  for (;;) {
+    const size_t got = std::fread(buf, 1, sizeof buf, h);
+    if (!got) break;                 // EOF 或错误, 不再细分
+    out.insert(out.end(), buf, buf + got);
+  }
+  std::fclose(h);
+  return out;
+}
+\end{lstlisting}
+
+共享模式与顺序扫描提示（\Tp{FILE\_SHARE\Bk \_DELETE}、\Tp{FILE\_FLAG\Bk \_SEQUENTIAL\_SCAN}）
+\Fn{\_wfopen} 给不了，那时换成 \Fn{CreateFileW} 加 \Fn{\_fdopen}，\Fn{read\_all} 的签名不变——这正是``唯一转换点''的好处。
+
+\subsection{argv：第一条被毁掉的中文文件名}
+
+Windows 的 \Tp{main(int, char**)} 不是从 ANSI 命令行来的：CRT 启动代码调 \Fn{GetCommandLineW}
+取 Unicode 整串，分词后用 \Fn{WideCharToMultiByte}（CP\_ACP）逐条转成 \Tp{argv}。所以 GBK
+机器上 \Tp{argv[i]} 装的是 GBK 字节，运行期\emph{无法}换回 UTF-8（\Fn{setlocale} 太晚，转换
+早已发生），整体换掉 ACP 的只有 10.3.1 那个框里的第 2 条。经典症状：用户敲 \Tp{mytool open 报告.txt}，
+程序打印``找不到文件 ????.txt''——问号是转换留下的，真正的名字在进入你的代码之前就没了。
+三条纪律：Windows 入口用 \Fn{wmain}，或自己 \Fn{GetCommandLineW} 配 \Fn{CommandLineToArgvW}
+（第 9 章拼命令行的编码器，正好反向）并\emph{立刻}转成内部表示；环境变量同罪，窄
+\Tp{environ} 也过了 ACP，要用 \Tp{\_wenviron} 或 \Fn{GetEnvironment\Bk VariableW}；POSIX
+分支反过来——\Tp{argv} 是\emph{原始字节}，别校验它是不是合法 UTF-8，更别``修正''它，原样送到 \Tp{open} 才是最正确的行为。
+
+\section{六个文件动作与各自的坑}
+
+\subsection{递归遍历与文件大小}
+
+\Fn{std::filesystem::\Bk recursive\_directory\_iterator} 默认\emph{不}跟随符号链接，这是安全
+的默认值；打开 \Tp{follow\_directory\_symlink} 就必须自带去重，因为 \Tp{a/link} 指回 \Tp{a}
+会让遍历永不终止并撑爆内存。判重要按\emph{文件身份}而非路径：POSIX 是设备号加 inode，
+Windows 是 \Fn{GetFileInformationByHandle} 的卷序列号加文件索引。深度上限与取消标志（第 2 章
+\Tp{g\_cancel}）要放进循环，否则一个坏目录会让你按不住 Ctrl-C；\Tp{skip\_permission\Bk \_denied}
+让 \Tp{/proc} 不再中断整轮扫描。双状态规则：\Fn{status} 跟随链接、\Fn{symlink\_status} 不
+跟随，所以``是目录吗''与``是链接吗''是两个问题。Windows 的重析点不止链接：目录联接与挂载点能成环，云占位文件则在读取时触发下载。
+
+\Fn{file\_size} 返回\emph{逻辑}字节数，既不反映占块也不反映洞的位置：\Tp{/proc} 与 \Tp{/sys}
+下的文件恒报 0，FIFO 与设备也不是常规文件——先 \Fn{is\_regular\_file}，一律``读到 EOF''，
+把大小只当``能否 mmap''的提示。\Fn{resize\_file} 在 POSIX 是 \Fn{ftruncate}（造洞、不占块），
+在 Windows 是 \Fn{SetEndOfFile}（\emph{可能}真写零，放大可慢到几十秒）；洞被写入时会悄悄
+填实，所以``副本比原件占空间多''是复制的默认结果，真实占用要看 \Tp{st\_blocks} 乘 512 或用 \Fn{GetCompressedFileSizeW}。
+
+\subsection{临时文件、TOCTOU 与原子保存}
+
+C++ 标准\emph{没有}唯一临时文件设施，这是 \Tp{std::filesystem} 最大的缺口。POSIX 正解是
+\Fn{mkstemp}：内核保证的 \Tp{O\_RDWR | O\_CREAT | O\_EXCL} 加 0600，返回\emph{已打开的 fd}；
+任何``先 \Fn{mktemp} 拿名字、再自己 \Fn{open}''的写法都丢了这层保证——那个窗口里名字可被
+抢先创建，也可被换成指向 \Tp{/etc/passwd} 的链接。Windows 的 \Fn{GetTempFileNameW} 有 65536
+个名字上限与回收竞态，不要用：自造随机名配 \Fn{CreateFileW} 的 \Tp{CREATE\_NEW}（不存在才
+建，存在即失败）加循环重试，就等价于 \Fn{mkstemp}。\Fn{rename} 的三平台语义：POSIX 同卷内
+原子且\emph{允许}覆盖，跨设备返回 \Tp{EXDEV}；Windows 的 CRT \Fn{rename} 遇目标存在直接失败，
+而 \Fn{std::filesystem::rename} 走带 \Tp{MOVEFILE\_REPLACE\Bk \_EXISTING} 的 \Fn{MoveFileExW}，
+代价是存在一个``旧的已消失、新的未就位''的可观察窗口，且目标被非共享打开时失败（Windows 上
+``保存失败''弹窗的日常来源）；真正的替换语义在 \Fn{ReplaceFileW}。两条落地结论：临时件放在
+\emph{目标目录}而不是系统临时区，因为跨卷只能``复制再删''，那不是原子操作，要写进文档；异常与取消出口必须删掉它。
+
+\begin{lstlisting}[caption={原子保存：写临时件、刷盘、替换（atomic\_save.cpp）}]
+// atomic_save.cpp  同目录临时件 -> flush -> fsync -> rename
+#include <chrono>
+#include <cstdio>
+#include <filesystem>
+#include <string_view>
+#include <system_error>
+#include <thread>            // POSIX 分支还需 fcntl.h 与 unistd.h
+namespace fs = std::filesystem;
+
+bool atomic_save(const fs::path& target, std::string_view data,
+                 std::error_code& ec) {
+  fs::path tmp = target.parent_path() / target.filename();  // 同目录!
+  tmp += ".tmp";             // 跨卷的 rename 不原子; 后缀保持 ASCII
+#if defined(_WIN32)
+  std::FILE* f = ::_wfopen(tmp.c_str(), L"wb");     // 只用 W 族
+# define COMMIT(s) ::_commit(::fileno(s))     // = FlushFileBuffers
+#else
+  std::FILE* f = ::fopen(tmp.native().c_str(), "wb");  // 字节直通
+# define COMMIT(s) ::fsync(::fileno(s))
+#endif
+  if (!f) { ec = std::errc::io_error; return false; }
+  const size_t n = std::fwrite(data.data(), 1, data.size(), f);
+  std::fflush(f);        // 步 1: CRT 缓冲送进内核
+  COMMIT(f);             // 步 2: 页缓存落到设备
+  std::fclose(f);        // 步 3: Windows 必须先关句柄才能改名
+  if (n != data.size()) { fs::remove(tmp, ec); return false; }
+#if !defined(_WIN32)
+  int dir = ::open(target.parent_path().native().c_str(),   // 步 4
+                   O_RDONLY | O_DIRECTORY);       // 目录项也要持久
+  if (dir >= 0) { ::fsync(dir); ::close(dir); }
+#endif
+  for (int i = 0; i < 6; ++i) {      // Windows: 占用可退避重试
+    fs::rename(tmp, target, ec);     // POSIX: 同卷原子覆盖
+    if (!ec) return true;
+    if (ec != std::errc::permission_denied) break;
+    std::this_thread::sleep_for(std::chrono::milliseconds(50 << i));
+  }
+  fs::remove(tmp, ec);               // 绝不留 .tmp 垃圾
+  return false;
+}
+\end{lstlisting}
+
+\subsection{文件锁：两边都不是你以为的那个}
+
+POSIX 有两套且语义不同。\Fn{flock}（BSD 血统）按\emph{打开文件描述}加锁、整文件粒度，
+\Fn{fork} 与 \Fn{dup} 之后共享同一把；\Fn{fcntl} 的 \Tp{F\_SETLK} 系按\emph{进程}记账、字节
+区间粒度，并有反直觉的杀伤力：进程内\emph{任意}一个指向该文件的 fd 被关闭，该文件上的锁就
+全没了——多线程共享 fd 的库最容易踩。两套\textbf{都是} advisory（劝告式）：任何不调用同族
+函数的写者都能无损穿过，包括你的用户用编辑器按了保存；两者都该用 \Tp{LOCK\_NB} 先试再轮询，
+别阻塞在锁上等，那是 Ctrl-C 也救不回的等待。Windows 方向相反：\Fn{LockFileEx} 是内核强制的
+字节区间锁，重叠区间上的 \Fn{ReadFile} 与 \Fn{WriteFile} 会失败；但``整个文件独占''通常不靠
+它，而靠 \Fn{CreateFileW} 的 \Tp{dwShareMode} 在打开那一刻决定（不给 \Tp{FILE\_SHARE\_WRITE}
+即写独占），冲突返回 \Tp{ERROR\_SHARING\Bk \_VIOLATION}。共同结论：\textbf{锁是协作协议，不是
+护甲}。要给用户数据做互斥就自建锁文件（\Tp{CREATE\_NEW} 是跨平台可用的独占创建，POSIX 上
+写进 pid 便于诊断陈旧锁），并把锁名、粒度、超时、陈旧判定写进文档。
+
+\subsection{\Tp{PATH} 查找、\Tp{PATHEXT} 与当前目录}
+
+Windows 三条规则。\Fn{CreateProcessW} 的搜索顺序里\emph{当前目录排在 \Tp{PATH} 之前}，于是
+\Tp{.} 里一个 \Tp{git.bat} 就能劫持你的 \Tp{git}；\Tp{PATHEXT} 决定哪些扩展名算可执行，默认
+顺序意味着同名时 \Tp{tool.com} 赢过 \Tp{tool.exe}，而批处理系扩展还意味着一次 \Tp{cmd.exe}
+解析（第 9 章的引用地狱）；\Fn{SearchPathW} 与 \Tp{where.exe} 又是第三套规则，所以``哪个
+\Tp{prog}''可以有三个答案。缓解两条：把 \Tp{NoDefault\Bk CurrentDirectoryInExePath} 置非空
+即去掉``当前目录''这一格；自己调 \Fn{CreateProcessW} 时传绝对路径的 \Tp{lpApplicationName}，
+绕开整张搜索表。POSIX 侧：\Fn{execvp} 只搜 \Tp{PATH}，\textbf{不含当前目录}，而 shell 另有
+哈希表，所以 \Fn{which} 与 \Tp{command -v} 可能给出与 \Fn{execvp} 不同的答案（新装程序要先
+\Tp{hash -r}）；\Tp{PATH} 里的空分量在 POSIX 已废弃，仍有实现按当前目录处理；\Tp{/usr/bin}
+常是符号链接（usrmerge），定位资源目录要走 \Fn{realpath} 而不是 \Tp{argv[0]} 的字面值。
+macOS 再加一条：浏览器下载的可执行文件带 \Tp{com.apple.quarantine} 属性，首跑可能被 Gatekeeper 拦下，给你 \Tp{EPERM} 而不是 \Tp{ENOENT}。
+
+\subsection{行尾与 BOM：进宽出严}
+
+读侧四条容忍：二进制模式打开（Windows 文本模式会把 \Tp{\textbackslash r\textbackslash n}
+折成 \Tp{\textbackslash n}，并在遇到 \Tp{\textbackslash x1A} 时当作 EOF，CSV 里有 Ctrl-Z 就
+等着被截断）；行级解析允许裸 \Tp{CR} 与行尾残留 \Tp{CR}；首行的 UTF-8 \Tp{BOM} 当编码标记
+剥掉且\textbf{只剥第一个}；中间位置的 \Tp{BOM} 是\emph{数据}，剥它会静默掩盖编码 bug。写侧
+三条严格：配置与机器输出统一 UTF-8 无 BOM 加 \Tp{LF}；只有明确``给记事本看''的文本才值得
+\Tp{CRLF}；面向 Excel 的 CSV 是刻意例外（无 BOM 时 Excel 按 ACP 猜），要带 BOM 就做成
+\Opt{format} 的显式取值并写进 \Opt{help}。最后一个 Windows 特有的死法：用户写 \Tp{mytool info | Out-File x.json}，
+Windows PowerShell 5.1 默认编码是 ANSI 码页\emph{并加 BOM}，
+\Tp{Out-File} 的 \Short{Encoding} 取值名还在版本间被改过，PowerShell 7 才换成无 BOM 的
+UTF-8——你不能赌用户装的是哪个。所以读侧要认 \Tp{BOM}，看到 UTF-16 的
+\Tp{\textbackslash xFF\textbackslash xFE} 开头时给出\emph{明确}诊断而不是解析错误，并尽量提供 \Opt{output} 让程序自己写文件，绕开重定向那一层。
+
+\begin{bestpractice}[title={路径与编码的六条纪律}]
+一、内部交换格式定成 UTF-8 字节，\emph{只}在平台边界转换一次。二、跨平台代码里对 \Tp{path}
+\textbf{永不}使用 \Fn{string}：要字节用 \Fn{u8string}，要交给 API 用 \Fn{native}。三、任何
+``存在吗、能写吗''都用一次带独占标志的打开回答，不用 \Tp{exists} 加 \Tp{open} 两段式。四、
+写用户文件一律同目录临时件加 \Fn{rename}，并为 Windows 的 \Tp{SHARING\_VIOLATION} 准备退避
+重试。五、把 POSIX 的``字节可以是任何东西''当真：路径列表用 \Tp{NUL} 分隔，永不按行。六、
+编码策略写成``进宽出严''，并在 \Opt{help} 里承诺 UTF-8 无 BOM。
+\end{bestpractice}
+% ====================================================================
+
+% ====================================================================
+% ====================================================================
+\chapter{配置、日志与结构化输出}
+% ====================================================================
+
+第 2 章管的是流上的字节，第 10 章管的是名字，这一章管三件更耐久的事：程序从\emph{哪里}取值、
+诊断\emph{写到哪里}、失败时\emph{留下什么}。三件事的共同点是读者不只是人——还有别的程序、别的
+脚本、别的月份的你。一个 \Opt{verbose}、一行日志、一个退出码都是对外发布的接口，改了就是破坏兼容。
+
+\section{配置的分层：默认、文件、环境、命令行}
+
+四层从静到响，后者只覆盖\emph{显式给出}的那些键：内置默认、配置文件（可以再分成机器级与
+用户级两层）、环境变量、命令行。写成一句话就是\textbf{合并而不是替换}：读完用户文件不等于
+默认值作废，而是那一层里被点名的键变了。第二句话同样重要：\textbf{每个生效值都要能说出自己
+来自哪一层}——做不到这一点的程序，用户只能靠猜来调试。
+
+\begin{warning}[title={优先级上最常犯的五个错}]
+\begin{enumerate}[label=\arabic*.,leftmargin=2.2em]
+\item \textbf{读到配置就 return}：文件分支里构造完配置直接返回，内置默认整体消失，用户
+      删掉一行就得到\emph{零}个并发线程。逐键合并，别整份替换。
+\item \textbf{用默认值表达``没给过''}：\Tp{int jobs = 4} 分不清用户写了 \Short{j} \Tp{4}
+      还是什么都没写，于是命令行永远``覆盖''文件。要么用 \Tp{std::optional}，要么把哨兵
+      定成 \Tp{0} 并在文档里写明。
+\item \textbf{环境变量当字符串直接吞}：\Fn{getenv} 拼错键名不会报错，只会静悄悄什么也不做；
+      \Tp{MYTOOL\_JOB} 与 \Tp{MYTOOL\_JOBS} 的区别只能靠肉眼。把支持的键列成表，未知的
+      \Tp{MYTOOL\_} 前缀在 \Opt{verbose} 里警告。
+\item \textbf{相对路径按当前目录解析}：配置里写 \Tp{path = \textquotedbl data/x.csv\textquotedbl}，
+      用户从别的目录运行就找错地方。约定二选一并写死：相对配置文件所在目录，或相对当前目录；
+      别两个都想。
+\item \textbf{把环境当 IPC 用}：用 \Fn{setenv} 回写来``传给子进程''，在 Windows 上还要指望
+      \Fn{\_putenv} 影响已启动的进程——都不会发生。要传给子进程就走第 8 章的环境块。
+\end{enumerate}
+\end{warning}
+
+落地上加两个开关就够了：\Opt{show-config} 打印每个键的最终值与来源层，\Opt{dry-run} 打印即将
+执行的动作。它们把``配置为什么没生效''从半小时问题变成一眼问题。
+
+\section{配置目录：\Tp{std::filesystem} 没有答案的那一问}
+
+标准库里没有任何\emph{已知目录}API——没有家目录、没有应用数据目录、没有 \Tp{\textasciitilde}
+展开。这是 \Tp{std::filesystem} 最大的空白之一，只能自己按平台补：
+
+\textbf{Linux 看 XDG 基目录规范。} \Tp{XDG\_CONFIG\_HOME} 为空或未设时用 \Tp{\$HOME\Bk/.config}，
+配置放 \Tp{\$HOME/.config\Bk/mytool\Bk/config.toml}；日志与历史状态放 \Tp{XDG\_STATE\_HOME}（默认
+\Tp{\$HOME/.local\Bk/state}），可丢弃缓存放 \Tp{XDG\_CACHE\_HOME}（默认 \Tp{\$HOME/.cache}）——
+把日志写进配置目录是常见的分层错误。两个细节最常被实现错：单值变量（\Tp{XDG\_CONFIG\_HOME}）
+必须是绝对路径，为空才回落默认；而列表变量（\Tp{XDG\_CONFIG\_DIRS}，默认 \Tp{/etc/xdg}）里的
+\emph{空分量和相对分量一律忽略}，不是按当前目录处理。机器级配置读 \Tp{/etc/mytool.toml}，
+它排在用户级之前。
+
+\textbf{Windows 别信 \Tp{\%APPDATA\%}。} 环境变量可以被父进程改写、在服务账户下可能根本不存在。
+正解是 \Fn{SHGetKnownFolderPath} 配 \Tp{FOLDERID\_RoamingAppData}（跟随漫游配置，放用户设置）、
+\Tp{FOLDERID\_LocalAppData}（本机专属，放缓存与大文件）、\Tp{FOLDERID\_ProgramData}（机器级共享，
+默认普通用户可读不可写，正好放\emph{系统级}配置）。出参是系统分配的宽字符缓冲，用完必须
+\Fn{CoTaskMemFree}；\Tp{CSIDL} 那套老接口和它配套的 \Fn{SHGetFolderPath} 只为兼容 2000 时代留着。
+
+\textbf{macOS 用 \Tp{\$HOME/Library/Application Support/mytool}。} 这是平台给第三方程序的
+默认位置，同样通过 \Tp{\$HOME} 自己拼。别写到 \Tp{Documents}：那里可能有 iCloud 同步与桌面权限
+弹窗；系统偏好那套 plist 加 \Fn{CFPreferencesCopyAppValue} 是另一条路，但那是 Objective-C 的世界，
+自带一个 TOML 文件对 CLI 更实际。
+
+最后一类反复出现的错：在配置文件里写 \Tp{\$XDG\_CONFIG\_HOME/mytool} 或 \Tp{\textasciitilde/.mytool}，
+然后奇怪它为什么变成一个名叫 \Tp{\$XDG...} 的目录。\textbf{变量展开与波浪号展开是 shell 的行为，}
+不是 C++ 的，也不是文件系统的；\Fn{std::getenv} 与 \Fn{fopen} 都不会替你展开。要么在文档里禁止
+这种写法，要么自己在读配置时展开一次（并且只在 POSIX 上找 \Fn{getpwuid}，Windows 上没有 tilde
+约定）。
+
+\section{格式选择：谁会编辑这份文件}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.11\textwidth}
+                 >{\raggedright\arraybackslash}p{0.13\textwidth}
+                 >{\raggedright\arraybackslash}p{0.17\textwidth}
+                 >{\raggedright\arraybackslash}p{0.16\textwidth}
+                 >{\raggedright\arraybackslash}p{0.24\textwidth}@{}}
+\caption{配置文件格式的取舍} \\
+\toprule
+格式 & 可注释 & 类型系统 & 依赖 & 适合谁 \\
+\midrule
+\endfirsthead
+\toprule
+格式 & 可注释 & 类型系统 & 依赖 & 适合谁 \\
+\midrule
+\endhead
+TOML & 支持 \Tp{\#} & 整数、浮点、布尔、日期都有 & 单头文件 toml++ & 人手编辑的首选项（本章默认） \\
+JSON & 禁止 & 只有数字与布尔，类型靠猜 & 单头文件 nlohmann & 机器产出、跨语言接口 \\
+YAML & 支持 & 看着有类型，实际会转 & 依赖最重，语义最难 & 已经在这个生态里的人 \\
+INI & 支持两种注释符 & 全是字符串 & 一百行自研 & 两三个开关的小工具 \\
+纯命令行 & 谈不上 & 由解析库给 & 第 3 章那几个库 & 参数不超过五个的一次性动作 \\
+\bottomrule
+\end{longtable}
+
+\textbf{TOML 之所以是 2026 年的默认答案}，是因为它同时满足三条：能写注释（用户敢编辑）、
+类型是显式的（\Tp{workers = 4} 与 \Tp{workers = \textquotedbl4\textquotedbl} 不是一回事）、
+结构能嵌套（表与数组表）。\cpp{17} 项目用 toml++：单头文件、无依赖、无异常外的开销。读侧核心
+就三个动作——\Fn{toml::parse}、下标链、\Fn{value\_or} 给默认值：
+\Tp{t[\textquotedbl app\textquotedbl][\textquotedbl workers\textquotedbl]\Bk
+value\_or(4)} 一行同时完成``取键、查类型、缺省回退''，而类型不符时
+它不会骗你说这是 \Tp{4}。错误对象 \Tp{toml::parse\_error} 直接带 \Fn{source\_line}、
+\Fn{source\_column}、\Fn{description}，把``第 3 行少了个右括号''原样打给用户就有定位了。
+它的短板也真实：\emph{写回会丢注释}，所以程序自己维护的文件和用户编辑的文件最好分开（配置一份、
+状态一份）；没有 JSON Schema 那类校验生态，键的合法性得自己写。
+
+\textbf{JSON 是给机器读的，不是给人读的。} nlohmann 单头文件、DOM 全量建树，中等配置的解析
+开销比 TOML 高一档且内存放大明显。两个坑：一是不许注释，团队会发明 \Tp{\_comment} 键或引入带注释
+方言，两边都不彻底；二是报错质量——\Tp{parse\_error} 给的是字节偏移而不是行列，要精确诊断得自己
+扫一遍源串数行（或者走它的 SAX 接口把偏移换成位置）。非抛出路线把第二个参数留空、第三个写
+\Tp{false}，再用 \Fn{is\_discarded} 判断结果；要严格校验结构时，异常加逐键 \Fn{value\_or} 比拿
+\Tp{json\_pointer} 逐个试探更好写。
+
+\begin{note}[title={YAML 的 Norway 问题与它的同类}]
+YAML 1.1 会把你没要求的东西转成类型：\Tp{country: no} 的 \Tp{no} 被解析成布尔假，于是国家代码
+\Tp{NO} 消失（这就是 Norway 问题的名字）；\Tp{time: 1:30} 变成 \Tp{90}（六十进制老账）；
+\Tp{mode: 0755} 变八进制 \Tp{493}；\Tp{yes}、\Tp{on} 也是真；版本号 \Tp{1.20} 成了 \Tp{1.2}。
+YAML 1.2 收了一些口，但各实现的边界不一致，同一个文件在三个解析器里可以给出三种结果。加上
+它要拖一个 C 库或大体积的 C++ 库进来、错误恢复依赖缩进、锚点别名能把加载器变成炸弹——所以
+CLI 作者的主流建议是\emph{不用 YAML}，除非你在跟吃 YAML 的生态互换。
+\end{note}
+
+\textbf{INI 与纯命令行}各占一角：INI 只有一个平面键表、全是字符串，写解析器很便宜，但一旦
+用户想要``每个站点一段配置''你就得现场发明嵌套；纯命令行最诚实——参数少的时候没有比它更清楚的
+载体，第 3 章那些解析库还顺手给你 \Opt{help} 与类型校验。渐进的做法是：先只做命令行，等出现
+``用户想记住这些参数''的需求再加文件，而不是反过来。
+
+\section{一个分层加载器}
+
+下面这段是全章的落点：内置默认打底、TOML 逐键覆盖、少数环境变量再覆盖，命令行在最外层（由
+调用方在解析 \Tp{argv} 之后写入）。注意它\emph{先按字节把文件读进来}再解析——10.3.2 的教训在这里
+仍然成立，\Fn{toml::parse\_file} 收的是窄路径，中文用户名下照样踩 ACP。
+
+\begin{lstlisting}[caption={分层配置加载：默认、TOML、环境变量（config\_load.cpp）}]
+// config_load.cpp  四层: 内置默认 < 配置文件 < 环境变量 < 命令行
+#include <cstdlib>
+#include <filesystem>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <toml++/toml.hpp>
+#include "fs_bytes.hpp"        // 10.3.2: 按字节读, 路径不猜编码
+namespace fs = std::filesystem;
+
+struct Config {
+  fs::path input;              // 位置参数: 只能来自命令行
+  int  workers    = 4;         // 下面三层都只覆盖这一个键
+  long timeout_ms = 30000;
+  bool json_out   = false;
+};
+
+// 失败返回空并把"哪个文件第几行"写进 why, 不让异常穿出 main()
+std::optional<Config> load_config(const fs::path& file,
+                                  std::string& why) {
+  Config c;                    // 第 1 层: 内置默认
+  if (!file.empty()) {         // 第 2 层: 配置文件
+    const auto bytes = read_all(file);
+    if (!bytes) { why = "读不到配置文件"; return std::nullopt; }
+    toml::table t;
+    try {
+      t = toml::parse(std::string_view(bytes->data(), bytes->size()));
+    } catch (const toml::parse_error& e) {
+      why = "第 " + std::to_string(e.source_line()) + " 行第 "
+          + std::to_string(e.source_column()) + " 列: "
+          + std::string(e.description());
+      return std::nullopt;     // 配置坏了就停, 不要带着半份配置干活
+    }
+    c.workers    = t["app"]["workers"].value_or(c.workers);
+    c.timeout_ms = t["app"]["timeout_ms"].value_or(c.timeout_ms);
+    c.json_out   = t["app"]["json"].value_or(c.json_out);
+  }
+  if (const char* w = std::getenv("MYTOOL_WORKERS"))   // 第 3 层
+    c.workers = std::atoi(w);  // atoi 不报错, 范围校验放到最后
+  if (const char* d = std::getenv("MYTOOL_TIMEOUT_MS"))
+    c.timeout_ms = std::atol(d);
+  return c;                    // 第 4 层(argv)由调用方覆盖
+}
+\end{lstlisting}
+
+三条纪律收尾：环境变量只覆盖\emph{少数}键（十几个封顶，全配置都开一个变量等于开了第二套配置
+语言）；所有层加载完再做一次\emph{整体校验}（范围、互斥、依赖），别在每层里校验；配置解析失败
+就退出，别``用默认值继续''——用户会以为自己的设置生效了。
+
+\section{日志写到 stderr，数据写到 stdout}
+
+这一条不是风格偏好而是接口设计：\Tp{stdout} 上的东西会被接进管道、被 \Tp{>} 重定向、被
+另一个程序逐行读；诊断信息一旦混进去，整条管道就坏了。所以\textbf{默认所有诊断走 stderr，
+所有产物走 stdout}，并且让读者自己决定怎么合并。
+
+\begin{lstlisting}[style=shellstyle,caption={stdout 与 stderr 的分工与合流}]
+$ mytool convert a.csv > out.json      # 数据进文件
+config: 第 3 行第 9 列: 少一个右方括号   # 诊断进终端, 不污染 out.json
+$ mytool convert a.csv 2> err.log      # 只把诊断存下来
+$ mytool convert a.csv 2>&1 | jq .id   # 合流再过滤: 日志混进了 jq
+$ mytool convert a.csv >/dev/null 2>&1 # 全部丢掉
+$ mytool convert a.csv 2>&1 >/dev/null # 只看诊断: 这一行才对
+$ mytool convert a.csv 2>&1 >run.log   # 错法: 诊断没进 run.log
+\end{lstlisting}
+
+最后三行都在讲顺序：重定向从左到右生效，\Tp{2>\&1} 必须在 \Tp{>/dev/null} \emph{之前}，否则
+stderr 复制的是还没改过的 stdout。第 5 章讲过 \Tp{jq} 这类过滤器的输入约定，这里的原则一样：
+\emph{给程序读的东西只放 stdout}。
+
+级别用四档就够（\Tp{error}、\Tp{warning}、\Tp{info}、\Tp{debug}），门槛由 \Opt{verbose}
+的\emph{计数}减去 \Opt{quiet} 的计数决定；默认只出错误，一次 \Short{v} 到 info，两次到 debug。
+不要同时提供 \Opt{log-level} 与环境变量又不定优先级——11.1 节的分层在这里同样适用。
+
+\begin{lstlisting}[caption={只写 stderr 的四级日志与 verbose 计数开关（log.hpp）}]
+// log.hpp  门槛由 -v 计数与 -q 计数相减得到
+#include <cstdio>
+namespace log {
+enum Level { kError = 0, kWarn = 1, kInfo = 2, kDebug = 3 };
+static Level threshold = kError;              // 默认: 只报错误
+static void set_verbosity(int v, int q) {     // -vvv 与 --quiet 相抵
+  const int n = v - q;
+  threshold = n < 0 ? kError : n > 2 ? kDebug : n > 0 ? kInfo : kWarn;
+}
+// 关键: 门槛不够时一个字的格式化都不发生
+#define LOG(lvl, fmt, ...)                                       \
+  do { if (int(lvl) <= int(threshold))                           \
+       std::fprintf(stderr, fmt "\n", __VA_ARGS__); } while (0)
+inline void die(int code, const char* msg) {  // 诊断与退出码一起定
+  std::fprintf(stderr, "mytool: %s\n", msg);
+  std::exit(code);                            // 见 11.7
+}
+}  // namespace log
+// 用法: log::set_verbosity(opt.verbose, opt.quiet);
+//       LOG(log::kInfo, "读入 %zu 行", n);   <- 关着时不格式化
+\end{lstlisting}
+
+\textbf{惰性是日志的第一性能问题。} \Fn{std::format}（或 fmt）的代价在\emph{实参被格式化}那一刻，
+不在调用点看起来有多干净。所以门槛判断必须在格式化之前：收 \Tp{format\_string} 而非法已拼好的串，
+或者显式短路——spdlog 的对应写法是 \Tp{if (!lg->should\_log(lvl)) return;}，因为它的宏之外
+并没有替你省掉字符串构造。反例是把已经拼好的消息交给日志函数（先 \Fn{join} 再 \Fn{debug}）：
+日志关着，\Fn{join} 的成本照样付满。
+
+\begin{compare}[title={手写二十行 与 引入 spdlog}]
+\textbf{手写够用的场景：}单线程、只写 stderr、不需要文件与轮转、格式固定。二十行（含门槛判断）
+换来零依赖、零编译开销、退出顺序完全自己掌控——上面那段就是这个量级。
+\textbf{该上 spdlog 的场景：}要多路输出（终端加文件同时写）、要按大小轮转、要彩色级别、要在
+多线程里安全追加、要 trace 采样。它的代价也要一起签：头文件与模板把编译时间抬高一档、静态链接
+体积上去、\Fn{flush\_on} 策略决定崩溃前你能看到几行（默认只保证 warn 以上）、异步 sink 需要
+线程池并在崩溃时丢掉队列、注册表里的 sink 是静态对象——退出时要么显式 \Fn{spdlog::shutdown}，
+要么等着``日志对象比全局对象活得久''这类析构顺序坑。
+\textbf{折中：}自己写门槛与格式，只把落地交给一个 sink 接口；等真需要轮转再换库。
+\end{compare}
+
+颜色的事本章不重复：第 3 章定的 \Tp{NO\_COLOR} 与非 tty 判定同样适用于日志——诊断也只在终端
+上色，进了管道就是纯文本。
+
+\section{结构化记录与 \Opt{json} 这条契约}
+
+给人看的日志按行；给机器看的记录要\emph{稳定}。两条主流形状：一行一个 JSON 对象（JSON Lines）
+和 \Tp{key=value} 配平（logfmt 风格，\Fn{grep} 与 \Tp{awk} 都能吃）。选一种，用 \Opt{log-format}
+切换，\emph{不要在同一份 stderr 上混}。字段名定下就是接口：\Tp{ts}、\Tp{level}、\Tp{msg} 再加
+两三个自己的键，别把值里的空格靠引号救。JSON 用第 4 章的转义纪律写，注意时间戳用 UTC 加
+ISO 8601，日志排序才不会因时区打架。
+
+\begin{warning}[title={json 开关改的是整份输出契约}]
+加 \Opt{json} 不只是换分隔符，它同时改变了：字段集合与命名、错误如何表达（是人话还是
+\Tp{error} 字段）、部分失败怎么办（继续处理并把坏项写进对象里，还是立刻退出）、以及退出码的
+含义。所以一旦提供 \Opt{json}：stdout 上\emph{只}有 JSON（一行一个对象或一个完整数组，二选一
+并写进 \Opt{help}）；诊断仍然走 stderr，绝不能把 ``处理中...'' 混进 JSON 流；字段增删要走版本
+策略并在文档里声明；失败仍要用退出码表达（11.7），别让脚本靠\emph{读消息文本}判断出错。
+第 5 章的机器可读输出那一节是同一套规矩的展开。
+\end{warning}
+
+\section{退出码与错误报告的契约}
+
+最小约定人人认得：\Tp{0} 成功、\Tp{1} 干活了但失败、\Tp{2} 用法错误（第 3 章那些解析器普遍
+把参数错误报成 2）。要更细就用 \Tp{sysexits.h} 那套 64 到 78 的编号：\Tp{EX\_USAGE} 64、
+\Tp{EX\_DATAERR} 65（输入数据本身不对）、\Tp{EX\_NOINPUT} 66、\Tp{EX\_UNAVAILABLE} 69（资源
+暂时不可用，重试也许有用）、\Tp{EX\_CANTCREAT} 73、\Tp{EX\_IOERR} 74、\Tp{EX\_CONFIG} 78。
+好处是\emph{别人猜得到}：脚本可以只区分 0、非 0、以及``重试可能有用''的那几个。注意这个头文件
+在 glibc 与 macOS 上有，MSVC 的 CRT 没有——自带一份常量表即可，值要一样。
+
+位数这道坎要记住：POSIX 的 shell 只看得见低 8 位，\Fn{exit} \Tp{-1} 到 shell 手里是
+\Tp{255}，而 \Tp{256} \emph{变成 0}——脚本会高高兴兴地认为成功了。所以内部错误码（几百几千的
+枚举）绝不能直接透出给 \Fn{exit}，要么映射到 1 与 64 到 78，要么把详细码写进 stderr 或 JSON
+字段。Windows 侧不截断：进程退出码是 32 位，崩溃会以 \Tp{0xC0000005}（十进制 3221225477）
+这类值出现在 \Tp{\%ERRORLEVEL\%} 与 \Tp{\$LASTEXITCODE} 里；而 Git Bash、MSYS2、WSL 里的
+shell 仍然按 8 位取模。结论跨平台一致：\textbf{只承诺 0 与 1 到 125}，128 以上留给信号约定
+（第 8 章的 128 加 N）。
+
+错误报告写成人话加机器话，一行足矣：
+\Tp{mytool: 无法打开 config.toml: 没有那个文件或目录}——三段式（动作、对象、原因），程序名用
+\Fn{basename} 过的 \Tp{argv[0]}（Windows 上记得去掉 \Tp{.exe}），末尾带系统给出的原因串。
+
+\textbf{errno 与 GetLastError 不是一回事。} C 运行库函数（\Fn{fopen}、\Fn{stat}）填 errno，
+文本用 \Fn{strerror}：它返回静态缓冲、内容随 locale 变、多线程下并不保险。可移植的线程安全写法
+有两条分裂的路——POSIX 的 \Fn{strerror\_r} 在 glibc 上返回 \Tp{char*}（可能是你传入的缓冲区，
+也可能不是），在 XSI 定义下返回 \Tp{int}；MSVC 的 \Fn{strerror\_s} 参数顺序是
+\Tp{(buf, size, err)}，恰好和 POSIX 的 \Tp{(err, buf, size)} 相反。要么用 \cpp{11} 起的
+\Fn{std::system\_error}：\Tp{std::make\_error\_code(errno)} 配 \Tp{std::generic\_category}
+把消息统一成一处，要么自己写两行的分派（第 4 章的错误处理）。
+
+\textbf{Win32 的 \Fn{GetLastError}} 更阴：规则是\emph{调用之后立刻取值}，因为许多``成功''的
+API 也会留下脏值，而且你打印错误的过程本身就会覆盖它——先存进局部变量再做任何别的事。取文本要
+\Fn{FormatMessageW}，它自己可能失败并再覆盖 last error，还会在末尾留一个换行；COM 那一路返回
+HRESULT，低位是那 16 位的 code，跟 last error 不是同一个数空间。
+
+\begin{bestpractice}[title={配置、日志与退出码的五条纪律}]
+一、配置分层写死成``合并而不是替换''，并提供 \Opt{show-config} 说明每个值来自哪一层。二、人手
+编辑的用 TOML，机器产出的用 JSON，永不 YAML，绝不自创格式。三、诊断一律 stderr，数据一律
+stdout，\Opt{json} 之后仍然如此。四、格式化之前先判门槛，日志关着就不该有代价。五、退出码只用
+0、1、2 加 64 到 78，内部错误码留在消息或字段里；错误消息三段式（动作、对象、原因）。
+\end{bestpractice}
+% ====================================================================
+
+% ====================================================================
+% ====================================================================
+\part{工程化：构建、分发与验证}
+% ====================================================================
+
+前面十一章解决的是``程序在终端里怎么表现''。本部分解决另一半问题：
+``程序怎么到达用户手里，以及怎么证明它到达之后还是你以为的那个东西''。
+第 12 章处理构建与分发——把 \Tp{imgres} 变成一个陌生人敢双击的文件；
+第 13 章处理测试——CLI 是最容易做端到端测试的程序形态，但它的可观测面
+（流、退出码、终端状态）也最容易在移植中悄悄变形。
+
+% ====================================================================
+\chapter{构建、静态链接与分发}
+% ====================================================================
+
+``给用户一个能直接运行的二进制''这句话里藏着一整串工程决定：运行时归谁管、
+标准库用哪一种、依赖是打进产物还是留在系统里、符号放哪里、谁给文件签名、
+出问题后怎么拿到符号表。这些决定互相牵制，而且\emph{每个平台的正确答案
+不一样}。本章按牵制的顺序讲：先讲最贵的 Windows CRT，再讲 Linux 静态链接
+的现实选择，然后是跨平台的 ABI 与动态加载约定，接着是体积与启动开销，
+最后才是分发机制与两个平台的发布税。
+
+\section{先算清``一个文件''的成本}
+
+一个可执行文件从来不是孤立的字节：它是一张依赖图的根。图上的每个节点
+（CRT、C++ 标准库、 OpenSSL、libcurl、系统的 \Tp{libc.so}）都要回答同一个
+问题——\emph{谁提供，谁负责更新，谁负责版本匹配}。表
+\ref{tab:distribution} 是本章的地图：把每个分发形态需要用户预装的东西和
+体积代价并排列出来，你就能看出``静态单文件''到底在为什么付账。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+                 >{\raggedright\arraybackslash}p{0.13\textwidth}
+                 >{\raggedright\arraybackslash}p{0.27\textwidth}
+                 >{\raggedright\arraybackslash}p{0.25\textwidth}@{}}
+\caption{分发形态、平台、用户预装要求与体积代价}
+\label{tab:distribution} \\
+\toprule
+形态 & 平台 & 用户需要预装什么 & 体积与代价 \\
+\midrule
+\endfirsthead
+\toprule
+形态 & 平台 & 用户需要预装什么 & 体积与代价 \\
+\midrule
+\endhead
+单个静态 exe & Linux & 几乎什么都不需要（连 \Tp{ld.so} 都不必） &
+产物 3 到 30 MB；musl 侧 locale 与宽字符能力受限；无法热修安全洞 \\
+单个静态 exe & Windows & 系统自带的 \Tp{kernel32} 等 &
+/MT 或 MinGW 静态；CRT 补丁要你自己发版 \\
+动态链接裸 exe 加 \Tp{lib} 目录 & Windows & VC 运行库（或用 app-local 绕开） &
+体积最小，但缺 DLL 的报错最常见：\Tp{0xC000007B}、找不到
+\Tp{msvcp140.dll} \\
+NSIS 或 MSI & Windows & 无（安装器自带依赖） & MSI 才认数字签名与
+GPO 分发；EXE 安装器 reputation 更低 \\
+AppImage & Linux & FUSE（或 \Tp{--appimage\Bk-extract\Bk-and-run}） &
+50 到 200 MB（打包 Qt 之类）；启动多一次挂载 \\
+deb 与 rpm & Linux & 发行版包管理与共享库 & 体积小、能升级，但要跟
+发行版的 OpenSSL 版本走 \\
+Homebrew formula & macOS & Homebrew & 多源码编译；要维护 tap，
+bottle 才有预编译产物 \\
+zip 加 \Tp{.app}（已公证） & macOS & 无，但 Gatekeeper 检查签名 &
+必须 notarize；universal 二进制体积翻倍 \\
+busybox 式多命令单文件 & 类 Unix & 无 & 靠 \Tp{argv[0]} 分派；
+一个洞全部命令一起重发 \\
+\bottomrule
+\end{longtable}
+
+三条从表里读出来的结论。一，\textbf{``单个文件''的代价不是体积而是
+更新责任}：你把共享库的安全补丁责任从发行版或系统厂商接了过来。
+二，动态链接并不自动更省——Windows 上未签名 DLL 的加载失败与
+macOS 上的路径重写常常比多几 MB 更贵。三，用户能容忍的下载量取决于
+形态：命令行小工具超过 20 MB 就会被问``为什么这么大''（12.5 节回答）。
+
+\section{Windows 的 CRT 问题：\Tp{/MT} 与 \Tp{/MD}}
+
+MSVC 有三套 CRT 变体，链接开关决定你选哪一套：\Short{MT}（静态、发布）、
+\Short{MD}（动态、发布，默认）、以及带 \Short{d} 的调试版
+（\Short{MTd}、\Short{MDd}）。\Short{MD} 的产物依赖
+\Tp{ucrtbase.dll}（通用 CRT，Windows 10 及带补丁的 Windows 8.1 起在系统里）、
+\Tp{vcruntime140.dll} 与 \Tp{vcruntime140\Bk\_1.dll}（异常与架构相关部分）、
+\Tp{msvcp140.dll}（C++ 标准库）、以及按需的 \Tp{concrt140.dll}、
+\Tp{msvcp140\Bk\_atoms.dll}、\Tp{mfc} 之类。这些 DLL 由
+Visual C++ Redistributable（VC 运行库）提供，2015 到 2022 共用同一条版本号线，
+文件名里的 \Tp{140} 就是这条线的锚点。
+
+真正的规则只有一句：\textbf{同一个进程里所有使用 CRT 的模块必须共享
+同一份 CRT 实例}。这不是风格偏好，而是 CRT 内部状态的物理约束——
+stdio 缓冲区、locale、\Tp{errno}、\Fn{strtok} 的静态游标、
+\Fn{setlocale} 的表、C++ 的 \Tp{std::locale} 缓存、
+以及\emph{堆本身}都住在 CRT 里。
+
+\subsection{跨模块释放：``堆属于别人''的崩溃}
+
+最典型的事故是：一个第三方 DLL 内部用静态 CRT（或你为它编译的插件用了
+静态 CRT），它把 \Fn{malloc} 出来的指针通过接口交给你的 exe 释放；
+或者更隐蔽的——DLL 返回一个 \Tp{std::string}，exe 侧析构它。
+两条路径分别通向：
+
+\begin{itemize}
+\item \textbf{堆损坏}：释放方 CRT 在块头里找不到自己写入的
+\Tp{\_CRT\_BLOCK} 与 guard 值，调试版直接 fastfail 报
+\lstinline|HEAP[...] corruption|，发布版则在下一次 \Fn{malloc} 时
+以 \Tp{0xC0000374}（\Tp{STATUS\_HEAP\_CORRUPTION}）终止，
+现场离真凶已经隔了几千次分配。
+\item \textbf{两套堆的伪共享}：从 VS2015（UCRT）起，多个模块动态链接
+同一份 \Tp{ucrtbase.dll} 时\emph{堆确实是共享的}，跨模块 free 不再必然崩。
+这骗过了很多人：它让混链看起来能跑，但静态 CRT 的那一侧仍是独立堆，
+而且 \Tp{msvcp140.dll} 与静态内嵌的 C++ 库仍是两份状态，
+\Tp{std::cout} 的顺序、\Fn{setlocale} 的效果、异常表都可能各走各的。
+\end{itemize}
+
+\begin{warning}[title={只要依赖图里有一个 DLL 用 CRT，\Tp{/MT} 就通常是错的}]
+你的 exe 静态链接 CRT，同时又加载了任何用 CRT 的 DLL（libcurl、SQLite、
+图像解码器、Python 扩展、杀软注入的模块都算），进程里就存在\emph{两份
+CRT 状态}。跨边界传所有权（指针、\Tp{std::string}、\Tp{FILE*}、
+\Fn{\_dupenv} 结果、错误消息缓冲区）的那一刻起，你依赖的是运气而不是规则。
+可行的出路只有两条：全部改 \Short{MD}（回到共享 CRT，接受运行库依赖），
+或者\emph{严格不跨边界传所有权}（每个导出函数配一个释放函数，
+接口只传 POD 与调用方持有的缓冲区）。第二条比听起来难：C++ 异常、
+locale、以及任何标准库对象都是隐式的跨边界所有权。
+\end{warning}
+
+\subsection{运行库的版本现实}
+
+\Short{MD} 路线上你会遇到两类真实故障。第一类是``缺 DLL''：用户机器上
+没装 VC 运行库，双击得到一个模棱两可的错误框（``找不到
+\Tp{msvcp140.dll}''），CI 里则是 \Tp{exit code -1073741515}
+（\Tp{STATUS\_DLL\_NOT\_FOUND}）。第二类更有欺骗性：``装过但太旧''。
+新工具链会用运行库里新加的导出（例如某个 \Tp{std::} 内部函数或
+\Tp{V} 系列原子指针支持），于是程序在启动时弹出一句
+``The procedure entry point'' 开头的错误，点名
+\Tp{MSVCP140.dll}，而中间那个 \Tp{?...@std@@...} 形式的名字
+是 C++ 修饰名——它在告诉你：本机安装的运行库比构建时用的旧。
+运行库的 DLL 号是按发布递增的，而 Windows Update 分发的速度不由你控制。
+
+于是诚实的选项只有两个，必须\emph{选一个并承担它的账}：
+
+\begin{enumerate}
+\item \textbf{静态链接 CRT}（\Short{MT}，或 MinGW 的
+\Tp{-static}）：用户零预装，代价是\emph{更新责任归你}。CRT 里的每个
+CVE（历史上的格式化字符串与路径处理洞）都要你重新构建、重新签名、
+重新推给用户。工具链版本必须锁死并在文档里公布；调试与崩溃分析要带上
+你自己的 PDB。适合单文件 CLI、离线环境、以及``装完就不管''的运维工具。
+\item \textbf{带上运行库}：把 \Tp{vc\_redist.x64.exe} 塞进安装器并
+静默执行（\Tp{vc\_redist\Bk.x64.exe /quiet /norestart}），或者用 merge
+module 打进 MSI，或者做 app-local 部署——把 \Tp{msvcp140.dll} 等
+复制到 exe 旁边，应用目录在 DLL 搜索顺序里最靠前，因此优先于系统版本。
+app-local 的坑是你要\emph{自己维护}那几个 DLL 的版本，并且必须
+一并带上 \Tp{vcruntime140\Bk\_1.dll}（x64 上的 C++ 异常处理需要它），
+漏掉时表现为``异常一抛就终止''。
+\end{enumerate}
+
+\begin{compare}[title={\Tp{/MT} 与 \Tp{/MD} 的实际账目}]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}
+               >{\raggedright\arraybackslash}p{0.32\textwidth}
+               >{\raggedright\arraybackslash}p{0.32\textwidth}@{}}
+\toprule
+维度 & \Short{MT} 静态 & \Short{MD} 动态 \\
+\midrule
+用户预装 & 无 & VC 运行库或 app-local 文件 \\
+体积 & 每个 exe 各带一份 CRT 与 STL & 共享，exe 可小于 200 KB \\
+安全更新 & 你发版 & 系统或运行库安装器推送 \\
+多模块共存 & 每模块一份状态，跨边界传所有权是 UB &
+共享一份状态（前提是同一个 \Tp{ucrtbase}） \\
+构建可复现 & 强（工具链即产物） & 弱（受目标机器 DLL 版本影响） \\
+调试体验 & 需要 CRT 源码与 PDB 匹配 & 断点进 \Tp{msvcp} 需符号服务器 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+在 CMake 里这件事有一个干净开关：策略 \Tp{CMP0091}（3.15 起）加上
+\Tp{CMAKE\Bk\_MSVC\Bk\_RUNTIME\Bk\_LIBRARY}，取值
+\Tp{Static}、\Tp{Dynamic} 及其 \Tp{Debug}/\Tp{Release} 变体，
+它会把 \Short{MT}/\Short{MD} 从 \Tp{CMAKE\Bk\_CXX\_FLAGS} 里拿走并
+放进正确的 ABI 选项位置。混用旧式手工塞 \Short{MD} 到 flags 的写法
+是这一类 bug 的温床——它会静默覆盖，让同一个目标里出现两种运行时。
+
+\section{Linux 的静态链接：musl 才是可静态的目标}
+
+\subsection{为什么 glibc 静态链接是个陷阱}
+
+\Tp{ld} 会在你静态链接 glibc 时主动警告，而这些警告不是礼貌性提醒：
+
+\begin{lstlisting}[style=shellstyle,caption={静态链接 glibc：链接器与运行时的真实输出}]
+$ cc -static o.c -o o
+/usr/bin/ld: warning: Using 'getaddrinfo' in statically linked
+  applications requires at runtime the shared libraries from the
+  glibc version used for linking
+$ ./o                 # 主机名解析在别的机器上静默失效
+getaddrinfo: Name or service not known
+\end{lstlisting}
+
+原因是 glibc 内部大量功能是\emph{运行时} \Fn{dlopen} 出来的 NSS 模块。
+静态链接时 \Fn{dlopen} 只能按构建机器的路径去加载共享对象，
+于是这些路径全断：\Fn{getpwnam}、\Fn{getgrnam}（用户与组名查询）、
+\Fn{getaddrinfo}（主机名解析，尤其是 mDNS 与 \Tp{hosts} 之外的后端）、
+\Fn{gethostbyname}、\Fn{iconv\_open}、以及 locale 数据
+（\Tp{setlocale} 在静态产物上常只剩 \Tp{C} 与 \Tp{C.UTF-8}）。
+\textbf{任何用到用户名、权限、主机名解析或字符集转换的工具，
+静态链接 glibc 之后会得到``能跑但答案是错的''程序}。
+更糟的是这类错误和构建机器上装没装 \Tp{libnss-resolve} 有关，
+所以本地测试过了、CI 里也没事、用户机器上开始报
+\lstinline|unknown host|。glibc 还是版本化符号（symbol versioning）的
+重灾区：产物 \Tp{GLIBC\_2.34} 一栏就要求目标系统的 glibc 至少那么新。
+
+\subsection{musl：把静态当默认实现目标}
+
+musl 从一开始就为静态设计：DNS 解析器在 libc 内部（不靠 NSS 模块），
+\Fn{getaddrinfo} 可静态工作，没有版本化符号。工程上常见的三种接法：
+
+\begin{itemize}
+\item \Tp{musl-gcc} 包装脚本（发行版包 \Tp{musl-tools}），
+      配 CMake 时写一个 toolchain 文件设置
+      \Tp{CMAKE\_C\_COMPILER} 与 \Tp{CMAKE\_EXE\_LINKER\_FLAG\_INIT}。
+\item 交叉工具链（\Tp{musl.cc} 的
+      \Tp{x86\Bk\_64\Bk-linux\Bk-musl\Bk-cross}、\Tp{aarch64\Bk-linux\Bk-musl\Bk-cross}）
+      加 Alpine 容器——Alpine 的默认 libc 就是 musl，
+      \lstinline|apk add musl-dev| 之后 \Tp{-static} 直接可用。
+      Docker 的\lstinline|scratch| 镜像加一个静态产物是 CI 里的省事实做法。
+\item \lstinline|zig cc -target x86_64-linux-musl|：一条命令得到
+      与主机无关的静态 C/C++ 交叉编译，还能顺手指定
+      \Tp{-target} 后面加 \Tp{x86\_64-linux.5.10-gnu}
+      这类目标内核版本。
+\end{itemize}
+
+musl 的代价要写清：\textbf{locale 与宽字符支持是子集}。
+\Tp{LC\_COLLATE} 之类基本只剩 \Tp{C}，\Fn{wcwidth} 与
+\Fn{mbrtowc} 可用但 Unicode 表覆盖不如 glibc，图标转换能力有限，
+没有 GNU 扩展（\Fn{asprintf} 在 musl 1.2 里有，但
+\Tp{program\_invocation\_name} 一类行为不同）；依赖 glibc 扩展的第三方
+库要打补丁；\Fn{dlopen} 在纯静态产物里仍然不存在（动态链接的 musl 才有）。
+对只做文件与文本处理、不查用户名的 CLI，这些限制通常碰不到；
+一旦你要 \Tp{getpwuid} 显示用户名，就要准备好自己实现 \Tp{/etc/passwd} 解析。
+
+\subsection{三个``静态''开关的差别}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.25\textwidth}
+                 >{\raggedright\arraybackslash}p{0.26\textwidth}
+                 >{\raggedright\arraybackslash}p{0.28\textwidth}@{}}
+\toprule
+开关 & 静态化了什么 & 典型动机与残留风险 \\
+\midrule
+\endfirsthead
+\toprule
+开关 & 静态化了什么 & 典型动机与残留风险 \\
+\midrule
+\endhead
+\Tp{-static-libstdc++} & 只把 \Tp{libstdc++.a} 打进来 &
+免掉用户的 \Tp{libstdc++.so.6} 版本焦虑（老 CentOS 上尤其值钱）；
+\Tp{libc.so.6} 仍动态，于是 NSS 与符号版本问题一个不少 \\
+\Tp{-static-libgcc} & \Tp{libgcc\Bk\_s} 或 \Tp{libgcc.a} &
+异常与 \Tp{\_\_atomic} 辅助；常与前一个成对出现 \\
+\Tp{-static} & 一切，包括 libc 与加载器 &
+真正单文件；\Tp{file} 显示 \Tp{static-pie}（配
+\Tp{-fPIE} 时有 ASLR）；\Tp{LD\_PRELOAD} 与 \Tp{getent} 失效 \\
+\Tp{-Wl,-Bstatic} \dots \Tp{-Bdynamic} & 只对其后的归档生效 &
+``只静态 curl、其余留给系统''的唯一正道；注意 pkg-config 给的
+\Tp{-l} 顺序会把它覆盖回去 \\
+\bottomrule
+\end{longtable}
+
+\subsection{\Tp{--whole-archive} 与符号可见性}
+
+静态库是\emph{按需抽取成员}的：链接器只从 \Tp{.a} 里取出能解决未定义符号的
+目标文件。这一条对两类代码是致命的——靠 \Tp{static} 局部对象自注册的
+工厂表（插件系统、\Tp{protobuf} 描述符、测试框架的用例表），
+以及只通过虚表或 \lstinline{__attribute__((constructor))} 被间接触达的目标文件。
+它们的症状是``库链接了，功能是空的''，或者运行到一半抛
+\lstinline|unknown message type|。解法：
+\lstinline|-Wl,--whole-archive -lmylib -Wl,--no-whole-archive|，
+代价是把体积全带回来；更稳的做法是给自注册对象加
+\lstinline{__attribute__((used))} 或改成显式的 \Fn{init} 调用。
+循环依赖的归档则用 \lstinline|-Wl,--start-group ... -Wl,--end-group|
+（或 lld 默认的多次扫描）。
+
+另一个只影响动态链接但常被误用的开关是 \Tp{-fvisibility=hidden}
+（配 \Tp{-fvisibility-inlines-hidden}）：默认符号全导出会让共享库的
+重定位表膨胀、启动变慢、还意外把内部符号变成 ABI。正确姿势是
+库内默认隐藏，只对导出宏用 \Tp{visibility} 属性显式放行。
+注意它对静态链接几乎没有体积收益，而且和 LTO 同时开时，
+忘记标注的导出会在\emph{链接期}消失——插件 ABI 尤其要小心。
+
+\section{ABI、部署目标与运行时搜索路径}
+
+\subsection{libstdc++ 与 libc++ 不是同一种类型}
+
+两套 C++ 标准库给同一个名字 \Tp{std::string} 生成了\emph{不同的类型}：
+libstdc++ 的新 ABI 把它放进内联命名空间 \Tp{std::\_\_cxx11}，
+libc++ 放进 \Tp{std::\_\_1}（由
+\Tp{\_LIBCPP\Bk\_ABI\Bk\_NAMESPACE=1} 控制；LLVM 20 起还提供
+\Tp{EnhancedExceptionInformationAbi}，即命名空间 \Tp{\_\_1} 到 \Tp{\_\_2}
+的迁移）。历史遗留的 \Tp{\_GLIBCXX\_USE\_CXX11\_ABI=0} 会把
+\Tp{std::string} 退回写时复制（COW）的实现——老 ABI 与新 ABI 的对象
+内存布局不同，\emph{混用即 UB}。
+
+这三类症状你一定见过：
+\begin{itemize}
+\item 链接报未定义符号里出现 \Tp{std::\_\_1::} 或 \Tp{std::\_\_cxx11::}
+      ——预编译库与你的编译器不同族或不同 ABI；
+\item 同一个 \Tp{.so} 在 Ubuntu 上好好的，在 NixOS 上加载失败——
+      它偷偷依赖了系统 libstdc++ 的新符号版本；
+\item \Tp{std::cout} 顺序诡异、\Fn{setlocale} 在某模块里无效——
+      进程里存在两份 CRT 或两份标准库状态。
+\end{itemize}
+结论与 12.2 节同构：\textbf{标准库对象不要跨模块边界传递}；
+必须跨界时，接口只留 C 类型加显式的释放函数（这也是
+\lstinline|extern "C"| 存在的真正理由，而不只是``名字不改编''）。
+
+\subsection{macOS：部署目标与 \Tp{@rpath}}
+
+macOS 侧第一个决定是 Xcode/Clang 只带 \textbf{libc++}：
+系统里没有 libstdc++（GCC 的旧 \Tp{libstdc++} 依赖在 Xcode 12 之后被彻底移除），
+Homebrew 装的 GCC 是 keg-only 的，路径带版本号。于是
+``用 \Tp{g++} 编译再发布到别人机器''在 macOS 上通常是错的；
+正确做法是用 \Fn{clang++} 加 libc++，并把
+\Tp{-mmacosx-version-min}（CMake 的 \Tp{CMAKE\Bk\_OSX\Bk\_DEPLOYMENT\Bk\_TARGET}）
+设成你承诺的最老系统：低于该目标的 API 会在链接期报
+\lstinline|symbol not found for target OS|，而高于目标的符号在老系统上
+以 \Tp{dyld} 崩溃形式出现。Apple Silicon 与 Intel 是两个产物
+（\Tp{arm64} 与 \Tp{x86\_64}），要么分别发，要么
+\lstinline|-arch arm64 -arch x86_64| 做 universal（体积近翻倍，
+用 \Fn{lipo} 与 \Fn{vtool} 检查）。
+
+动态库的位置用 install name 与 rpath 两级约定：库自己记录
+\lstinline|-install_name @rpath/libfoo.1.dylib|，
+可执行文件记录搜索目录 \lstinline|-Wl,-rpath,@loader_path/../lib|。
+\Tp{@rpath}、\Tp{@loader\_path}、\Tp{@executable\_path}
+三个token 由 \Tp{dyld} 在加载时展开，因此``把整个包拷到任意目录''能工作。
+事后修补用 \Fn{install\_name\_tool}：
+
+\begin{lstlisting}[style=shellstyle,caption={查看与改写 Mach-O 的依赖路径}]
+$ otool -L build/imgres                    # 列出依赖及其 install name
+build/imgres:
+    @rpath/libfoo.1.dylib (compat 1.0.0)
+    /usr/lib/libc++.1.dylib (compat 1.0.0)
+$ otool -l build/imgres | grep -A2 LC_RPATH
+$ OLD=/usr/local/opt/openssl/lib/libssl.3.dylib
+$ NEW=@loader_path/../lib/libssl.3.dylib
+$ install_name_tool -change "$OLD" "$NEW" build/imgres
+$ install_name_tool -add_rpath @loader_path/../lib build/imgres
+$ codesign --force --sign - build/imgres   # 改过必须重签, 否则被杀
+\end{lstlisting}
+
+最后那行不是可选的：macOS 上所有可执行文件都必须有签名（adhoc 签名即可，
+\lstinline|--sign -|），而 \Fn{install\_name\_tool} 会让既有签名失效。
+顺序永远是``先重写路径，再签，最后公证''。
+
+\subsection{Linux：RPATH 与 \Tp{\$ORIGIN}}
+
+Linux 的等价机制是 ELF 的两个动态条目：老的 \Tp{DT\_RPATH} 和
+\Tp{DT\_RUNPATH}（\lstinline|-Wl,--enable-new-dtags| 生成后者）。
+区别有实际安全含义：RPATH 排在 \Tp{LD\_LIBRARY\_PATH} \emph{之前}，
+会被同目录恶意库劫持；RUNPATH 排在环境变量之后、\Tp{ldconfig} 缓存之前。
+路径里的 \Tp{\$ORIGIN} 由加载器展开为可执行文件所在目录，
+shell 里必须用单引号护住，否则会被先展开成空串：
+
+\begin{lstlisting}[style=shellstyle,caption={可搬运目录的 rpath 写法与检查}]
+$ cc imgres.cpp -o imgres -lfoo \
+    -Wl,-rpath,'$ORIGIN/../lib' -Wl,--enable-new-dtags
+$ readelf -d imgres | grep -E 'RUNPATH|RPATH|NEEDED'
+$ ldd imgres                             # 未解析会显示 not found
+$ patchelf --set-rpath '$ORIGIN/../lib' imgres   # 事后改写
+$ chrpath -d imgres                      # 删掉 rpath（发行版打包常做）
+\end{lstlisting}
+
+CMake 会自动在构建目录与安装目录之间重写 rpath
+（\Tp{BUILD\_RPATH}、\Tp{INSTALL\_RPATH}、
+\Tp{INSTALL\_RPATH\_USE\_LINK\_PATH}）；注意
+\lstinline|cmake --install build --strip| 之后 rpath 仍在，
+但 \Tp{DESTDIR} 打包时不要让它指向暂存根目录。
+
+Windows 没有 rpath。它靠 DLL 搜索顺序：应用目录永远优先（除非用了
+\Tp{SetDefaultDllDirectories}），所以``exe 加同目录 DLL''是可行且常见的
+portable zip 方案；想要``exe 在 \Tp{bin}、DLL 在 \Tp{lib}''就必须
+把 \Tp{lib} 加进 \Tp{PATH}、或用 \Fn{AddDllDirectory}
+加 \Tp{LOAD\_WITH\_ALPHA\_PATH\_METALANGUAGE\_NOT\_PRESENT} 显式
+\Fn{LoadLibraryEx}、或者写 side-by-side 清单里的
+\Tp{assemblyBinding} 与探测路径。清单方式的调试成本高，
+CLI 工具更常见的选择就是简单粗暴地把 DLL 拷到 exe 旁边。
+
+\begin{note}[title={一个反直觉的事实：动态链接常让产物更大}]
+把 \Tp{libstdc++} 静态打进来会让 hello world 从几十 KB 涨到 1 MB 以上，
+但把整个 OpenSSL 与 libcurl 静态化通常只增加 1 到 2 MB；
+而为了让用户``不装东西''而打包成 NSIS 压缩安装器，产物反而常常
+比裸 zip 加 DLL 大，因为安装器自己也要解压空间。
+体积不是选择链接方式的理由，\emph{依赖集合}才是：
+真正吃掉几十 MB 的往往是 ICU、字体、DebugInfo 与被
+\Tp{--whole-archive} 拖进来的全部归档。
+\end{note}
+
+\section{体积与启动：LTO、段回收与调试符号分离}
+
+\subsection{把没用的代码删掉}
+
+\begin{itemize}
+\item \textbf{按段回收}：\lstinline{-ffunction-sections -fdata-sections}
+      让每个函数与全局数据独占一个段，链接期
+      \lstinline{-Wl,--gc-sections} 从入口与保留符号出发做可达性分析，
+      删掉到不了的部分。MSVC 的对应组合是 \Short{Gy}（函数级链接）加
+      \Tp{/OPT:REF}。对静态链接了大库的 CLI，这一条通常砍掉三分之一。
+\item \textbf{LTO}：GCC 的 \Short{flto}（配 \Short{flto=auto}）
+      与 Clang 的 \lstinline{-flto=thin}、MSVC 的 \Short{GL} 加
+      \Tp{/LTCG}。收益是跨模块内联与死代码消除，代价是链接时间、
+      内存、以及三类具体问题：与不带 LTO 的静态库混用时优化幅度有限、
+      \Tp{\_\_FILE\_\_} 与调试信息在 GCC 上会指到奇怪的位置、
+      以及违反 ODR 的程序从``链接成功''变成``链接失败''
+      （这通常是好事）。LTO 与自注册模式的冲突见 12.3.4 节的
+      \Tp{used} 属性。
+\item \textbf{折叠相同函数}：lld 的 \lstinline{-Wl,--icf=all} 或
+      MSVC 的 \Tp{/OPT:ICF} 会把内容相同的 COMDAT 合并。风险很实际：
+      两个不同的函数可能拿到同一地址，任何依赖函数指针唯一性的代码
+      （按地址做类型判定、日志里打函数名）会出错，栈上也认不出原本是谁。
+\item \textbf{标准库本身}：\Short{fno-exceptions} 与
+      \Short{fno-rtti} 能省几百 KB 并去掉异常表，但要整棵依赖树同意；
+      \Tp{libstdc++} 的 \Tp{iostream} 静态初始化与 locale 装载是
+      ``启动慢''最常见来源，改 \Tp{stdio} 或 \Tp{fmt} 往往立刻见效。
+      \lstinline{-Os} 在冷路径多的 CLI 上通常不比 \Short{O2} 慢。
+\end{itemize}
+
+\subsection{strip 与调试符号分离}
+
+发布产物与调试符号应当\emph{一次构建、两份产物}。三个平台的姿势不同：
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}
+                 >{\raggedright\arraybackslash}p{0.28\textwidth}
+                 >{\raggedright\arraybackslash}p{0.38\textwidth}@{}}
+\toprule
+平台 & 符号形态 & 事后如何对应到发布产物 \\
+\midrule
+\endfirsthead
+\toprule
+平台 & 符号形态 & 事后如何对应到发布产物 \\
+\midrule
+\endhead
+Linux & 独立的 \Tp{.debug} 文件，原 exe 只留 \Tp{gnu\_debuglink}
+& 构建时加 \lstinline|-Wl,--build-id=sha1|；
+GDB 先看 debuglink 里的文件名与 CRC，再看 build-id；
+发行版还走 \Tp{debuginfod} 与 \Fn{debugedit} 那条路 \\
+macOS & \Tp{.dSYM} 目录 bundle & \Tp{UUID} 是配对键
+（\lstinline|dwarfdump --uuid| 两边各打一次比较）；
+符号化用 \Fn{atos} 或 LLDB \\
+Windows & 独立 \Tp{.pdb} 文件（exe 里只有一条 CodeView 记录） &
+匹配键是 GUID 加 age；WinDbg 与 Visual Studio 用
+\Tp{sympath} 指向内部符号共享，崩溃转储才能还原行号 \\
+\bottomrule
+\end{longtable}
+
+\begin{lstlisting}[style=shellstyle,caption={三平台的``一次构建、两份产物''命令}]
+# Linux: 把 DWARF 抽出去, 再挂回一个链接
+$ objcopy --only-keep-debug imgres imgres-1.4.2.debug
+$ strip --strip-debug --strip-unneeded imgres
+$ objcopy --add-gnu-debuglink=imgres-1.4.2.debug imgres
+# macOS: 先聚符号再剥离, 顺序不能反
+$ dsymutil imgres -o imgres-1.4.2.dSYM && strip -x imgres
+# Windows: PDB 与 exe 天然分离, 只要别把 /Z7 编进 obj
+$ cl /MT /O2 /Zi /Gy /Gw imgres.cpp /link /OPT:REF,ICF /LTCG
+\end{lstlisting}
+
+两个平台顺序细节值得单独记：其一，\textbf{macOS 上必须在 strip 之前跑}
+\Fn{dsymutil}，否则调试信息已经没了；同理，代码签名要放最后。
+其二，Windows 上 PDB 与 exe 的匹配靠 CodeView 记录里的 GUID，
+重新链接一次就变，所以\emph{PDB 必须与 exe 同批次归档}，
+不能拿主干最新构建的 PDB 去解读上周的用户崩溃转储。
+
+\begin{warning}[title={40 MB 不是 C++ 的必要代价}]
+常见来源按嫌疑排序：\textbf{没 strip 的调试信息}（DWARF 常常占文件的一大半）、
+\lstinline{-g} 与 \lstinline{-gsplit-dwarf} 混用配错、
+\Tp{--whole-archive} 拉进整个 OpenSSL 加 ICU 加 protobuf、
+每个子命令 \Tp{static} 初始化表、以及\emph{把测试数据编进了二进制}
+（\lstinline{.rodata} 里的 JSON 快照与字体）。诊断工具是
+\lstinline|size -A prog|、\lstinline|nm --size-sort -S prog|、
+\lstinline|ld --print-gc-sections|、Windows 的
+\lstinline|/MAP[:verbose]| 与 \Fn{dumpbin}。
+\Tp{upx} 之类的压缩壳能砍一半体积，但会显著提高杀软误报率、
+破坏 macOS 签名流程、并让崩溃堆栈不可用——不要用在发布产物上。
+\end{warning}
+
+\section{分发机制：install 规则、CPack 与包管理器}
+
+\subsection{先把安装布局写对：GNUInstallDirs}
+
+手工拼 \Tp{/usr/local/bin} 是分发失败的第一步：同一个 \Tp{PREFIX}
+在 Debian 的 multilib、Arch 的 \Tp{lib}、Fedora 的 \Tp{lib64}
+以及 Windows 的布局下含义不同。标准做法是
+\lstinline|include(GNUInstallDirs)|，它给出
+\Tp{CMAKE\Bk\_INSTALL\Bk\_BINDIR}、\Tp{LIBDIR}、\Tp{INCLUDEDIR}、
+\Tp{DATADIR}、\Tp{MANDIR}、\Tp{SYSCONFDIR}，
+并且在 Windows 上自动退化成 \Tp{bin}/\Tp{lib}。
+\Tp{RUNTIME}/\Tp{LIBRARY}/\Tp{ARCHIVE} 三个目标类别要分清楚
+（exe 与 DLL、带 SOVERSION 的库、导入库），
+CMake 3.14 起的 ``DESTINATION \Tp{bin}/\Tp{lib}''
+加 \Tp{RUNTIME\_DEPENDENCY\_DIRECTORY} 会自动把依赖 DLL 拷进目标目录，
+比手工 \lstinline|install(FILES $<TARGET_PDB_FILE:...>)| 更可靠。
+
+\begin{lstlisting}[style=cmakestyle,caption={install 布局与 CPack 配置}]
+include(GNUInstallDirs)                    # 目录变量的唯一来源
+install(TARGETS imgres
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+if (MSVC)                                  # PDB 与 exe 同批归档
+  install(FILES $<TARGET_PDB_FILE:imgres>
+          DESTINATION ${CMAKE_INSTALL_BINDIR} OPTIONAL)
+endif ()
+set_target_properties(imgres PROPERTIES
+        INSTALL_RPATH "$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
+install(FILES doc/imgres.1
+        DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
+install(DIRECTORY examples/
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/imgres
+        FILES_MATCHING PATTERN "*.toml")
+install(TARGETS imgres EXPORT imgresTargets   # 库形态才需要
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+include(InstallRequiredSystemLibraries)    # 把 VC 运行库交给 CPack
+set(CPACK_PACKAGE_NAME "imgres")
+set(CPACK_PACKAGE_VERSION "1.4.2")
+set(CPACK_PACKAGE_VENDOR "Example Corp")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+set(CPACK_GENERATOR "TGZ;ZIP")             # 兜底: 任何平台都能出
+if (WIN32)
+  set(CPACK_GENERATOR "NSIS;WIX")
+  set(CPACK_WIX_UPGRADE_GUID "3f2a1c88-1b4e-4a11-9d27-0e5c6b1a9f44")
+elseif (APPLE)
+  set(CPACK_GENERATOR "DragNDrop;productbuild")
+else ()
+  set(CPACK_GENERATOR "DEB;RPM;TGZ")
+  set(CPACK_DEBIAN_PACKAGE_MAINTAINER "dev@example.com")
+  set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)   # 让 dpkg 自己算依赖
+  set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+endif ()
+include(CPack)
+\end{lstlisting}
+
+CPack 的定位要说实话：\Tp{TGZ}/\Tp{ZIP} 很好用；\Tp{NSIS} 出的
+EXE 安装器能用但脚本能力弱；\Tp{WIX} 出的 MSI 是企业分发需要的形态
+（能静默、能被 GPO 与 SCCM 装），但 WiX 的升级语义要求你\emph{永远}
+保持 \Tp{UpgradeCode} 不变；\Tp{DEB}/\Tp{RPM} 足够自用，
+但要进官方仓库还得走发行版自己的打包流程；
+\Tp{productbuild} 需要自己写 component plist 并负责签名与公证。
+调用方式统一是：配置好后
+\lstinline|cpack -G DEB --config <build>/CPackConfig.cmake|，
+或 \lstinline|ctest -C Release -T package|。
+
+\subsection{依赖侧与发布侧的包管理器}
+
+两个方向不要混。给\emph{你的构建}喂依赖的是 vcpkg 与 Conan：
+vcpkg 用清单模式（仓库里的 \Tp{vcpkg.json} 声明依赖与
+\Tp{builtin-baseline}，配置期设
+\Tp{CMAKE\Bk\_TOOLCHAIN\Bk\_FILE} 指向
+\Tp{scripts\Bk/buildsystems\Bk/vcpkg.cmake}），
+它的价值是``同一份源码在三个平台上装到同一版本''；
+Conan 2 用 \lstinline|conan install --build=missing -g CMakeToolchain|
+加生成的 \Tp{conan\_toolchain.py}，在跨部门共享二进制缓存上更成熟。
+只支持头文件的库（第 4 章与附录 B 里那一大票）用
+\Fn{FetchContent\_MakeAvailable} 或干脆 vendor 进仓库，
+比包管理器更省事。
+
+发布\emph{你的程序}给用户的是另一批：
+\begin{itemize}
+\item \textbf{winget}：清单是每版本一份的 YAML，提交到 GitHub 的
+      \Tp{winget\Bk-pkgs} 仓库；关键字段是 \Tp{PackageIdentifier}、
+      \Tp{InstallerUrl}、\Tp{InstallerSha256}，
+      \Tp{InstallerType} 可为 \Tp{portable}。本地验证用
+      \lstinline|winget validate|，\lstinline|winget install -m|
+      直接指向清单文件。门槛低，但签名与 SmartScreen 的问题仍在
+      （12.8 节）。
+\item \textbf{Scoop}：一个 JSON 清单进 bucket 仓库，
+      适合 portable zip 形态，\lstinline|checkver| 与
+      \lstinline|autoupdate| 能把新版本半自动化。
+\item \textbf{Chocolatey}：nuspec 加 \Tp{tools/chocolateyinstall.ps1}，
+      企业里仍有存量。
+\item \textbf{Homebrew}：自己维护一个 tap 仓库里的 Ruby formula，
+      \lstinline|brew bump-formula-pr| 负责升版，
+      \lstinline|brew audit --strict| 要求许可证与稳定 URL；
+      只有进 homebrew-core 才有官方 bottle，那需要维护者接受
+      并且\emph{不接受只在夜间构建的活}。
+\item \textbf{Debian 与 Ubuntu}：进主仓库要 opensponsor 一位
+      Debian Developer（走 ITP bug、\Tp{debhelper}、
+      \lstinline|sbuild|、\lstinline|lintian -i|），门槛是人力不是技术；
+      \textbf{PPA}（Launchpad，\lstinline|dput ppa:you/pkg build.changes|）
+      则是自助的，几分钟就能给自己的用户发带安全更新的包。
+      RPM 侧的等价物是 Copr。
+\end{itemize}
+
+\subsection{AppImage 与单文件的可搬运性}
+
+AppImage 不是容器：它是一段 ELF \emph{runtime} 加一个被追加在后面的
+squashfs 文件系统，靠 magic 字节（\Tp{AI} 后跟两个类型与版本字节）与两个
+偏移量拼成同一个文件。
+所以它需要 FUSE（或 \lstinline|--appimage-extract-and-run|
+与 \Tp{APPIMAGE\_EXTRACT\_AND\_RUN=1}）才能挂载，
+在 \Tp{no-new-privileges} 的容器里和 \Tp{noexec} 的 \Tp{/tmp} 上会失败
+——这是 CI 里最常见的 AppImage 构建坑，出路是把工作目录放到可执行卷上。
+
+构建走 linuxdeploy：给它一个已安装好的 \Tp{AppDir}
+（\Tp{usr/bin/prog}、\Tp{usr/lib/*.so}、\Tp{usr/share/applications/*.desktop}、
+根目录的图标 PNG），它递归收集依赖、把 rpath 改写成
+\lstinline|$ORIGIN/../APPDIR/usr/lib|、剥掉与宿主冲突的库
+（glibc、加载器、libstdc++ 的某些组合默认排除），
+最后嵌入 runtime 生成单个 AppImage。
+
+\begin{lstlisting}[style=shellstyle,caption={从 install 目录做一个 AppImage}]
+ARCH=x86_64
+ROOT=$(pwd)/AppDir
+rm -rf "$ROOT"
+mkdir -p "$ROOT"/usr/{bin,lib,share/applications}
+cmake --install build --prefix "$ROOT/usr"
+cp pack/imgres.desktop "$ROOT"/usr/share/applications/
+cp pack/icon.png "$ROOT"/imgres.png     # 名字要与 desktop 的 Icon 一致
+GH=https://github.com/linuxdeploy/linuxdeploy
+NAME=linuxdeploy-$ARCH.AppImage
+curl -fsSLO "$GH/releases/download/continuous/$NAME"
+chmod +x "$NAME"
+./"$NAME" --appdir "$ROOT" --output appimage
+# 产物 imgres-1.4.2-x86_64.AppImage
+./imgres-1.4.2-x86_64.AppImage --appimage-extract-and-run --version
+\end{lstlisting}
+
+CLI 用 AppImage 有两个特有问题，值得在决策时写进文档。其一，
+程序看到的可执行路径不是用户敲的那个：\Fn{readlink}
+\Tp{/proc/self/exe} 指向 \Tp{AppDir} 里的真实二进制，
+要靠 \Tp{APPIMAGE} 与 \Tp{ARGV0} 环境变量还原用户调用的名字
+（这正是 busybox 式多命令分发在 AppImage 里会坏的原因）。其二，
+\$CWD 与相对路径语义不变，但临时目录与 \Tp{LD\_LIBRARY\_PATH}
+被 runtime 改写过，你再 \Fn{exec} 一个子进程时要么显式清理环境，
+要么接受子进程也看到这套库。
+
+busybox 式的多命令单文件（同一份二进制按 \Tp{argv[0]} 的 basename
+分派，靠硬链接或符号链接安装成 \Tp{imgres-info}、
+\Tp{imgres-resize}）在静态 musl 产物上非常便宜，代价是：
+补全脚本、\Opt{help} 文案与崩溃报告都要按调用名分支，
+而且``一个洞全体重发''。
+
+\begin{guideline}[title={分发形态的决策三问}]
+一、\textbf{用户的机器上已经有什么？}企业 Windows 有运行库与 MSI 部署，
+选 \Short{MD} 加 MSI；开发者的 Linux 有包管理与终端，选 deb/rpm 或
+发行版仓库；``谁的都没有''的异构环境才值得上静态单文件。
+二、\textbf{谁承担安全更新？}静态化了 OpenSSL 与 CRT，你就签下
+``每次 CVE 都要重发''的军令状；把这条写进项目的维护承诺再决定。
+三、\textbf{用户怎么升级？}单文件形态必须有自更新通道或包管理器入口，
+否则三年后你会维护五个不兼容的现存版本。
+\end{guideline}
+
+\section{Windows 的发布税：SmartScreen、签名与清单}
+
+浏览器下载的 exe 会被打上 ``网络区域''标记（保存在 NTFS 的
+\Tp{Zone.Identifier} 备用数据流里），SmartScreen 据此做一次评估：
+先看文件哈希是否有下载量与信誉，再看代码签名证书的哈希，
+两者都陌生就弹出``Windows 已保护你的电脑''这一页
+——它\emph{没有}``仍要运行''的普通链接，用户必须点``更多信息''。
+对小众工具，这是分发失败的头号原因。用 curl 或 PowerShell 的
+\Fn{Invoke-WebRequest} 下载不会加 MOTW，于是出现``教程里的命令能跑、
+双击不行''的现象；\Fn{Unblock-File} 是文档里该写的一行。
+
+Authenticode 的操作面很小：
+
+\begin{lstlisting}[style=batchstyle,caption={签名、校验与时间戳（cmd）}]
+:: 带 RFC3161 时间戳, 证书过期后签名仍然可校验
+set TS=http://timestamp.digicert.com
+signtool sign /fd SHA256 /td SHA256 /tr %TS% ^
+              /n "Example Corp" /d "imgres" imgres.exe
+signtool verify /pa /v imgres.exe
+:: MSI 与安装器都要签, 否则 SmartScreen 照拦
+signtool sign /fd SHA256 /td SHA256 /tr %TS% ^
+              /n "Example Corp" imgres.msi
+:: PDB 也能签, 否则符号服务器上的文件同样会被拦
+signtool sign /fd SHA256 /td SHA256 /tr %TS% ^
+              /debug /n "Example Corp" imgres.pdb
+\end{lstlisting}
+
+要澄清的三件事。第一，\textbf{自签名证书不能解决问题}：它不在受信任根里，
+用户要么导入根证书（等于把安全决策推给陌生人），要么看到红色警告，
+比不签名更糟。第二，签名\emph{立刻}改善的是``发布者''显示与
+安装器的静默部署，reputation 是按证书哈希累积的——同一张证书发布的
+版本越多，后续版本越不容易被拦；换证书等于信誉清零，
+所以证书（或 Azure Trusted Signing 之类的服务）要当作长期资产。
+第三，杀软误报是另一门账：触发点包括 UPX 壳、\Short{MT} 带来的巨大
+单一文件、往 \Tp{Program Files} 与注册表写入、检测虚拟机与
+\Fn{GetTickCount} 的``反分析''味道代码、以及新发布的低存量二进制。
+流程上是每次发布前扫 VirusTotal、向 Microsoft Defender 的提交入口
+申诉、并在安装器里保留``校验哈希''文档行。
+
+清单（application manifest）是一件小 XML，用
+\lstinline|mt.exe /manifest img.manifest| 加
+\lstinline|/outputresource:imgres.exe;1|，
+或 link.exe 的 \lstinline|/MANIFEST:EMBED| 配
+\lstinline|/MANIFESTINPUT:img.manifest|
+嵌进资源 1。它对 CLI 的意义集中在五项：
+
+\begin{itemize}
+\item \Tp{requestedExecutionLevel}：几乎永远写 \Tp{asInvoker}。
+      \Tp{requireAdministrator} 会弹出 UAC，而提权后的进程
+      \emph{不继承}当前目录与用户环境块，接着 shell 的
+      \Tp{cd} 结果就丢了——这是被大量旧安装文档带偏的经典错误。
+\item \Tp{activeCodePage} 设为 \Tp{UTF-8}：让进程默认代码页变 65001，
+      第 2 章的编码问题在源头消失（需要 Windows 10 1903 及以上，
+      更早版本会忽略它）。
+\item \Tp{longPathAware} 设为 \Tp{true}：解 260 字符路径限制，
+      但仍需目标机器启用该策略（Windows 10 1607 起）。
+\item \Tp{compatibility} 里的 \Tp{supportedOS} 那组 GUID，
+      决定兼容性垫片（shim）数据库是否对你的 exe 生效。
+\item \Tp{application} 与 \Tp{assemblyIdentity} 影响版本伪装，
+      旧文档常把它们写成必需项，实际可以省。
+\end{itemize}
+
+\section{macOS：签名、公证与隔离属性}
+
+面向外部下载的 Mach-O 要走三步，顺序不可颠倒。
+
+\begin{enumerate}
+\item \textbf{签名}：\lstinline|codesign --options runtime| 加
+      \lstinline|--timestamp| 与 Developer ID 证书。
+      \Tp{--options runtime} 即 hardened runtime，它会关掉
+      未签名可执行内存、库验证与 debug entitlements，
+      需要例外时写 entitlements plist（例如
+      \Tp{com.apple.security.cs.allow-jit}），并把每个嵌套二进制
+      （dylib、子工具的 helper）都签上，再对整个 bundle 做
+      \lstinline|codesign --verify --deep --strict|。
+\item \textbf{公证}：把 \Tp{.zip}、\Tp{.dmg} 或 \Tp{.pkg} 交给
+      \lstinline|xcrun notarytool submit|，配
+      \lstinline|--keychain-profile| 与 \lstinline|--wait|，
+      Apple 做恶意扫描并记录结果；单个裸 Mach-O 不能直接提交，
+      必须装在归档里。被拒时用它给的 ID 查日志
+      （\lstinline|notarytool log|），里面会点名哪个嵌套二进制没签。
+\item \textbf{staple}：\lstinline|xcrun stapler staple imgres.dmg|
+      把公证票据写进文件，离线也能通过 Gatekeeper。
+\end{enumerate}
+
+\begin{lstlisting}[style=shellstyle,caption={macOS 侧一条典型的发布命令串}]
+$ codesign --force --options runtime --timestamp \
+    --sign "Developer ID Application: Example Corp (TEAMID)" \
+    --entitlements pack/imgres.entitlements build/imgres
+$ codesign --display --verbose=4 build/imgres | grep Runtime
+$ xcrun notarytool submit imgres.zip --keychain-profile NP --wait
+$ xcrun stapler staple imgres.dmg
+$ spctl --assess --type execute -vv imgres.dmg
+\end{lstlisting}
+
+用户侧的机制是 \Tp{com.apple.quarantine} 扩展属性：浏览器与邮件附件
+会写入它，Gatekeeper 在执行时检查签名与公证票据。
+命令行下载（\lstinline|curl|）不加隔离属性，于是``照文档装能用、
+从网页下不行''与 Windows 完全同构。验证与排查用
+\lstinline|xattr -l|、\lstinline|spctl --assess -vv| 与 \Fn{sysctl}
+\lstinline|kern.osrext_signature|。不要教用户
+\lstinline|xattr -dr com.apple.quarantine|——那是把判断权交还给
+一个报错框，正确出路是把公证做完。
+
+\begin{bestpractice}[title={发布流水线的最小闭环}]
+把下面这些固化成一条 CI 里的 release job，缺一项就会在某天
+半夜被用户以 issue 形式提醒：构建产物（每个平台一份，
+带 \Tp{--build-id} 或 GUID 可追溯）；调试符号（PDB、dSYM、
+\Tp{.debug} 三个形态，独立 artifact 归档，同批次）；
+哈希清单（SHA-256 逐个文件、逐条写在发布说明里）；
+签名与时间戳（Windows 签 exe 与 PDB，macOS 签后公证再 staple）；
+包管理器入口（winget 与 Scoop 的 PR、Homebrew tap 的 bump）；
+以及一次真实的\emph{干净机器冒烟测试}：在 Alpine、Ubuntu 22.04、
+Windows Server Core 容器与 macOS 虚拟机里各跑
+\lstinline|prog --version| 与一个用到路径与编码的用例。
+最后一条是最常被省掉的，也是唯一能发现
+``静态链接把 NSS 吃掉了''这类问题的。
+\end{bestpractice}
+% ====================================================================
+
+% ====================================================================
+% ====================================================================
+\chapter{测试 CLI 程序}
+% ====================================================================
+
+CLI 其实是最好测的程序形态：输入是字符串数组加标准输入，输出是两条流加一个
+整数，没有事件循环、没有渲染栈、也不需要模拟器。它同时又是\emph{最容易被
+漏测}的形态，因为可观测面比函数调用宽：终端类型、环境变量、当前 locale、
+管道对端的生死、信号的到达时机都会改变行为。本章的顺序是：先把程序改成
+可测的形状，再分层测（单元、快照、真终端、失败路径），最后把这套东西放进
+三平台的 CI，并承认有一批问题只有人工点一遍才能发现。
+
+\section{先为可测性设计}
+
+三件事决定了后面好不好测，而且都要在写第一行业务代码之前定下来。
+
+\subsection{把环境依赖变成参数}
+
+第 3 章那个能力快照 \Tp{Terminal} 是天然的注入点：\Fn{probe} 只在
+\Tp{main} 里调用一次，然后把 \Tp{const Terminal\&} 沿参数往下传，
+所有输出函数\emph{只读}它。于是测试里可以构造一个
+``假 132 列真彩终端''或 ``假 \Tp{TERM=dumb}''，不必真的开终端。
+同样的处理适用于两个通常被硬编码的东西：
+
+\begin{itemize}
+\item \textbf{时钟}：把 \Tp{std::chrono::steady\Bk\_clock::now} 换成
+      一个 \Tp{Clock} 接口（或一个返回时间点的函数对象）。生产实现读硬件，
+      测试实现按步进递增。进度条、超时、重试退避、``3 seconds ago''
+      这类相对时间全部因此可测；不注入的话，它们只能靠
+      \lstinline|sleep| 加宽松断言，也就是未来的 flaky 报告。
+\item \textbf{随机源}：同理传一个 \Tp{Ullng}\& 或 \Fn{rand} 抽象，
+      测试里固定种子。任何 ``生成临时文件名''、``指数退避抖动''、
+      ``抽样日志'' 都要能重放。
+\end{itemize}
+
+\subsection{解析层不碰 argv}
+
+把解析写成纯函数，而不是 \Tp{main} 里的一个循环：
+
+\begin{lstlisting}[caption={解析入口的可测形状}]
+// parse.hpp   纯函数: 输入是字符串数组, 输出是结构或错误
+#include <string>
+#include <vector>
+
+namespace cli {
+
+struct Options {
+  int width = 0, quality = 90, verbosity = 0;
+  bool no_cache = false, json = false;
+  std::string subcommand, config_path;
+  std::vector<std::string> inputs;
+};
+
+// 返回 false 时 err 已经写好可直接给用户看的一行（不含程序名前缀）
+bool parse(std::vector<std::string> args, Options& out,
+       std::string& err);
+
+} // namespace cli
+\end{lstlisting}
+
+\Tp{main} 只做三件事：\Fn{setlocale}、把 \Tp{argv} 拷成
+\Tp{std::vector\{argv+1, argv+argc\}} 交给 \Fn{parse}、
+按结果设置退出码。这个形状的好处是第 4 章讨论的十个接口语义
+（\Tp{--}、附着值、短选项合并、负数位置参数、缩写歧义）全部可以在
+毫秒级、无子进程、无临时文件的情况下遍历。CLI11 与 argparse 也支持
+\lstinline|parse(std::vector<std::string>)| 这种入口，
+不必为了测试而退回手写。
+
+\subsection{契约是流加退出码}
+
+对外承诺要写死成文档并可测：\Tp{stdout} 只有被请求的数据、
+\Tp{stderr} 只有诊断、退出码按第 5 章的分层（0、1、2、
+以及信号对应的 128 加 n）。测试断言的对象就只能是这三样加
+副作用（写了哪些文件）。任何``只能靠人眼看''的输出（比如颜色对不对）
+说明程序缺一个 \Opt{no-color} 或 \Opt{json} 开关，先补开关再测。
+
+\begin{bestpractice}[title={可测性的三条注入纪律}]
+一、进程级的\emph{不确定性来源}（时间、随机、终端、文件系统根、子进程）
+必须能替换；替换的方式是构造参数，不是全局变量加 \Tp{friend} 后门。
+二、纯逻辑（解析、宽度计算、格式化、配置合并）与 IO 严格分层，
+让纯逻辑能被直接调用。三、每个错误路径都产出\emph{结构化}的信息
+（哪个参数、什么期望、实际值），否则断言只能匹配整行文案，
+下一次改文案就全线红灯。
+\end{bestpractice}
+
+\section{单元测试：表驱动为主}
+
+CLI 的单测里百分之八十是同一张表：一列输入、一列期望。
+四张值得长期存在的表：参数解析表（每个接口语义一行）、
+显示宽度表（东亚、歧义宽度、组合字符、emoji、控制字符）、
+ANSI 剥离往返（着色后的串剥掉转义应等于裸文本）、
+配置优先序表（同一个键在默认值、配置文件、环境变量、
+命令行四层各出现一次，期望取哪一层）。
+
+\begin{lstlisting}[caption={表驱动单测：解析用例即数据}]
+// t_parse.cpp   框架无关: 断言宏换成 GoogleTest 或 catch2 都行
+#include "parse.hpp"
+#include <cstdio>
+
+struct Case {
+  const char* name;
+  std::vector<std::string> args;
+  int want_code;                 // 0 成功, 2 用法错误
+  int want_width;
+  std::size_t want_inputs;
+};
+
+static const Case cases[] = {
+  {"defaults",        {"-w", "64"},                  0, 64, 0},
+  {"attached value",  {"-w64", "a.png"},             0, 64, 1},
+  {"long equals",     {"--width=64", "a.png"},       0, 64, 1},
+  {"dashes end opts", {"--", "-w", "-x"},            0, 0,  2},
+  {"negative posarg", {"--", "-5"},                  0, 0,  1},
+  {"bad number",      {"--width", "8x"},             2, 0,  0},
+  {"missing value",   {"--width"},                   2, 0,  0},
+  {"unknown opt",     {"--nope"},                    2, 0,  0},
+  {"repeated flag",   {"-vvv"},                      0, 0,  0},
+};
+
+int main() {
+  int fail = 0;
+  for (const auto& c : cases) {
+    cli::Options o;
+    std::string err;
+    int code = cli::parse(c.args, o, err) ? 0 : 2;
+    if (code != c.want_code || o.width != c.want_width
+        || o.inputs.size() != c.want_inputs) {
+      std::printf("FAIL %-16s code=%d width=%d n=%zu (%s)\n",
+                  c.name, code, o.width, o.inputs.size(),
+                  err.c_str());
+      ++fail;
+    }
+  }
+  std::printf("%s: %d failed\n", "parse", fail);
+  return fail != 0;
+}
+\end{lstlisting}
+
+宽度表要格外小心中日韩混排与零宽：``\Tp{中文}'' 是 4 列、
+``\Tp{a}'' 是 1 列，带变体选择符的 emoji 是 2 列而不是逐码点求和的结果，
+组合附标（例如 ``e\Tp{+}  combining acute''）是 1 列。
+\Fn{display\_width} 的测试应当同时断言\emph{截断}函数：
+按 3 列截断 ``\Tp{中a中}'' 必须是 ``\Tp{中a}''，
+绝不能返回半个多字节序列——那会让下游终端吐出replacement box。
+ANSI 剥离的往返测试则天然覆盖第 6 章``先算宽度再上色''这条纪律：
+对每个着色后的串检查 \Fn{strip} 结果等于裸文本、
+且 \Fn{display\_width} 不受转义影响。
+
+\section{快照测试：整程序的输入输出}
+
+单元测试管片段，快照（snapshot，也叫 golden file）管整体：
+跑一次真二进制，把 \Tp{stdout}、\Tp{stderr}、退出码存成文件，
+下次跑完做逐字节比较。它是 CLI 文档的\emph{可执行版本}——
+帮助文本、错误文案、\Opt{json} 字段名、\Opt{porcelain} 列序，
+全都由快照锁住。
+
+难点全在``归一化''。必须先折掉的内容：时间戳与耗时、
+绝对路径与临时目录、PID 与线程 id、ANSI 转义、
+行尾（Windows 的 CRLF）、以及机器名与用户名。
+归一化要\emph{保守}：折成占位符而不是删掉，
+否则 ``输出变短了'' 这类回归会被静默放过。
+
+\begin{lstlisting}[caption={golden 测试骨架：跑二进制、归一化、比对或更新}]
+// t_golden.cpp   需要 9 章的 run_capture() 返回 {code, out, err}
+#include <cstdio>
+#include <fstream>
+#include <regex>
+#include <sstream>
+#include <string>
+
+namespace {
+
+std::string normalize(std::string s) {
+  static const std::regex esc_pat("\x1b\\[[0-9;?]*[A-Za-z]");
+  static const std::regex ts_pat("[0-9]{4}-[0-9]{2}-[0-9]{2}"
+                                 "T[0-9:.]+Z?");
+  static const std::regex dur_pat("[0-9]+(\\.[0-9]+)?(ms|s)\\b");
+  static const std::regex tmp_pat("[A-Za-z]?:[\\\\/]*(?:tmp|Temp)"
+                                  "[\\\\/][^ ]+");
+  s = std::regex_replace(s, esc_pat, "");        // 剥 ANSI
+  s = std::regex_replace(s, ts_pat, "<TS>");     // 时间戳
+  s = std::regex_replace(s, dur_pat, "<DUR>");   // 耗时
+  s = std::regex_replace(s, tmp_pat, "<TMP>");   // 临时路径
+  std::string t;
+  for (char c : s) if (c != '\r') t.push_back(c);  // CRLF -> LF
+  if (!t.empty() && t.back() != '\n') t.push_back('\n');
+  return t;
+}
+
+std::string read_or_empty(const std::string& p) {
+  std::ifstream in(p, std::ios::binary);
+  return {(std::istreambuf_iterator<char>(in)),
+          std::istreambuf_iterator<char>()};
+}
+
+bool write_file(const std::string& p, const std::string& s) {
+  std::ofstream out(p, std::ios::binary);
+  return static_cast<bool>(out << s);
+}
+
+} // namespace
+
+// name 是用例名; args 是命令行; 期望文件在 tests/golden/<name>.txt
+int golden(const std::string& name,
+             const std::vector<std::string>& args,
+             const std::string& stdin_data) {
+  Run r = run_capture(bin_path(), args, stdin_data);
+  std::ostringstream os;
+  os << "exit " << r.code << "\n"
+     << "--- stdout ---\n" << normalize(r.out)
+     << "--- stderr ---\n" << normalize(r.err);
+  std::string got = os.str();
+  std::string path = "tests/golden/" + name + ".txt";
+  std::string want = read_or_empty(path);
+  if (!want.empty() && got == want) return 0;
+  bool update = want.empty()
+              || std::getenv("GOLDEN_UPDATE") != nullptr;
+  if (update) {                       // 首次或被显式授权覆盖
+    write_file(path, got);
+    std::printf("GOLDEN %s\n", update ? "updated" : "created");
+    return 0;
+  }
+  write_file(path + ".got", got);     // 供 diff -u 复核
+  std::printf("FAIL %s (see %s.got)\n", name.c_str(), path.c_str());
+  return 1;
+}
+\end{lstlisting}
+
+期望文件的位置约定要简单到能靠目录名推断：
+\Tp{tests/golden/} 下一例一个文件，文件名就是用例名
+（也是 \Tp{tests/cases/} 的目录名）。审阅 diff 的正确姿势是
+\emph{把} \lstinline|.got| \emph{留在产物里}并在 CI 日志里打印
+\lstinline|diff -u expected got|，让 reviewer 在 PR 上看见变化本身，
+而不是``作者说快照更新了''。更新快照必须走一个显式开关
+（上面是 \Tp{GOLDEN\Bk\_UPDATE}），绝不能是``测试自动修好''——
+自动修的快照测试等于没有测试。
+
+\begin{warning}[title={快照与断言的分工，别搞反}]
+快照擅长\emph{发现变化}，不擅长\emph{表达意图}：一段 40 行的
+\Opt{help} 文本更新后，diff 里看不出新写法是否更符合规范。
+反过来，逐字段断言（\lstinline+EXPECT_EQ(json.at("size").as_int(), 128)+）
+表达意图但不覆盖没想到的字段。可行的分工是：\textbf{对外承诺的
+机器可读面用断言}（\Opt{json} 字段名与类型、\Opt{porcelain} 列序、
+退出码表），\textbf{给人看的文案用快照}（\Opt{help}、错误提示、
+表格渲染）。整程序只有快照的项目，重构时没人敢碰文案；
+只有断言的项目，文案早就漂移了。
+\end{warning}
+
+\section{程序想要终端时怎么测}
+
+\subsection{两条路都要走}
+
+第一条路是给测试真的伪终端，让 \Fn{isatty} 返回真，从而把颜色、
+动画、宽度、原始输入这些分支跑起来。POSIX 侧最省事的是
+\Fn{openpty} 加 \Fn{forkpty}（\Tp{pty.h}，需要
+\lstinline|_XOPEN_SOURCE| 与 \Tp{libutil}）：
+子进程把三个标准流接到 slave 端，父进程拿到 master fd，
+读的是``终端渲染后''的字节，写的是``用户敲的键''。
+Windows 侧用 ConPTY：两条管道加 \Fn{CreatePseudoConsole}，
+把结果句柄塞给 \Fn{InitializePseudoConsole} 生成的
+\Tp{STARTUPINFOEX}；这正是第 9 章在 Windows 上读到彩色输出的唯一办法。
+手边没有代码时也可以用外部工具（\Tp{script -qec}、
+\Tp{expect}、\Tp{unbuffer}）把程序抬进 tty。
+
+第二条路是伪造``没有终端''与``有终端但很笨''：
+用环境变量把能力面关掉——\Tp{NO\_COLOR}、\Tp{TERM=dumb}、
+\Tp{TERM=unknown}、不设 \Tp{WT\_SESSION}、把 \Tp{COLUMNS} 设成 40。
+这条路便宜、可移植、在任何 runner 上都能跑。
+
+两条都要，因为它们测的是\emph{不同的代码分支}，而缺陷恰恰长在分岔上：
+只跑假终端，你永远发现不了 tty 路径上进度条把日志挤成楼梯；
+只跑 pty，你永远发现不了管道里被写进 \Tp{stdout} 的转义码
+把 \Tp{prog | jq} 变成语法错误。
+
+\begin{warning}[title={只覆盖管道路径是最贵的漏测}]
+典型症状链：开发机上一切正常，CI 全绿（因为 CI 里 \Tp{stdout} 是管道），
+用户在 Windows Terminal 里得到满屏 \Tp{ESC [ ?25l} 与残影。
+根因是测试进程继承的是 runner 的重定向，于是所有
+\lstinline|if (term.stdout_is_tty)| 分支永远走 else。
+判定你的测试有没有这个问题，只要问一句：
+``有没有任何一条断言依赖过 \Tp{cols}？''如果宽度永远是 80，
+那么宽度相关的渲染代码一行都没被测过。
+\end{warning}
+
+\begin{compare}[title={pty 与假终端各自能测什么}]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+               >{\raggedright\arraybackslash}p{0.31\textwidth}
+               >{\raggedright\arraybackslash}p{0.31\textwidth}@{}}
+\toprule
+维度 & pty（真终端语义） & 假终端（环境变量与管道） \\
+\midrule
+成本 & 高：平台代码、超时、字符编码切片 & 近零 \\
+\Fn{isatty} 结果 & 真 & 假 \\
+覆盖分支 & 动画、清行、光标、原始输入、\Tp{SIGWINCH} &
+里程碑行、纯文本表格、无转义输出 \\
+断言方式 & 剥 ANSI 后比对；也可断言序列存在 & 逐字节比对，最稳定 \\
+适合放哪 & 少量关键用例（每平台跑一次） & 全部快照与大多数用例 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+一个必须知道的 pty 细节：pty \emph{不遵守} ``一次读到一个完整序列''。
+转义序列可能被拆成两次 \Fn{read}（内核与终端模拟器之间的
+缓冲边界不保证），所以 pty 测试里读到的字节流要用
+``直到超时或直到期望串出现''的方式聚合，
+不要按 \Fn{read} 返回值切分。另外 pty 上 \Tp{ONLCR} 会把
+\Tp{\textbackslash n} 变成 \Tp{\textbackslash r\textbackslash n}，
+快照比对前必须归一化。
+
+\section{测失败：管道、中断、坏输入与 locale}
+
+\subsection{\Tp{prog | head -1} 之后该怎样}
+
+这是 CLI 独有的失败模式：下游读端提前关闭，你写 \Tp{stdout} 时
+POSIX 默认送 \Tp{SIGPIPE} 杀掉进程，退出码变成 141（128 加 13），
+于是 \Tp{prog | head -1 \&\& echo ok} 判定为失败。
+Windows 上对应的是写返回 \Tp{ERROR\_NO\_DATA}（232），不杀进程。
+
+\textbf{该测的是策略，不是现象}，因为这里有真实的分歧：
+GNU 传统派让进程被 SIGPIPE 打死（\Tp{yes}、\Tp{cat} 就是这个行为，
+shell 里 141 被视为``正常地被下游终止''）；
+现代 CLI 派则 \Fn{signal} 忽略 \Tp{SIGPIPE}、把 \Tp{EPIPE}
+当正常收尾（退出码 0 或一个专门的码），因为工具往往在写文件之外还
+持有副作用（临时文件、锁、终端状态），被信号打断就跳过清理。
+无论选哪派，测试要固化三件事：
+其一，读端关闭后\emph{不留临时文件、终端状态已恢复}；
+其二，退出码是文档里承诺的那个（并写清 141 与 1 的区别）；
+其三，不把 ``broken pipe'' 当成红色错误刷进 \Tp{stderr}
+（用户看不懂，而且他会以为数据没写完）。
+
+\begin{lstlisting}[style=shellstyle,caption={失败路径的三条手工探针}]
+$ ./imgres list | head -1; echo "pipe status: ${PIPESTATUS[0]}"
+$ ./imgres resize --width 8x a.png; echo "usage code: $?"
+$ ( ./imgres resize --width 800 big/*.png & sleep .3
+     kill -INT $! ) ; \
+    wait; echo "interrupt code: $?"; git status --porcelain  # 有无残留
+\end{lstlisting}
+
+\subsection{中断与部分完成}
+
+Ctrl-C 的用例长这样：启动一个可观察进度的长任务，中途发
+\Tp{SIGINT}（Windows 上发给整个进程组或用 \Tp{GenerateConsoleCtrlEvent}），
+然后断言四件事——退出码非 0（第 5 章的约定，被终止不能算成功）、
+临时文件与锁已清、终端模式已恢复（可以紧接着 \lstinline|stty -a|
+或再跑一次彩色程序来验证）、以及已提交的操作是可解释的
+（``3 个文件里写完了 1 个''要有对应的一行诊断）。
+把这条测试做成自动的关键是先注入一个假时钟，
+否则``中途''只能靠猜延时。
+
+坏输入侧至少四条：不存在的文件、不可读的文件（权限，
+注意 root 身份的 runner 上 \Tp{chmod} 000 照样能读，这条要跳过）、
+类型不符的值、以及\emph{目录当文件}。每条都断言退出码与
+\Tp{stderr} 的机器可读前缀（\lstinline|error: <what>: <detail>|）。
+
+locale 是最后一个常被忽略的维度。同一份程序在
+\lstinline|LC_ALL=C| 下 \Fn{wcwidth} 退化成全部 1 列、
+\Fn{setlocale} 让流按单字节处理、\lstinline|strcoll| 排序变了、
+千分位小数点变了。测试矩阵里要有
+\Tp{C}、\Tp{C.UTF-8}、一个非拉丁 locale（\Tp{zh\_CN.UTF-8}）
+以及 Windows 上的一个非 UTF-8 代码页；
+断言的形式是``程序必须显式声明它按什么处理''：
+要么带 \Opt{locale} 开关，要么保证机器可读输出与 locale 无关。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+                 >{\raggedright\arraybackslash}p{0.23\textwidth}
+                 >{\raggedright\arraybackslash}p{0.13\textwidth}
+                 >{\raggedright\arraybackslash}p{0.29\textwidth}@{}}
+\caption{测试层次与被测对象}
+\label{tab:testlevels} \\
+\toprule
+层次 & 被测对象 & 需要真终端 & 常见失败 \\
+\midrule
+\endfirsthead
+\toprule
+层次 & 被测对象 & 需要真终端 & 常见失败 \\
+\midrule
+\endhead
+纯函数单测 & \Fn{parse}、\Fn{display\_width}、\Fn{strip\_ansi}、
+配置合并 & 否（伪造快照） &
+宽度算错、\Tp{--} 之后误当选项、locale 相关的排序差异 \\
+组件测试 & 输出层（表格、进度、样式）与流的分配 & 否 &
+着色后字符串参与宽度计算、诊断混进 \Tp{stdout} \\
+进程级快照 & 完整运行的两条流与退出码 & 否（管道） &
+未归一化的时间戳与路径、CRLF、ANSI 残留 \\
+pty 测试 & tty 分支：颜色、动画、原始输入、尺寸变化 & 是 &
+序列被拆包、\Tp{ONLCR} 造成的 \Tp{CR} 差异、超时 \\
+失败注入 & 读端关闭、坏输入、权限、磁盘满 & 部分 &
+退出码与文档不符、清理未执行、141 与 1 混用 \\
+信号测试 & \Tp{SIGINT}、\Tp{SIGTERM}、子进程组转发 & 是 &
+终端状态未恢复、部分写入、信号竞态导致的抖动 \\
+性能与容量 & 十万行输入、深目录、超长行、大文件名 & 否 &
+管道缓冲死锁、单行无界增长、Windows 260 字符路径 \\
+跨平台矩阵 & 同一用例在三平台的输出 & 是（每平台一次） &
+分隔符、代码页、\Fn{wcwidth} 缺失、大小写不敏感文件名 \\
+\bottomrule
+\end{longtable}
+
+\section{CI：三平台矩阵与实际坑}
+
+GitHub Actions 的形状是三行矩阵加缓存加产物。要点都写在注释里了：
+
+\begin{lstlisting}[style=shellstyle,caption={CI 矩阵作业（YAML 节选）}]
+# .github/workflows/ci.yml   (matrix 部分)
+strategy:
+  fail-fast: false
+  matrix:
+    include:
+      - {os: ubuntu-22.04, target: linux-musl, ctest_jobs: 4}
+      - {os: macos-14,     target: macos-arm64, ctest_jobs: 3}
+      - {os: windows-2022, target: msvc-x64,    ctest_jobs: 2}
+runs-on: ${{ matrix.os }}
+steps:
+  - uses: actions/checkout@v4
+  - uses: lukka/run-vcpkg@v11      # 缓存 downloads 与已装依赖
+  - run: cmake --preset ci-${{ matrix.target }}
+  - run: cmake --build --preset ci --parallel 2
+  - run: ctest --preset ci --output-on-failure --schedule-random
+  - run: bash tests/golden.sh           # 快照: 管道环境, 不许有颜色
+    env: {LC_ALL: C.UTF-8, NO_COLOR: "1", COLUMNS: "80"}
+  - uses: actions/upload-artifact@v4    # 产物与符号分开传
+    with: {name: symbols-${{ matrix.os }}, path: build/**/*.pdb}
+\end{lstlisting}
+
+七条实际会咬人的事项：
+
+\begin{enumerate}
+\item \textbf{runner 上没有 tty}。所有测试默认在管道里跑，
+      于是 tty 分支必须由 pty 用例显式覆盖，或者用 \Tp{FORCE\_COLOR}
+      在 CI 里开一份彩色产物（\lstinline|.github/workflows| 里
+      \lstinline|TERM: xterm-256color| 是不够的，
+      \Fn{isatty} 仍然假）。
+\item \textbf{缓存依赖管理器}。vcpkg 缓存
+      \Tp{\$\{HOME\}/.vcpkg} 与 \Tp{vcpkg\_installed}；
+      Conan 2 缓存 \Tp{\~/.conan2}（\lstinline|CONAN_HOME|）。
+      \Tp{actions/cache} 的 key 要带上 \Tp{vcpkg.json} 的哈希，
+      否则升级依赖时不会重建。
+\item \textbf{每个测试都要有超时}：给 \lstinline|ctest| 设
+      \Tp{--timeout 120}，或用 \Tp{set\Bk\_tests\Bk\_properties}
+      给单个用例设 \Tp{TIMEOUT}；
+      再加 \lstinline|--no-tests=error| 防止``测试没注册''被当成绿。
+      CLI 挂死的典型原因是读子进程输出时两边管道都写满（第 9 章的死锁），
+      没有超时的话它会挂住整个作业直到 runner 超时。
+\item \textbf{产物与符号}：exe、pdb 或 \Tp{.debug}、
+      dSYM 各自上传，并把 build-id 或 GUID 打进 artifact 名，
+      否则一周前的崩溃转储对不上今天的符号。
+\item \textbf{终端宽度默认值}：runner 上 \Tp{COLUMNS} 常未设置，
+      程序退到 80；本地是 132，于是快照不一致。
+      显式设 \Tp{COLUMNS=80} 并在测试里断言宽度确实来自它。
+\item \textbf{CRLF}：Git 的 \lstinline|autocrlf| 会把 Windows runner
+      上检出的期望文件变成 CRLF，\lstinline|diff| 立刻全红。
+      解决是 \Tp{.gitattributes} 里对 \Tp{tests/golden/\*.txt}
+      写 \lstinline|eol=lf| 与 \lstinline|-text|，
+      并在归一化里折掉 \Tp{CR}。
+\item \textbf{Windows 路径长度}：检出目录本身很长时，
+      测试里再建临时子目录就撞 260 上限，报错是 ``找不到路径''
+      这种误导话。临时目录建在 \Tp{C:\textbackslash tmp}，
+      并给用例名做长度截断。
+\end{enumerate}
+
+CLI 测试独有的 flaky 来源，按出现频率：延时假设（``进度条应该出现过''
+但机器快得只画了一帧）、locale 与用户名差异、终端宽度、
+CRLF、以及 Windows runner 上的实时杀软扫描拖慢文件读写导致超时。
+对付方式统一是：注入时钟去掉时间依赖、所有断言给足上界不给下界、
+失败时把 \Tp{stdout}、\Tp{stderr}、退出码与环境一并打进日志。
+
+\begin{note}[title={本地全绿、CI 变红时的前三个检查}]
+一、\lstinline|env -i LC_ALL=C PATH=$PATH ./prog ...|：
+清掉环境后还过吗？二、\Tp{./prog ... | head -1}：
+下游提前收工还过吗？三、\lstinline|./prog ... > f 2>&1| 之后
+\lstinline|cat -v f|：有没有转义码残留在不该有的地方？
+这三条覆盖了 CI 里大多数``解释不了''的快照差异。
+\end{note}
+
+\section{手工 QA 清单}
+
+自动化测不到的东西集中在``看起来对不对''。发布前自己走一遍，
+每条不超过一分钟，值得写进 CONTRIBUTING：
+
+\begin{enumerate}
+\item 接到管道：\Tp{prog list | sort} —— \Tp{stdout} 里
+      除了数据不能有别的，且不能有转义码（\lstinline|cat -v| 验）。
+\item \lstinline|TERM=dumb| 与 \lstinline|NO_COLOR=1| 各跑一次：
+      只剩文本，标记仍然完整（\Tp{OK}、\Tp{WARN} 一类）。
+\item 两条流分别重定向：\lstinline|1>f 2>g| 与 \lstinline|2>&1|
+      各一次，看有没有把该给用户的诊断吞掉。
+\item 窄终端：\lstinline|COLUMNS=40|，再试 \lstinline|COLUMNS=200|；
+      表格要么截断要么换行，不能散架，机器可读输出不能折行。
+\item 非 UTF-8 与非 ASCII 文件名：造一个含空格、引号、
+      换行与中文的文件，走一遍读、写、列目录三条路径；
+      Windows 上再用 \lstinline|chcp 936| 与 \lstinline|chcp 65001|
+      各跑一次。
+\item 每个阶段按一次 Ctrl-C：解析参数时、写第一个文件时、
+      最后一个文件写完后。检查退出码、残留临时文件、
+      以及紧接着 \lstinline|ls --color| 是否正常（终端状态）。
+\item \lstinline|LC_ALL=C| 全流程一遍（POSIX 共享环境，
+      CI runner 常见），确认没有 locale 依赖的解析或排序。
+\item 在真实的三个宿主上各看一次：Windows Terminal、
+      \Tp{conhost}（经典控制台）、以及一个 \Tp{tmux} 里的
+      Linux 终端；顺手试一次 \Tp{ssh} 远程会话，
+      因为那是很多人实际的运行环境。
+\end{enumerate}
+
+\begin{guideline}[title={测试投资的优先序}]
+若只有一周时间，按这个顺序做，收益递减：一、把解析改成纯函数并写
+表驱动单测（覆盖 \Tp{--}、附着值、负数、缺值）；二、给
+\Opt{help}、\Opt{version}、一条正常路径与三条错误路径建快照，
+配好归一化与更新开关；三、加一条 pty 用例证明 tty 分支真的被测到；
+四、加一条 ``\Tp{prog | head -1}'' 与一条 Ctrl-C 用例；
+五、把三平台矩阵与符号归档跑通。六以后的性能与模糊测试
+只对会被喂不可信输入的工具才值得投。
+\end{guideline}
+% ====================================================================
+
+% ====================================================================
+% ====================================================================
+\appendix
+% ====================================================================
+
+% ====================================================================
+\chapter{转义序列与 terminfo 速查}
+% ====================================================================
+
+本附录把第 1、3、6、8 章用到的控制序列集中成表，便于写代码时直接查。
+约定：\Tp{ESC} 是字节 \Tp{0x1b}；表中把 CSI 写成 \Tp{ESC [}，
+参数之间用分号，省略参数取其默认值；序列结尾的终止符既可写
+\Tp{BEL}（\Tp{0x07}）也可写 \Tp{ST}（\Tp{ESC \textbackslash\textbackslash}），
+现代终端两者都接受，但 OSC 与 DCS 序列混用终止符时有差异，
+发送时用 \Tp{BEL} 兼容性最好。所有\emph{查询}类序列（DSR、DA、XTVERSION）
+都要从输入流读回答，风险见 3.4 节，速查表里列出但标注为``谨慎''。
+
+\section{SGR：颜色与字符属性}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.25\textwidth}
+                 >{\raggedright\arraybackslash}p{0.24\textwidth}
+                 >{\raggedright\arraybackslash}p{0.30\textwidth}@{}}
+\caption{SGR 序列（\Tp{ESC [ p1 ; p2 m}）速查}
+\label{tab:sgr} \\
+\toprule
+序列 & 含义 & 实际支持度与复位方式 \\
+\midrule
+\endfirsthead
+\toprule
+序列 & 含义 & 实际支持度与复位方式 \\
+\midrule
+\endhead
+\Tp{ESC [ 0 m} & 关闭全部属性 & 通用。注意它是\emph{全}复位，
+不是``取消粗体''；反复用它会把刚设好的颜色一起清掉 \\
+\Tp{ESC [ m} & 空参数 & 终端普遍按 \Tp{0} 处理，但 terminfo 的
+\Tp{sgr0} 才是可移植的复位写法 \\
+\Tp{ESC [ 1 m} & 加粗或高亮 & 通用；许多配色把它实现成``前景改用
+高亮 8 色''，于是 \Tp{1;31} 与 \Tp{91} 看起来一样。复位 \Tp{22} \\
+\Tp{ESC [ 2 m} & 暗淡 & 支持面最差的一档：macOS Terminal 与老
+\Tp{conhost} 直接忽略。复位 \Tp{22} \\
+\Tp{ESC [ 3 m} & 斜体 & 需字体有斜体；\Tp{conhost} 不支持，
+Windows Terminal 与主流 Linux 终端支持。复位 \Tp{23} \\
+\Tp{ESC [ 4 m} & 下划线 & 广泛支持；\Tp{ESC [ 4 ; 3 m}（curlly）
+只有 kitty、WezTerm、foot 一类实现。复位 \Tp{24} \\
+\Tp{ESC [ 5 m}、\Tp{ESC [ 6 m} & 慢闪、快闪 & 现代终端多实现为
+高亮或不实现；不要用（对色觉与可读性都不友好） \\
+\Tp{ESC [ 7 m} & 反色 & 通用，适合做选中行高亮。复位 \Tp{27} \\
+\Tp{ESC [ 8 m} & 隐藏文本 & 几乎没有实现。密码请关 \Tp{ECHO}，
+不要用这个 \\
+\Tp{ESC [ 9 m} & 删除线 & xterm、kitty、foot、Windows Terminal 支持；
+\Tp{tmux} 与 screen 可能吞掉。复位 \Tp{29} \\
+\Tp{ESC [ 21 m} & 歧义：双重下划线或取消粗体 & 别依赖它，
+用 \Tp{4} 配 \Tp{24} 表达下划线 \\
+\Tp{ESC [ 53 m} & 上划线 & 少数终端（kitty、某些 iTerm2 版本） \\
+\Tp{ESC [ 30 m} 到 \Tp{ESC [ 37 m} & 基本 8 色前景 &
+通用；\Tp{39} 恢复默认前景 \\
+\Tp{ESC [ 90 m} 到 \Tp{ESC [ 97 m} & 高亮 8 色前景 &
+通用（VT100 时代就有）；色值由用户主题决定 \\
+\Tp{ESC [ 40 m} 到 \Tp{ESC [ 47 m} & 基本 8 色背景 & 通用；
+\Tp{49} 恢复默认背景；\Tp{100} 到 \Tp{107} 为高亮背景 \\
+\Tp{ESC [ 3 8 ; 5 ; n m} & 256 色前景，\(n\) 取 0 到 255 &
+需要 \Tp{TERM} 声明 256 色；背景同形用 \Tp{48}。
+编号 0 到 15 是系统色，16 到 231 是立方体，232 到 255 是灰阶 \\
+\Tp{ESC [ 3 8 ; 2 ; r ; g ; b m} & 24 位真彩前景 &
+背景用 \Tp{48}。Windows 需 10 1709 以上的宿主；
+不确定时按第 3 章的阶梯降到 256 或 16 色 \\
+\Tp{ESC [ 3 8 ; 2 : r : g : b : cs m} & 带子参数的真彩
+（色彩空间、色调映射） & 只有 kitty、foot 等实现；
+老终端把 \Tp{:} 当 \Tp{;} 会得到错色，谨慎使用 \\
+\bottomrule
+\end{longtable}
+
+\section{光标、擦除与滚动}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.24\textwidth}
+                 >{\raggedright\arraybackslash}p{0.19\textwidth}
+                 >{\raggedright\arraybackslash}p{0.36\textwidth}@{}}
+\caption{光标定位、擦除与滚动序列}
+\label{tab:cursor} \\
+\toprule
+序列 & 名称 & 语义与备注 \\
+\midrule
+\endfirsthead
+\toprule
+序列 & 名称 & 语义与备注 \\
+\midrule
+\endhead
+\Tp{ESC [ r ; c H} 或 \Tp{f} & CUP & 光标移到第 \(r\) 行第 \(c\) 列，
+\textbf{从 1 开始}；省略参数等价于 1；1（即回左上角） \\
+\Tp{ESC [ n A}、\Tp{B}、\Tp{C}、\Tp{D} & CUU、CUD、CUF、CUB &
+上、下、右、左移动 \(n\) 格，缺省 1；\emph{不会越出滚动区域} \\
+\Tp{ESC [ n G} & HPA & 绝对列（行不变），等价于``回到行首再右移'' \\
+\Tp{ESC [ n d} & VPA & 绝对行（列不变），xterm 系实现 \\
+\Tp{ESC [ n E}、\Tp{F} & CNL、CPN & 下移 \(n\) 行并回到第 1 列、上移同理 \\
+\Tp{ESC 7}、\Tp{ESC 8} & DECSC、DECRC & 保存与恢复光标\emph{与属性}。
+\Tp{tmux} 与某些宿主对 \Tp{ESC 8} 有兼容问题；
+xterm 另提供 \Tp{ESC [ s} 与 \Tp{ESC [ u}，但它只在拉丁字符集下可靠 \\
+\Tp{ESC [ 0 K}、\Tp{1 K}、\Tp{2 K} & EL & 清``光标到行尾''、
+``行首到光标''、``整行''。进度条用 \Tp{ESC [ 2 K} 加 \Tp{\textbackslash r}
+或 \Tp{ESC [ 0 K} 配 \Tp{\textbackslash r} \\
+\Tp{ESC [ 0 J}、\Tp{1 J}、\Tp{2 J}、\Tp{3 J} & ED & 清``光标到屏尾''、
+``屏首到光标''、``整屏''、``整屏加回滚缓冲''。
+\Tp{3} 是 xterm 扩展，别默认它有 \\
+\Tp{ESC [ n X} & ECH & 用空白擦 \(n\) 个字符\emph{但保留属性}，
+比 EL 更适合局部重绘 \\
+\Tp{ESC [ n @}、\Tp{ESC [ n P} & ICH、DCH & 插入与删除字符，
+行内会滚动其余内容 \\
+\Tp{ESC [ top ; bot r} & DECSTBM & 设滚动区域；之后光标移动被限制在里面，
+\Tp{ESC [ n S}（SU）与 \Tp{ESC [ n T}（SD）在区域内滚动 \\
+\Tp{ESC M}、\Tp{ESC D} & RI、IND & 反扫与换行（上移一行、下移一行并回车） \\
+\Tp{ESC [ 6 n} & DSR & 请求报告光标位置，回答形如 \Tp{ESC [ r ; c R}。
+\textbf{谨慎}：要读输入流，可能与用户按键混在一起 \\
+\Tp{ESC [ c}、\Tp{ESC [ > 0 c} & DA1、DA2 & 请求终端识别码，
+回答是设备属性序列。同样\textbf{谨慎} \\
+\Tp{ESC [ 8 ; rows ; cols ; any t} & XTWINOPS & 请求改窗口尺寸或
+报告图标；属于``问终端''一类，谨慎 \\
+\bottomrule
+\end{longtable}
+
+\section{DEC 私有模式与鼠标}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}
+                 >{\raggedright\arraybackslash}p{0.20\textwidth}
+                 >{\raggedright\arraybackslash}p{0.40\textwidth}@{}}
+\caption{CLI 常用的 DEC 私有模式（\Tp{ESC [ ? Pm h} 开、\Tp{l} 关）}
+\label{tab:decpriv} \\
+\toprule
+模式 & 名称 & 用途与坑 \\
+\midrule
+\endfirsthead
+\toprule
+模式 & 名称 & 用途与坑 \\
+\midrule
+\endhead
+\Tp{?1} & DECCKM & 应用光标键：打开后方向键发
+\Tp{ESC O C} 而不是 \Tp{ESC [ C}。curses 用 \Tp{smkx} 与 \Tp{rmkx}
+封装，手工解析按键时务必记得这一档 \\
+\Tp{?7} & DECAWM & 自动换行。全屏程序常关掉以免自动换行破坏坐标 \\
+\Tp{?25} & DECTCEM & 光标可见性，对应 terminfo 的 \Tp{civis} 与
+\Tp{cnorm}。退出时必须恢复，否则用户看不见自己敲的字 \\
+\Tp{?3}、\Tp{?40} & DECCOLM & 80 与 132 列切换；现代终端多半忽略，
+改宽度请用宿主设置 \\
+\Tp{?1000} & X10 按钮追踪 & 只在按下与松开时报，坐标编码在字符里
+（上限 223），滚轮在多数宿主上归到这一类 \\
+\Tp{?1002} & 按钮追踪加拖拽 & 移动时若按键未松也报告 \\
+\Tp{?1003} & 任意事件追踪 & 每次移动都报告，噪声大；
+配合 \Tp{?1006} 才能拿到可靠坐标 \\
+\Tp{?1004} & 焦点事件 & 终端被聚焦或失去聚焦时发 \Tp{ESC [ I} 与
+\Tp{ESC [ O}，适合做``离开时暂停'' \\
+\Tp{?1005} & UTF-8 坐标扩展 & 把坐标写成 UTF-8 码点，
+非 UTF-8 环境会坏；已被 \Tp{?1006} 取代 \\
+\Tp{?1006} & SGR 坐标扩展 & 报告形如 \Tp{ESC [ < b ; x ; y M}
+（\Tp{m} 表示松开），无坐标上限，是今天应当用的那一个 \\
+\Tp{?1015} & urxvt 坐标扩展 & 历史实现，与 \Tp{?1006} 冲突时优先后者 \\
+\Tp{?47}、\Tp{?1047}、\Tp{?1049} & 备用屏幕 & \Tp{?1049} 是唯一
+正确的选择：进入时保存主屏与光标、退出时还原，并且输出不进回滚缓冲。
+\Tp{?47} 与 \Tp{?1047} 会让用户滚不到历史 \\
+\Tp{?2004} & 括号粘贴 & 打开后粘贴被 \Tp{ESC [ 2 0 0 ~} 与
+\Tp{ESC [ 2 0 1 ~} 包住，行编辑据此关掉自动缩进与逐键回调 \\
+\Tp{?2026} & 同步输出 & 在 \Tp{h} 与 \Tp{l} 之间的整批输出被
+一次性呈现，减少全屏重绘撕裂；不支持的宿主直接忽略，可以安全地试 \\
+\Tp{?12} & 光标闪烁 & 打开后光标起始为闪烁状态；某些配色会忽略 \\
+\bottomrule
+\end{longtable}
+
+\section{OSC 与 DCS}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.24\textwidth}
+                 >{\raggedright\arraybackslash}p{0.55\textwidth}@{}}
+\toprule
+序列 & 语义 \\
+\midrule
+\endfirsthead
+\toprule
+序列 & 语义 \\
+\midrule
+\endhead
+\Tp{OSC 0 ; txt BEL} & 同时设图标名与窗口标题；
+\Tp{OSC 1 ; txt} 只设图标名，多数宿主忽略 \\
+\Tp{OSC 2 ; txt BEL} & 设窗口标题（进度与阶段名可用它，
+但要确认 \Tp{TERM} 不是 \Tp{dumb}） \\
+\Tp{OSC 4 ; n ; spec} & 设或查调色板项；参数给 \Tp{?} 则终端回答
+当前值，属于``问终端''一类 \\
+\Tp{OSC 10 ; ?} 与 \Tp{11}、\Tp{12} & 查询默认前景、背景、光标颜色，
+回答是 \Tp{rgb:rr/gg/bb} 形式。用它判色比猜可靠，但同样有输入流竞争 \\
+\Tp{OSC 8 ; params ; URL BEL} & 超链接。\Tp{params} 支持
+\Tp{id=} 用于配对开闭；关闭链接发一条 URL 为空的同形序列。
+宿主可能要求用户在设置里允许，并且多数实现限制长度 \\
+\Tp{OSC 52 ; c ; b64 BEL} & 写（或读，参数给 \Tp{?}）系统剪贴板。
+需要宿主允许，SSH 转发时受 \Tp{AllowTcpForwarding} 与终端策略影响，
+大内容会被截 \\
+\Tp{OSC 7 ; file://host/path} & 报告当前目录，供 shell 集成与
+新标签页继承目录使用 \\
+\Tp{OSC 9 ; txt} 与 \Tp{OSC 777 ; notify ; t ; b} &
+桌面通知的两条方言（前者是 iTerm2 一路，后者是 urxvt 一路） \\
+\Tp{OSC 133 ; A ; B ; C} & 语义提示符：标记提示符起止、命令起止、
+输出区，于是宿主能``跳到上一条命令''。由 shell 而不是程序发 \\
+\Tp{OSC 633 ; E} & VS Code 集成终端的等价方言 \\
+\Tp{DCS q ; ... ST} & sixel 图像；\Tp{ESC [ ... : 1 0 0 0 p}
+是 kitty 图形协议。两者都属于``宿主扩展''，不要当成通用能力 \\
+\bottomrule
+\end{longtable}
+
+\section{terminfo 能力名与环境变量}
+
+用 curses 或自己发序列之前，先问 terminfo。表 \ref{tab:terminfo} 是
+CLI 代码里最常出现的子集；\lstinline{tput} 与 \lstinline{infocmp}
+是查看它们的两个命令。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.30\textwidth}
+                 >{\raggedright\arraybackslash}p{0.09\textwidth}
+                 >{\raggedright\arraybackslash}p{0.40\textwidth}@{}}
+\caption{常用 terminfo 能力（括号内是 termcap 缩写）}
+\label{tab:terminfo} \\
+\toprule
+能力名 & 缩写 & 用途 \\
+\midrule
+\endfirsthead
+\toprule
+能力名 & 缩写 & 用途 \\
+\midrule
+\endhead
+\Tp{clear} & cl & 清屏并把光标归位（派生能力，等价 ED 加 CUP） \\
+\Tp{sgr0} & me & 关闭全部属性，\textbf{比发 \Tp{ESC [ 0 m} 更可移植}，
+因为某些宿主的复位序列不是 0 \\
+\Tp{orig\_pair} 与 \Tp{orig\_colors} & op、OC & 把前景背景恢复成默认，
+但保留粗体一类属性 \\
+\Tp{setaf} 与 \Tp{setab} & AF、AB & 带一个参数设前景与背景，
+参数是调色板编号（0 到 7、0 到 255） \\
+\Tp{max\_colors} & Co & 调色板容量；数值能力，用
+\lstinline{tput colors} 读 \\
+\Tp{init\_color}、\Tp{can\_change} & Ic、Cc & 能否改调色板项 \\
+\Tp{enter\Bk\_bold\Bk\_mode} 与 \Tp{exit\Bk\_attribute\Bk\_mode} & md、me & 粗体 \\
+\Tp{enter\Bk\_dim\Bk\_mode} & mh & 暗淡，很多条目里没有 \\
+\Tp{enter\Bk\_underscore\Bk\_mode} & Su & 下划线 \\
+\Tp{enter\Bk\_italics\Bk\_mode} & mS & 斜体；条目缺失时应当降级 \\
+\Tp{enter\Bk\_reverse\Bk\_mode} & mr & 反色 \\
+\Tp{cup} & cu & 绝对定位（参数是 0 基！发出去前 \Tp{+1}），
+\lstinline{tput cup 2 5} \\
+\Tp{sc} 与 \Tp{rc} & fs、bs & 保存与恢复光标 \\
+\Tp{civis}、\Tp{cnorm}、\Tp{cvvis} & vi、ve、vs & 隐藏、正常、可见光标 \\
+\Tp{el}、\Tp{el1}、\Tp{ed} & ce、ae、cd & 清行尾、清行首、清屏 \\
+\Tp{smcup} 与 \Tp{rmcup} & ti、te & 进入与离开备用屏幕；
+TUI 的进出必须成对，异常路径也要发 \\
+\Tp{smkx} 与 \Tp{rmkx} & ks、se & 应用键盘模式（光标键转义变化） \\
+\Tp{ind}、\Tp{ri} & do、up & 换行、反扫一行 \\
+\Tp{cols}、\Tp{lines} & co、li & 数值能力：宽高。
+ncurses 会优先信 \Tp{LINES} 与 \Tp{COLUMNS} 环境变量 \\
+\Tp{acs\_lines} 与 \Tp{acsc} & acsc & 线框字符集（ACS）映射，
+决定 \lstinline{acs_up} 那套框线画什么 \\
+\Tp{bell} & bl & 蜂鸣；宿主可能实现成闪屏或静音 \\
+\Tp{kcuu1}、\Tp{kcud1}、\Tp{kcul1}、\Tp{kcuf1} & ku、kd、kl、kr &
+方向键的实际序列；\Tp{khome}、\Tp{kend}、\Tp{kpp}、\Tp{knp} 同理 \\
+\Tp{key\Bk\_backspace} 与 \Tp{backspace\Bk\_delay} & kb、pd & 退格码
+（0x08 与 0x7f 的历史分歧就在这里） \\
+\bottomrule
+\end{longtable}
+
+\begin{note}[title={读 terminfo 的三条实用命令}]
+\lstinline{infocmp $TERM} 打印当前条目的全部能力；
+\lstinline{infocmp -1} 配 \Tp{xterm\Bk-256color} 加
+\lstinline{grep} 筛单个能力；
+\lstinline{tput civis; tput cup 3 5; tput sgr0} 手工试序列。
+写代码时 \lstinline{tiparm} 或 curses 的
+\lstinline{mvwaddch} 会自动补参数，但\emph{自己发序列}的项目
+（比如只做进度条）应当在启动时 \Fn{setupterm} 一次、
+用 \Fn{tigetstr} 与 \Fn{tparm} 取序列并缓存，
+不要在每帧重新查库。相关环境变量：\Tp{TERM}、\Tp{TERMINFO}、
+\Tp{TERMINFO\_DIRS}（数据库路径，容器里常缺整套而报
+\lstinline{terminfo entry not found}），
+以及 ncurses 扩展 \Tp{NCURSES\_NO\_UTF8\_ACS}
+（强制用 ASCII 画框线）。
+\end{note}
+
+\section{你会真正遇到的 \Tp{TERM} 值}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.24\textwidth}
+                 >{\raggedright\arraybackslash}p{0.32\textwidth}
+                 >{\raggedright\arraybackslash}p{0.24\textwidth}@{}}
+\toprule
+值 & 谁设置 & 需要知道的事 \\
+\midrule
+\endfirsthead
+\toprule
+值 & 谁设置 & 需要知道的事 \\
+\midrule
+\endhead
+\Tp{xterm\Bk-256color} & 大量宿主的默认值 & 事实上的通用条目；
+24 位色不在其中，需靠 \Tp{COLORTERM} 判定 \\
+\Tp{xterm-kitty}、\Tp{alacritty}、\Tp{foot}、\Tp{wezterm} &
+各自终端模拟器 & 自带扩展能力（图形协议、同步输出、自定义键），
+判定时可以按名字开增强 \\
+\Tp{st-256color}、\Tp{rxvt\Bk-unicode\Bk-256color} & suckless 与 urxvt &
+\Tp{rxvt} 系对 OSC 8 与某些 OSC 支持不完整 \\
+\Tp{screen\Bk-256color}、\Tp{tmux\Bk-256color} & GNU screen 与 tmux &
+多路复用器会过滤它不认识的序列；鼠标、同步输出、超链接都要实测，
+真彩还需要 \Tp{tmux} 3.2 以上与对应设置 \\
+\Tp{linux} & 内核虚拟控制台（无 X 的 \Tp{/dev/tty1}） &
+只有 16 色与有限属性，是``降级到底''的现实样本 \\
+\Tp{vt100}、\Tp{vt220} & 老条目、串口控制台、某些 SSH 客户端 &
+无 256 色；框线与斜体都没有 \\
+\Tp{dumb}、\Tp{unknown} & Emacs 的 shell、CI、被清空的会话 &
+按 3.2 节：不发颜色、不发光标控制、宽度用默认值 \\
+\Tp{cygwin}、\Tp{msys} & Windows 上的两套 POSIX 层 &
+色深取决于宿主（conhost 还是 Windows Terminal），
+条目本身不能给你答案 \\
+（未设置） & \Tp{cron}、\Tp{systemd} 服务、\lstinline{ssh host cmd} &
+最常见的一类；把\emph{未设置}与 \Tp{dumb} 分开处理会更保守也更安全 \\
+\bottomrule
+\end{longtable}
+
+% ====================================================================
+\chapter{库与平台支持矩阵}
+% ====================================================================
+
+表 \ref{tab:libs} 汇总本书正文提到过的第三方与系统库，按用途分组。
+``形态''一栏区分只支持头文件、需要编译的库、以及系统提供的设施；
+``最低标准''指使用\emph{推荐用法}时的门坎，头文件模式常能容忍更旧的标准。
+许可证以仓库当前的 LICENSE 文件为准——本表的作用是筛掉不可能的选项
+（尤其 GPL 一栏），不是替代法务核对。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+                 >{\raggedright\arraybackslash}p{0.075\textwidth}
+                 >{\raggedright\arraybackslash}p{0.105\textwidth}
+                 >{\raggedright\arraybackslash}p{0.095\textwidth}
+                 >{\raggedright\arraybackslash}p{0.12\textwidth}
+                 >{\raggedright\arraybackslash}p{0.26\textwidth}@{}}
+\caption{参数解析、输出与终端相关库一览}
+\label{tab:libs} \\
+\toprule
+名称 & 形态 & 许可 & 最低标准 & 平台 & 一句话定位 \\
+\midrule
+\endfirsthead
+\toprule
+名称 & 形态 & 许可 & 最低标准 & 平台 & 一句话定位 \\
+\midrule
+\endhead
+\multicolumn{6}{@{}l}{\textbf{参数解析}}\\
+CLI11 & 头文件 & BSD-3 & \cpp{14} & 跨平台 &
+子命令、校验器、错误信息与补全都最完整 \\
+cxxopts & 单头 & MIT & \cpp{11} & 跨平台 & 短小直白，
+适合选项不超过二十个的工具 \\
+argparse（p-ranav） & 单头 & MIT & \cpp{17} & 跨平台 &
+类 Python 的帮助文案与用法行，可读性最好 \\
+Args（taywee/args） & 单头 & MIT & \cpp{11} & 跨平台 &
+极简 API 加子命令，错误信息可定制 \\
+Boost\Bk.Program\Bk\_options & 编译库 & BSL-1.0 & \cpp{14} & 跨平台 &
+配置文件与命令行统一建模，能力上限最高，错误信息偏弱 \\
+getopt 与 getopt\_long & 系统 libc & 随系统（glibc 为 LGPL-2.1
+加运行时例外，BSD 与 musl 为 BSD 风格） & C & Linux、macOS、
+MinGW；MSVC 无 & 零依赖的选择，长表与 optstring 要维护两份 \\
+\multicolumn{6}{@{}l}{\textbf{输出、日志与配置}}\\
+\{fmt\} & 库或头文件 & MIT & \cpp{11} & 跨平台 &
+排版、宽度、分组与着色常量，\lstinline{std::format} 的过渡实现 \\
+spdlog & 库或头文件 & MIT & \cpp{11} & 跨平台 &
+分层日志与多种 sink，与 \{fmt\} 天然配套 \\
+toml++ & 单头 & MIT（另有公共领域声明） & \cpp{11} & 跨平台 &
+现代 TOML 解析与写出，配置文件的当前主流选择 \\
+nlohmann\Bk/json & 单头 & MIT & \cpp{11} & 跨平台 &
+机器可读输出（\Opt{json}）的实现基础 \\
+indicators & 头文件 & MIT & \cpp{14} & 跨平台 &
+进度条、多行进度、spinner 与终端尺寸探测 \\
+rangy & 单头 & MIT & \cpp{11} & 跨平台（含传统 Console API） &
+颜色常量与自动降级，教学价值大于使用价值 \\
+\multicolumn{6}{@{}l}{\textbf{全屏界面与行编辑}}\\
+ncurses & 共享库 & 类 X11 的 ncurses 许可 & C（C++ 需包装） &
+POSIX 为主，Windows 走 PDCurses 或 MSYS2 &
+terminfo 之上的完整屏幕抽象，含面板、菜单、表单 \\
+termbox2 & 小库 & ISC & C99（C++ 直调） & POSIX（Windows 靠移植或 WSL） &
+极简：一张网格、256 色、自己写渲染循环 \\
+FTXUI & 编译库 & MIT & \cpp{17} & 跨平台（含 Windows Console） &
+组件加 FlexBox 布局，界面复杂时最省力 \\
+Notcurses & 共享库 & Apache-2.0 & C（附 C++ 头） & Linux 最好，
+BSD 与 macOS 部分，Windows 实验性 & 真彩、图形、高帧率的重型方案 \\
+GNU readline & 共享库 & GPL-3.0-or-later & C & POSIX &
+行编辑能力最全，\textbf{但 GPL 直接改变你能发布的形态}：
+静态或动态链接闭源程序都要求提供源码 \\
+libedit & 共享库 & BSD-3 & C & BSD、macOS 系统自带、Linux &
+readline 的许可友好替身，API 近似但子集更小 \\
+linenoise & 两个源文件 & BSD-2 风格 & C & POSIX（有 Windows 移植） &
+千行内：历史、左右移、简单补全，适合直接进仓库 \\
+replxx & 源文件或库 & BSD-3 风格 & \cpp{11} & 跨平台 &
+能力介于 readline 与 linenoise 之间，带着色回调 \\
+\multicolumn{6}{@{}l}{\textbf{进程与文件}}\\
+Boost.Process & 编译库转头文件 & BSL-1.0 & \cpp{17} & 跨平台 &
+子进程、管道与作业对象抽象，异步集成好 \\
+subprocess.h & 单头 & 公共领域（另有 MIT 双许可） & C（C++ 直用） &
+POSIX 加 Windows & 一份源码搞定 fork-exec、重定向与等待 \\
+\lstinline|std::filesystem| & 标准头 & 属语言标准 & \cpp{17} &
+跨平台（\cpp{17} 之前需链接 \lstinline{stdc++fs}） &
+路径与目录遍历，注意第 10 章的编码与权限差异 \\
+\bottomrule
+\end{longtable}
+
+\begin{warning}[title={许可证会决定分发形态}]
+readline 是 GPL-3.0：把依赖它的程序作为闭源二进制发给用户，
+等价于承诺提供对应源码与可重新构建的接口，这是\emph{链接}就触发的问题，
+与``我们只用了很小一部分''无关。同类需要盯住的是
+\Tp{termcap} 时代的旧库、若干 GPL 许可的图像与 PDF 后端，
+以及``GPL 加例外''（gcc runtime exception、LGPL 加动态链接）的差别。
+反过来，ISC、MIT、BSD-2、BSD-3、Apache-2.0 与 BSL-1.0
+都允许闭源再分发，只有 Apache-2.0 附带专利授权条款与
+NOTICE 文件的保留义务，而 ``AGPL'' 一族会因网络服务触发义务。
+静态还是动态链接\emph{不改变} copyleft 的判定，只改变你是否能把
+``用户可自行替换库''这一条做到——那正是 LGPL 的要求。
+\end{warning}
+
+% ====================================================================
+\chapter{术语表}
+% ====================================================================
+
+按主题排（终端与设备、字符与文本、分发与签名、测试），不严格按字母顺序：
+同一话题的词放在一起更有助于回忆。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}
+                 >{\raggedright\arraybackslash}p{0.61\textwidth}@{}}
+\caption{术语速查}
+\label{tab:glossary} \\
+\toprule
+术语 & 含义 \\
+\midrule
+\endfirsthead
+\toprule
+术语 & 含义 \\
+\midrule
+\endhead
+tty & teletype 的缩写，指``字符设备式终端''；POSIX 上是
+\Tp{/dev/ttyN} 或 \Tp{/dev/pts/N} 这样的设备节点 \\
+pty & 伪终端：一对主从设备，master 由终端模拟器持有，
+slave 呈现给程序；没有物理设备也存在 \\
+line discipline & 内核里位于 tty 驱动与用户空间之间的处理层，
+负责行缓冲、回显、控制字符到信号的转换 \\
+raw mode & 原始模式：关掉行缓冲与内核处理，程序逐字节读；
+通常同时关掉回显 \\
+canonical mode & 规范模式：内核累积到行结束符才把输入交给程序，
+退格与 Ctrl-U 由内核实现 \\
+echo & 内核把你敲的字符直接写回输出方向；密码输入要临时关掉 \\
+VMIN 与 VTIME & 非规范模式下 \Fn{read} 的两个控制字符：
+最少读多少字节、最多等多久（单位是十分之一秒） \\
+SIGWINCH & 终端尺寸变化时发给前台进程组的信号；Windows 没有对应物 \\
+SIGPIPE & 向已关闭的管道写入时的信号，默认动作是终止进程，
+于是退出码常为 141 \\
+ANSI & 这里指被俗称为 ANSI 转义码的那套控制序列（标准号 X3.64），
+不是``美国标准''这个泛称 \\
+VT100 & DEC 的终端型号，其序列事实定义了今天 CSI、光标控制与
+私有模式的形态 \\
+CSI & 控制序列引导符，字节 \Tp{ESC [}，后面跟参数与一个结尾字符 \\
+SGR & Select Graphic Rendition，即 \Tp{ESC [ ... m}，
+负责颜色与字符属性 \\
+OSC & Operating System Command，\Tp{ESC ]} 引导的序列，
+用于标题、颜色查询、超链接、剪贴板等``宿主级''能力 \\
+DEC private mode & 带 \Tp{?} 参数的 \Tp{ESC [ ? Pm h} 与
+\Tp{l}，用于光标可见性、备用屏幕、鼠标追踪等 \\
+terminfo & 描述终端能力与序列的数据库，按 \Tp{TERM} 值取条目；
+每条目含字符串、数值、布尔三类能力 \\
+cap（termcap） & terminfo 之前的文本形式能力库，
+现在主要作为两字符缩写来源出现 \\
+ACS & Alternate Character Set，terminfo 提供的框线与半块字符映射 \\
+alternate screen & 备用屏幕缓冲区：程序输出不进回滚历史，
+退出后主屏原样回来（\Tp{?1049h}） \\
+bracketed paste & 括号粘贴：终端把粘贴内容用固定序列包住，
+让程序区分粘贴与逐键输入 \\
+mouse tracking & 鼠标追踪模式：宿主把按键位置变成序列发给程序，
+于是 CLI 能``响应点击'' \\
+ConPTY & Windows 的伪控制台：把控制台 API 会话重新序列化成
+VT 字节流，供终端模拟器使用 \\
+console host & Windows 上承载控制台会话的宿主进程（\Tp{conhost}），
+决定序列被解析到什么程度 \\
+code page & Windows 把字节映射到字符的代码页编号；
+65001 是 UTF-8，936 是简体中文 GBK \\
+UTF-8 & 变长 Unicode 编码，ASCII 字节自同步，
+是 Linux 与 macOS 的事实标准 \\
+UTF-16 code unit & Windows 内部文本的单位，2 字节一段；
+基本平面外字符由两段组成 \\
+surrogate pair & 代理对：两个 UTF-16 码元表示一个码点，
+逐码元切字符串会切碎字符 \\
+combining character & 组合字符：本身零宽，叠加在前一个字符上；
+按码点算宽度会得出错误列数 \\
+display width & 一个字符在终端里占的列数（0、1 或 2），
+东亚字符为 2，由 \Fn{wcwidth} 一类实现回答 \\
+grapheme & 用户感知的一个字符单位（字素簇），可能由多个码点组成 \\
+job object & Windows 的内核对象，可把一组进程一起限制与终止，
+是父进程被强杀时带走子进程的正确办法 \\
+side-by-side assembly & Windows 的并行组件机制：靠清单声明版本，
+让同名 DLL 的不同版本共存于一个进程 \\
+manifest & 嵌在 PE 文件资源里的 XML，声明权限级别、UTF-8 代码页、
+长路径支持与依赖组件 \\
+Authenticode & Windows 的代码签名格式：证书签名加时间戳，
+SmartScreen 与杀软据此累积信誉 \\
+notarization & macOS 的公证：把产物交给 Apple 扫描并 Staple 票据，
+Gatekeeper 才会放行下载来的文件 \\
+AppImage & Linux 的单文件分发形态：ELF runtime 加 squashfs
+拼在一个文件里，靠 FUSE 挂载后执行 \\
+PPA & Launchpad Personal Package Archive：Ubuntu 用户的自助仓库，
+不需要审核人，是发行版主仓库之前的现实通道 \\
+rpath & ELF 动态条目里写死的库搜索路径；\Tp{\$ORIGIN}
+在加载时展开成可执行文件所在目录 \\
+snapshot test & 快照测试：把整次运行的输出存成期望文件，
+下次逐字节比较，变化需要人工批准 \\
+golden file & 快照测试里那份期望输出文件（以及这套做法的旧称） \\
+NO\_COLOR & 非空即要求程序关闭颜色的约定变量，
+只看是否设置不看取值 \\
+\bottomrule
+\end{longtable}
+% ====================================================================
+
+\end{document}
