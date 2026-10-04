@@ -133,8 +133,10 @@ try {
         $process.WaitForExit()
         $sw.Stop()
 
-        # 解析日志
-        $errorCount    = ([regex]::Matches($stdout, '(?im)^!')).Count
+        # 解析日志（-file-line-error 下错误形如 "sfinae_and_concepts.tex:421: LaTeX Error: ..."，
+        # 与 "^!" 传统格式都要统计，否则会漏报错误）
+        $errorCount    = ([regex]::Matches($stdout, '(?im)^!')).Count + `
+                         ([regex]::Matches($stdout, '(?im)^[^\r\n]*\.tex:\d+:.*(LaTeX Error|Package .* Error|Undefined control sequence|Missing \$ inserted|Emergency stop)')).Count
         $overfullCount = ([regex]::Matches($stdout, '(?i)Overfull')).Count
         $underfullCount = ([regex]::Matches($stdout, '(?i)Underfull')).Count
 
