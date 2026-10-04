@@ -2403,6 +2403,28 @@ CRTP 的好处：\seqsplit{\texttt{self->charge(...)}} 在编译期直接展开�
 
 \subsection{动态对象 + \texttt{invoke}/\texttt{fake}：按方法名劫持}
 
+\begin{note}{为什么非要有这层动态调度}
+托管语言里，方法调用本质上是对象收到的一条\textbf{消息}：
+\seqsplit{\texttt{obj.method(...)}} 先取对象引用，再经运行时方法表
+分派。正因如此，代理（Proxy）能在运行时插入一张方法表，把任意调用
+改写到 mock 实现——这才是 Mockito、NSubstitute 可以“凭空”替换对象
+行为的根本。
+
+C++ 恰恰相反。成员函数在 ABI 层只是一个\textbf{首参为 \texttt{this}
+指针的外部函数}：\seqsplit{\texttt{obj.size()}} 编译成
+\seqsplit{\texttt{size(\&obj)}}，符号在编译期就已确定，非虚调用直接
+静态绑定，虚调用也只查对象自带的固定虚表，运行时无从替换整张方法表。
+C++23 的显式 \texttt{this}（deducing this，形如
+\seqsplit{\texttt{void f(this auto\& self)}}）把这条隐藏首参写进了
+签名，恰好把本质显式化：成员函数并不是“对象身上可变的行为”，只是
+约定俗成地把对象当作第一个实参的普通函数。
+
+所以 C++ 缺少托管语言那层可变的运行时方法表，任何按名劫持都无从
+挂靠。AnyObject 的 \seqsplit{\texttt{invoke}}/\seqsplit{\texttt{fake}}
+正是人为补上这张表——把成员调用退回到带字符串名字的运行时派发，
+顺带塞进可替换的 fake 表，才换来接近托管语言的手感。
+\end{note}
+
 某些代码库（Qt 风格的元对象层、脚本绑定层、自研反射容器）把对象
 包装成类型擦除的“AnyObject”：所有调用都走字符串方法名，配合一张
 劫持表，就能在运行时改写任意成员的行为，被测对象的类一行不改：

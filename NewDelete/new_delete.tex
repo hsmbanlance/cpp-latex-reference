@@ -54,6 +54,59 @@
 }
 \lstset{style=cppstyle}
 
+% ---- C# （生命周期对比章使用）----
+\lstdefinelanguage{CSharpLD}{
+  morekeywords={
+    abstract,as,base,bool,break,byte,case,catch,char,checked,class,
+    const,continue,decimal,default,delegate,do,double,else,enum,
+    event,explicit,extern,false,finally,fixed,float,for,foreach,
+    goto,if,implicit,in,int,interface,internal,is,lock,long,
+    namespace,new,null,object,operator,out,override,params,
+    partial,private,protected,public,readonly,ref,return,sbyte,
+    sealed,short,sizeof,stackalloc,static,string,struct,switch,
+    this,throw,true,try,typeof,uint,ulong,unchecked,unsafe,
+    ushort,using,virtual,void,volatile,while,
+    var,async,await,yield,dynamic,where,value,get,set,
+    record,with,required,nint,nuint,unmanaged,record struct
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+}
+\lstdefinestyle{csharpstyle}{
+  language=CSharpLD,
+  keywordstyle=\color{violet}\bfseries,
+  emph={int,string,bool,double,float,long,byte,char,object,decimal,
+    var,Task,List,Dictionary,Action,Func,IDisposable,Span,Memory,
+    StructLayout,GCHandle},
+  emphstyle=\color{teal!80!black}\bfseries,
+}
+
+% ---- Rust （生命周期对照节使用；' 不作字符串定界符，避免误吞 'a 标注）----
+\lstdefinelanguage{RustLD}{
+  morekeywords={
+    as,box,break,const,continue,crate,dyn,else,enum,extern,false,
+    fn,for,if,impl,in,let,loop,match,mod,move,mut,pub,ref,return,
+    static,struct,super,trait,true,type,unsafe,use,where,while,
+    async,await,dyn,self,Self,macro_rules,yield,try
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+}
+\lstdefinestyle{ruststyle}{
+  language=RustLD,
+  keywordstyle=\color{orange!85!black}\bfseries,
+  emph={u8,u16,u32,u64,i8,i16,i32,i64,usize,isize,f32,f64,bool,
+    str,String,Vec,Box,Rc,Arc,Weak,Ref,RefMut,RefCell,Cell,OnceCell,
+    Mutex,RwLock,HashMap,Option,Result,Some,None,Ok,Err,Pin,BoxPin,
+    NonNull,Cow,Send,Sync,Drop,GlobalAlloc,System},
+  emphstyle=\color{teal!80!black}\bfseries,
+}
+
 % ==================== tcolorbox ====================
 \usepackage[most]{tcolorbox}
 
@@ -131,6 +184,7 @@
 
 \setlist[itemize]{leftmargin=2em,itemsep=2pt}
 \setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+\emergencystretch=3em
 
 % ==================== 超链接 ====================
 \usepackage{hyperref}
@@ -870,7 +924,7 @@ int main() {
 % ================================================================
 
 类级别的 \texttt{operator new} 重载和 STL 自定义分配器
-（\texttt{Allocator}）都涉及"控制内存从哪里来"，但它们作用的层次、
+（\texttt{Allocator}）都涉及``控制内存从哪里来''，但它们作用的层次、
 生效范围和适用场景完全不同。
 
 \section{作用层次对比}
@@ -1524,5 +1578,966 @@ vec->~CudaVector();   // 手动析构，释放显存
 // control_block 内存由静态数组管理，无需释放
 \end{lstlisting}
 \end{warning}
+
+% ================================================================
+\chapter{生命周期与指针所有权}
+% ================================================================
+
+前面四章回答的是``怎么分配''；本章回答两个更根本的问题：
+\textbf{对象住在哪、活多久}，以及\textbf{谁负责让它结束}。
+这两个问题在 C/C++ 里被刻意留给程序员与实现，在 C\# 里被写进类型系统，
+在 Qt/UE/Android 的框架层里则各自演化出一套指针方言，
+在 Rust 里更进一步——连``借到哪一刻''都成了类型参数（第 6.8 节）。
+
+\section{四种存储期限：自动、手动、静态、线程}
+
+ISO C（6.2.4p2）与 C++（basic.stc）都把对象的存储期（storage duration）
+规定为四种。中文教材常把``手动''称作``动态''，本书沿用与题目一致的
+\textbf{自动 / 手动 / 静态 / 进程}四分法，并在括号中给出标准术语：
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}>{\raggedright\arraybackslash}p{0.20\textwidth}@{}}
+\toprule
+\textbf{期限} & \textbf{如何取得} & \textbf{何时结束} & \textbf{标准术语} \\
+\midrule
+自动 & 块作用域变量、参数、\texttt{auto}、
+  C99 的 VLA & 离开作用域（含异常离开）；
+  VLA 离开块即失效 & automatic storage duration \\
+\addlinespace
+手动 & \texttt{new}/\texttt{new[]}、\texttt{malloc}/
+  \texttt{calloc}/\texttt{realloc}、\texttt{strdup} &
+  显式 \texttt{delete}/\texttt{free}，或进程结束 &
+  dynamic storage duration \\
+\addlinespace
+静态 & 全局/命名空间变量、\texttt{static} 局部与成员、
+  C 的文件作用域变量 & 进程终止（\texttt{atexit} 逆序析构） &
+  static storage duration \\
+\addlinespace
+线程 & \texttt{\_Thread\_local} 或 \texttt{thread\_local} 变量 &
+  所属线程结束 &
+  thread storage duration \\
+\bottomrule
+\end{longtable}
+
+题目中所说的``进程''期限，对应标准的 static storage duration：
+它的生命周期跨越整个进程，因此口语里也叫``进程期存储''。
+需要补充的是，C++ 还有第五个正交概念\textbf{持续时间（duration）}
+与\textbf{生命周期（lifetime）}：期限描述``存储从哪来、何时还''，
+生命周期描述``对象何时有效''，两者并不等同。
+
+\subsection{期限与生命周期不是一回事}
+
+\begin{lstlisting}
+alignas(Widget) static char buf[sizeof(Widget)];   // 存储：进程期
+
+void use() {
+  Widget* w = new (buf) Widget();   // 对象生命周期开始（placement new）
+  w->run();
+  w->~Widget();                     // 对象生命周期结束，存储仍然有效
+}
+// buf 的存储期跨越整个进程，但其中的对象只活在两行之间
+\end{lstlisting}
+
+三个高频 UB 现场都源于混淆这两层：
+
+\begin{itemize}
+  \item \textbf{返回自动变量地址}：作用域结束时对象生命周期终止，
+        指针指向的存储可能还在（栈没被覆盖前``看起来能用''），但读取即 UB。
+  \item \texttt{shared\_ptr} \textbf{指向栈对象}：控制块与对象寿命解耦，
+        对象先于引用销毁就成了悬垂引用（第 6.7 节给出安全写法）。
+  \item \textbf{\texttt{string\_view} 持有临时}：视图不延长生命周期，
+        全句结束时视图即悬垂（编译器通常给 \texttt{-Wdangling-gsl} 警告）。
+\end{itemize}
+
+\begin{note}[title=``不规定位置''的准确程度]
+标准对四种期限\textbf{只规定分配与释放的时机}，从不规定物理位置。
+``自动变量在栈上''是实现惯例而非语言承诺：C++ 标准全篇没有定义 stack，
+只有 \textit{implementation} 与 \textit{as-if} 规则。
+唯一被标准点名``可能不在栈''的是 C99 的 VLA（其存储``像块作用域对象''）。
+因此嵌入式厂商可以把自动存储实现在静态池上（无 MMU 的微型内核），
+而编译器也可以把自动变量完全放进寄存器（逃逸分析）。
+\end{note}
+
+\section{``住在哪''由谁决定：与 C\# 的对照}
+
+C++ 的位置决定权在\emph{声明处}（写在哪、用什么分配函数）；
+C\# 的位置决定权在\emph{类型声明处}（是 \texttt{struct} 还是 \texttt{class}）。
+这是两种完全不同的所有权语言。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}>{\raggedright\arraybackslash}p{0.32\textwidth}@{}}
+\toprule
+\textbf{位置} & \textbf{C\# 的 \texttt{struct}（值类型）} &
+  \textbf{C\# 的 \texttt{class}（参考类型）} \\
+\midrule
+局部变量 & 内联于当前调用帧（栈），可被 JIT 拆入寄存器 &
+  变量本身是栈上的引用，对象在托管堆 \\
+\addlinespace
+作为字段 & 内联于宿主对象（宿主在哪它在哪） &
+  宿主存引用，被引用对象在托管堆 \\
+\addlinespace
+作为数组元素 & 内联于数组缓冲（一块连续值） &
+  数组存引用，元素对象各自在堆 \\
+\addlinespace
+\texttt{new} 一个实例 & 仍在当前位置（仅产生一份复制），
+  装箱后才入堆 & 必然在托管堆 \\
+\addlinespace
+\texttt{stackalloc} & 可显式栈上分配（\texttt{Span<T>}） & 不适用 \\
+\bottomrule
+\end{longtable}
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：位置由类型声明决定，不由使用方式决定}]
+struct Point { public int X, Y; }        // 值类型
+class  Node  { public int X, Y; }        // 参考类型
+
+Point p = new Point(1, 2);               // p 在栈（或寄存器）
+Point[] ps = new Point[1024];            // 一块连续的 8KB 值缓冲
+Node  n = new Node { X = 1, Y = 2 };     // 栈上引用 + 堆上对象
+Node[] ns = new Node[1024];              // 一块引用数组，1024 个独立对象
+
+ref struct Local { public Span<int> S; } // ref struct 只能住在栈：
+                                         // 禁止作字段、禁止进堆、禁止装箱
+\end{lstlisting}
+
+\begin{compare}[title=两种``位置控制''的对比]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}p{0.21\textwidth}>{\raggedright\arraybackslash}p{0.21\textwidth}>{\raggedright\arraybackslash}p{0.21\textwidth}@{}}
+\toprule
+\textbf{控制点} & \textbf{C++} & \textbf{C\#} & \textbf{Java} \\
+\midrule
+同一类型换位置 & 可以：栈/堆/静态/池任选 & 不可以：\texttt{struct} 与
+  \texttt{class} 是两个类型 & 不可以 \\
+\addlinespace
+位置由谁决定 & 使用处的表达式与分配器 & 类型声明（值/参考） &
+  运行时（几乎全堆） \\
+\addlinespace
+容器自定义分配 & 语言层：分配器是类型的一部分 & 库层协议：
+  \texttt{ArrayPool<T>} 或 \texttt{stackalloc} & 无 \\
+\addlinespace
+栈上大块 & \texttt{alignas} 数组、\texttt{alloca}（不推荐） &
+  \texttt{stackalloc}（有大小与逃逸限制） & 无 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+一句话概括：\textbf{C++ 的``位置''是表达式属性，C\# 的``位置''是类型属性}。
+所以 C++ 里换分配策略要改分配代码，C\# 里换分配策略要改类型定义。
+
+\section{分配位置到底被规定到什么程度}
+
+\subsection{\texttt{operator new} 的全部承诺}
+
+标准对 \texttt{operator new} 的要求只有四条（\texttt{[basic.stc.dynamic.allocation]}）：
+
+\begin{enumerate}
+  \item 返回的指针若\emph{非空}，必须正确对齐于 \texttt{max\_align\_t}
+        （C++17 起由 aligned new 保证更严格的对齐请求）；
+  \item 同一大小的两次成功分配不得返回同一地址（\texttt{[basic.stc.dynamic]}）；
+  \item 分配失败：抛 \texttt{std::bad\_alloc}，\texttt{nothrow} 版返回空指针；
+  \item 返回值\emph{不指定}来源区域、不指定是否连续、不指定是否可增长。
+\end{enumerate}
+
+\texttt{malloc} 家族在 C 侧的规定同样只到语义层：
+POSIX 只要求``分配 \texttt{size} 字节、返回未初始化内存''，
+底层用 \texttt{brk} 扩张、\texttt{mmap} 大块、线程局部 arena，
+还是被整体换成 mimalloc/jemalloc，都与标准无关。
+极端情形下，嵌入式实现可以把 \texttt{malloc} 写成
+``从 \texttt{.bss} 里的一块静态数组切分''，此时``堆''根本不是堆区。
+
+\begin{lstlisting}[caption={同一段代码，三种合法的落点（取决于实现与重载）}]
+void* a = operator new(1024);   // ① glibc ptmalloc：main_arena 的堆（brk）
+                                // ② mimalloc：本线程 arena 的段（mmap）
+                                // ③ 本项目重载：静态池 + 空闲链（裸机）
+// 三者都满足标准：对齐正确、地址唯一、失败时抛出或返回 nullptr
+\end{lstlisting}
+
+\subsection{容器：分配器是类型参数}
+
+标准容器的最后一个模板参数就是分配器，因此
+\texttt{vector<T>} 与带自定义分配器的 \texttt{vector<T,\,Pooled>}
+是\emph{不同类型}，落点自然可以完全不同：
+
+\begin{lstlisting}
+// ① 编译期分配器：写进类型
+template <class T> using PoolVec = std::vector<T, PoolAllocator<T>>;
+PoolVec<Task> tasks;                 // 全部元素住在自定义池
+
+// ② 运行时多态分配器（C++17 pmr）：类型不变，资源可换
+std::pmr::vector<int> v1{&sync};     // 同步资源
+std::pmr::vector<int> v2{&pool};     // 单线程池
+std::pmr::vector<int> v3;            // 默认 new_delete_resource()
+
+// ③ 一次性切换：monotonic 资源只分配不释放，函数结束整块回收
+std::pmr::monotonic_buffer_resource arena(buf, sizeof buf);
+std::pmr::string name(&arena);       // 短生命周期字符串，零 free 成本
+\end{lstlisting}
+
+\subsection{伪容器与视图：不分配，因而``住在哪''不适用}
+
+常被误认为``有分配器''的其实是\textbf{伪容器}（不拥有存储的类容器类型）：
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.24\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}>{\raggedright\arraybackslash}p{0.44\textwidth}@{}}
+\toprule
+\textbf{类别} & \textbf{例子} & \textbf{位置语义} \\
+\midrule
+非拥有视图 & \texttt{string\_view}、\texttt{span}、
+  \texttt{initializer\_list} & 不分配，指向别人的存储；
+  视图本身随声明处（通常栈） \\
+\addlinespace
+固定容量 & \texttt{std::array}、\texttt{bitset}、
+  C 数组 & 无分配器参数：随宿主（栈/堆/静态皆可） \\
+\addlinespace
+适配器 & \texttt{stack}/\texttt{queue} & 分配器来自\emph{底层容器} \\
+\addlinespace
+\texttt{std::string} & 分配器 + SSO & 短串住在对象内部（常为栈），
+  长串才走分配器 \\
+\addlinespace
+框架容器 & Qt \texttt{QVector}/\texttt{QList}、UE \texttt{TArray} &
+  走框架自己的分配入口（\texttt{FMemory::Malloc}、Qt 的 \texttt{qMalloc}），
+  标准分配器参数不适用 \\
+\bottomrule
+\end{longtable}
+
+\section{自定义分配器与重载 \texttt{new} 的落点能力}
+
+题目所说``自定义分配器或重载 new 可以分配到系统的堆中''，
+准确表述是：\textbf{落点由你选择，系统堆只是其中一个合法选项}。
+C++ 提供三个粒度的落点控制：
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.19\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}@{}}
+\toprule
+\textbf{粒度} & \textbf{手段} & \textbf{能落到的位置} \\
+\midrule
+指定地址 & placement \texttt{new (ptr)} & 你给的任意地址（MMIO、
+  共享内存、栈缓冲、静态池）；\textbf{不接管释放} \\
+\addlinespace
+全局替换 & 重载 \texttt{::operator new}/\texttt{delete} &
+  整个 TU/程序的所有 \texttt{new}：可转 \texttt{malloc}、
+  \texttt{HeapAlloc}、\texttt{mmap}、池 \\
+\addlinespace
+类型替换 & 类内 \texttt{operator new}/\texttt{delete} &
+  该类型的专用池（对象大小固定，最适合定长分配器） \\
+\addlinespace
+容器替换 & \texttt{Allocator} 模板参数 / \texttt{pmr} &
+  该容器的元素与内部节点，可按运行时资源切换 \\
+\bottomrule
+\end{longtable}
+
+\begin{lstlisting}[caption={全局重载：把 new 重定向到系统堆或自定义堆}]
+#include <windows.h>   // Linux 换成 mmap / malloc
+
+void* operator new(std::size_t n) {
+  // 选项 A：显式落到系统堆（与 CRT 的堆解耦，便于统一审计）
+  void* p = HeapAlloc(GetProcessHeap(), 0, n);
+  // 选项 B：落到自建池（裸机/实时场景，池本身可以是静态数组）
+  // void* p = Pool::instance().alloc(n);
+  if (!p) throw std::bad_alloc();
+  return p;
+}
+void operator delete(void* p) noexcept { HeapFree(GetProcessHeap(), 0, p); }
+void operator delete(void* p, std::size_t) noexcept { HeapFree(GetProcessHeap(), 0, p); }
+
+// 数组形式必须成对重载，否则 new[] 仍走默认实现（分配器混用 = UB）
+void* operator new[](std::size_t n) { return operator new(n); }
+void  operator delete[](void* p) noexcept { operator delete(p); }
+\end{lstlisting}
+
+\begin{warning}[title=落点自由的三条硬约束]
+\begin{itemize}
+  \item \textbf{分配与释放必须同源}：\texttt{HeapAlloc} 的内存交给
+        \texttt{free}、跨 DLL 边界的 CRT 堆、或另一个池，都是 UB
+        （Windows 下 ``the same heap'' 规则尤其容易踩）。
+  \item \texttt{delete} \textbf{表达式会先析构再释放}：重载
+        \texttt{operator delete} 只改变``内存从哪回收''，
+        不会改变析构时机；析构时机仍由 \texttt{delete} 表达式与
+        智能指针的删除器决定。
+  \item \textbf{\texttt{new[]} 多占一份 cookie}：数组形式在头部额外存储元素数，
+        自定义池的块大小要按 \texttt{n + sizeof(size\_t)} 预算，
+        且 \texttt{delete[]} 必须知道这个偏移。
+\end{itemize}
+\end{warning}
+
+\section{C++ 为什么引入智能指针}
+
+\subsection{裸指针没有回答的问题}
+
+\begin{lstlisting}
+Widget* make();          // 返回的指针：调用者要 delete 吗？
+void use(Widget* p);     // 参数：p 会被保存下来吗？函数返回后它还有效吗？
+Widget* g;               // 全局：谁负责释放？在 main 之前还是之后？
+\end{lstlisting}
+
+裸指针只表达``这里有个地址''，不表达\textbf{所有权}（ownership）。
+所有权的缺失带来三类具体成本：
+
+\begin{enumerate}
+  \item \textbf{异常路径泄漏}：\texttt{new} 与\texttt{初始化}之间一旦抛出，
+        中间指针不会被释放；
+  \item \textbf{多重释放与悬垂}：所有权不清时，两处代码都认为自己该 delete；
+  \item \textbf{审计不可自动化}： reviewer 只能靠注释与惯例判断谁拥有谁。
+\end{enumerate}
+
+\begin{lstlisting}
+void legacy() {
+  Widget* w = new Widget();
+  setup(w);              // 若 setup 抛异常：w 泄漏
+  config.load();         // 若这里抛：w 与 setup 内部资源都泄漏
+  delete w;
+}
+\end{lstlisting}
+
+\subsection{智能指针把``谁拥有''写进类型}
+
+智能指针的目的可以归纳为四条：
+
+\begin{itemize}
+  \item \textbf{所有权类型化}：\texttt{unique\_ptr} 表示唯一拥有，
+        \texttt{shared\_ptr} 表示共享拥有，
+        裸指针/\texttt{weak\_ptr} 表示\emph{借用观察}；
+  \item \textbf{释放点确定化}：析构在最后一个拥有者消失的那一刻发生（RAII），
+        异常路径同样成立；
+  \item \textbf{自定义释放协议}：删除器把``释放''从 \texttt{delete}
+        扩展到 \texttt{fclose}、\texttt{CFRelease}、
+        \texttt{CoTaskMemFree} 等库语义；
+  \item \textbf{与移动语义协同}：转移所有权成为一次显式的 \texttt{std::move}，
+        可被静态检查与 code review 追踪。
+\end{itemize}
+
+\begin{lstlisting}
+// 同一逻辑的现代写法：无 delete，异常安全，所有权写在签名里
+void modern() {
+  auto w = std::make_unique<Widget>();
+  setup(*w);             // 抛出时 w 自动析构
+  config.load();
+  return;                // 离开作用域即释放
+}
+void use(Widget& w);     // 借用：明确不接管所有权
+\end{lstlisting}
+
+\begin{note}[title=智能指针不是``替代裸指针'']
+Core Guidelines 的 F-profile/R-profile 约定：拥有者用
+\texttt{unique\_ptr}/\texttt{shared\_ptr}，借用者用裸指针或引用
+（\texttt{T*} 表示可空借用、\texttt{T\&} 表示非空借用）。
+\texttt{shared\_ptr} 也不能解决循环引用（需 \texttt{weak\_ptr}）
+与\emph{对象图整体回收}（需 GC 或 arena）。
+智能指针买到的是``释放时机与所有权显式化''，不是内存管理的全能解。
+\end{note}
+
+\section{\texttt{auto\_ptr}：为什么被废弃}
+
+\texttt{std::auto\_ptr} 由 C++98 标准引入（\texttt{<memory>},
+规划于 C++98 之前，实现于 HP aC++ 的 \texttt{auto\_ptr}），
+C++11 标记 deprecated，\textbf{C++17 起从标准中移除}。
+它被废弃不是因为``没用了''，而是因为\textbf{设计前提被语言本身推翻}。
+
+\subsection{致命缺陷：复制即转走}
+
+\begin{lstlisting}
+template <class T>
+class auto_ptr {
+  mutable T* m;
+public:
+  // 注意：参数是引用而非 const 引用 —— 复制构造会修改源对象
+  auto_ptr(auto_ptr& other) throw() : m(other.m) { other.m = 0; }
+  auto_ptr& operator=(auto_ptr& other) throw() {
+    if (this == &other) return *this;
+    delete m;            // 释放自己原来的对象
+    m = other.m;         // 接管
+    other.m = 0;         // 源被掏空
+    return *this;
+  }
+  T* release() throw() { T* t = m; m = 0; return t; }
+  void reset(T* p = 0) throw() { if (p != m) delete m; m = p; }
+  // ... operator*/->/get
+};
+\end{lstlisting}
+
+这个``复制构造窃取源对象''的设计导致四类具体事故：
+
+\begin{enumerate}
+  \item \textbf{按值传参静默掏空}：\texttt{void f(auto\_ptr<T> p)}
+        调用后实参变 \texttt{nullptr}，后续解引用即崩溃；
+  \item \textbf{放进标准容器是定时炸弹}：容器实现会复制元素
+        （\texttt{vector} 扩容、\texttt{sort} 交换），
+        被掏空的元素在析构时``删除空指针不报错、但真实资源被删两次或漏删''；
+        标准 \texttt{[res.on.required]} 甚至专门写了
+        ``程序不得把 \texttt{auto\_ptr} 作为容器元素''，
+        但编译器无法阻止，只在运行时炸；
+  \item \textbf{同一对象两个拥有者}：\texttt{auto\_ptr<T> b = a;}
+        之后 \texttt{a} 为空，若代码逻辑仍以为 \texttt{a} 有效，
+        就出现``看似共享实为悬垂''；
+  \item \textbf{无数组版本}：\texttt{auto\_ptr<T>} 的析构是标量
+        \texttt{delete}，用 \texttt{new T[n]} 初始化它就是
+        分配/释放形式不匹配（UB）；\texttt{auto\_ptr<T[]>} 从未进入标准。
+\end{enumerate}
+
+\subsection{根因：它早于移动语义}
+
+\texttt{auto\_ptr} 想要的语义其实是\emph{移动}，但 C++98 没有右值引用，
+只能把移动伪装成复制（因此参数类型是\texttt{auto\_ptr\&}，
+因此 \texttt{get()} 与 \texttt{release()} 都得是 \texttt{const} 可调用）。
+C++11 有了 \texttt{static\_assert}、右值引用与 \texttt{std::move} 之后，
+这些技巧全部成为负资产：
+
+\begin{itemize}
+  \item 复制构造被 \texttt{= delete}，转移必须写 \texttt{std::move}，
+        编译器直接拒绝\texttt{auto\_ptr} 式的``隐式转走''；
+  \item 转移后源对象\textbf{保证为空}（\texttt{unique\_ptr} 的移动构造
+        与移动赋值都显式置空源），不再出现``看起来还有值''的状态；
+  \item 提供 \texttt{unique\_ptr<T[]>} 特化，数组用 \texttt{delete[]}；
+  \item 删除器是\textbf{类型参数}（\texttt{unique\_ptr<T, D>}），
+        函数指针删除器才进运行时，无删除器时零开销（空基优化）；
+  \item 与容器、\texttt{return}、\texttt{move\_iterator} 完全兼容。
+\end{itemize}
+
+\begin{lstlisting}
+std::unique_ptr<Widget> a = std::make_unique<Widget>();
+std::unique_ptr<Widget> b = a;             // 编译错误：拷贝被删除
+std::unique_ptr<Widget> c = std::move(a);  // OK：a 保证为空
+// C++11 起 auto_ptr 被废弃；新代码一律 unique_ptr / shared_ptr
+\end{lstlisting}
+
+\begin{warning}[title=迁移 auto\_ptr 代码的实操要点]
+\begin{itemize}
+  \item \texttt{auto\_ptr<T>} 到 \texttt{unique\_ptr<T>}
+        的机械替换会在``按值传参''处报编译错，
+        那些点正是原代码隐藏的所有权 bug，逐个改成 \texttt{std::move} 或借用；
+  \item \texttt{release()} 的返回值交给非拥有者时最容易漏，
+        替换时优先用 \texttt{reset()} + 显式 \texttt{std::move}；
+  \item 老代码里 \texttt{auto\_ptr} 与 \texttt{shared\_ptr} 混用
+        （\texttt{shared\_ptr<T>(a.release())}）是合法但脆弱的写法，
+        迁移后应统一所有权类型。
+\end{itemize}
+\end{warning}
+
+\section{框架层指针方言：Qt、UE、Android}
+
+标准智能指针不携带任何\emph{对象模型}信息，而三大框架的对象模型
+（Qt 元对象、UE 反射、Android Binder）都需要指针理解``这个对象还活着吗''。
+于是各自长出一套指针体系。
+
+\subsection{Qt：QObject 父子树 + 一组 Q\,*Pointer}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.235\textwidth}>{\raggedright\arraybackslash}p{0.34\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}@{}}
+\toprule
+\textbf{类型} & \textbf{语义} & \textbf{备注} \\
+\midrule
+QObject 父子树 & 父对象析构时递归删除子对象；
+  子对象自动从父的列表摘除 & 事实上的``框架内 GC''，
+  只保证单亲 \\
+\addlinespace
+\texttt{QScopedPointer} & 作用域内唯一拥有，禁止复制，
+  可选自定义删除器 & Qt6 起即 \texttt{std::unique\_ptr}（Qt5 为自实现） \\
+\addlinespace
+\texttt{QPointer<T>} & 观察者：目标 QObject 销毁后自动置空 &
+  不是所有权工具，用于防悬垂 \\
+\addlinespace
+\texttt{QSharedPointer} & 共享计数（非侵入），可跨线程拷贝 &
+  与 \texttt{std::shared\_ptr} 互不兼容，需显式转换 \\
+\addlinespace
+\texttt{QWeakPointer} & 配合 \texttt{QSharedPointer} 破环 &
+  \texttt{toStrongRef()} 提升 \\
+\addlinespace
+\texttt{QString}、\texttt{QList} & 值语义 + 隐式共享（COW） &
+  所谓``复制''是引用计数复制 \\
+\bottomrule
+\end{longtable}
+
+\begin{lstlisting}[caption={Qt 的三条所有权路径（同一程序可并存）}]
+// ① 父子树：GUI 对象的默认方式
+auto* dlg = new QDialog(this);            // this 为父，父析构时自动删除
+auto* btn = new QPushButton("OK", dlg);   // btn 挂在 dlg 下
+
+// ② QScopedPointer（Qt6 = std::unique_ptr）：非 QObject 的资源
+QScopedPointer<Parser> p(new Parser(path));         // Qt5 风格
+auto p2 = std::make_unique<Parser>(path);           // Qt6 推荐
+
+// ③ QSharedPointer：需要共享且要跨线程
+auto shared = QSharedPointer<Model>::create();
+QMetaObject::invokeMethod(worker, [w = QWeakPointer<Model>(shared)] {
+  if (auto m = w.toStrongRef()) m->save();          // 提升后使用
+});
+\end{lstlisting}
+
+Qt 的取舍：QObject 树解决了``界面析构即全部清理''，
+代价是\textbf{不能把 QObject 放进 \texttt{QSharedPointer}}
+（两套计数会打架，Qt 文档明确禁止）；
+\texttt{QPointer} 之所以必要，是因为父子树与智能指针都无法表达
+``我只是想看它还在不在''。
+
+\subsection{UE：GC 可达性 + 四种指针}
+
+UE 的 UObject 生命周期由\textbf{增量标记清除垃圾回收器}管理，
+指针类型决定``是否参与根集''：
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.235\textwidth}>{\raggedright\arraybackslash}p{0.34\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}@{}}
+\toprule
+\textbf{类型} & \textbf{语义} & \textbf{备注} \\
+\midrule
+\texttt{TObjectPtr<T>} & GC 可见的强引用（UE5 取代裸 \texttt{UObject*}
+  字段） & 需配合 \texttt{UPROPERTY} 才进入根集 \\
+\addlinespace
+\texttt{TWeakObjectPtr} & 不延长寿命；用
+  \texttt{FUObjectHandle} 序列号验证有效性 &
+  对象被 GC 后 \texttt{IsValid()} 返回 false \\
+\addlinespace
+\texttt{TSharedPtr<T>} & 非 GC 对象的共享计数，
+  配 \texttt{SNew} 与 Slate 控件 & 计数线程安全，对象访问不保证 \\
+\addlinespace
+\texttt{TUniquePtr<T>} & 非 GC 对象的唯一拥有 &
+  基本就是 \texttt{std::unique\_ptr} 的别名 \\
+\addlinespace
+\texttt{FRawWeakPtr} & Slate 内部的弱引用 &
+  与 UObject 无关 \\
+\bottomrule
+\end{longtable}
+
+\begin{lstlisting}[caption={UE 的引用与有效性检查}]
+UPROPERTY() TObjectPtr<AEnemy> Nearest;   // 参与 GC 根集，不会被回收
+UPROPERTY() TWeakObjectPtr<AEnemy> LastSeen;
+
+void UCombatComponent::Tick(float dt) {
+  if (AEnemy* e = LastSeen.Get()) {        // 对象可能已被 GC
+    AimAt(e);
+  }
+  // Nearest 无需检查：只要本组件存活，GC 就保证它存活
+}
+
+// 非 GC 对象（Slate 控件、数学类型）走 shared/unique
+TSharedPtr<FItemStyle> Style = SNew(SButton).Style(...);
+\end{lstlisting}
+
+UE 的取舍：对象图巨大且\textbf{循环引用是常态}（Actor 互相引用），
+引用计数无法处理，只能上 GC；代价是必须区分
+``GC 管理的''与``我管理的''两套世界，
+混用（把 UObject 放进 \texttt{TSharedPtr}）会导致
+GC 提前回收或永不回收两类事故，因此 UE5 用
+\texttt{TObjectPtr} + 分析器把这条边界写进工具链。
+
+\subsection{Android：RefBase 与 \texttt{sp}/\texttt{wp}}
+
+Android 原生框架层（\texttt{frameworks/native/include/utils/}）
+用的是\textbf{侵入式引用计数}：
+
+\begin{lstlisting}
+class SoundPool : public RefBase {   // frameworks/native/include/media
+  // ...
+};
+
+sp<SoundPool> pool = SoundPool::create(4, AUDIO_STREAM_MUSIC, 0);
+// 要求：T 必须继承 android::RefBase
+// sp<T> 构造即 android_atomic_inc(&mStrong)；析构即 decStrong()
+
+wp<SoundPool> weak(pool);                  // 只增弱计数
+if (sp<SoundPool> s = weak.promote()) {    // 提升：强计数 > 0 才成功
+  s->play(1.0f, 1.0f, 0, 0, 0.0f);
+}
+// 线程池回调里投递任务的标准写法：
+pool->getThreadExecutor()->post([w = wp<SoundPool>(pool)] {
+  if (auto s = w.promote()) s->onDone();   // 对象可能已销毁
+});
+\end{lstlisting}
+
+\texttt{RefBase} 维护\textbf{两个计数}：强计数决定对象存活，
+弱计数决定 \texttt{wp} 的引用块是否还有效；
+强计数归零后先调用虚函数 \texttt{onLastStrongRef()}
+（Binder 的 \texttt{BBinder} 用它清理线程状态），
+再等弱计数归零才销毁对象与引用块。
+NDK 侧则没有 \texttt{sp}，只有 C 层的引用计数惯例
+（\texttt{ANativeWindow\_incRef}/\texttt{decRef}、
+\texttt{AHardwareBuffer\_incRef}），Java/Kotlin 层交给 ART 的 GC。
+
+\begin{compare}[title=为什么 Android 不用 \texttt{std::shared\_ptr}]
+\begin{itemize}
+  \item \textbf{系统库禁用异常与 RTTI}：\texttt{make\_shared}
+        失败要抛 \texttt{bad\_alloc}，Android 平台代码用
+        \texttt{abort} 而非异常，标准智能指针的收益被削掉一半；
+  \item \textbf{侵入式更便宜}：\texttt{RefBase} 的计数与对象同块内存，
+        一次分配、一次缓存命中；\texttt{shared\_ptr}
+        非 \texttt{make\_shared} 时是两次分配；
+  \item \textbf{跨 Binder 传递}需要``引用块''这一独立实体
+        （强/弱引用在进程间映射为 handle），
+        \texttt{wp.promote()} 正是进程对端可能已死的语义载体；
+  \item 历史：\texttt{RefBase} 源自 OpenGRO（2000 年前后），
+        早于 \texttt{shared\_ptr} 进入 TR1。
+\end{itemize}
+\end{compare}
+
+\subsection{四套体系横向对照}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}>{\raggedright\arraybackslash}p{0.225\textwidth}>{\raggedright\arraybackslash}p{0.225\textwidth}@{}}
+\toprule
+\textbf{维度} & \textbf{C++ 标准} & \textbf{Qt} & \textbf{UE / Android} \\
+\midrule
+唯一拥有 & \texttt{unique\_ptr} & \texttt{QScopedPointer}
+  （Qt6 即 \texttt{unique\_ptr}） & UE \texttt{TUniquePtr}；
+  Android 无对应 \\
+\addlinespace
+共享拥有 & \texttt{shared\_ptr} & \texttt{QSharedPointer} &
+  UE \texttt{TSharedPtr}；Android \texttt{sp} \\
+\addlinespace
+计数位置 & 控制块（非侵入，可 \texttt{make\_shared} 合并） &
+  控制块（非侵入） & UE \texttt{TSharedPtr} 非侵入；
+  Android \texttt{RefBase} 侵入 \\
+\addlinespace
+弱引用 & \texttt{weak\_ptr} & \texttt{QWeakPointer} 与 \texttt{QPointer} &
+  UE \texttt{TWeakObjectPtr}；Android \texttt{wp.promote()} \\
+\addlinespace
+线程安全 & 计数原子，对象访问不保证 & 计数原子；QObject 树限主线程 &
+  Android 计数原子；UE GC 仅游戏线程 \\
+\addlinespace
+自定义删除 & \texttt{unique\_ptr} 类型参数、
+  \texttt{shared\_ptr} 构造参数 & \texttt{QScopedPointer} 模板参数 &
+  UE \texttt{TSharedPtr} 删除器；Android 虚函数
+  \texttt{onLastStrongRef} \\
+\addlinespace
+循环引用 & \texttt{weak\_ptr} 手工破 & 父子树天然无环，
+  另有 \texttt{QWeakPointer} &
+  UE 交给 GC；Android 需手工用 \texttt{wp} \\
+\addlinespace
+与标准互操作 & 即标准 & 需显式转换 & UE 的 \texttt{TUniquePtr}
+  是别名；Android 完全不兼容 \\
+\bottomrule
+\end{longtable}
+
+\section{与 Rust 的对照：把``活多久''写进类型}
+
+C/C++ 把``这个指针还能用多久''留给文档、命名与程序员的自律；
+智能指针（第 6.5--6.6 节）解决的是\textbf{谁负责释放}，
+仍然不解决\textbf{借用何时失效}。
+Rust 走的是第三条路：所有权与借用时长都写成类型参数，
+由编译期的借用检查器（borrow checker）证明
+``引用不会比它指向的对象活得更久''。
+本节只做机制对照，不评优劣。
+
+\subsection{三组概念的对应与错位}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}>{\raggedright\arraybackslash}p{0.40\textwidth}@{}}
+\toprule
+\textbf{C/C++ 的做法} & \textbf{Rust 的对应} & \textbf{错位之处} \\
+\midrule
+\texttt{unique\_ptr} 表达独占 &
+  移动语义 + \texttt{Drop}；\texttt{Box} 只是``要放堆上''的独占值 &
+  Rust 的\textbf{默认形态}就是独占所有权，独占不需要包装类型；
+  被移动过的值在语言层不可再用，而 \texttt{unique\_ptr} 移走后
+  仍可通过 \texttt{release()} 之类的口子绕回 \\
+\addlinespace
+\texttt{T*} 或 \texttt{T\&} 表示借用，不记时长 &
+  \texttt{\&'a T} 与 \texttt{\&'a mut T}，时长是类型参数 &
+  同一条``借用不拥有''的语义，C++ 只写到``是不是 const''，
+  Rust 还要写到``借到哪一刻'' \\
+\addlinespace
+\texttt{shared\_ptr} 一份计数跨线程通用 &
+  \texttt{Rc}（非原子）与 \texttt{Arc}（原子）两型 &
+  把 \texttt{Rc} 带上工作线程在 Rust 是编译失败；
+  C++ 里 \texttt{shared\_ptr} 计数原子、对象访问却仍可竞争，
+  只能靠 \texttt{-fsanitize=thread} 事后抓 \\
+\addlinespace
+析构点即释放点（RAII） & \texttt{Drop::drop} 在作用域末尾 &
+  两者同构，这是 Rust 直接继承 C++ 的部分 \\
+\addlinespace
+删除器运行期塞进构造参数 & \texttt{impl Drop} 写在类型里 &
+  Rust 的释放协议编译期确定；确需运行期自定义时反而要
+  \texttt{Box<dyn FnMut()>} 这样的闭包包装 \\
+\addlinespace
+悬垂、迭代器失效、数据竞争都是 UB &
+  借用冲突与 \texttt{Send}/\texttt{Sync} 违反是编译错误 &
+  错误类别相同，报告时机从运行期前移到编译期 \\
+\bottomrule
+\end{longtable}
+
+\begin{lstlisting}[style=ruststyle,caption={Rust 的三种情形：拒绝、标注、推断}]
+// ① 返回局部值的引用：编译期直接拒绝
+fn dangling() -> &String {
+    let s = String::from("hi");
+    &s                        // error[E0106] 缺少生命周期说明
+}
+
+// ② 输出借自输入：必须写明"同生共死"
+fn first_word<'a>(s: &'a str) -> &'a str {
+    s.split(' ').next().unwrap_or("")
+}
+
+// ③ 同一作用域内使用：无需任何标注
+fn main() {
+    let text = String::from("hello rust");
+    println!("{}", first_word(&text));   // text 在打印后才析构
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption={同型代码在 C++ 里：①编译通过，运行期才出错}]
+// ① 悬垂视图：没有任何诊断
+std::string_view dangling() {
+    std::string s = "hi";
+    return s;                    // s 已析构，读取即 UB
+}
+
+// ② "输出借自输入"只能写在注释里
+std::string_view first_word(std::string_view s) {   // 结果借自 s
+    return s.substr(0, s.find(' '));
+}
+
+// ③ 作用域内使用同样安全，但没人替你核对
+int main() {
+    std::string text = "hello rust";
+    std::cout << first_word(text) << '\n';
+}
+\end{lstlisting}
+
+差异的关键不是``有没有检查''，而是检查发生在哪一层：
+C++ 靠事后工具（地址消毒器、静态分析）与人工审阅，
+Rust 要求信息在编译前就出现在签名里——
+要么手写，要么被省略规则推出来。
+
+\subsection{省略规则：为什么多数签名不写 \texttt{'a}}
+
+Rust 用三条纯语法约定补全不写的标注：
+
+\begin{enumerate}
+  \item 每个引用参数各自成为一个区域；
+  \item 若函数\textbf{恰有一个}输入生命周期，它被赋给所有输出；
+  \item 若签名含 \texttt{\&self} 或 \texttt{\&mut self}，
+        \texttt{self} 的区域赋给所有输出。
+\end{enumerate}
+
+于是 \texttt{fn first\_word(s: \&str) -> \&str} 无需标注即可被正确理解；
+而返回\textbf{两个}输入之一的函数必须手写标注，
+因为省略规则给不出唯一答案。
+C++ 没有对应机制：\texttt{string\_view} 作返回值时借自哪个参数、
+调用方要保它到何时，全部落在注释里。
+
+\begin{warning}[title=省略不等于没有约束]
+三条规则只是把\emph{可推断}的约束写成默认值，
+编译器仍按补全后的签名核对。
+C++ 侧同方向的补丁是 GSL 的 \texttt{lifetime} 标注
+（Clang 的 \texttt{-Wdangling-gsl} 诊断、\texttt{-fsanitize=address} 兜底），
+但它是可选的告警，不是语言保证：
+\textbf{默认关闭时，悬垂仍然是合法的 C++}。
+\end{warning}
+
+\subsection{视图类型必须记录借自谁}
+
+\begin{lstlisting}[style=ruststyle,caption={Rust 的视图结构体：字段带区域名}]
+struct Cursor<'a> {           // 不拥有 buf，只借用
+    buf: &'a [u8],
+    at: usize,
+}
+
+impl<'a> Cursor<'a> {
+    fn advance(&mut self, n: usize) { self.at += n; }
+    fn rest(&self) -> &'a [u8] { &self.buf[self.at..] }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[caption={C++ 的同型视图：编译器不记录 buf 借自谁}]
+struct Cursor {                          // 宿主决定 buf 的生死
+    std::span<const std::uint8_t> buf;
+    std::size_t at = 0;
+    void advance(std::size_t n) { at += n; }
+
+    std::span<const std::uint8_t> rest() const {
+        return buf.subspan(at);
+    }
+};
+\end{lstlisting}
+
+这正是第 6.3.3 节``伪容器不延长生命周期''的分界点：
+C++ 里 \texttt{span} 作成员时，宿主与缓冲区的关系不可表达；
+Rust 里 \texttt{Cursor<'a>} 的 \texttt{'a} 会\textbf{传染}给所有
+持有它的类型与函数签名，于是``谁借给谁''成为一张编译器可核对的图。
+传染的代价是签名噪音（每个类型多一个参数），
+收益是悬垂在类型层\textbf{不可表达}。
+
+\subsection{智能指针与拥有权类型的对照}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}>{\raggedright\arraybackslash}p{0.21\textwidth}>{\raggedright\arraybackslash}p{0.23\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}@{}}
+\toprule
+\textbf{维度} & \textbf{C++} & \textbf{Rust} & \textbf{备注} \\
+\midrule
+独占 & \texttt{unique\_ptr<T>} & \texttt{Box<T>} 或值本身 &
+  Rust 的独占是默认，不必是指针 \\
+\addlinespace
+共享 & \texttt{shared\_ptr<T>} & \texttt{Rc<T>} / \texttt{Arc<T>} &
+  原子与非原子分成两型，用错编译失败 \\
+\addlinespace
+弱引用 & \texttt{weak\_ptr}，\texttt{lock()} &
+  \texttt{Weak}，\texttt{upgrade()} 返回 \texttt{Option} &
+  语义同；Rust 无 \texttt{use\_count()} \\
+\addlinespace
+借用观察 & \texttt{T*} / \texttt{T\&} & \texttt{\&T} / \texttt{\&mut T} &
+  Rust 的借用不可悬垂 \\
+\addlinespace
+内部可变 & \texttt{mutable}、\texttt{const\_cast} &
+  \texttt{Cell} / \texttt{RefCell} &
+  Rust 把冲突变成运行期 panic 而非 UB \\
+\addlinespace
+自定义删除 & 类型参数或构造参数 & \texttt{impl Drop} &
+  Rust 编译期确定，运行期删除器要闭包 \\
+\addlinespace
+数组 & \texttt{unique\_ptr} 的数组版、\texttt{vector} &
+  \texttt{Box<[T]>}、\texttt{Vec<T>} &
+  \texttt{Vec} 头部在栈、缓冲在堆 \\
+\addlinespace
+循环引用 & \texttt{weak\_ptr} 手工破 &
+  \texttt{Weak} 手工破，或 \texttt{Rc<RefCell>} &
+  Rust 无 GC，UE 式对象图通常改写成 arena + 索引 \\
+\bottomrule
+\end{longtable}
+
+\subsection{位置与分配：同样不规定，但顺序相反}
+
+\begin{lstlisting}[style=ruststyle,caption={Rust 的分配入口与位置归属}]
+#[global_allocator]          // 全局粒度，等同重载 operator new
+static ALLOC: MiMalloc = MiMalloc;
+
+fn main() {
+    let a = 42u32;                       // 局部值：栈
+    let b = Box::new(42u32);             // 显式装箱才进堆
+    let v = vec![0u8; 4096];             // Vec 头在栈，缓冲在堆
+    std::mem::forget(b);                 // 泄漏在 Rust 里是 safe
+}
+\end{lstlisting}
+
+与第 6.3--6.4 节的结论逐条对齐：
+
+\begin{itemize}
+  \item \textbf{同样不规定位置}。\texttt{Box::new} 走 \texttt{GlobalAlloc}
+        （默认即系统 \texttt{malloc}），
+        \texttt{\#[global\_allocator]} 换成 mimalloc、jemalloc
+        与本章全局重载 \texttt{operator new} 是同一粒度的手段。
+  \item \textbf{没有类级别重载的稳定等价物}。
+        按类型分池要靠自定义分配器（\texttt{allocator\_api} 仍未稳定）
+        或手写 arena，粒度比 C++ 粗。
+  \item \textbf{没有 placement new}。Rust 的值先在栈上成形，
+        再随 \texttt{Box::new}、\texttt{Vec::push} \textbf{搬移}
+        （move 即 memcpy）进堆；C++ 是``先取内存再原地构造''，
+        Rust 是``先构造再搬移''。
+        因此 Rust 需要 \texttt{Pin} 来表达``地址不许再变''
+        （自引用结构、异步状态机），
+        而 C++ 靠``moved-from 之后不再使用''的人为约定。
+  \item \textbf{泄漏仍是 safe}。\texttt{std::mem::forget} 合法，
+        借用检查保证的是\textbf{引用有效性}，
+        不是\textbf{资源必被回收}——这一点与 C/C++ 完全一致，
+        也是 Rust 依旧需要 RAII 与内存统计工具的原因。
+  \item \textbf{位置归属仍是表达式属性}。局部变量在栈、
+        \texttt{Box} 在堆，与 C++ 同类，
+        与 C\# 的``\texttt{struct} 还是 \texttt{class} 决定位置''（第 6.2 节）相反。
+\end{itemize}
+
+\begin{note}[title=\texttt{'static} 常被误读]
+\texttt{'static} 不等于``静态存储期限''。它表达的是
+\textbf{不含任何短生命周期借用，因此在任意时刻都可安全丢弃}。
+字符串字面量确实落在 \texttt{.rodata}（那是静态期限），
+但 \texttt{T: 'static} 对堆对象同样成立——
+它说的是所有权完整，不是地址固定。
+这与 C/C++ 的 static storage duration 是两个正交概念，
+对照第 6.1.1 节``期限与生命周期不是一回事''。
+\end{note}
+
+\subsection{逃逸舱：\texttt{unsafe}、\texttt{Rc<RefCell>} 与索引代替指针}
+
+\begin{lstlisting}[style=ruststyle,caption={三种妥协写法，各自对应一个 C++ 常态}]
+// ① 凭空承诺区域：责任回到人身上，等同 C++
+unsafe fn borrow_raw<'a, T>(p: *const T) -> &'a T { &*p }
+
+// ② 编译期让位给运行期：借用冲突变成 panic
+type Shared = Rc<RefCell<Node>>;
+
+// ③ 用间接层换掉不可表达的别名约束：索引代替指针
+struct Graph { slots: Vec<Node> }
+fn get(g: &Graph, id: usize) -> &Node { &g.slots[id] }
+\end{lstlisting}
+
+\begin{itemize}
+  \item \texttt{unsafe} + 裸指针 $\approx$ C++ 本身：
+        不变式写进文档，编译器不再核对。
+        标准库的 \texttt{Vec}、\texttt{Rc}、\texttt{RefCell}
+        就是包在 \texttt{unsafe} 外面的安全外壳——
+        与第 6.7 节框架把裸指针包成安全句柄是同一手法。
+  \item \texttt{Rc<RefCell<T>>} $\approx$ \texttt{shared\_ptr} 加手工标志位：
+        把编译期检查降级为运行期 \texttt{BorrowMutError}，
+        换来的是``多所有者 + 可修改''终于可表达。
+  \item 索引 / 句柄代替指针 $\approx$ arena：
+        UE 的 \texttt{TWeakObjectPtr} 用（索引，序列号）二元组、
+        Java 的 handle、Linux 内核的 \texttt{idr} 都是同一形状。
+        本章末尾的速查把这条列为 C++ 的首选建议，
+        Rust 只是把它变成更常见的默认选择。
+\end{itemize}
+
+\begin{compare}[title=三种语言把``活多久''写在哪一层]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.31\textwidth}>{\raggedright\arraybackslash}p{0.32\textwidth}@{}}
+\toprule
+\textbf{语言} & \textbf{写在哪} & \textbf{违规后果} \\
+\midrule
+C/C++ & 文档、命名、人脑；类型只说明``是什么'' &
+  UB，靠消毒器与审阅事后抓 \\
+Rust & 类型参数与 trait，编译期核对 & 编译错误 \\
+C\#、Java & 运行时（GC 与句柄），程序员不问 &
+  无悬垂，代价是 GC 与内存开销 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+\begin{warning}[title=三条易错类比]
+\begin{itemize}
+  \item \texttt{'a} \textbf{不是时间单位}。它是区域的\textbf{名字}，
+        只能出现在约束里：两个标注同名即要求同生共死，
+        无法据此算出``还剩多久能用''。
+  \item \texttt{Rc} \textbf{不等于} \texttt{shared\_ptr}。
+        无控制块合并、无 \texttt{use\_count()}、不满足 \texttt{Send}，
+        克隆必须显式 \texttt{clone()}，
+        它更像``单线程且要手写加计数的 \texttt{shared\_ptr}''。
+  \item \texttt{Box<T>} \textbf{不承诺}``堆上的 \texttt{T}''这一位置。
+        它承诺独占与地址固定；
+        要表达``地址永不变''还得 \texttt{Pin<Box<T>>}。
+\end{itemize}
+\end{warning}
+
+\section{生命周期与指针选型速查}
+
+\begin{bestpractice}[title=落地规则]
+\begin{itemize}
+  \item \textbf{普通 C++ 对象}：默认 \texttt{unique\_ptr}，
+        确需共享再 \texttt{shared\_ptr}，
+        借用一律裸指针或引用（\texttt{T*}/\texttt{T\&}）；
+  \item \textbf{框架对象}：QObject 派生类用父子树 + \texttt{QPointer}，
+        UObject 用 \texttt{TObjectPtr} + \texttt{UPROPERTY}，
+        AOSP 原生类用 \texttt{sp}/\texttt{wp}；
+        \textbf{不要在同一所有权链上混用两套体系}；
+  \item \textbf{非堆资源}：删除器比析构更可靠
+        （\texttt{unique\_ptr<FILE, int(*)(FILE*)>}、
+        \texttt{shared\_ptr<void>(p, dl\_free)}）；
+  \item \textbf{短生命周期批量对象}：优先 arena/\texttt{pmr}
+        而不是智能指针：整块回收比逐个计数便宜一个数量级，
+        且没有计数开销；
+  \item \textbf{跨层边界}：只传\emph{借用}指针 + 长度，
+        所有权留在分配侧（与《Lang Levels》第 7.3 节的边界规则一致）；
+  \item \textbf{不引入 Rust 也能借鉴 Rust}：视图类型只存借用不存所有权，
+        ``输出借自输入''写进注释或 GSL 的 \texttt{lifetime} 标注；
+        需要多所有者时先想 arena + 句柄，再想 \texttt{shared\_ptr}
+        （对照第 6.8 节）。
+\end{itemize}
+\end{bestpractice}
+
+\begin{guideline}[title=本章小结]
+\begin{itemize}
+  \item C/C++ 规定四种存储期限的\textbf{分配与释放时机}，
+        从不规定\textbf{物理位置}；placement \texttt{new}
+        是唯一能把位置写进代码的手段，而它不接管释放。
+  \item 容器把位置交给\textbf{分配器}（类型参数或 \texttt{pmr} 资源），
+        伪容器与视图根本不分配，框架容器走框架自己的分配入口。
+  \item C\# 反过来：\texttt{struct}/\texttt{class} 把位置写进类型声明，
+        值类型内联、参考类型必在托管堆，泛型容器无自定义分配器。
+  \item 智能指针的目的 = 把所有权写进类型 + 把释放点交给作用域；
+        \texttt{auto\_ptr} 因``复制即转走''违背值语义、
+        无数组版本、且早于移动语义而被废弃（C++11 弃用、C++17 移除）。
+  \item Qt/UE/Android 的指针方言各自映射其对象模型：
+        父子树、GC 可达性、侵入式双计数；
+        共同趋势是向 \texttt{std} 靠拢（Qt6 别名 \texttt{unique\_ptr}），
+        框架专属指针只用于框架对象。
+  \item Rust 把\textbf{借用时长}写成类型参数 \texttt{'a} 并在编译期核对：
+        独占对应 \texttt{Box}、共享对应 \texttt{Rc}/\texttt{Arc}、
+        弱引用对应 \texttt{Weak}、悬垂对应编译错误。
+        但它同样不规定内存位置、泄漏仍是 safe，
+        \texttt{unsafe} 与 \texttt{Rc<RefCell>} 就是退回 C++ 式约定的逃逸舱。
+\end{itemize}
+\end{guideline}
 
 \end{document}
