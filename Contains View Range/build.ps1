@@ -135,7 +135,10 @@ try {
 
         # 解析日志（-file-line-error 下错误形如 "containers_views_ranges.tex:421: LaTeX Error: ..."，
         # 与 "^!" 传统格式都要统计，否则会漏报错误）
-        $errorCount    = ([regex]::Matches($stdout, '(?im)^!')).Count + `
+        # "^!" 必须再要求 ! 后紧跟拉丁字母或 =：TeX 把盒子内容打进日志时 $\to$ 记作 !，
+        # 日志按 79 列折行会让这个 ! 落到行首，纯 ^! 于是把排版 dump 数成错误
+        # （CI 的 Fandol 字宽与本地不同，就出现只有 CI 报 Err=1 的假错误）。
+        $errorCount    = ([regex]::Matches($stdout, '(?im)^![ \t]*[A-Za-z=]')).Count + `
                          ([regex]::Matches($stdout, '(?im)^[^\r\n]*\.tex:\d+:.*(LaTeX Error|Package .* Error|Undefined control sequence|Missing \$ inserted|Emergency stop|You can''t use)')).Count
         $overfullCount = ([regex]::Matches($stdout, '(?i)Overfull')).Count
         $underfullCount = ([regex]::Matches($stdout, '(?i)Underfull')).Count
@@ -152,7 +155,7 @@ try {
             $allLines = @($stdout -split "`n")
             $hitIdx   = @()
             for ($k = 0; $k -lt $allLines.Count; $k++) {
-                if ($allLines[$k] -match '^!' -or $allLines[$k] -match '\.tex:\d+:.*(LaTeX Error|Package .* Error|Undefined control sequence|Missing \$ inserted|Emergency stop|You can''t use)') {
+                if ($allLines[$k] -match '^![ \t]*[A-Za-z=]' -or $allLines[$k] -match '\.tex:\d+:.*(LaTeX Error|Package .* Error|Undefined control sequence|Missing \$ inserted|Emergency stop|You can''t use)') {
                     $hitIdx += $k
                     if ($hitIdx.Count -ge 3) { break }
                 }
