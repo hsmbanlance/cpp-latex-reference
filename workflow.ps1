@@ -134,7 +134,9 @@ function Invoke-Build {
     Write-Host "  [$status] Err=$errors Ov=$overfull Ref=$dangling ${sizeKB}KB ${elapsed}s" -ForegroundColor $color
 
     if ($status -eq 'FAIL') {
-        $output | Select-Object -Last 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkRed }
+        # 45 lines: enough to keep the whole error-context window build.ps1 prints
+        # (header + 6 before + hit + 8 after), 15 used to cut off the message head.
+        $output | Select-Object -Last 45 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkRed }
     }
 
     return [PSCustomObject]@{ Name=$Name; Status=$status; Errors=$errors; Overfull=$overfull; Refs=$dangling; SizeKB=$sizeKB }
