@@ -145,12 +145,24 @@ try {
             if ($errorCount -gt 0) { 'Red' } elseif ($overfullCount -gt 0) { 'DarkYellow' } else { 'Green' }
         )
 
-        # 计数非零就打印错误行原文：xelatex 常以退出码 0 收尾却留下单条可恢复错误，
-        # 只在退出码非 0 时 dump 日志的话，这类错误查不到正文（本地/CI 差异缺陷就没法定位）
+        # 计数非零就打印错误行及其上下文：xelatex 常以退出码 0 收尾却留下单条可恢复错误，
+        # 只在退出码非 0 时 dump 日志的话，这类错误查不到正文（本地与 CI 的差异缺陷就没法定位）
         if ($errorCount -gt 0) {
-            Write-Host "`n  [错误行摘录，最多 12 条]" -ForegroundColor Red
-            $hits = @(($stdout -split "`n") | Where-Object { $_ -match '^!' -or $_ -match '\.tex:\d+:.*(LaTeX Error|Package .* Error|Undefined control sequence|Missing \$ inserted|Emergency stop|You can''t use)' })
-            $hits | Select-Object -First 12 | ForEach-Object { Write-Host ('    ' + $_.Trim()) -ForegroundColor DarkRed }
+            Write-Host "`n  [错误行上下文，最多 3 处]" -ForegroundColor Red
+            $allLines = @($stdout -split "`n")
+            $hitIdx   = @()
+            for ($k = 0; $k -lt $allLines.Count; $k++) {
+                if ($allLines[$k] -match '^!' -or $allLines[$k] -match '\.tex:\d+:.*(LaTeX Error|Package .* Error|Undefined control sequence|Missing \$ inserted|Emergency stop|You can''t use)') {
+                    $hitIdx += $k
+                    if ($hitIdx.Count -ge 3) { break }
+                }
+            }
+            foreach ($h in $hitIdx) {
+                $from = [Math]::Max(0, $h - 6)
+                $to   = [Math]::Min($allLines.Count - 1, $h + 8)
+                for ($j = $from; $j -le $to; $j++) { Write-Host ('    ' + $allLines[$j].TrimEnd()) -ForegroundColor DarkRed }
+                Write-Host '    ----' -ForegroundColor DarkYellow
+            }
         }
 
         if ($process.ExitCode -ne 0 -and $errorCount -gt 0) {
