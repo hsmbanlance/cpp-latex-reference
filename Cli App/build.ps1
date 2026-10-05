@@ -111,6 +111,21 @@ try {
         $env:PATH = "$miktexDir;$env:PATH"
     }
 
+    # ─── 取证用：逐行数花括号增量（反斜杠吃掉下一个字符） ───
+    # 生成的 toc 里只要有一行括号断裂，报错就会漂到几百行之后的表格里，只能这样定位
+    function Get-BraceDelta {
+        param([string]$s)
+        $d = 0; $i = 0
+        while ($i -lt $s.Length) {
+            $c = $s[$i]
+            if ($c -eq '\' -and $i + 1 -lt $s.Length) { $i += 2; continue }
+            # 这里必须用 +=/-=，写成 $d++ 会把旧值泄进函数输出流、返回值变成数组
+            if ($c -eq '{') { $d += 1 } elseif ($c -eq '}') { $d -= 1 }
+            $i += 1
+        }
+        return $d
+    }
+
     # ─── 编译函数 ───
     function Invoke-XeLaTeX {
         param([int]$Pass)
@@ -179,7 +194,47 @@ try {
                 Get-Content -LiteralPath $logTailPath -Encoding UTF8 |
                     Select-Object -Last 45 |
                     ForEach-Object { Write-Host "    $_" -ForegroundColor DarkRed }
+
+                # 触发点通常在"第一条"错误而不是收尾几十行。-file-line-error 下 plain-TeX 的
+                # 错误行首没有 !（形如 ./cli_app.tex:5294: Extra }, or forgotten \endgroup.），
+                # 所以这里按 log 原样扫，前 3 条各带上下文。
+                $logLines = @(Get-Content -LiteralPath $logTailPath -Encoding UTF8)
+                $firstIdx = @()
+                for ($k = 0; $k -lt $logLines.Count; $k++) {
+                    if ($logLines[$k] -match '^! ' -or $logLines[$k] -match '\.tex:\d+: ') {
+                        $firstIdx += $k
+                        if ($firstIdx.Count -ge 3) { break }
+                    }
+                }
+                Write-Host "`n  [log 首条错误上下文，最多 3 处]" -ForegroundColor Red
+                foreach ($h in $firstIdx) {
+                    $from = [Math]::Max(0, $h - 4)
+                    $to   = [Math]::Min($logLines.Count - 1, $h + 10)
+                    for ($j = $from; $j -le $to; $j++) { Write-Host ('    ' + $logLines[$j].TrimEnd()) -ForegroundColor DarkRed }
+                    Write-Host '    ----' -ForegroundColor DarkYellow
+                }
             }
+
+            # 第 3 pass（目录修复）的头号嫌疑：manual.toc 只要有一行括号断裂，报错就会漂到
+            # 几百行之后的表格里。把行数、全文件增量与断裂行的行号一起打出来。
+            $tocProbePath = Join-Path $scriptDir "$jobName-manual.toc"
+            if (Test-Path -LiteralPath $tocProbePath) {
+                $tocLines = @(Get-Content -LiteralPath $tocProbePath -Encoding UTF8)
+                $unbal = @(); $totalDelta = 0
+                for ($k = 0; $k -lt $tocLines.Count; $k++) {
+                    $d = Get-BraceDelta $tocLines[$k]
+                    $totalDelta += $d
+                    if ($d -ne 0) { $unbal += ('line {0}: delta {1}' -f ($k + 1), $d) }
+                }
+                Write-Host ("`n  [manual.toc 行数 {0} | 全文件括号增量 {1} | 不平衡行 {2}]" -f $tocLines.Count, $totalDelta, $unbal.Count) -ForegroundColor Red
+                if ($unbal.Count -gt 0) {
+                    $show = $unbal[0..([Math]::Min(9, $unbal.Count - 1))]
+                    Write-Host ('    ' + ($show -join '; ')) -ForegroundColor DarkRed
+                }
+                Write-Host "  [manual.toc 前 12 行]" -ForegroundColor DarkGray
+                $tocLines | Select-Object -First 12 | ForEach-Object { Write-Host ('    ' + $_) }
+            }
+
             if ($stderr.Trim()) {
                 Write-Host "`n  [stderr 最后 10 行]" -ForegroundColor Red
                 $stderr -split "`n" | Select-Object -Last 10 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkRed }
