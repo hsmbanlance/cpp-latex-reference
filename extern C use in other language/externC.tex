@@ -182,6 +182,19 @@
 }
 
 % ---- Rust ----
+\lstdefinelanguage{Rust}{%
+  morekeywords={%
+    as,break,const,continue,crate,dyn,else,enum,extern,false,fn,for,
+    if,impl,in,let,loop,match,mod,move,mut,pub,ref,return,static,struct,
+    super,trait,true,type,unsafe,use,where,while,async,await,self,Self,
+    macro_rules,yield,try,vtable
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]"
+}[keywords,comments,strings]
+
 \lstdefinestyle{ruststyle}{%
   language=Rust,
   basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
@@ -208,12 +221,8 @@
     c_int,c_uint,c_float,c_double,c_char,c_void
   },
   emphstyle=\color{rusttype},
-  moredelim=*[macro][\color{rustmacro}]{println!},
-  moredelim=*[macro][\color{rustmacro}]{print!},
-  moredelim=*[macro][\color{rustmacro}]{format!},
-  moredelim=*[macro][\color{rustmacro}]{vec!},
-  moredelim=*[macro][\color{rustmacro}]{assert!},
-  moredelim=*[macro][\color{rustmacro}]{assert_eq!},
+  emph=[2]{println,print,format,vec,assert,assert_eq},
+  emphstyle=[2]{\color{rustmacro}},
   escapeinside={(*@}{@*)}
 }
 
@@ -245,6 +254,21 @@
 }
 
 % ---- JavaScript ----
+\lstdefinelanguage{JavaScript}{%
+  morekeywords={%
+    const,let,var,function,return,if,else,for,while,do,
+    switch,case,break,continue,try,catch,finally,throw,new,
+    class,extends,constructor,super,this,typeof,instanceof,
+    import,export,from,default,async,await,yield,
+    of,in,delete,void,with,debugger
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]'
+}[keywords,comments,strings]
+
 \lstdefinestyle{jsstyle}{%
   language=JavaScript,
   basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
@@ -420,6 +444,7 @@
 \newcommand{\Tp}[1]{\texttt{#1}}
 
 % ===== 标题与章节格式 =====
+\usepackage{titlesec}
 \titleformat{\chapter}[display]{\huge\bfseries\color{algheadbg}}{\chaptertitlename\ \thechapter}{10pt}{\huge}
 \titleformat{\section}{\Large\bfseries\color{blue!70!black}}{\thesection}{8pt}{}
 \titleformat{\subsection}{\large\bfseries\color{blue!60!black}}{\thesubsection}{6pt}{}
@@ -432,6 +457,8 @@
 \fancyhead[RE]{\leftmark}
 \fancyhead[LO]{\rightmark}
 \renewcommand{\headrulewidth}{0.4pt}
+
+\emergencystretch=3em
 
 % ===== 超链接 =====
 \usepackage{hyperref}
@@ -2131,15 +2158,15 @@ Source/MyProject/
   ThirdParty/
     mathlib/
       include/
-        mathlib.h          (*@\textcolor{cppcomment}{# extern "C" 头文件}@*)
+        mathlib.h          (*@\textcolor{cppcomment}{\# extern "C" 头文件}@*)
       lib/
         Win64/
-          mathlib.lib      (*@\textcolor{cppcomment}{# 导入库}@*)
+          mathlib.lib      (*@\textcolor{cppcomment}{\# 导入库}@*)
         Linux/
-          libmathlib.a     (*@\textcolor{cppcomment}{# 静态库}@*)
+          libmathlib.a     (*@\textcolor{cppcomment}{\# 静态库}@*)
       bin/
         Win64/
-          mathlib.dll      (*@\textcolor{cppcomment}{# 运行时动态库}@*)
+          mathlib.dll      (*@\textcolor{cppcomment}{\# 运行时动态库}@*)
 \end{lstlisting}
 
 \subsection{Build.cs 配置}
@@ -2236,18 +2263,18 @@ Unity 按平台和架构查找原生插件：
 Assets/
   Plugins/
     x86_64/
-      mathlib.dll          (*@\textcolor{cppcomment}{# Windows 64-bit}@*)
+      mathlib.dll          (*@\textcolor{cppcomment}{\# Windows 64-bit}@*)
     x86/
-      mathlib.dll          (*@\textcolor{cppcomment}{# Windows 32-bit}@*)
+      mathlib.dll          (*@\textcolor{cppcomment}{\# Windows 32-bit}@*)
     Android/
       libs/
         arm64-v8a/
-          libmathlib.so    (*@\textcolor{cppcomment}{# Android ARM64}@*)
+          libmathlib.so    (*@\textcolor{cppcomment}{\# Android ARM64}@*)
         armeabi-v7a/
-          libmathlib.so    (*@\textcolor{cppcomment}{# Android ARM32}@*)
+          libmathlib.so    (*@\textcolor{cppcomment}{\# Android ARM32}@*)
     iOS/
-      libmathlib.a         (*@\textcolor{cppcomment}{# iOS 静态库}@*)
-    mathlib.bundle         (*@\textcolor{cppcomment}{# macOS}@*)
+      libmathlib.a         (*@\textcolor{cppcomment}{\# iOS 静态库}@*)
+    mathlib.bundle         (*@\textcolor{cppcomment}{\# macOS}@*)
 \end{lstlisting}
 
 也可以在 Unity Editor 的 Inspector 中为每个插件勾选目标平台，Unity 会在构建时自动选择正确的库。

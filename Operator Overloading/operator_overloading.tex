@@ -1479,7 +1479,7 @@ K += B.transpose() * D * B * (det_j * weight);
 \section{核心建议}
 % ----------------------------------------------------------------------
 
-\begin{keypoint}
+\begin{guideline}
 \begin{enumerate}
   \item \textbf{遵循代数结构}：运算符重载应有数学基础。复数构成域，重载四则运算合理；\Tp{Student} 不构成代数结构，重载 \Op{+} 无意义。
   \item \textbf{最小惊讶原则}：\Op{+} 应该做加法，\Op{==} 应该做相等判断。如果用户需要查文档才能理解 \texttt{a + b} 做了什么，就不应该重载。
@@ -1488,6 +1488,6 @@ K += B.transpose() * D * B * (det_j * weight);
   \item \textbf{\cpp{20} 优先使用 \texttt{<=>}}：减少比较运算符的样板代码。
   \item \textbf{浮点数慎用 \texttt{==}}：浮点数是实数的有限精度近似，直接使用 \texttt{==} 几乎总是错误的。
 \end{enumerate}
-\end{keypoint}
+\end{guideline}
 
 \end{document}
