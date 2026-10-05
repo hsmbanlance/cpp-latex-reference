@@ -83,6 +83,7 @@ function Invoke-Build {
 
     $projDir = "$base\$($Info.dir)"
     $buildScript = "$projDir\build.ps1"
+    $logPath = Join-Path $projDir ($Info.job + '.log')
 
     $sep = '=' * 60
     Write-Host "`n$sep" -ForegroundColor Cyan
@@ -91,7 +92,7 @@ function Invoke-Build {
 
     if (-not (Test-Path -LiteralPath $buildScript)) {
         Write-Host "  [MISSING] build.ps1 not found!" -ForegroundColor Red
-        return [PSCustomObject]@{ Name=$Name; Status='MISSING'; Errors=-1; Overfull=-1; SizeKB='?' }
+        return [PSCustomObject]@{ Name=$Name; Status='MISSING'; Errors=-1; Overfull=-1; Refs=0; Pages=-1; SizeKB='?' }
     }
 
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
@@ -112,34 +113,69 @@ function Invoke-Build {
     if ($mOv.Count -gt 0) { $overfull = [int]$mOv[$mOv.Count - 1].Groups[1].Value }
     if ($fullText -match '\u5927\u5c0f: ([\d.]+) KB') { $sizeKB = $Matches[1] }
 
+    # xelatex can stop early and still leave a valid PDF behind. Its exit code is the only
+    # signal that distinguishes "finished the document" from "ran out of steam", so the
+    # per-pass summary from build.ps1 now prints it. -1 = old script that prints nothing.
+    $exitCode = -1
+    $mExit = [regex]::Matches($fullText, '\u9000\u51fa\u7801: (-?\d+)')
+    if ($mExit.Count -gt 0) { $exitCode = [int]$mExit[$mExit.Count - 1].Groups[1].Value }
+
     # A dangling \ref/\cite only raises "LaTeX Warning: Reference `x' ... undefined",
     # which neither Err nor Ov counts. Scan the log of the LAST pass only: earlier
     # passes legitimately report every cross-reference before the .aux exists.
-    $dangling = 0
-    $logPath = Join-Path $projDir ($Info.job + '.log')
+    # Pages comes from the "Output written on X.pdf (N pages, M bytes)" trailer; -1 means
+    # the log holds no such line, i.e. xelatex never reached \end{document}.
+    $dangling = 0; $pages = -1
+    $logRaw = ''
     if (Test-Path -LiteralPath $logPath) {
-        $raw = Get-Content -LiteralPath $logPath -Raw -Encoding UTF8
-        $lastRun = (@($raw -split 'This is XeTeX') | Select-Object -Last 1)
+        $logRaw = Get-Content -LiteralPath $logPath -Raw -Encoding UTF8
+        $lastRun = (@($logRaw -split 'This is XeTeX') | Select-Object -Last 1)
         $dangling = ([regex]::Matches($lastRun, '(?:Reference|Citation)[\s\S]{0,40}?undefined')).Count
+        # MiKTeX prints "(169 pages)." while TeX Live adds the byte count -> "(154 pages, ...)."
+        $mPg = [regex]::Matches($logRaw, 'Output written on .* \((\d+) pages?[,)]')
+        if ($mPg.Count -gt 0) { $pages = [int]$mPg[$mPg.Count - 1].Groups[1].Value }
+    }
+
+    # Completeness probe: TeX writes \newlabel into the .aux as it *reaches* each \label, so
+    # a run that stops early leaves the tail unwritten. Directional (aux < tex) on purpose —
+    # captions repeated across longtable heads write more \newlabel than \label, which must
+    # not read as truncation.
+    $unwritten = 0
+    $texPath = Join-Path $projDir $Info.tex
+    $auxPath = Join-Path $projDir ($Info.job + '.aux')
+    if ((Test-Path -LiteralPath $texPath) -and (Test-Path -LiteralPath $auxPath)) {
+        $srcText = (Get-Content -LiteralPath $texPath -Raw -Encoding UTF8) -replace '(?<!\\)%.*', ''
+        $nLab = ([regex]::Matches($srcText, '\\label\{')).Count
+        $nAux = ([regex]::Matches((Get-Content -LiteralPath $auxPath -Raw -Encoding UTF8), '\\newlabel\{')).Count
+        if ($nAux -lt $nLab) { $unwritten = $nLab - $nAux }
     }
 
     $failed = $fullText -match '\u7f16\u8bd1\u5931\u8d25'
-    $status = if ($failed -or $errors -gt 0) { 'FAIL' }
+    $status = if ($failed -or $errors -gt 0 -or $exitCode -gt 0 -or $unwritten -gt 0) { 'FAIL' }
               elseif ($overfull -gt 0)       { 'OVERFULL' }
               elseif ($dangling -gt 0)       { 'BADREF' }
               elseif ($errors -eq 0)         { 'OK' }
               else                           { 'UNKNOWN' }
 
     $color = switch ($status) { 'OK'{'Green'} 'OVERFULL'{'DarkYellow'} 'BADREF'{'DarkYellow'} 'FAIL'{'Red'} default{'Gray'} }
-    Write-Host "  [$status] Err=$errors Ov=$overfull Ref=$dangling ${sizeKB}KB ${elapsed}s" -ForegroundColor $color
+    Write-Host "  [$status] Err=$errors Ov=$overfull Ref=$dangling Pg=$pages Exit=$exitCode ${sizeKB}KB ${elapsed}s" -ForegroundColor $color
+    if ($unwritten -gt 0) {
+        Write-Host "  [TRUNCATED] $unwritten label(s) never reached the .aux - the run stopped before \end{document}" -ForegroundColor Red
+    }
 
     if ($status -eq 'FAIL') {
         # 45 lines: enough to keep the whole error-context window build.ps1 prints
         # (header + 6 before + hit + 8 after), 15 used to cut off the message head.
         $output | Select-Object -Last 45 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkRed }
+        # Exit code 0 with no counted error leaves build.ps1 with nothing to dump; the .log
+        # tail is then the only witness of where the document actually stopped.
+        if ($unwritten -gt 0 -and $logRaw) {
+            Write-Host "    ---- last 45 lines of $(Split-Path -Leaf $logPath) ----" -ForegroundColor Red
+            ($logRaw -split "`r?`n") | Select-Object -Last 45 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkRed }
+        }
     }
 
-    return [PSCustomObject]@{ Name=$Name; Status=$status; Errors=$errors; Overfull=$overfull; Refs=$dangling; SizeKB=$sizeKB }
+    return [PSCustomObject]@{ Name=$Name; Status=$status; Errors=$errors; Overfull=$overfull; Refs=$dangling; Pages=$pages; SizeKB=$sizeKB }
 }
 
 function Invoke-Clean {
@@ -235,7 +271,7 @@ switch ($Action) {
 
         foreach ($r in $results) {
             $c = switch ($r.Status) { 'OK'{'Green'} 'OVERFULL'{'DarkYellow'} 'BADREF'{'DarkYellow'} 'FAIL'{'Red'} default{'Gray'} }
-            Write-Host ('  {0,-16} {1,-10} Err={2} Ov={3} Ref={4} {5}KB' -f $r.Name,$r.Status,$r.Errors,$r.Overfull,$r.Refs,$r.SizeKB) -ForegroundColor $c
+            Write-Host ('  {0,-16} {1,-10} Err={2} Ov={3} Ref={4} Pg={5} {6}KB' -f $r.Name,$r.Status,$r.Errors,$r.Overfull,$r.Refs,$r.Pages,$r.SizeKB) -ForegroundColor $c
         }
 
         $tt = '{0:F1}' -f $totalSw.Elapsed.TotalSeconds

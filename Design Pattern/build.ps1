@@ -131,6 +131,7 @@ try {
         $stdout  = $process.StandardOutput.ReadToEnd()
         $stderr  = $process.StandardError.ReadToEnd()
         $process.WaitForExit()
+        $exitCode = $process.ExitCode
         $sw.Stop()
 
         # 解析日志（-file-line-error 下错误形如 "design_patterns.tex:421: LaTeX Error: ..."，
@@ -144,7 +145,7 @@ try {
         $underfullCount = ([regex]::Matches($stdout, '(?i)Underfull')).Count
 
         $elapsed = '{0:F1}' -f $sw.Elapsed.TotalSeconds
-        Write-Host "  耗时: ${elapsed}s | 错误: $errorCount | Overfull: $overfullCount | Underfull: $underfullCount" -ForegroundColor $(
+        Write-Host "  耗时: ${elapsed}s | 错误: $errorCount | Overfull: $overfullCount | Underfull: $underfullCount | 退出码: $exitCode" -ForegroundColor $(
             if ($errorCount -gt 0) { 'Red' } elseif ($overfullCount -gt 0) { 'DarkYellow' } else { 'Green' }
         )
 
@@ -168,9 +169,17 @@ try {
             }
         }
 
-        if ($process.ExitCode -ne 0 -and $errorCount -gt 0) {
+        if ($exitCode -ne 0) {
             Write-Host "`n  [最后 20 行输出]" -ForegroundColor Red
             $stdout -split "`n" | Select-Object -Last 20 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkRed }
+            # 退出码非 0 但错误计数为 0（XeLaTeX 提前收尾）时，stdout 里没有 LaTeX 侧的最后一条诊断
+            $logTailPath = Join-Path $scriptDir "$jobName.log"
+            if (Test-Path -LiteralPath $logTailPath) {
+                Write-Host "`n  [log 最后 45 行]" -ForegroundColor Red
+                Get-Content -LiteralPath $logTailPath -Encoding UTF8 |
+                    Select-Object -Last 45 |
+                    ForEach-Object { Write-Host "    $_" -ForegroundColor DarkRed }
+            }
             if ($stderr.Trim()) {
                 Write-Host "`n  [stderr 最后 10 行]" -ForegroundColor Red
                 $stderr -split "`n" | Select-Object -Last 10 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkRed }
