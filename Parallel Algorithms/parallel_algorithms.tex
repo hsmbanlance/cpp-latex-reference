@@ -1,5 +1,5 @@
 % !TEX program = xelatex
-\documentclass[12pt,a4paper]{ctexbook}
+\documentclass[12pt,a4paper,fontset=fandol]{ctexbook}
 
 % ==================== 页面 ====================
 \usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
@@ -7,7 +7,17 @@
 % ==================== 字体 ====================
 \usepackage{fontspec}
 \usepackage{iffont}
-\IfFontExistsTF{Consolas}{\setmonofont{Consolas}}{\setmonofont{DejaVu Sans Mono}}
+% CJK 钉 fandol（两侧都取自 TeX 树里的同一份 FandolSong-Regular.otf）；
+% mono 钉 DejaVu Sans Mono：CI 由 fontconfig 命中同名，本机没有该系统字体，
+% 就用 MiKTeX dejavu 包里的同一版本 TTF（kpathsea 按文件名命中）。
+\IfFontExistsTF{DejaVu Sans Mono}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+  {\setmonofont[Extension=.ttf,
+      UprightFont=DejaVuSansMono,
+      BoldFont=DejaVuSansMono-Bold,
+      ItalicFont=DejaVuSansMono-Oblique,
+      BoldItalicFont=DejaVuSansMono-BoldOblique]
+     {DejaVuSansMono}[Scale=MatchLowercase]}
 
 % ==================== 颜色 ====================
 \usepackage[dvipsnames,svgnames,x11names]{xcolor}
@@ -629,7 +639,7 @@ warp 内若线程走不同路径，两条路径要分别带掩码执行，代价
 
 \section{NPU 画像：静态图与显式搬移的世界}
 
-\NPU{} 是最容易被另外两域的习惯伤害的执行域。以华为昇腾的达芬奇（Da Vinci）架构为例，它的世界观是：形状在编译期已知，计算由专用单元成批完成，数据搬移由软件（而不是硬件缓存）负责。
+\NPU{} 是最容易被另外两域的习惯伤害的执行域。以华为Ascend的达芬奇（Da Vinci）架构为例，它的世界观是：形状在编译期已知，计算由专用单元成批完成，数据搬移由软件（而不是硬件缓存）负责。
 
 \subsection{三类计算单元}
 
@@ -647,7 +657,7 @@ warp 内若线程走不同路径，两条路径要分别带掩码执行，代价
 
 \subsection{CANN 软件栈}
 
-昇腾侧的软件栈（CANN）大致可以按职责切成四层，具体包名与接口随版本演进，本书只按职责描述：
+Ascend侧的软件栈（CANN）大致可以按职责切成四层，具体包名与接口随版本演进，本书只按职责描述：
 \begin{enumerate}
 \item 驱动与运行时层：设备、上下文、片外内存、stream 与异步执行的持有者。面向应用的运行时接口通常以 AscendCL 一类名字出现，负责``把算子或模型跑起来''这件事，不负责``算子怎么写''。
 \item 图与编译层：把算子按静态形状与数据类型接成图，做图级调度与算子融合；把上层网络描述离线编译为可加载的设备侧模型，是这一层的产物。这一层的存在意味着\textbf{形状改变可能触发重新编译或换用另一份编译产物}。
@@ -1531,7 +1541,7 @@ STL 侧对应的是 \Fn{std::inclusive\_scan} 与 \Fn{std::exclusive\_scan}
 维度 & OpenMP & oneTBB & stdexec \\
 \midrule
 写并行循环 & 一句 \Tp{parallel for} 最省事 &
-lambda 配 \Tp{blocked\Bk\_range}，稍啰嗦 &
+lambda 配 \Tp{blocked\Bk\_range}，稍冗长 &
 要自己拼 sender，最费笔墨 \\
 不规则任务与依赖 & \Tp{task} 可用但依赖靠人守 &
 task\_group 与 flow 图，成熟 &
@@ -2547,7 +2557,7 @@ __global__ void gemmTile(const float* __restrict__ A,
 代码里几处\Tp{omitted}注释是刻意留白：加载片段与写回是访存问题（合并、向量化、padding或swizzle防bank conflict），外层乘累加是执行单元问题。张量核心（mma类指令）接管的是后者：
 它把一条指令的作用对象从``一个lane一个乘加''变成``一组线程共同完成一个小矩阵乘''，例如$16\times 8\times 16$这样的块，操作数直接放在寄存器片段里，累加也留在寄存器里。
 于是职责划分变成：全局与shared的搬运、布局与对齐由算法层负责；mma只负责把已经摆好的片段吃掉。用mma必须满足它的布局与对齐要求（矩阵片段要按固定顺序排、维度要是固定倍数），
-这也是为什么低精度GEMM的实现常常比fp32版本更啰嗦。
+这也是为什么低精度GEMM的实现常常比fp32版本更冗长。
 
 \section{batched GEMM与注意力形状}
 
@@ -2682,7 +2692,7 @@ MLA处在第三种情形：它内部有两个GEMM（打分与加权求和），�
 % ====================================================================
 \chapter{NPU侧算子与图编译}
 
-本章以昇腾（达芬奇架构加CANN软件栈）为例，说明换一个执行域之后，同一套算法知识要怎么重新落地。
+本章以Ascend（达芬奇架构加CANN软件栈）为例，说明换一个执行域之后，同一套算法知识要怎么重新落地。
 这里不比较厂商优劣，只讲世界观差异：\GPU{}把调度权交给硬件与启动参数，\NPU{}把它交给编译器与图；
 \GPU{}让你描述一个线程做什么，\NPU{}更常让你描述一块数据从哪级缓冲来到哪级缓冲去。
 凡涉及接口名称、参数与工具行为，都会随CANN版本、固件版本与框架后端版本变化，

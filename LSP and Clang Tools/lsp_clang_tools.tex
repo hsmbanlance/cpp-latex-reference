@@ -1,5 +1,5 @@
 % !TEX program = xelatex
-\documentclass[12pt,a4paper]{ctexbook}
+\documentclass[12pt,a4paper,fontset=fandol]{ctexbook}
 
 % ==================== 页面 ====================
 \usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
@@ -7,7 +7,17 @@
 % ==================== 字体 ====================
 \usepackage{fontspec}
 \usepackage{iffont}
-\IfFontExistsTF{Consolas}{\setmonofont{Consolas}}{\setmonofont{DejaVu Sans Mono}}
+% CJK 钉 fandol（两侧都取自 TeX 树里的同一份 FandolSong-Regular.otf）；
+% mono 钉 DejaVu Sans Mono：CI 由 fontconfig 命中同名，本机没有该系统字体，
+% 就用 MiKTeX dejavu 包里的同一版本 TTF（kpathsea 按文件名命中）。
+\IfFontExistsTF{DejaVu Sans Mono}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+  {\setmonofont[Extension=.ttf,
+      UprightFont=DejaVuSansMono,
+      BoldFont=DejaVuSansMono-Bold,
+      ItalicFont=DejaVuSansMono-Oblique,
+      BoldItalicFont=DejaVuSansMono-BoldOblique]
+     {DejaVuSansMono}[Scale=MatchLowercase]}
 
 % ==================== 颜色 ====================
 \usepackage[dvipsnames,svgnames,x11names]{xcolor}
@@ -4992,9 +5002,9 @@ diff -u defaults.cfg detected.cfg | grep -E '^[+-][a-z]' | head -40
 uncrustify -c repo.cfg -l cpp --frag --assume-filename old.cpp < part.cpp
 \end{lstlisting}
 
-\subsection{为什么它更啰嗦，也更可控}\label{sec:ch11-s2-why}
+\subsection{为什么它更冗长，也更可控}\label{sec:ch11-s2-why}
 
-啰嗦是因为它把「构造 × 位置」笛卡尔积展开成键：每一种 token 对都要一条规则，
+冗长是因为它把「构造 × 位置」笛卡尔积展开成键：每一种 token 对都要一条规则，
 所以一份认真配过的 \texttt{uncrustify.cfg} 动辄上千行，键的数量是
 \texttt{.clang-format} 的一个数量级以上。收益是控制权：
 \texttt{pos\_*} 可以精确规定「逻辑运算符断在行尾还是行首」，

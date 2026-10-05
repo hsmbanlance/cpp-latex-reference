@@ -1,5 +1,5 @@
 % !TEX program = xelatex
-\documentclass[12pt,a4paper]{ctexbook}
+\documentclass[12pt,a4paper,fontset=fandol]{ctexbook}
 
 % ==================== 页面 ====================
 \usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
@@ -7,7 +7,17 @@
 % ==================== 字体 ====================
 \usepackage{fontspec}
 \usepackage{iffont}
-\IfFontExistsTF{Consolas}{\setmonofont{Consolas}}{\setmonofont{DejaVu Sans Mono}}
+% CJK 钉 fandol（两侧都取自 TeX 树里的同一份 FandolSong-Regular.otf）；
+% mono 钉 DejaVu Sans Mono：CI 由 fontconfig 命中同名，本机没有该系统字体，
+% 就用 MiKTeX dejavu 包里的同一版本 TTF（kpathsea 按文件名命中）。
+\IfFontExistsTF{DejaVu Sans Mono}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+  {\setmonofont[Extension=.ttf,
+      UprightFont=DejaVuSansMono,
+      BoldFont=DejaVuSansMono-Bold,
+      ItalicFont=DejaVuSansMono-Oblique,
+      BoldItalicFont=DejaVuSansMono-BoldOblique]
+     {DejaVuSansMono}[Scale=MatchLowercase]}
 
 % ==================== 颜色 ====================
 \usepackage[dvipsnames,svgnames,x11names]{xcolor}
@@ -1742,9 +1752,9 @@ POSIX 只要求``分配 \texttt{size} 字节、返回未初始化内存''，
 ``从 \texttt{.bss} 里的一块静态数组切分''，此时``堆''根本不是堆区。
 
 \begin{lstlisting}[caption={同一段代码，三种合法的落点（取决于实现与重载）}]
-void* a = operator new(1024);   // ① glibc ptmalloc：main_arena 的堆（brk）
-                                // ② mimalloc：本线程 arena 的段（mmap）
-                                // ③ 本项目重载：静态池 + 空闲链（裸机）
+void* a = operator new(1024);   // (1) glibc ptmalloc：main_arena 的堆（brk）
+                                // (2) mimalloc：本线程 arena 的段（mmap）
+                                // (3) 本项目重载：静态池 + 空闲链（裸机）
 // 三者都满足标准：对齐正确、地址唯一、失败时抛出或返回 nullptr
 \end{lstlisting}
 
@@ -1755,16 +1765,16 @@ void* a = operator new(1024);   // ① glibc ptmalloc：main_arena 的堆（brk�
 是\emph{不同类型}，落点自然可以完全不同：
 
 \begin{lstlisting}
-// ① 编译期分配器：写进类型
+// (1) 编译期分配器：写进类型
 template <class T> using PoolVec = std::vector<T, PoolAllocator<T>>;
 PoolVec<Task> tasks;                 // 全部元素住在自定义池
 
-// ② 运行时多态分配器（C++17 pmr）：类型不变，资源可换
+// (2) 运行时多态分配器（C++17 pmr）：类型不变，资源可换
 std::pmr::vector<int> v1{&sync};     // 同步资源
 std::pmr::vector<int> v2{&pool};     // 单线程池
 std::pmr::vector<int> v3;            // 默认 new_delete_resource()
 
-// ③ 一次性切换：monotonic 资源只分配不释放，函数结束整块回收
+// (3) 一次性切换：monotonic 资源只分配不释放，函数结束整块回收
 std::pmr::monotonic_buffer_resource arena(buf, sizeof buf);
 std::pmr::string name(&arena);       // 短生命周期字符串，零 free 成本
 \end{lstlisting}
@@ -2041,15 +2051,15 @@ QObject 父子树 & 父对象析构时递归删除子对象；
 \end{longtable}
 
 \begin{lstlisting}[caption={Qt 的三条所有权路径（同一程序可并存）}]
-// ① 父子树：GUI 对象的默认方式
+// (1) 父子树：GUI 对象的默认方式
 auto* dlg = new QDialog(this);            // this 为父，父析构时自动删除
 auto* btn = new QPushButton("OK", dlg);   // btn 挂在 dlg 下
 
-// ② QScopedPointer（Qt6 = std::unique_ptr）：非 QObject 的资源
+// (2) QScopedPointer（Qt6 = std::unique_ptr）：非 QObject 的资源
 QScopedPointer<Parser> p(new Parser(path));         // Qt5 风格
 auto p2 = std::make_unique<Parser>(path);           // Qt6 推荐
 
-// ③ QSharedPointer：需要共享且要跨线程
+// (3) QSharedPointer：需要共享且要跨线程
 auto shared = QSharedPointer<Model>::create();
 QMetaObject::invokeMethod(worker, [w = QWeakPointer<Model>(shared)] {
   if (auto m = w.toStrongRef()) m->save();          // 提升后使用
@@ -2244,37 +2254,37 @@ Rust 走的是第三条路：所有权与借用时长都写成类型参数，
 \end{longtable}
 
 \begin{lstlisting}[style=ruststyle,caption={Rust 的三种情形：拒绝、标注、推断}]
-// ① 返回局部值的引用：编译期直接拒绝
+// (1) 返回局部值的引用：编译期直接拒绝
 fn dangling() -> &String {
     let s = String::from("hi");
     &s                        // error[E0106] 缺少生命周期说明
 }
 
-// ② 输出借自输入：必须写明"同生共死"
+// (2) 输出借自输入：必须写明"同生共死"
 fn first_word<'a>(s: &'a str) -> &'a str {
     s.split(' ').next().unwrap_or("")
 }
 
-// ③ 同一作用域内使用：无需任何标注
+// (3) 同一作用域内使用：无需任何标注
 fn main() {
     let text = String::from("hello rust");
     println!("{}", first_word(&text));   // text 在打印后才析构
 }
 \end{lstlisting}
 
-\begin{lstlisting}[caption={同型代码在 C++ 里：①编译通过，运行期才出错}]
-// ① 悬垂视图：没有任何诊断
+\begin{lstlisting}[caption={同型代码在 C++ 里：(1)编译通过，运行期才出错}]
+// (1) 悬垂视图：没有任何诊断
 std::string_view dangling() {
     std::string s = "hi";
     return s;                    // s 已析构，读取即 UB
 }
 
-// ② "输出借自输入"只能写在注释里
+// (2) "输出借自输入"只能写在注释里
 std::string_view first_word(std::string_view s) {   // 结果借自 s
     return s.substr(0, s.find(' '));
 }
 
-// ③ 作用域内使用同样安全，但没人替你核对
+// (3) 作用域内使用同样安全，但没人替你核对
 int main() {
     std::string text = "hello rust";
     std::cout << first_word(text) << '\n';
@@ -2434,13 +2444,13 @@ fn main() {
 \subsection{逃逸舱：\texttt{unsafe}、\texttt{Rc<RefCell>} 与索引代替指针}
 
 \begin{lstlisting}[style=ruststyle,caption={三种妥协写法，各自对应一个 C++ 常态}]
-// ① 凭空承诺区域：责任回到人身上，等同 C++
+// (1) 凭空承诺区域：责任回到人身上，等同 C++
 unsafe fn borrow_raw<'a, T>(p: *const T) -> &'a T { &*p }
 
-// ② 编译期让位给运行期：借用冲突变成 panic
+// (2) 编译期让位给运行期：借用冲突变成 panic
 type Shared = Rc<RefCell<Node>>;
 
-// ③ 用间接层换掉不可表达的别名约束：索引代替指针
+// (3) 用间接层换掉不可表达的别名约束：索引代替指针
 struct Graph { slots: Vec<Node> }
 fn get(g: &Graph, id: usize) -> &Node { &g.slots[id] }
 \end{lstlisting}
