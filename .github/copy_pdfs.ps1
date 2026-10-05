@@ -38,6 +38,12 @@ $projects = @(
     @{ dir = 'Lang History';                    job = 'c_cpp_history' }
     @{ dir = 'Asm Embedding';                   job = 'asm_embedding' }
     @{ dir = 'HW Access and Kernels';           job = 'hw_kernels' }
+    @{ dir = 'Lang Levels';                     job = 'lang_levels' }
+    @{ dir = 'Cli App';                         job = 'cli_app' }
+    @{ dir = 'Crypto Database';                 job = 'crypto_database' }
+    @{ dir = 'Parallel Algorithms';             job = 'parallel_algorithms' }
+    @{ dir = 'Math Geo DSP';                    job = 'math_geo_dsp' }
+    @{ dir = 'LSP and Clang Tools';             job = 'lsp_clang_tools' }
 )
 
 $copied = 0

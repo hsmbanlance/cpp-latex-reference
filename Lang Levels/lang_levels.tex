@@ -6,7 +6,7 @@
 
 % ==================== 字体 ====================
 \usepackage{fontspec}
-\setmonofont{Consolas}
+\IfFontExistsTF{Consolas}{\setmonofont{Consolas}}{\setmonofont{DejaVu Sans Mono}}
 
 % ==================== 颜色 ====================
 \usepackage{xcolor}
