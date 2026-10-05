@@ -5290,7 +5290,7 @@ CLI 代码里最常出现的子集；\lstinline{tput} 与 \lstinline{infocmp}
 \Tp{setaf} 与 \Tp{setab} & AF、AB & 带一个参数设前景与背景，
 参数是调色板编号（0 到 7、0 到 255） \\
 \Tp{max\_colors} & Co & 调色板容量；数值能力，用
-\lstinline{tput colors} 读 \\
+\lstinline|tput colors| 读 \\
 \Tp{init\_color}、\Tp{can\_change} & Ic、Cc & 能否改调色板项 \\
 \Tp{enter\Bk\_bold\Bk\_mode} 与 \Tp{exit\Bk\_attribute\Bk\_mode} & md、me & 粗体 \\
 \Tp{enter\Bk\_dim\Bk\_mode} & mh & 暗淡，很多条目里没有 \\
@@ -5298,7 +5298,7 @@ CLI 代码里最常出现的子集；\lstinline{tput} 与 \lstinline{infocmp}
 \Tp{enter\Bk\_italics\Bk\_mode} & mS & 斜体；条目缺失时应当降级 \\
 \Tp{enter\Bk\_reverse\Bk\_mode} & mr & 反色 \\
 \Tp{cup} & cu & 绝对定位（参数是 0 基！发出去前 \Tp{+1}），
-\lstinline{tput cup 2 5} \\
+\lstinline|tput cup 2 5| \\
 \Tp{sc} 与 \Tp{rc} & fs、bs & 保存与恢复光标 \\
 \Tp{civis}、\Tp{cnorm}、\Tp{cvvis} & vi、ve、vs & 隐藏、正常、可见光标 \\
 \Tp{el}、\Tp{el1}、\Tp{ed} & ce、ae、cd & 清行尾、清行首、清屏 \\
@@ -5309,7 +5309,7 @@ TUI 的进出必须成对，异常路径也要发 \\
 \Tp{cols}、\Tp{lines} & co、li & 数值能力：宽高。
 ncurses 会优先信 \Tp{LINES} 与 \Tp{COLUMNS} 环境变量 \\
 \Tp{acs\_lines} 与 \Tp{acsc} & acsc & 线框字符集（ACS）映射，
-决定 \lstinline{acs_up} 那套框线画什么 \\
+决定 \lstinline|acs_up| 那套框线画什么 \\
 \Tp{bell} & bl & 蜂鸣；宿主可能实现成闪屏或静音 \\
 \Tp{kcuu1}、\Tp{kcud1}、\Tp{kcul1}、\Tp{kcuf1} & ku、kd、kl、kr &
 方向键的实际序列；\Tp{khome}、\Tp{kend}、\Tp{kpp}、\Tp{knp} 同理 \\
@@ -5366,7 +5366,7 @@ ncurses 会优先信 \Tp{LINES} 与 \Tp{COLUMNS} 环境变量 \\
 \Tp{cygwin}、\Tp{msys} & Windows 上的两套 POSIX 层 &
 色深取决于宿主（conhost 还是 Windows Terminal），
 条目本身不能给你答案 \\
-（未设置） & \Tp{cron}、\Tp{systemd} 服务、\lstinline{ssh host cmd} &
+（未设置） & \Tp{cron}、\Tp{systemd} 服务、\lstinline|ssh host cmd| &
 最常见的一类；把\emph{未设置}与 \Tp{dumb} 分开处理会更保守也更安全 \\
 \bottomrule
 \end{longtable}
@@ -5413,7 +5413,7 @@ getopt 与 getopt\_long & 系统 libc & 随系统（glibc 为 LGPL-2.1
 MinGW；MSVC 无 & 零依赖的选择，长表与 optstring 要维护两份 \\
 \multicolumn{6}{@{}l}{\textbf{输出、日志与配置}}\\
 \{fmt\} & 库或头文件 & MIT & \cpp{11} & 跨平台 &
-排版、宽度、分组与着色常量，\lstinline{std::format} 的过渡实现 \\
+排版、宽度、分组与着色常量，\lstinline|std::format| 的过渡实现 \\
 spdlog & 库或头文件 & MIT & \cpp{11} & 跨平台 &
 分层日志与多种 sink，与 \{fmt\} 天然配套 \\
 toml++ & 单头 & MIT（另有公共领域声明） & \cpp{11} & 跨平台 &
@@ -5449,7 +5449,7 @@ Boost.Process & 编译库转头文件 & BSL-1.0 & \cpp{17} & 跨平台 &
 subprocess.h & 单头 & 公共领域（另有 MIT 双许可） & C（C++ 直用） &
 POSIX 加 Windows & 一份源码搞定 fork-exec、重定向与等待 \\
 \lstinline|std::filesystem| & 标准头 & 属语言标准 & \cpp{17} &
-跨平台（\cpp{17} 之前需链接 \lstinline{stdc++fs}） &
+跨平台（\cpp{17} 之前需链接 \lstinline|stdc++fs|） &
 路径与目录遍历，注意第 10 章的编码与权限差异 \\
 \bottomrule
 \end{longtable}

@@ -2591,9 +2591,12 @@ C++~使用~\Fn{std::string::substr}~验证匹配；C\#~使用~\Fn{string.Compare
 C~实现类似但需手动管理结果数组的动态扩容。
 \end{compare}
 
-% ============================================================
-\part*{算法总览}
-\addcontentsline{toc}{part}{算法总览}
+% \part* 清页在写完标题之后，故目录行必须赶在 \@endpart 里写，否则页码记到空白背页。
+\makeatletter
+{\let\saved@endpart\@endpart
+ \def\@endpart{\addcontentsline{toc}{part}{算法总览}\saved@endpart}%
+ \part*{算法总览}}
+\makeatother
 % ============================================================
 
 \begin{center}

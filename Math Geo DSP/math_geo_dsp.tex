@@ -1586,6 +1586,10 @@ J_{n}(x)=\left(\frac{x}{2}\right)^{n}\sum_{k=0}^{\infty}
 \toprule
 库 & 语言层 & 覆盖 & 精度与误差控制 & 接入成本 \\
 \midrule
+\endfirsthead
+\toprule
+库 & 语言层 & 覆盖 & 精度与误差控制 & 接入成本 \\
+\midrule
 \endhead
 \Lib{GSL} & \CL{} &
   特殊函数一族（Bessel、Gamma、Airy、不完全 Gamma、椭圆积分、勒让德、Hermite、Laguerre、超几何）、积分与求根、随机数与分布、统计、插值、直方图、特征分解 &
@@ -4849,6 +4853,10 @@ python -c "import numpy; numpy.show_config()" > env.blas.txt
 \toprule
 库 & 内核语言 & 对外接口 & 绑定与备注 \\
 \midrule
+\endfirsthead
+\toprule
+库 & 内核语言 & 对外接口 & 绑定与备注 \\
+\midrule
 \endhead
 \Lib{BLAS} 参考 & \FTN{} & \FTN{} 符号加 \CL{} 的 \Tp{cblas\_} &
   任何语言可及；同一符号可有多个实现 \\
@@ -4886,6 +4894,10 @@ python -c "import numpy; numpy.show_config()" > env.blas.txt
 \toprule
 库 & 内核语言 & 对外接口 & 绑定与备注 \\
 \midrule
+\endfirsthead
+\toprule
+库 & 内核语言 & 对外接口 & 绑定与备注 \\
+\midrule
 \endhead
 \Lib{CGAL} & \CPP{} 模板 & 头文件模板加可选 \CL{} 包装 &
   Kernel 参数化精确性；依赖任意精度库 \\
@@ -4916,6 +4928,10 @@ python -c "import numpy; numpy.show_config()" > env.blas.txt
   >{\raggedright\arraybackslash}p{0.19\textwidth}
   >{\raggedright\arraybackslash}p{0.28\textwidth}@{}}
 \caption{信号处理类库的接口形态}\label{tab:apA-dsp}\\
+\toprule
+库 & 内核语言 & 对外接口 & 绑定与备注 \\
+\midrule
+\endfirsthead
 \toprule
 库 & 内核语言 & 对外接口 & 绑定与备注 \\
 \midrule
@@ -4986,6 +5002,10 @@ python -c "import numpy; numpy.show_config()" > env.blas.txt
   >{\raggedright\arraybackslash}p{0.18\textwidth}
   >{\raggedright\arraybackslash}p{0.26\textwidth}@{}}
 \caption{库名的四种写法}\label{tab:apB-names}\\
+\toprule
+库 & CMake 名 & pkg-config & \PY{} 侧常见对应 \\
+\midrule
+\endfirsthead
 \toprule
 库 & CMake 名 & pkg-config & \PY{} 侧常见对应 \\
 \midrule
@@ -5068,6 +5088,10 @@ strace -e trace=file ./build/dsp_app 2>&1 | grep -i wisdom
 \toprule
 变量 & 影响 & 误用后果 \\
 \midrule
+\endfirsthead
+\toprule
+变量 & 影响 & 误用后果 \\
+\midrule
 \endhead
 \Tp{CMAKE\_PREFIX\_PATH} & 探测安装的库与配置包 &
   找不到库，或链到系统里的旧版本 \\
@@ -5089,6 +5113,10 @@ strace -e trace=file ./build/dsp_app 2>&1 | grep -i wisdom
   >{\raggedright\arraybackslash}p{0.26\textwidth}
   >{\raggedright\arraybackslash}p{0.38\textwidth}@{}}
 \caption{全书术语与缩写}\label{tab:apC-glossary}\\
+\toprule
+缩写 & 展开 & 一句话定义 \\
+\midrule
+\endfirsthead
 \toprule
 缩写 & 展开 & 一句话定义 \\
 \midrule
