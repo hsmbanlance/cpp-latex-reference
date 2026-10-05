@@ -116,7 +116,9 @@ C、C++/
   - `D:\winget\MiKTeX\miktex\bin\x64\`
   - `C:\Program Files\MiKTeX\miktex\bin\x64\`
   - `$env:LOCALAPPDATA\Programs\MiKTeX\`
-- **Consolas** 等宽字体（Windows 自带）
+- **DejaVu Sans Mono** 等宽字体 + **Fandol** 中文字体（本地与 CI 同族，否则断行位置不同、Overfull 数对不上）
+  - 本地：`mpm --install=dejavu`（MiKTeX 把 TTF 装进 TeX 字体树，不装系统字体）；Fandol 随 MiKTeX 已有
+  - CI：apt 的 `fonts-dejavu` 与 `texlive-lang-chinese` 提供同一套字体
 
 ## workflow.ps1 使用
 
@@ -214,9 +216,9 @@ C、C++/
 
 | 项目 | 设置 |
 |------|------|
-| 文档类 | `ctexbook`，12pt，A4 |
+| 文档类 | `ctexbook`，12pt，A4，`fontset=fandol` |
 | 页边距 | 上下左右各 2.5cm |
-| 等宽字体 | Consolas（`fontspec`） |
+| 等宽字体 | DejaVu Sans Mono（`fontspec` + `\IfFontExistsTF` 双分支，家族名命中不到就按 MiKTeX 的 TTF 文件名回落） |
 | 代码高亮 | `listings`，`cppstyle` 样式 |
 | 提示框 | `tcolorbox`：`note`、`warning`、`guideline`、`compare`、`bestpractice` |
 | 页眉 | `fancyhdr`：偶数页左章名，奇数页右节名，外侧页码 |
@@ -238,14 +240,22 @@ mkdir "E:\C、C++\MyNewTopic"
 
 ```latex
 % !TEX program = xelatex
-\documentclass[12pt,a4paper]{ctexbook}
+\documentclass[12pt,a4paper,fontset=fandol]{ctexbook}
 
 % ==================== 页面 ====================
 \usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
 
 % ==================== 字体 ====================
 \usepackage{fontspec}
-\setmonofont{Consolas}
+\usepackage{iffont}
+\IfFontExistsTF{DejaVu Sans Mono}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+  {\setmonofont[Extension=.ttf,
+      UprightFont=DejaVuSansMono,
+      BoldFont=DejaVuSansMono-Bold,
+      ItalicFont=DejaVuSansMono-Oblique,
+      BoldItalicFont=DejaVuSansMono-BoldOblique]
+     {DejaVuSansMono}[Scale=MatchLowercase]}
 
 % ==================== 颜色 ====================
 \usepackage{xcolor}

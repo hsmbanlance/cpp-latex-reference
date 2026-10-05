@@ -1,6 +1,6 @@
 % !TEX program = xelatex
 % C++ 单元测试：框架、跨平台实践、Mock 与覆盖率
-\documentclass[12pt,a4paper]{ctexbook}
+\documentclass[12pt,a4paper,fontset=fandol]{ctexbook}
 
 % ===== 页面 =====
 \usepackage[margin=2.5cm]{geometry}
@@ -8,9 +8,17 @@
 % ===== 字体 =====
 \usepackage{fontspec}
 \usepackage{iffont}
-\IfFontExistsTF{Consolas}
-  {\setmonofont{Consolas}}
+% CJK 钉 fandol（两侧都取自 TeX 树里的同一份 FandolSong-Regular.otf）；
+% mono 钉 DejaVu Sans Mono：CI 由 fontconfig 命中同名，本机没有该系统字体，
+% 就用 MiKTeX dejavu 包里的同一版本 TTF（kpathsea 按文件名命中）。
+\IfFontExistsTF{DejaVu Sans Mono}
   {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+  {\setmonofont[Extension=.ttf,
+      UprightFont=DejaVuSansMono,
+      BoldFont=DejaVuSansMono-Bold,
+      ItalicFont=DejaVuSansMono-Oblique,
+      BoldItalicFont=DejaVuSansMono-BoldOblique]
+     {DejaVuSansMono}[Scale=MatchLowercase]}
 
 % ===== 颜色 =====
 \usepackage[dvipsnames,svgnames,x11names]{xcolor}
