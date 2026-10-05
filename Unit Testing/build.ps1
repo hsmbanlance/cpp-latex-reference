@@ -145,6 +145,14 @@ try {
             if ($errorCount -gt 0) { 'Red' } elseif ($overfullCount -gt 0) { 'DarkYellow' } else { 'Green' }
         )
 
+        # 计数非零就打印错误行原文：xelatex 常以退出码 0 收尾却留下单条可恢复错误，
+        # 只在退出码非 0 时 dump 日志的话，这类错误查不到正文（本地/CI 差异缺陷就没法定位）
+        if ($errorCount -gt 0) {
+            Write-Host "`n  [错误行摘录，最多 12 条]" -ForegroundColor Red
+            $hits = @(($stdout -split "`n") | Where-Object { $_ -match '^!' -or $_ -match '\.tex:\d+:.*(LaTeX Error|Package .* Error|Undefined control sequence|Missing \$ inserted|Emergency stop|You can''t use)' })
+            $hits | Select-Object -First 12 | ForEach-Object { Write-Host ('    ' + $_.Trim()) -ForegroundColor DarkRed }
+        }
+
         if ($process.ExitCode -ne 0 -and $errorCount -gt 0) {
             Write-Host "`n  [最后 20 行输出]" -ForegroundColor Red
             $stdout -split "`n" | Select-Object -Last 20 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkRed }
