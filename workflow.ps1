@@ -101,11 +101,16 @@ function Invoke-Build {
     $sw.Stop()
     $elapsed = '{0:F1}' -f $sw.Elapsed.TotalSeconds
 
-    $lastText = $output | Select-Object -Last 15 | Out-String
+    # build.ps1 prints one pass summary per run and, on failure, a raw log tail AFTER the
+    # last summary. Scanning only the trailing 15 lines missed the summary and left
+    # Err=-1, so take the LAST match over the whole output.
+    $fullText = $output | Out-String
     $errors = -1; $overfull = -1; $sizeKB = '?'
-    if ($lastText -match '\u9519\u8bef: (\d+)') { $errors = [int]$Matches[1] }
-    if ($lastText -match 'Overfull: (\d+)')     { $overfull = [int]$Matches[1] }
-    if ($lastText -match '\u5927\u5c0f: ([\d.]+) KB') { $sizeKB = $Matches[1] }
+    $mErr = [regex]::Matches($fullText, '\u9519\u8bef: (\d+)')
+    if ($mErr.Count -gt 0) { $errors = [int]$mErr[$mErr.Count - 1].Groups[1].Value }
+    $mOv = [regex]::Matches($fullText, 'Overfull: (\d+)')
+    if ($mOv.Count -gt 0) { $overfull = [int]$mOv[$mOv.Count - 1].Groups[1].Value }
+    if ($fullText -match '\u5927\u5c0f: ([\d.]+) KB') { $sizeKB = $Matches[1] }
 
     # A dangling \ref/\cite only raises "LaTeX Warning: Reference `x' ... undefined",
     # which neither Err nor Ov counts. Scan the log of the LAST pass only: earlier
@@ -118,7 +123,7 @@ function Invoke-Build {
         $dangling = ([regex]::Matches($lastRun, '(?:Reference|Citation)[\s\S]{0,40}?undefined')).Count
     }
 
-    $failed = $lastText -match '\u7f16\u8bd1\u5931\u8d25'
+    $failed = $fullText -match '\u7f16\u8bd1\u5931\u8d25'
     $status = if ($failed -or $errors -gt 0) { 'FAIL' }
               elseif ($overfull -gt 0)       { 'OVERFULL' }
               elseif ($dangling -gt 0)       { 'BADREF' }

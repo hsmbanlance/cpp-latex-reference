@@ -136,7 +136,7 @@ try {
         # 解析日志（-file-line-error 下错误形如 "math_geo_dsp.tex:421: LaTeX Error: ..."，
         # 与 "^!" 传统格式都要统计，否则会漏报错误）
         $errorCount    = ([regex]::Matches($stdout, '(?im)^!')).Count + `
-                         ([regex]::Matches($stdout, '(?im)^[^\r\n]*\.tex:\d+:.*(LaTeX Error|Package .* Error|Undefined control sequence|Missing \$ inserted|Emergency stop)')).Count
+                         ([regex]::Matches($stdout, '(?im)^[^\r\n]*\.tex:\d+:.*(LaTeX Error|Package .* Error|Undefined control sequence|Missing \$ inserted|Emergency stop|You can''t use)')).Count
         $overfullCount = ([regex]::Matches($stdout, '(?i)Overfull')).Count
         $underfullCount = ([regex]::Matches($stdout, '(?i)Underfull')).Count
 
@@ -162,12 +162,10 @@ try {
     $totalSw = [System.Diagnostics.Stopwatch]::StartNew()
 
     $runs = if ($SinglePass) { 1 } else { $MaxRuns }
+    $hardFail = $false
     for ($i = 1; $i -le $runs; $i++) {
         $ok = Invoke-XeLaTeX -Pass $i
-        if (-not $ok) {
-            Write-Host "`n编译失败！" -ForegroundColor Red
-            return
-        }
+        if (-not $ok) { $hardFail = $true; break }
     }
 
     # ─── TOC 修复（LaTeX 2025-11-01 内核 bug 导致 .toc 为空）───
@@ -194,6 +192,11 @@ try {
     }
 
     $totalSw.Stop()
+
+    if ($hardFail) {
+        Write-Host "`n编译失败！" -ForegroundColor Red
+        return
+    }
 
     # ─── 验证输出 ───
     $pdfPath = Join-Path $scriptDir "$jobName.pdf"
