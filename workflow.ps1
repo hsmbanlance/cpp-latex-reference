@@ -92,7 +92,7 @@ function Invoke-Build {
 
     if (-not (Test-Path -LiteralPath $buildScript)) {
         Write-Host "  [MISSING] build.ps1 not found!" -ForegroundColor Red
-        return [PSCustomObject]@{ Name=$Name; Status='MISSING'; Errors=-1; Overfull=-1; Refs=0; Pages=-1; SizeKB='?' }
+        return [PSCustomObject]@{ Name=$Name; Status='MISSING'; Errors=-1; PlainErr=0; Overfull=-1; Refs=0; MultDef=0; NotConv=0; Pages=-1; SizeKB='?' }
     }
 
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
@@ -126,6 +126,7 @@ function Invoke-Build {
     # Pages comes from the "Output written on X.pdf (N pages, M bytes)" trailer; -1 means
     # the log holds no such line, i.e. xelatex never reached \end{document}.
     $dangling = 0; $pages = -1
+    $plainErr = 0; $multdef = 0; $notConv = 0
     $logRaw = ''
     if (Test-Path -LiteralPath $logPath) {
         $logRaw = Get-Content -LiteralPath $logPath -Raw -Encoding UTF8
@@ -134,6 +135,18 @@ function Invoke-Build {
         # MiKTeX prints "(169 pages)." while TeX Live adds the byte count -> "(154 pages, ...)."
         $mPg = [regex]::Matches($logRaw, 'Output written on .* \((\d+) pages?[,)]')
         if ($mPg.Count -gt 0) { $pages = [int]$mPg[$mPg.Count - 1].Groups[1].Value }
+        # build.ps1 counts only the two error shapes it greps for. Under -file-line-error a
+        # plain-TeX error prints as "./cli_app.tex:5294: Extra }, or forgotten \endgroup." --
+        # no leading "!" and none of its listed keywords -- so it escaped the gate while the run
+        # aborted at the 100-error cap and shipped a short PDF. Count those from the log itself.
+        # The list must stay a whitelist of error openings: longtable's benign
+        # "ignored error: Infinite glue shrinkage" shares this exact prefix shape.
+        $plainErr = ([regex]::Matches($lastRun, '(?m)^[^\r\n]*\.(?:tex|sty|cls):\d+:\s*(Extra |Missing |Undefined control sequence|Runaway argument|LaTeX Error|Paragraph ended before|Illegal pream-token|Double space|Limit exceeded|Sorry, but|Bad space factor|That makes 100 errors|Emergency stop)')).Count
+        # Two more warnings mean the reference pass never settled: colliding labels break the
+        # \ref targets, and "Rerun to get cross-references right" means the shipped pages still
+        # disagree with the printed contents. Either one is a misplaced or incomplete TOC online.
+        $multdef = ([regex]::Matches($lastRun, 'multiply defined')).Count
+        $notConv = ([regex]::Matches($lastRun, 'Label\(s\) may have changed|Rerun to get|There were undefined references')).Count
     }
 
     # Completeness probe: TeX writes \newlabel into the .aux as it *reaches* each \label, so
@@ -151,14 +164,16 @@ function Invoke-Build {
     }
 
     $failed = $fullText -match '\u7f16\u8bd1\u5931\u8d25'
-    $status = if ($failed -or $errors -gt 0 -or $exitCode -gt 0 -or $unwritten -gt 0) { 'FAIL' }
+    # pages -le 0 = no "Output written" trailer at all, i.e. xelatex never finished the document.
+    $status = if ($failed -or $errors -gt 0 -or $exitCode -gt 0 -or $unwritten -gt 0 -or
+                 $plainErr -gt 0 -or $multdef -gt 0 -or $notConv -gt 0 -or $pages -le 0) { 'FAIL' }
               elseif ($overfull -gt 0)       { 'OVERFULL' }
               elseif ($dangling -gt 0)       { 'BADREF' }
               elseif ($errors -eq 0)         { 'OK' }
               else                           { 'UNKNOWN' }
 
     $color = switch ($status) { 'OK'{'Green'} 'OVERFULL'{'DarkYellow'} 'BADREF'{'DarkYellow'} 'FAIL'{'Red'} default{'Gray'} }
-    Write-Host "  [$status] Err=$errors Ov=$overfull Ref=$dangling Pg=$pages Exit=$exitCode ${sizeKB}KB ${elapsed}s" -ForegroundColor $color
+    Write-Host "  [$status] Err=$errors PErr=$plainErr Ov=$overfull Ref=$dangling MD=$multdef NC=$notConv Pg=$pages Exit=$exitCode ${sizeKB}KB ${elapsed}s" -ForegroundColor $color
     if ($unwritten -gt 0) {
         Write-Host "  [TRUNCATED] $unwritten label(s) never reached the .aux - the run stopped before \end{document}" -ForegroundColor Red
     }
@@ -175,7 +190,7 @@ function Invoke-Build {
         }
     }
 
-    return [PSCustomObject]@{ Name=$Name; Status=$status; Errors=$errors; Overfull=$overfull; Refs=$dangling; Pages=$pages; SizeKB=$sizeKB }
+    return [PSCustomObject]@{ Name=$Name; Status=$status; Errors=$errors; PlainErr=$plainErr; Overfull=$overfull; Refs=$dangling; MultDef=$multdef; NotConv=$notConv; Pages=$pages; SizeKB=$sizeKB }
 }
 
 function Invoke-Clean {
@@ -271,11 +286,20 @@ switch ($Action) {
 
         foreach ($r in $results) {
             $c = switch ($r.Status) { 'OK'{'Green'} 'OVERFULL'{'DarkYellow'} 'BADREF'{'DarkYellow'} 'FAIL'{'Red'} default{'Gray'} }
-            Write-Host ('  {0,-16} {1,-10} Err={2} Ov={3} Ref={4} Pg={5} {6}KB' -f $r.Name,$r.Status,$r.Errors,$r.Overfull,$r.Refs,$r.Pages,$r.SizeKB) -ForegroundColor $c
+            Write-Host ('  {0,-16} {1,-10} Err={2} PErr={7} Ov={3} Ref={4} MD={8} NC={9} Pg={5} {6}KB' -f $r.Name,$r.Status,$r.Errors,$r.Overfull,$r.Refs,$r.Pages,$r.SizeKB,$r.PlainErr,$r.MultDef,$r.NotConv) -ForegroundColor $c
         }
 
         $tt = '{0:F1}' -f $totalSw.Elapsed.TotalSeconds
         Write-Host "`n  Total: ${tt}s" -ForegroundColor Cyan
+
+        # Anything short of OK must not reach Pages: a FAIL volume still leaves a PDF on disk (a
+        # truncated one when xelatex stopped early), and the next steps would copy and publish it
+        # while the run looked green. Exit non-zero here so copy_pdfs / upload / deploy are skipped.
+        $blocked = @($results | Where-Object { $_.Status -ne 'OK' }).Count
+        if ($blocked -gt 0) {
+            Write-Host "  BLOCKED: $blocked volume(s) are not OK - deploying nothing to Pages" -ForegroundColor Red
+            exit 1
+        }
     }
 
     'build' {
