@@ -519,17 +519,23 @@ C 和 \cpp{} 编写的函数库广泛存在于操作系统底层、科学计算�
   \item \textcolor{purple!50!black}{\textbf{最佳实践框}}~给出接口设计建议。
 \end{itemize}
 
-% --- TOC：重定向 \@starttoc 读取 build.ps1 生成的 -manual.toc ---
+% --- TOC：从 build.ps1 生成的 -manual.toc 读取目录 ---
 % LaTeX 2025-11-01 kernel bug: \@starttoc 的 \chardef 在 \begingroup 内是局部的 → .toc 永远为空
+% 不用 \renewcommand{\@starttoc} 的形式：它会连带丢掉分组与 tocdepth，且两册在 CI 上
+% 的 PDF /PageLabels 起点比书口早两页（改成下面这种册内局部写法后待 CI 复验）。
 \makeatletter
-\renewcommand*{\@starttoc}[1]{%
-  \IfFileExists{\jobname-manual.toc}{%
-    \@input{\jobname-manual.toc}%
-  }{}%
-}
+\newif\ifhavemanualtoc
+\IfFileExists{\jobname-manual.toc}{\havemanualtoctrue}{}
+\ifhavemanualtoc
+  \clearpage
+  \chapter*{\contentsname}%
+  \@mkboth{\contentsname}{\contentsname}%
+  \@input{\jobname-manual.toc}%
+  \clearpage
+\else
+  \tableofcontents
+\fi
 \makeatother
-
-\tableofcontents
 
 \mainmatter
 

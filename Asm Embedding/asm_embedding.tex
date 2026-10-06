@@ -404,16 +404,21 @@
   \item \textcolor{purple!50!black}{\textbf{最佳实践框}}~给出工程上的推荐写法。
 \end{itemize}
 
-% --- TOC 修复（LaTeX 2025-11-01 kernel bug）---
+% --- TOC：从 build.ps1 生成的 -manual.toc 读取目录 ---
+% LaTeX 2025-11-01 kernel bug: \@starttoc 的 \chardef 在 \begingroup 内是局部的 → .toc 永远为空
 \makeatletter
-\renewcommand*{\@starttoc}[1]{%
-  \IfFileExists{\jobname-manual.toc}{%
-    \@input{\jobname-manual.toc}%
-  }{}%
-}
+\newif\ifhavemanualtoc
+\IfFileExists{\jobname-manual.toc}{\havemanualtoctrue}{}
+\ifhavemanualtoc
+  \clearpage
+  \chapter*{\contentsname}%
+  \@mkboth{\contentsname}{\contentsname}%
+  \@input{\jobname-manual.toc}%
+  \clearpage
+\else
+  \tableofcontents
+\fi
 \makeatother
-
-\tableofcontents
 
 \mainmatter
 
