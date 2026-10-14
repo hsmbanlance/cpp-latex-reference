@@ -1,0 +1,5925 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper,fontset=fandol]{ctexbook}
+
+% ==================== 页面 ====================
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+
+% ==================== 字体 ====================
+\usepackage{fontspec}
+\usepackage{iffont}
+% CJK 钉 fandol（两侧都取自 TeX 树里的同一份 FandolSong-Regular.otf）；
+% mono 钉 DejaVu Sans Mono：CI 由 fontconfig 命中同名，本机没有该系统字体，
+% 就用 MiKTeX dejavu 包里的同一版本 TTF（kpathsea 按文件名命中）。
+\IfFontExistsTF{DejaVu Sans Mono}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+  {\setmonofont[Extension=.ttf,
+      UprightFont=DejaVuSansMono,
+      BoldFont=DejaVuSansMono-Bold,
+      ItalicFont=DejaVuSansMono-Oblique,
+      BoldItalicFont=DejaVuSansMono-BoldOblique]
+     {DejaVuSansMono}[Scale=MatchLowercase]}
+
+% ==================== 颜色 ====================
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{toolheadbg}{HTML}{2D3E50}
+\definecolor{yamlkey}{HTML}{7A3E9D}
+\definecolor{diffadd}{HTML}{1A7F37}
+\definecolor{diffdel}{HTML}{B62324}
+
+% ==================== listings ====================
+\usepackage{listings}
+
+% ---- 所有代码块共用的排版（先定义，各语言 style 组合它）----
+\lstdefinestyle{codebase}{
+  basicstyle=\small\ttfamily,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  numberstyle=\tiny\color{linenumgray},
+  numbers=left,
+  frame=single,
+  rulecolor=\color{codeframe},
+  framesep=6pt,
+  breaklines=true,
+  tabsize=4,
+  columns=flexible,
+  keepspaces=true,
+  backgroundcolor=\color{codebg},
+  showstringspaces=false,
+  escapeinside={(*@}{@*)},
+}
+
+\lstdefinestyle{cppstyle}{
+  style=codebase,
+  language=C++,
+  morekeywords={constexpr,consteval,constinit,decltype,auto,
+    concept,requires,co_await,co_yield,co_return,
+    noexcept,override,final,nullptr,static_assert,
+    template,typename,namespace,using,mutable,volatile,
+    explicit,operator,friend,inline,virtual,
+    thread_local,alignas,alignof},
+  deletekeywords={int,char,bool,float,double,long,short,unsigned,signed,void,wchar_t},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    string,vector,map,set,unique_ptr,shared_ptr,optional,variant,any,
+    span,string_view,FILE,wchar_t},
+  emphstyle=\color{teal!80!black},
+}
+\lstset{style=cppstyle}
+
+
+% ---- C：寄存器、RTOS 对象与内核接口的 C ABI 边界 ----
+\lstdefinestyle{cstyle}{
+  style=codebase,
+  language=C,
+  morekeywords={bool,FILE,size_t,restrict,inline,volatile,sig_atomic_t,_Atomic},
+  emph={size_t,int32_t,uint32_t,int64_t,uint64_t,ssize_t,
+    TaskHandle_t,QueueHandle_t,SemaphoreHandle_t,EventGroupHandle_t,TimerHandle_t,
+    BaseType_t,UBaseType_t,TickType_t,can_frame_t,sockaddr_can,
+    ADC_HandleTypeDef,SPI_HandleTypeDef,UART_HandleTypeDef,I2C_HandleTypeDef,
+    TIM_HandleTypeDef,DMA_HandleTypeDef,CAN_HandleTypeDef,GPIO_TypeDef},
+  emphstyle=\color{teal!80!black},
+}
+
+% ---- YAML：设备树绑定、板级配置与 CI 描述文件 ----
+\lstdefinestyle{yamlstyle}{
+  style=codebase,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[d]',
+  alsoletter={-,:},
+  morekeywords=[1]{Version,Checks,CheckOptions,HeaderFilterRegex,FormatStyle,
+    User,WarningsAsErrors,CompilationDatabase,ExtraArgs,Add,Remove,
+    Diagnostics,ClangTidy,UnusedIncludes,MissingIncludes,index,background-index,
+    clang-tidy,InlayHints,Style,BasedOnStyle,IndentWidth,TabWidth,UseTab,
+    ColumnLimit,BreakBeforeBraces,AlignAfterOpenBracket,AllowShortIfStatementsOnASingleLine,
+    IncludeBlocks,SortIncludes,SeparateDefinitionBlocks,SpacesInAngles,
+    Language,If,Else,Disable,Key,Name,files,exclude,repo,rev,hooks,id,entry,
+    language_types,on,push_pull_request,steps,uses,runs-on,defaults},
+  keywordstyle=[1]\color{yamlkey}\bfseries,
+}
+
+% ---- JSON：跟踪事件、机读输出与工具配置 ----
+\lstdefinestyle{jsonstyle}{
+  style=codebase,
+  morestring=[b]",
+  alsoletter={-},
+  morekeywords={directory,file,output,arguments,command,version,
+    cmakeMinimumRequired,name,generator,binaryDir,sourceDir,caches,
+    toolchainFile,C_CXX_FLAGS,defineConstants,environments,
+    editorMode,rulerColumn,tabSize,insertSpaces,files,settings,
+    codec_name,codec_type,width,height,pix_fmt,r_frame_rate,avg_frame_rate,
+    duration,bit_rate,sample_rate,sample_fmt,channel_layout,nb_frames,pkt_size},
+  keywordstyle=\color{yamlkey}\bfseries,
+}
+
+% ---- Shell：命令行与工具调用 ----
+\lstdefinelanguage{ShellLD}{
+  morekeywords={if,then,else,elif,fi,for,in,do,done,while,case,esac,
+    function,return,local,export,source,echo,cd,set,exec,trap,read,
+    printf,test,exit,shift,eval,alias},
+  sensitive=true,
+  morecomment=[l]{\#},
+  morestring=[b]",
+  morestring=[d]',
+}
+\lstdefinestyle{shellstyle}{
+  style=codebase,
+  language=ShellLD,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  emph={arm-none-eabi-gcc,arm-none-eabi-objdump,arm-none-eabi-nm,
+    arm-none-eabi-size,arm-none-eabi-gdb,riscv64-unknown-elf-gcc,
+    openocd,pyocd,JLinkGDBServer,st-flash,dfu-util,flashrom,dtc,west,idf.py,
+    cyclictest,oslat,hwlatdetect,rt-migrate-test,chrt,taskset,
+    stress-ng,trace-cmd,ethtool,udevadm,dmesg,modprobe,
+    candump,cansend,canecho,i2cdetect,i2cget,i2cset,spidev_test,devmem2,
+    lscpu,turbostat,cpupower,qemu-system-arm,renode,
+    grep,sed,awk,xargs,jq,python3,pip,pip3,pwsh,bash,git,
+    cmake,ninja,make,ccache,lldb,gdb,code,nvim,tar,mkdir,touch,ls,cat,
+    pkg-config,ldconfig,strace,ltrace,perf,valgrind,gh,yamllint,wc,diff,find,sort,uniq,tee,rm},
+  emphstyle=\color{teal!80!black}\bfseries,
+}
+
+% ---- CMake ----
+\lstdefinelanguage{CMakeLD}{
+  morekeywords={cmake_minimum_required,project,add_executable,
+    add_library,target_link_libraries,target_include_directories,
+    target_compile_definitions,target_compile_options,set,if,elseif,
+    else,endif,find_package,option,message,install,file,
+    target_sources,add_subdirectory,enable_language,set_target_properties,
+    FetchContent_Declare,FetchContent_MakeAvailable,list,string},
+  sensitive=false,
+  morecomment=[l]{\#},
+  morestring=[b]",
+}
+\lstdefinestyle{cmakestyle}{
+  style=codebase,
+  language=CMakeLD,
+  keywordstyle=\color{cppkeyword}\bfseries,
+}
+
+% ---- Python：抖动统计、跟踪日志解析与离线分析脚本 ----
+\lstdefinestyle{pythonstyle}{
+  style=codebase,
+  language=Python,
+  morekeywords={self,lambda,async,await,yield,with,as,pass,del,
+    global,nonlocal,is,in,not,and,or,True,False,None},
+  keywordstyle=\color{cppkeyword}\bfseries,
+  emph={av,subprocess,np,numpy,plt,json,os,sys,pathlib,struct,numpy},
+  emphstyle=\color{teal!80!black},
+}
+
+% ---- 统一 diff：补丁式改动对比 ----
+\lstdefinestyle{diffstyle}{
+  style=codebase,
+  numbers=none,
+  frame=none,
+  backgroundcolor=\color{white},
+  morecomment=[l][\color{diffdel}]{-},
+  morecomment=[l][\color{diffadd}]{+},
+  morecomment=[l][\color{blue!70!black}\bfseries]{@@},
+}
+
+% ==================== tcolorbox ====================
+\usepackage[most]{tcolorbox}
+
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ==================== 章节标题 ====================
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{float}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{toolheadbg}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+\setlength{\headheight}{14.5pt}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+\emergencystretch=6em
+
+% ==================== 超链接 ====================
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={C++ Reference},
+  pdftitle={C/C++ 代码风格参考手册：主流风格指南、译文滞后条款与 inline 和异常的现代语义},
+}
+
+% ==================== 自定义命令 ====================
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\Fn}[1]{\texttt{#1()}}
+\newcommand{\Tp}[1]{\texttt{#1}}
+\newcommand{\Opt}[1]{\texttt{-\/-#1}}
+\newcommand{\Bk}{\discretionary{}{}{}}
+\newcommand{\Lib}[1]{\textbf{\texttt{#1}}}
+\newcommand{\Lang}[1]{\textsf{#1}}
+\newcommand{\CL}{\Lang{C}}
+\newcommand{\CPP}{\Lang{C++}}
+\newcommand{\PY}{\Lang{Python}}
+% 域标签：风格源流用前四个，涉及嵌入式方言域时用后四个，避免同义多形
+% DomGo/DomLlvm 标谷歌与 LLVM 两条风格源流，DomMod/DomTra 标现代语义与译本滞后条款
+\newcommand{\DomGo}{\Lang{Google}}
+\newcommand{\DomLlvm}{\Lang{LLVM}}
+\newcommand{\DomMod}{\Lang{Modern}}
+\newcommand{\DomTra}{\Lang{Legacy}}
+\newcommand{\DomBare}{\Lang{Bare}}
+\newcommand{\DomRtos}{\Lang{RTOS}}
+\newcommand{\DomRT}{\Lang{Realtime}}
+\newcommand{\DomHost}{\Lang{Host}}
+
+% ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C/C++ 代码风格参考手册\par}
+\vspace{1cm}
+{\LARGE 主流风格指南的结构、依据与适用边界\par}
+\vspace{0.4cm}
+{\Large 谷歌风格译本的滞后条款，inline 与异常在现代标准下的语义勘误\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+\cleardoublepage
+
+% ====================================================================
+% 章节正文由 frag_chNN.tex 合并插入到下面这行之前（merge_frags.py）
+% ---- frag_ch01.tex ----
+% ============================================================
+\part{主流风格指南的谱系与条款解剖}
+\chapter{代码风格手册为什么存在}
+\label{ch:ch01-why}
+
+在翻开任何一份风格指南之前，先回答三个前置问题：风格手册究竟替团队省下了什么，
+它的条款为什么天然分成两层，以及为什么 \CL{} 与 \CPP{} 这两个语言永远不可能
+收敛出唯一一份官方风格。本章不给出任何可直接抄用的条款，而是建立贯穿全书的
+分析框架：谱系（谁写的、给谁用）、裁决方式（机器还是人）、时效（依据哪个年代
+的语言标准）。第二、第三部分对具体指南的逐条解剖，都会反复回到本章的定义。
+
+\section{风格争议的代价}
+\label{sec:ch01-cost}
+
+一个团队里同时存在多少种``合法''写法？答案往往比想象的多。同一个把值限制到
+区间内的函数，在未经约定的代码库里至少能以三种互不相容但各自完全正确的
+风格存在（见列表 \ref{lst:ch01-variants}）：大括号同行或换行、缩进两空格或
+四空格、提前返回或单出口、结果走返回值还是出参加错误码。把这一维度扩展到
+命名、头文件组织、宏与 \texttt{constexpr} 的取舍，组合数是爆炸性的；所谓
+``同一功能十种写法''不是修辞，是未立契约的代码库的日常统计量。
+
+\begin{lstlisting}[style=cppstyle,caption={同一个求限制函数的三种写法：各自皆合法，风格互不相容},label={lst:ch01-variants}]
+// 变体一：大括号同行，提前返回，两空格缩进，谷歌系节奏
+int clamp_v1(int lo, int value, int hi) {
+  if (value < lo) return lo;
+  if (value > hi) return hi;
+  return value;
+}
+
+// 变体二：Allman 大括号，四空格缩进，单出口传统
+int clamp_v2(int lo, int value, int hi)
+{
+    int result = value;
+    if (value < lo) {
+        result = lo;
+    } else if (value > hi) {
+        result = hi;
+    }
+    return result;
+}
+
+// 变体三：C 接口传统，结果走出参，整数错误码打前
+int clamp_v3(int lo, int value, int hi, int *out)
+{
+    if (out == NULL) return EINVAL;
+    *out = (value < lo) ? lo : ((value > hi) ? hi : value);
+    return 0;
+}
+\end{lstlisting}
+
+争议的代价分三笔账。第一笔是评审时间：当格式没有公约数，评审者要在判断
+逻辑是否正确之前，先花注意力确认每一处换行、每一个星号是不是``有意为之''。
+经验上这部分注意力开销占去小型评审的相当比例，而它换回的信息量为零。
+第二笔是 diff 噪声：一次跨风格的重排会让机械改动在版本控制里显示为
+``全文件皆被改动''，真正的语义修改被淹没；想找回真相，就得学会用
+\texttt{git\,diff} 的忽略空白选项，这本身又是一笔认知税。第三笔是人员
+流动成本：新成员在多种风格混存的库里，要花数周才能建立``这里怎么写才算
+正常''的隐性知识，而这份知识本应写成两页纸。
+
+三笔账的共同根源是一条被反复验证的事实：\textbf{读代码的时间远大于写
+代码的时间}。业界对维护期代码的常见估算是读写比约十比一甚至更高；一份
+代码在被写入后的几年到几十年里会被无数陌生人阅读，而写它的人只阅读它
+有限几次。风格手册的整个经济学就建立在这个不对称上：牺牲作者的一次
+小便利，换取所有读者的长期低摩擦。由此得到本书第一条立场——风格是
+\textbf{团队契约}而非个人品味。个人品味没有对错，所以无法仲裁；团队契约
+可以不好，但必须唯一，因为两个并存的好契约等于一个坏契约。
+
+\section{格式化层与设计约定层的分界}
+\label{sec:ch01-twolayer}
+
+所有主流指南的条款都混杂着两种性质完全不同的东西，把它们分开是本书
+的基本方法论。
+
+\begin{compare}[title={两层规则的分界}]
+\textbf{格式化层}：缩进宽度与制表符、大括号位置、行宽上限、空格分布、
+头文件包含的排序。这一层的特征是\textbf{可机器裁决}——
+\Tp{clang{\Bk}format} 读一份 \Tp{.clang{\Bk}format} 描述文件就能把全仓库
+收敛到同一形态，评审中为它辩论的每一分钟都是浪费。\par\medskip
+\textbf{设计约定层}：命名背后的类型语义（前缀是否表示所有权）、资源的
+所有权与生命周期由谁声明、错误处理选错误码、\Fn{expected} 还是异常、
+\Tp{inline} 与头文件组织承担什么契约、哪些语言设施在本项目被禁用。
+这一层的特征是\textbf{必须人裁决}，且每条都需要附理由：它约束的是
+编译器和格式工具无法看见的语义承诺。
+\end{compare}
+
+把两层混为一谈，是一份风格手册开始腐烂的起点。常见的腐烂形态有两种，
+方向恰好相反。其一是``格式手册化''：整本手册扩写成格式工具的参数说明书，
+对所有权、错误处理这些真正昂贵的决策一字不提，团队看起来有手册，实际
+没有任何语义契约。其二是``约定格式化''：用裁决大括号的语气去裁决异常
+——把一条涉及运行期代价、二进制尺寸与跨 ABI 边界的语义决策，写成
+``本项目不使用异常''七个字而无任何理由与适用边界，结果新成员在需要它
+的场合要么误用要么恐慌。这两种腐烂的病灶相同：不知道一条规则属于哪一
+层，因而用错了裁决工具。
+
+这条分界线也是第二部分全部批评工作的坐标系。\DomGo{} 风格指南本身两层
+皆备且质量不低，但它的若干中文译本把设计约定层的条款（例如关于
+\Tp{inline} 与头文件的那几条）用格式化层的口吻转述，读者便以为那是
+可以交给工具处理的排版偏好，或者反过来把过时的语义条款当成永恒真理
+执行。条款的分层归属错了，执行的力度和方向就全错——这正是后续章节
+逐条展开的问题。
+
+\section{为什么 \CL/\CPP{} 不存在``一种官方风格''}
+\label{sec:ch01-nostyle}
+
+有读者会问：\Lang{Go} 社区用 \Tp{gofmt} 一劳永逸，\CPP{} 为什么学不会？
+对比一下 \Tp{gofmt} 成立的前提，答案就清楚了（见列表 \ref{lst:ch01-fmt}）。
+第一，语言只有一个官方实现路线和强势的中心决策体，格式即语言的法定
+组成部分，未格式化的代码在社约上``不存在''。第二，语言年轻、方言少，
+不存在必须跨三十年二进制兼容的历史包袱。第三，工具链从编译器到构建
+系统皆官方出品，格式化能力内建于 \texttt{go} 命令本身。
+
+\begin{lstlisting}[style=shellstyle,caption={两种世界的格式化仪式：左边是义务，右边是协商},label={lst:ch01-fmt}]
+# Go 世界：gofmt 是工具链内置义务，样式不是讨论项
+gofmt -l -w .
+# 常见 CI 约定：存在未格式化文件即失败，无人辩论
+gofmt -l . | grep -q . && exit 1
+
+# C/C++ 世界：样式由仓库自行声明，工具只是执行者
+clang-format --style=file -i src/*.cpp
+clang-tidy src/*.cpp --quiet -- \
+  -std=c++20 -Iinclude
+\end{lstlisting}
+
+而 \CL/{\Bk}\CPP{} 的现实中，三条前提全部不成立。其一，\textbf{语言演进太快，
+条款会过时}：从 \cpp{98} 到 \cpp{23}，移动语义、\Tp{constexpr}、范围 for、
+协程与 \Tp{format} 依次改写了``什么写法更好''的答案；一份没有年代坐标
+的手册，十年内必然自相矛盾。其二，\textbf{方言域太多}：\DomBare{} 与
+\DomRtos{} 的 \CL{} 世界禁用动态内存、栈预算以字节计；\DomLlvm{} 与 \DomGo{}
+代表的系统级 \CPP{} 世界对异常与 RTTI 各怀取舍；应用层 \CPP{} 世界则把
+标准库和智能指针视为默认装备。同一条款在不同域里结论相反，任何``统一
+官方风格''都会在其中至少两个域里是错的。其三，\textbf{标准库与 ABI 的
+硬约束}：导出头文件里的类布局、函数签名和宏一旦发布便被二进制兼容
+冻结几代人；\Tp{inline} 函数体在已发布库中改动即破坏调用方的链接假设。
+风格工具敢对格式层全仓重写，却不敢触碰任何进入 ABI 的名字与布局——
+机器裁决的自由度在源头就被历史锁死了。
+
+所以 \CPP{} 生态走了另一条路：样式以``家族''形式共存。\Tp{clang{\Bk}format}
+内置的 \Opt{style=} 取值——\Opt{LLVM}、\Opt{Google}、\Opt{Chromium}、
+\Opt{Mozilla}、\Opt{WebKit}、\Opt{GNU}——本身就是对各指南格式化层的
+机器化封存。没有赢家，只有各自仓库声明自己属于哪个家族。
+
+\section{主流指南地图}
+\label{sec:ch01-map}
+
+进入逐条解剖之前，先建立一张谱系地图。表 \ref{tab:ch01-map} 按``演化
+机制''而非``条款内容''给各指南定位：谁有权改条款、改动以什么节奏落地，
+决定了这份手册可信度的时间函数。
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.19\textwidth}
+                  >{\raggedright\arraybackslash}p{0.24\textwidth}
+                  >{\raggedright\arraybackslash}p{0.36\textwidth}}
+\caption{\CL/\CPP{} 主流风格指南一览：源流、演化机制与适用人群}
+\label{tab:ch01-map}\\
+\toprule
+指南（源流） & 演化机制 & 适用人群与一句话定位 \\
+\midrule
+\endfirsthead
+\caption[]{\CL/\CPP{} 主流风格指南一览（续）}\\
+\toprule
+指南（源流） & 演化机制 & 适用人群与一句话定位 \\
+\midrule
+\endhead
+\midrule
+\endfoot
+\bottomrule
+\endlastfoot
+\DomGo{} 风格指南 &
+内部单仓规约的外发快照；更新滞后于内部实践，公开版与内部版是两件事 &
+想要一份格式层与语义层俱备的完整样板的团队；作为教材价值最高，
+作为直接强制的法源风险见 \S\ref{sec:ch01-stale} 的预告 \\
+\DomLlvm{} 风格指南 &
+以随编译器发布的工具配置为真身；条款在评审与邮件列表演化，
+工具与文本冲突时先改工具 &
+编译器与基础设施项目；格式层几乎完全外包给 \Tp{clang{\Bk}format}，
+手册文本只解释例外 \\
+Chromium 风格指南 &
+随评审机器人落地，每次发布重新校核条款的可执行性 &
+超大型客户端代码库；``风格即 CI 门禁''模式的代表 \\
+Mozilla 风格指南 &
+与 \Lang{Rust} 采纳同步演化，\CPP{} 部分经工具化收编 &
+多语言混合仓库；展示两套语言风格如何共处于一个构建系统 \\
+\Lang{C++ Core Guidelines} &
+由语言元老发起、社区在网站上持续修订；条款按
+``主张加理由加替代方案''书写 &
+想跟随语言年代更新风格的 \CPP{} 项目；它自我声明不讨论缩进与大括号，
+只覆盖设计约定层 \\
+Linux 内核编码风格 &
+由维护者集团修订并写入内核文档 \Tp{coding{\Bk}style.rst}；
+制表符缩进与宽行格律是数十年不动摇的先例 &
+内核模块与 \DomBare{} 的 \CL{} 代码；注意其条款大量预设内核环境
+（无异常、栈预算、每文件全局命名空间） \\
+Emacs Lisp 社区风格 &
+经编辑器手册的附录与社区惯例传递，无强制工具 &
+本书仅在表中标点到场：它用来说明受控环境同样能形成风格契约，
+不进入后续 \CL/{\Bk}\CPP{} 对比 \\
+\end{longtable}
+
+读这张表的方式：先确定自己属于哪个方言域（\S\ref{sec:ch01-nostyle}），
+再在表里找同域的指南作为``方言样本''，而不是问``哪份最好''。格式层上
+各指南早已被 \Tp{clang{\Bk}format} 的样式家族固定下来，真正值得逐条研读
+的是各家设计约定层的取舍与理由。
+
+\section{手册的三种使用方式}
+\label{sec:ch01-usage}
+
+同一份手册，团队与它的关系有三种，三者不可偏废，也不可混用场合。
+
+\begin{itemize}
+\item \textbf{作为法律}：对新代码强制执行，通常由 CI 里的风格检查器
+落地。此时条款必须有明确的``违反即失败''清单；法律不允许``建议''语气，
+所以手册里凡属法律的部分应写成可机器判定或可一票否决的形式。
+\item \textbf{作为默认值}：与本地惯例冲突时让位。修改一片历史代码时，
+目录内既有的写法和风格声明（例如就近的 \Tp{.clang{\Bk}format}）优先于
+全局手册；这就是``童子军规则''的边界——顺手改格式是善意，跨越 ABI 与
+所有权约定的重排是越权。默认值身份意味着手册在此场合的举证责任更重：
+要求偏离手册可以，要求整片历史代码向手册看齐则要单独立项。
+\item \textbf{作为教材}：评审意见引用条款出处，而不是评审者的个人
+偏好。``此处出参未判空，依手册错误处理条款第几节''远比``我觉得应该
+判空''有效；引用出处把争论从人与人的摩擦，转成团队与文本的校订。
+\end{itemize}
+
+三种方式共用一个前提：条款必须带\textbf{版本戳}。每条语义层的规则都应
+写明它依据的语言年代与理由——``按值传参配合移动''是 \cpp{11} 之后的答案，
+``用 \Tp{string\_view} 代替指针加长度''是 \cpp{17} 之后的答案，
+``用 \Tp{span} 表达非拥有视图''又晚一代。没有版本戳的条款会在十年后
+悄悄变质为无源可考的教条，被后人像供奉性能真理一样供奉一条早已改写的
+旧语义——这恰是第二部分剖析 \DomTra{} 条款时的总背景。
+
+\begin{note}[title={为什么版本戳比条款本身更重要}]
+条款会过时是常态而不是事故；真正区分健康手册与腐烂手册的，是它是否
+把``本条依据 \cpp{20} 与某实现的行为''写进正文。有版本戳，过时是记录；
+没有版本戳，过时是事故。翻译与转述同样如此：译本一旦滞后于原文的
+修订历史，条款就从``现行约定''变成``某年约定的化石''，而读者无从分辨。
+\end{note}
+
+\section{不更新的手册如何伤害团队}
+\label{sec:ch01-stale}
+
+手册腐烂不表现为某天突然出错，而表现为条款与语言、工具、实践之间的
+缝隙被无声拉大。本节只登记两个将在第二部分详细解剖的旗舰案例，
+点到为止。
+
+其一，\Tp{inline} 的语义错位。旧时代的手册——以及忠实转述它们的译本——
+把 \Tp{inline} 用性能劝说的语气书写，仿佛它是给编译器的优化恳求。现代
+标准语义里它裁决的却是链接层面的事情：让同一实体的定义在多个翻译
+单元中合法共存。把这条语义条款当成格式或微优化条款执行，会得到一套
+既没换来速度、也没守住 ODR 约定的双重损失。细节留待第二部分展开。
+
+其二，``异常有代价''的误读。该条款诞生于某些实现把异常表编译进每个
+函数、处处付费的年代；当代主流实现采用表驱动机制，无异常路径的代价
+近于零，真实成本转移到二进制尺寸与卸载路径元数据上。条款本身没有
+被推翻，被推翻的是它隐含的实现年代。未标注年代的转述，让读者在一个
+已换算式的世界上着错误的旧方程。
+
+\begin{warning}[title={手册腐烂的三种症状}]
+（一）条款与现行标准的语义冲突却无人宣布废止，新旧两条同时在评审中
+被引用；（二）译本与本语版本各自漂移，同一编号在两份文本里指向不同
+强度；（三）格式层条款仍在靠人裁决——工具一秒能收敛的事在评审里
+辩论半小时，这是手册把 \S\ref{sec:ch01-twolayer} 的两层混齐的最直观
+外在症状。
+\end{warning}
+
+\begin{bestpractice}[title={从零开始一份不会腐烂的团队手册}]
+\begin{itemize}
+\item 格式层全部外包：仓库内放一份样式声明文件，让检查器在 CI 里
+裁决，手册正文不为任何可机器判定的事项写一个字的辩论性散文。
+\item 设计约定层每条规则三件套：断言、理由、依据年代（语言标准或
+关键库设施的版本），缺一不进正文。
+\item 声明手册的身份分层：哪些条款是法律（违反即拒绝合并），哪些是
+默认值（本地惯例可豁免），哪些是教材（仅供评审引用）。
+\item 建立季度重读机制：对照当前标准的修订与所用编译器的行为，给
+过时条款打上废止标记并保留记录，而不是悄悄删除——删除让历史条款
+以``新条款''的形态复活。
+\item 引入外部指南时只引入一种方言家族的格式层，语义层则逐条按本
+团队的域（\DomBare{}、系统 \CPP{} 或应用层）重新论证，拒绝整体照搬。
+\end{itemize}
+\end{bestpractice}
+
+\begin{guideline}[title={本章之后的阅读路线图}]
+本章立起三个坐标：两层规则的分界（\S\ref{sec:ch01-twolayer}）、方言域
+的不可统一性（\S\ref{sec:ch01-nostyle}）、条款的版本戳（\S\ref{sec:ch01-usage}）。
+为团队立手册的读者，请优先精读 \S\ref{sec:ch01-cost} 与
+\S\ref{sec:ch01-usage}，再到 \S\ref{sec:ch01-map} 选定自己的方言样本；
+怀疑手中译本的读者，\S\ref{sec:ch01-stale} 登记的两个案例即第二部分
+的开篇——它将逐条解剖 \DomGo{} 系译本中 \Tp{inline} 条款的语义错位，
+以及 ``异常代价''条款从 \DomTra{} 到 \DomMod{} 的语义迁移；后续部分
+再把框架推广到工具链落地与跨方言域的所有权约定。带着本章的两层
+分界去读，所有细节争论都会自动归位。
+\end{guideline}
+
+
+% ---- frag_ch02.tex ----
+\chapter{谷歌 C++ 风格指南的结构解剖}
+\label{ch:ch02-google}
+
+\DomGo{} 的 C++ 风格指南是工业界传播最广、被移植和翻译次数最多的一份风格
+文档。但它极少被按它本来的面目阅读：它不是一本 ``写法建议集''，而是一部带
+术语阶、带豁免条款、带机器执行层的工程法律文档。本章不逐条抄录内容，而是
+解剖它的骨架：术语系统如何分级（\ref{sec:ch02-structure}）、命名规则族如何
+组织（\ref{sec:ch02-naming}）、头文件条款背后的编译原理（\ref{sec:ch02-headers}）、
+类与函数条款中哪些来自语言标准、哪些来自公司策略（\ref{sec:ch02-classes}
+与 \ref{sec:ch02-functions}），以及格式层如何整体移交给了
+\Tp{clang{\Bk}format}（\ref{sec:ch02-format}）。这条解剖线同时为后续各章
+埋下两根线索：其一，条款随 \CPP{} 标准的演进而增删，任何静态译本都天然
+滞后；其二，``人读的格式条款''与``机器裁决的格式基线''是两层东西，混为
+一谈是中文圈争论的常见根源。
+
+\section{指南的组织方式}
+\label{sec:ch02-structure}
+
+指南开篇即声明一条元规则：先读代码，再读规则。当条文含糊、互相冲突或
+根本未覆盖眼前情形时，正确动作不是援引某句话做字面解释，而是观察周围
+代码并维持项目内一致。这句话确立了整部指南的适用次序：项目一致性优先
+于条文本身，条文只是缺省答案。对使用者的直接推论是：引用指南论证风格
+争论之前，先确认所讨论项目内部是否已经形成既成事实。
+
+指南同时给出自己的用词阶，语义分级大致对应一组英文原语，中文译本则
+把这些层级译成四个到五个档次的措辞：
+
+\begin{itemize}
+  \item 必须（MUST）：硬性要求，违反即不通过评审。典型如 ``头文件不得
+        出现 \Tp{using} 命名空间指令''。
+  \item 禁止（MUST NOT / DO NOT）：硬性禁令。典型如 ``函数不得重载仅
+        返回类型不同''。
+  \item 推荐（SHOULD）：强建议。偏离需要写明理由，但评审者有权接受该
+        理由。
+  \item 非鼓励（AVOID）：比推荐更弱的劝退，措辞常作 ``应当避免，除非
+        有非常特殊的理由''。这是中文译本最容易翻错的一档：把 AVOID 译
+        成 ``禁止''会凭空制造硬性条款。
+  \item 允许（MAY / OPTIONAL）：明确放行的自由裁量区，如部分项目可为
+        历史文件保留旧命名。
+\end{itemize}
+
+在术语阶之上，指南的条款还可以按另一条轴二分：定义性条款与声明性条款。
+定义性条款的正确性来自语言机制本身——include 顺序影响头文件自洽性、
+\Tp{explicit} 影响隐式转换、\Tp{inline} 与 ODR 相关，改不动也不需要
+论证；声明性条款则是组织的选择——成员变量尾下划线、常量 \Tp{k} 前缀，
+换成别的同样自洽，其价值只在 ``全工程统一'' 这一点上。读条款时先问它
+属于哪一类，决定了违反它时该有多大心理负担。
+
+最后要认清它的文体性质：这是一部\underline{工程法律文档}。它随语言标准
+演化而增删——\cpp{11} 之前用私有声明加未实现定义来封禁拷贝，之后改为
+显式 \Tp{= delete}；智能指针、\Tp{auto}、lambda 的措辞也随编译器基线
+迁移逐步松动；它还有成文的历史豁免机制：规则变更不要求重写存量代码，
+只约束新代码与被改动的部分。这直接意味着：任何译本在交付那一刻就开始
+过期，译本问题（后续章节展开）是这类文档的固有缺陷而非个别译者失误。
+
+\begin{guideline}[title={读条款前先定位三件事}]
+拿到任何一条 \DomGo{} 风格条款，先定位：它处于术语阶的哪一档（必须、
+禁止、推荐、非鼓励、还是允许）；它是定义性条款还是声明性条款；它的
+措辞锚定在哪个语言标准年代。三个坐标确定之后，才知道这条款适合用来
+``服从''、用来``论证''，还是只能用来``参考''。
+\end{guideline}
+
+\section{命名规则族}
+\label{sec:ch02-naming}
+
+命名是指南中声明性条款最密集的一族，但内部组织并非杂乱的喜好清单，
+而是一套按 ``符号类别'' 分派的形制表。要点如下。
+
+文件名采用全小写，可以用下划线分词，也可以整体去掉下划线——两种都
+合法，同一个项目内必须一致；测试文件带 \Tp{\_test} 后缀，这一条反而
+接近硬性。类型名（类、结构体、类型别名、枚举）用 CamelCase 且不带
+下划线，一般不缩写。普通函数用 PascalCase；而访问器与置值器破例用
+snake\_case，并与所访问的变量名对齐——\Fn{frame{\Bk}\_count} 读取
+\Tp{frame{\Bk}\_count\_}，\Fn{set{\Bk}\_frame{\Bk}\_count} 写入它。这一
+分野值得注意：函数被切成 ``动作'' 与 ``属性存取'' 两个语法阶层，后半
+部分的命名实际上跟着变量族走，而不是跟着函数族走。
+
+变量族内再分三支。局部变量与参数用描述性 snake\_case。类数据成员加
+尾下划线；纯数据的结构体成员不加。全局变量曾被旧版指南要求
+\Tp{g{\Bk}\_} 前缀，但上游现行文本的态度是淡化专名前缀、转而劝退全局
+变量本身——很多中文译本仍保留着 \Tp{g{\Bk}\_} 的教条，这是 ``译本
+滞后'' 最典型的样本之一。常量族（\Tp{const}、\Tp{constexpr} 变量与
+宏意义上的常量）统一用 \Tp{k} 前缀加 CamelCase；枚举值同样按常量
+对待，未限定作用域的枚举还要在 \Tp{k} 名前再冠以枚举名防冲突。
+宏本身是全大写加下划线并带项目前缀，同时指南明确宏是
+``最后手段''。
+
+\begin{table}[htbp]
+\centering
+\begin{tabularx}{\textwidth}{@{}
+  >{\raggedright\arraybackslash}p{0.16\textwidth}
+  >{\raggedright\arraybackslash}p{0.26\textwidth}
+  >{\raggedright\arraybackslash}X@{}}
+\toprule
+符号类别 & 推荐形制 & 示例 \\
+\midrule
+文件 & 全小写，下划线可选，项目内一致 & \Tp{image{\Bk}\_builder.cc} \\
+类型 & CamelCase，不缩写 & \Tp{Html{\Bk}Parser} \\
+局部变量/参数 & snake\_case & \Tp{table{\Bk}\_name} \\
+类数据成员 & snake\_case 加尾下划线 & \Tp{table{\Bk}\_name\_} \\
+全局变量 & 旧规 \Tp{g{\Bk}\_} 前缀，现行文本已淡化 & \Tp{g{\Bk}\_frame{\Bk}\_count} \\
+常量/枚举值 & \Tp{k} 前缀加 CamelCase & \Tp{kMax{\Bk}Chunks} \\
+宏 & 全大写，带项目前缀 & \Tp{MYPROJ{\Bk}\_ROUND} \\
+普通函数 & PascalCase & \Fn{Build{\Bk}Url} \\
+访问器/置值器 & snake\_case，对齐变量名 & \Fn{set{\Bk}\_page{\Bk}\_count} \\
+命名空间 & 源自项目名的小写简短词 & \Tp{videocodec} \\
+\bottomrule
+\end{tabularx}
+\caption{\DomGo{} 命名族速查：类别、形制与示例对照}
+\label{tab:ch02-naming}
+\end{table}
+
+\begin{lstlisting}[style=cppstyle,caption={命名形制在真实代码里的样子},label={lst:ch02-naming}]
+// 文件: videocodec/src/decoder/image_decoder.h
+namespace videocodec {
+
+// 常量: k 前缀；枚举: 优先限定作用域
+constexpr int kMaxRetries = 3;
+enum class Status { kOk, kTimeout, kInterrupted };
+
+class ImageDecoder {
+ public:
+  ImageDecoder();
+  int DecodeFrame(Frame* out);      // 普通函数: PascalCase
+  int frame_count() const { return frame_count_; }
+  void set_frame_count(int count);  // 访问器: snake_case
+
+ private:
+  int frame_count_;                 // 类成员: 尾下划线
+};
+
+// 纯数据用 struct: 成员不加尾下划线
+struct Frame {
+  int width;
+  int height;
+};
+
+}  // namespace videocodec
+\end{lstlisting}
+
+\begin{note}[title={读命名条款的正确姿势}]
+命名族里真正带定义色彩的只有零星几条（如宏全大写是为在扫读时把
+宏与普通标识符区分开），其余全部是声明性约定：尾下划线不解决任何编译问题，它的唯一功能是让
+``这是成员'' 在扫读时可见。因此当项目既有代码不用尾下划线时，跟随
+项目是比引用指南更正确的答案——这正是开篇 ``先读代码'' 元规则的用武之地。
+\end{note}
+
+\section{头文件条款}
+\label{sec:ch02-headers}
+
+头文件章是定义性条款的集中地，值得逐条问 ``为什么''。
+
+第一，include guard 形制。每个头文件用唯一的名字保护，形如项目名、
+路径、文件名拼接再全大写（示例见 \ref{lst:ch02-guard}）。要求 ``含
+路径'' 不是为了美观：同名头文件在大仓里几乎必然出现，guard 名若不
+含路径就会静默互相吞并，产生极难定位的重复定义或类型不一致。
+
+第二，头文件中禁止 \Tp{using namespace} 形态的指令。头文件会被复制
+进每一个包含它的翻译单元，一条顶层 using 指令会把名字污染传播到整个
+工程，且无法被下游撤销。这是硬性禁止（MUST NOT），属于 ``会伤害别人''
+的类别，与命名偏好不同档。
+
+第三，include 顺序。指南规定五块次序：相关头、C 系统头、C++ 标准库
+头、其他库的头、本项目其他头；块间空行，块内排序。``相关头排第一''
+的原理是一个漂亮的自检：若某头文件隐藏依赖别的头先行（少了先行者就
+编译不过），那么在 ``自己的实现文件'' 里把自己排第一，这个隐藏
+依赖就会当场以编译错误暴露；顺序一旦搞错，缺失的依赖被前面某个恰好
+包含它的头掩盖，编译通过，直到日后有人重构那个 ``掩护者'' 才炸开。
+可见顺序条款不是排版洁癖，而是把依赖检查前移到每一次单独编译。
+
+\begin{lstlisting}[style=cppstyle,caption={guard 形制与 include 顺序},label={lst:ch02-guard}]
+#ifndef MYPROJ_SRC_DECODER_IMAGE_DECODER_H
+#define MYPROJ_SRC_DECODER_IMAGE_DECODER_H
+
+#include <cstdint>
+#include <memory>
+#include <vector>
+
+// ... 其他库的头、本项目其他头各成一块 ...
+
+namespace videocodec {
+class ImageDecoder {
+ public:
+  ImageDecoder();
+};
+}  // namespace videocodec
+
+#endif  // MYPROJ_SRC_DECODER_IMAGE_DECODER_H
+\end{lstlisting}
+
+第四，``该不该包含、能否用前置声明替代'' 属于另一个体系的问题。
+\Tp{IWYU}（include-what-you-use）把 ``每个文件只包含自己直接使用的
+符号'' 升级为工具可判定的规则，是独立主题，本章只标记边界，别册展开。
+
+\begin{bestpractice}[title={把依赖缺陷变成编译错误}]
+维护头文件时执行三条：guard 名含完整路径保全局唯一；顶层绝不留
+\Tp{using} 指令；实现文件把相关头排在第一块。三条加起来，等于让
+编译器替你审计每个头的自洽性，成本为零。
+\end{bestpractice}
+
+\section{类与设计条款}
+\label{sec:ch02-classes}
+
+类章的主体条款可以背成六个要点：单参数构造函数与转换函数一律
+\Tp{explicit}；优先组合，继承保持克制（公开继承只用于 ``是一个''
+关系，多重继承至多叠加纯接口基类）；数据成员一律 private，protected
+仅限确实需要派生的少数场合；只有 ``纯数据'' 聚合体才用 struct，凡
+有不变量或行为就用 class；可拷贝性与可移动性要么声明、要么显式
+\Tp{delete}，不允许 ``看似能用实则按位拷贝''；友元只允许与类同文件
+内完整声明，作为对封装的受控破例。
+
+关键判断是：这些要点大多在 \CPP{} 标准语义上直接成立。\Tp{explicit}
+防的是标准定义的隐式转换序列；\Tp{= delete} 防的是标准合成的拷贝
+构造；数据成员 private 防的是无不变量守护的直接改写。它们是定义性
+条款——谷歌只是把 ``现代 \CPP{} 编译器与语言规则下的显然最优解''
+写成了条文，换一个组织，条文也几乎逐字相同。
+
+与之相对，同一章里还有一批条款没有任何语言机制背书：禁用异常与
+RTTI（历史包袱与二进制体量考量，而非语义缺陷）、内联函数给出十行
+上下的体积上限（性能启发式，且与编译器内联器职权重叠）、对长参数
+列表和输出参数形态的偏好。它们是策略驱动条款，随组织与年代变化。
+
+\begin{compare}[title={标准驱动条款与策略驱动条款}]
+标准驱动条款（\Tp{explicit}、显式拷贝/移动、private 数据、限定作用域
+枚举优先）的正确性来自 \CPP{} 标准语义与编译器诊断能力，条款措辞
+几乎只有 ``写不写'' 之分，没有 ``怎么写'' 之争；跨组织可移植，译本
+只要不歪曲语义就仍然成立。策略驱动条款（禁异常、内联体积上限、
+友元限制的具体形态）的正确性来自谷歌特定工程环境的历史约束，条款
+会随标准与基础设施演化被重写（拷贝封禁从私有声明换成 \Tp{= delete}
+即是一例）；照搬这类条款到别的团队，等于把别人组织的历史包袱移植
+成自己的成本，且无从向语言标准求助论证。
+\end{compare}
+
+读策略驱动条款的正确姿势是还原其成本收益，而不是把它当教义：在
+异常被禁的代码库里 ``不用异常'' 是符合本地法律，把它推广为普适真理
+则是误读。第九、十章将分别处理 \Tp{inline} 与异常这两个 ``公司策略
+伪装成普适规则'' 的重灾区。
+
+\section{函数条款}
+\label{sec:ch02-functions}
+
+函数章的条款多为 ``推荐 / 非鼓励'' 档，属于可协商的工程约束，可归为
+四组。
+
+其一，默认参数。限制比直觉严格：不得用于虚函数（默认参数不参与
+虚派生，写在不同声明处的默认值会造成静默不一致）；只允许出现在
+``叶函数''，即不被外部调用、改动半径可控的内部函数；且默认值只能
+补足语义，不得改变行为分支——用默认参数让函数 ``多长出一条路径''
+是明确非鼓励的。
+
+其二，输出与写回。指南的形态纪律是：输入参数按值或 const 引用传入
+且绝不被修改；需要带出的结果用指针型输出参数置于参数表尾部；
+``既是输入又是输出'' 的参数尽量避免；单个结果优先直接返回，返回
+结构体优于多个输出指针。写回输入参数（in-out 又作返回值）之所以被
+禁，是因为它同时破坏了 ``参数只读'' 的扫描直觉与返回值检查直觉。
+
+其三，体积与单责。函数应当小到一屏可读、只干一件事，章节给出的
+量级是 ``几十行以内为宜，超界先自问该不该拆''；这是典型的
+AVOID 档约束——违反不致命，但要在评审中解释。
+
+其四，调用形态。递归被建议避免，除非深度有静态界或框架强制回调
+风格；重载只允许在 ``参数种类不同而语义相同'' 时使用，禁止仅返回
+类型不同的重载，因为它破坏了调用点按名字检索的可发现性；函数指针
+与 \Tp{std::function} 作为回调的取舍也有倾向性表述。顺带一提，
+\Tp{constexpr} 与内联小函数在本章只被 ``命名与体积'' 的软规则
+间接触及——``函数体积与 \Tp{inline} 关键字'' 条款
+的深坑（内联的双重语义：链接性质与优化提示）留给第九、十章。
+
+\begin{note}[title={函数条款的语气信号}]
+本章几乎没有 MUST：条款密集使用 AVOID、PREFER、SUGGEST 措辞。语气
+本身就是分级信息——函数章的争议应当走 ``陈述理由、评审裁量'' 流程，
+而头文件章的争议（如 \Tp{using} 指令）根本没有裁量空间。拿函数章
+的 ``非鼓励'' 去支持一场格式战争，或拿头文件章的 ``禁止'' 去否定
+函数章的合理变通，都是把术语阶读平了。
+\end{note}
+
+\section{格式条款与工具化移交}
+\label{sec:ch02-format}
+
+格式章公开可见的硬值只有三个：行宽以 80 列为准（长 URL 等例外走
+注释绕行）、缩进两个空格不用制表符、大括号的控制语句习惯（if 换行
+必须带花括号，函数与类的左括号不换行）。其余细节——指针星号贴谁、
+参数表如何折行、构造初始化列表的排布——在文本上是细致规定，但
+上游同时明文说明：格式化层面的细节以 \Tp{clang{\Bk}format} 的
+Google 基线为准，评审不再逐条肉眼核对。
+
+这句话的分量在于它重构了 ``规范'' 与 ``文本'' 的关系。指南的格式
+正文因此退化为两份功能：一是 \Tp{clang{\Bk}format} 决策的解释文档
+（为什么短函数也要展开括号、折行优先在哪里断），二是配置之外区域的
+兜底（宏体、汇编嵌入、生成代码等格式化器不覆盖之处）。工程上正确的
+顺序是：落地 Google 基线配置、让机器裁决日常格式，人只在与机器无关
+的层面继续引用格式条文。
+
+\begin{warning}[title={把机器裁决当辩论素材}]
+中文技术社区围绕 Google 格式条款的持久争论（星号贴型还是贴名、
+花括号换不换行）几乎全部发生在格式化器已经裁决的层面。这些争论的
+正确解决方式不是引经据典，而是在项目根目录放下一份写明
+\Opt{style}=Google 的 \Tp{.clang{\Bk}format}，然后 \Tp{clang{\Bk}format}
+说了算。引用指南正文打格式笔仗，等于拿 ``法律的解释性前言'' 当
+``判决书'' 用——而指南自己在这一点上已经明确交出了判决书。
+\end{warning}
+
+\section{本章收束：给原文定年}
+\label{sec:ch02-close}
+
+\begin{guideline}[title={读原文前：版本与语言标准年代三查}]
+\begin{enumerate}
+  \item 查 \Tp{auto}、lambda 与智能指针的处理：若条文仍要求少用或
+        禁用这些设施，文本停在 \cpp{11} 之前的年代；若已给出专门
+        的用法边界（如类型明显处可用 \Tp{auto}），则在 \cpp{11} 之后。
+  \item 查拷贝封禁的写法：私有声明加不实现（或封禁宏）是前移动
+        语义时代的痕迹；\Tp{= delete} 与 ``五法则'' 式表述则是
+        \cpp{11} 之后的修订。
+  \item 查头文件章的修订痕迹：是否存在前置声明的独立小节、是否
+        讨论 include 块排序与编译防火墙，可判断这份文本经历过大型
+        工程编译速度导向的重写，其条款通常对应较新的修订。
+\end{enumerate}
+凡引用条款前先完成三查；拿 ``哪个年代的法律'' 去裁决 ``今天的问题''，
+是译本滞后之外第二种最常见的误用。
+\end{guideline}
+
+三查之后，读者手上就不再是 ``谷歌风格'' 这块铁板，而是一份分层清晰
+的文本：术语阶告诉你违反的代价，定义性/声明性二分告诉你论证的空间，
+标准年代告诉你引用的有效期。下一章转向 \DomLlvm{} 风格文档，用同样
+的刀法解剖它，并特别对照两者在 ``谁有权裁决格式'' 问题上的相反答案。
+
+
+% ---- frag_ch03.tex ----
+\chapter{\DomLlvm 风格与其分化出的支系}
+\label{ch:ch03-llvm}
+
+在前一章里，\DomGo 风格被当作``由公司工程实践沉淀成文''的样本来讲；
+本章换一条路径：\DomLlvm 风格很少是先有条文、再去遵守，
+它更像一组\emph{被工具链逼出来的答案}。编译器基础设施项目对性能、
+确定性与可移植性的要求，转化为若干编译开关；编译开关又反过来取消了
+某些语言设施（RTTI、异常）的可用性，于是风格必须为``设施缺席后的
+正确写法''给出唯一惯用法。围绕这套内核，Chromium、Fuchsia 等项目
+各自分化出支系，而 \Tp{clang-format} 则把 \DomLlvm 形制固化成可机械
+复现的格式基线。读这一章的要点不在记住某个名字怎么写，而在看清
+``约束在前、条文在后''这一支系方法论。
+
+\section{工具链约束先行：\DomLlvm 风格的成因}
+\label{sec:ch03-cause}
+
+\DomLlvm 代码库首先是一个被数百万行 \CPP 代码长期压测的编译器基础设施。
+为了让每个翻译单元的产物可预测、让链接阶段不带入 RTTI 与异常表这些
+``看不见的运行时成本''，上游构建习惯性地关掉两项语言设施：
+\Tp{-fno-rtti} 与 \Tp{-fno-exceptions}。命令行上的投影大致如此：
+
+\begin{lstlisting}[style=shellstyle,caption={塑造 \DomLlvm 风格的两个编译开关},label={lst:ch03-flags}]
+# 典型构建命令行：关掉两项设施，风格被迫给出替代惯用法
+clang++ -std=c++17 -fno-rtti -fno-exceptions -O2 -c Verifier.cpp
+\end{lstlisting}
+
+\subsection*{RTTI 被关之后：模板式向下转型三件套}
+
+\Tp{-fno-rtti} 的直接后果是 \Tp{dynamic\_{\Bk}cast} 整体缺席。IR 层类型树
+（\Tp{Instruction}、\Tp{Value} 的众多派生类）却恰恰最需要频繁向下转型，
+于是 \DomLlvm 用一类自研的模板函数补位：\Fn{isa} 只回答``是不是''，
+\Fn{dyn\_{\Bk}cast} 在``是''时给出目标类型指针、否则给出空指针，
+\Fn{cast} 则直接断言``必须''是这个类型——错了就尽早炸，绝不让错误类型
+悄悄溜进后续逻辑。三者共享同一套类层次位向量机制，开销不依赖运行时类型
+信息。惯用形状见 listing~\ref{lst:ch03-downcast}：
+
+\begin{lstlisting}[style=cppstyle,caption={三段式向下转型：模板对 dynamic\_cast 的替代},label={lst:ch03-downcast}]
+// 1) 判类型并取指针：分支内使用，空指针即分支条件
+if (CallInst *CI = dyn_cast<CallInst>(&I)) {
+  CI->setOperand(0, NewCallee);
+}
+
+// 2) 只判不问：isa 返回布尔，不产生指针
+if (isa<Function>(&I)) {
+  return;  // 早退，函数体余下部分只处理其余类型
+}
+
+// 3) 断言式：类型错了立即失败，不留静默的错型值
+Function &F = cast<Function>(*It);
+\end{lstlisting}
+
+请注意这三行小代码的风格含义：向下转型在 \DomLlvm 里从来不是``语法''，
+而是``库''。语言设施被关掉的位置，都由带名字的模板函数补回来，
+并且补得比原设施更收敛——\Fn{cast} 的语义实际上强于
+\Tp{dynamic\_{\Bk}cast} 失败返回空指针的默认行为，因为它不允许失败。
+
+\subsection*{异常被关之后：返回码代数}
+
+\Tp{-fno-exceptions} 取消了``错误沿调用栈自动传播''这条暗道，
+所有失败必须显式地躺在返回值或出参里。\DomLlvm 的补位设施是
+\Lib{llvm::Error} 与 \Lib{Expected}：前者是一个``只可能装着错误''的
+类型，后者是``值或错误''的和类型。它们构成一套小型的返回码代数——
+错误可以被包装（附上下文）、转交（\Fn{takeError}）、合并，
+但最终必须在某个调用点被摊开处理，工具会检查``未消费的 Error''。
+
+\begin{lstlisting}[style=cppstyle,caption={\Lib{Expected} 风格的两段式失败路径},label={lst:ch03-expected}]
+// Expected 要么带值、要么带 Error；两条路都写在签名上
+llvm::Expected<std::unique_ptr<Module>>
+loadModule(StringRef Path, LLVMContext &Ctx) {
+  auto Buf = MemoryBuffer::getFile(Path);
+  if (!Buf)
+    return errorCodeToError(Buf.error());  // 读取失败：转为 Error
+
+  auto Mod = parseIRFile(Path, Diag, Ctx);
+  if (!Mod)
+    return Mod.takeError();                // 解析失败：原样转交
+
+  return std::move(*Mod);                  // 成功：值随返回值走
+}
+\end{lstlisting}
+
+为什么编译器项目对``每个分支都要看得见的错误路径''有刚需？因为编译器
+天天在与\emph{不受信任的输入}（任意源码、任意比特流）搏斗。一个漏检的
+错误分支不会变成程序员的困惑，而会变成：把畸形 IR 当合法 IR 继续优化、
+最终产出静默错误的目标码，或者在客户流水线深处以难以复现的崩溃收场。
+异常可以被空的 catch 块吞掉，返回码代数做不到——错误对象若不消费，
+要么类型系统不答应，要么调试期直接断言。可见性不是审美洁癖，
+是威胁模型。要点收束如下：
+
+\begin{guideline}[title={约束先于条文}]
+读 \DomLlvm 风格时，先找它背后的编译开关：某设施（RTTI、异常）被关掉，
+风格必定给出唯一的替代惯用法（\Fn{isa}、\Fn{dyn\_{\Bk}cast}、\Fn{cast}；
+\Lib{Expected}）。评估这一支系要不要借鉴到自己项目里，等价于先评估
+要不要付出关掉那些设施的代价。
+\end{guideline}
+
+\section{命名与形制：内核的表层投影}
+\label{sec:ch03-naming}
+
+约束解决``能用什么''，命名解决``怎么称呼''。\DomLlvm 的命名内核
+相当简练，且处处可见与实现细节的呼应：
+
+{\small
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.15\textwidth} >{\raggedright\arraybackslash}p{0.27\textwidth} >{\raggedright\arraybackslash}p{0.40\textwidth}}
+\toprule
+元素 & 形制 & 例与备注 \\
+\midrule
+类与结构体 & CamelCase，每词首字母大写 & \Tp{Memory\allowbreak Buffer}；不设匈牙利前缀 \\
+函数与方法 & camelBack，首词小写 & \Fn{get\allowbreak BufferSize}；与 \DomGo 的 PascalCase 分道 \\
+枚举值 & CamelCase，不加 \Tp{k} 前缀 & \Tp{InlineAsm::\allowbreak AttrKind} 的各成员 \\
+宏 & 全大写下划线 & \Tp{DEBUG\_TYPELOG} \\
+模板参数 & CamelCase & \Tp{typename \allowbreak ValueType} \\
+\bottomrule
+\end{longtable}}
+
+形参约定是这一支系最有``历史地层感''的部分。三类签名形状各有来历：
+
+\begin{itemize}
+  \item 引用型 out 参数写作 \Tp{Type \&Name}，即 \Tp{\&} 紧贴类型侧
+        而非名字侧；早期代码甚至给指针参数名保留尾缀 \Tp{*} 的习惯，
+        读到 \Tp{Value *V} 这类名字时要知道 \Tp{V} 是指针而非值。
+  \item rvalue 引用参数（移动入参）写作 \Tp{Type \&\&Name}，
+        并在名字上带``已被转走''的暗示，如 \Tp{MovedTask}、
+        \Tp{OwnBuf}——移动语义进入风格词典比 \cpp{11} 条文本本身更晚，
+        但比多数项目更早形成默契。
+  \item 所有权用注释词钉死：\Tp{unique\_ptr} 参数附近出现
+        owning 一词说明被调方接管，出现 borrowing 一词说明只借看；
+        \Tp{shared\_ptr} 在这一支系里被视为需要理由的选项，
+        默认答案永远是\Tp{unique\_ptr} 加一句所有权注释。
+\end{itemize}
+
+\begin{lstlisting}[style=cppstyle,caption={形参三态与 owning/borrowing 注释词},label={lst:ch03-signature}]
+class Scheduler {
+public:
+  void push(std::unique_ptr<Task> OwnTask);      // 按值收移动，owning
+  void inspect(const Task &TaskRef);             // const 引用，borrowing
+  void absorb(std::unique_ptr<Task> &&MovedTask); // 显式转交，之后禁用
+
+  // 历史习惯：out 参数的 & 贴类型侧；旧代码指针名带尾 * 提示
+  void buildGraph(const Function &F, BasicBlock *&EntryOut);
+};
+\end{lstlisting}
+
+\begin{note}[title={注释词不是装饰}]
+owning 与 borrowing 出现在头文件注释里，是因为它们承担本应由类型系统
+表达、但类型系统表达不尽的信息（比如\Tp{unique\_ptr} 按引用传入时
+究竟转不转交）。审阅 \DomLlvm 风格的补丁时，这对词经常比代码本身更早
+揭示意图；借鉴这一支系时，请把这对词一并搬走，只搬命名是搬不齐的。
+\end{note}
+
+\section{Chromium 的分化：同一内核，不同边界}
+\label{sec:ch03-chromium}
+
+Chromium 的 \CPP 规范脱胎于 \DomLlvm，却在十年演化里长成了另一棵树。
+值得注意的不是它今天和 \DomLlvm 差多少，而是\emph{差分的产生方式}：
+它并非一次性的另立纲领，而是在继承总基调（禁 RTTI、慎用异常、
+重可读性轻语言魔法）的前提下，按模块、按风险逐条开洞或收紧。
+以异常为例：全局禁令仍然成立，但某些边界层与子系统在长期演化中
+以个案审批的方式获得了局部豁免——规范的正文只写裁定，
+开洞的轨迹藏在评审历史里。借鉴这类支系时，抄正文不抄演化过程，
+得到的是一张缺了脚注的地图。
+
+Chromium 一侧的另一显著特征是工具族与格式裁定权。它围绕
+\Lib{base} 建起一整套替代标准库惯用法的设施（容器视图、字符串、
+并发与回调原语的自家版本），使``标准库能用的地方''这一判断
+被平台层重新过滤；同时把 \Tp{clang-format} 抬为格式的\emph{唯一真理}：
+人与工具争执排版时，以工具输出为准，条文不再逐条辩论样式问题。
+这与 \DomLlvm``人写规范、工具兜底''的顺序恰好相反。
+
+\DomLlvm 与 \DomGo 两支命名体系的表层差异集中在下表，用 compare 框给出：
+
+\begin{compare}[title={\DomLlvm 与 \DomGo 的命名差分}]
+\begin{itemize}
+  \item 函数名：\DomLlvm 用 camelBack（\Fn{get\allowbreak BufferSize}）；
+        \DomGo 对函数统一 PascalCase（\Fn{GetBufferSize}）。
+  \item 类成员：\DomLlvm 历史形制是裸名或简单后缀；
+        \DomGo 钉死尾下划线（\Tp{buffer\_}），一眼识别成员身份。
+  \item 常量与枚举值：\DomLlvm 走 CamelCase；\DomGo 用 \Tp{k} 前缀
+        （\Tp{kMaxNumberOfRetries}）。
+  \item out 参数：\DomLlvm 靠 \Tp{Type \&Name} 的类型侧记号；
+        \DomGo 用参数名前缀 \Tp{out\_} 直接在名字上标注方向。
+  \item 指针星号位置：\DomLlvm 写 \Tp{Value *V}，星号随类型或
+        随名字历史上都有；\DomGo 明确钉在类型侧 \Tp{Value* V}。
+\end{itemize}
+\end{compare}
+
+\begin{warning}[title={把支系当成内核来引用是常见误读}]
+见到 Chromium 代码里 camelBack 的函数名，就断言``谷歌也这么写''；
+或见到 \DomLlvm 的 \Fn{dyn\_{\Bk}cast} 三连，就断言``Chromium 同款''——
+两种推论都越了界。支系的内核共享（继承关系、工具链约束）与表层分歧
+（命名、豁免清单、平台库）必须分开核对，各自的现行文档才是唯一
+可靠依据。
+\end{warning}
+
+\section{\DomLlvm 作为 \Tp{clang-format} 基线之一}
+\label{sec:ch03-baseline}
+
+\DomLlvm 风格的影响面还有一层常被忽略的载体：它是 \Tp{clang-format}
+内置的默认基线（\Tp{BasedOnStyle=LLVM}）。Fuchsia、若干 Swift 相关
+工具链项目等派生规范，都可以看作在这层基线附近做局部修订——但修订
+条文是一回事，\Tp{clang-format} 里``LLVM 基线''这个可复现的机器形制
+是另一回事。后者让``像 \DomLlvm''第一次变成可以一键达成的事。
+
+与 \Tp{BasedOnStyle=Google} 并排看，三个选项造成肉眼可辨的排版差：
+缩进宽度（LLVM 取 2，Google 取 4）、访问修饰符的缩进层级
+（\Tp{Access\allowbreak Modifier\allowbreak Offset}，LLVM 取 \Tp{-2}，Google 取 \Tp{-4}）、
+switch 里 case 标签是否随 body 一起缩进（\Tp{Indent\allowbreak CaseLabels}，
+LLVM 为 \Tp{false}，Google 为 \Tp{true}）。一份最小根目录配置：
+
+\begin{lstlisting}[style=yamlstyle,caption={项目根目录 \Tp{.clang-format} 的最小示例},label={lst:ch03-clangformat}]
+# 文件名固定为 .clang-format，放在项目根目录
+Language: Cpp
+BasedOnStyle: LLVM        # 本章主角的机械投影
+IndentWidth: 2            # Google 基线在这里是 4
+AccessModifierOffset: -2  # Google 基线是 -4
+IndentCaseLabels: false   # Google 基线是 true
+ColumnLimit: 80
+\end{lstlisting}
+
+{\small
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.24\textwidth} >{\raggedright\arraybackslash}p{0.10\textwidth} >{\raggedright\arraybackslash}p{0.10\textwidth} >{\raggedright\arraybackslash}p{0.38\textwidth}}
+\toprule
+选项 & LLVM 基线 & Google 基线 & 肉眼可见的后果 \\
+\midrule
+\Tp{IndentWidth} & 2 & 4 & 嵌套三层后两种版式的行首深度差一整格 \\
+\Tp{Access\allowbreak Modifier\allowbreak Offset} & \Tp{-2} & \Tp{-4} & \Tp{public:} 相对类体回缩几格 \\
+\Tp{Indent\allowbreak CaseLabels} & \Tp{false} & \Tp{true} & \Tp{case} 标签与 \Tp{switch} 齐平还是内缩 \\
+\bottomrule
+\end{longtable}}
+
+\begin{bestpractice}[title={以基线起家，用差分表达立场}]
+新项目采用 \DomLlvm 基线时，把 \Tp{BasedOnStyle: LLVM} 写死，
+再仅对\emph{团队真实分歧}的选项开差分（通常三五个键，如
+listing~\ref{lst:ch03-clangformat} 的 \Tp{ColumnLimit}）。
+把整套键位都覆写一遍等于自创基线，既失去与上游工具行为一致的
+可预期性，也让 code review 无法再借助``工具输出即真理''这条外部
+仲裁。想借 \DomGo 的缩进宽度，就改 \Tp{IndentWidth: 4} 这一键，
+不要顺手把基线也换掉——基线一换，附带的默认分支行为会一起漂移。
+\end{bestpractice}
+
+\section{支系方法论启示：为第二部分铺垫}
+\label{sec:ch03-method}
+
+把本章与前章并置，能提炼出支系研究的一般方法：
+
+\begin{enumerate}
+  \item \emph{先找编译开关，再读条文}。一条风格规则若能用
+        ``某个被关掉的语言设施''解释，它就是内核级的，随工具链迁移；
+        解释不了的，多半是口味或历史包袱。
+  \item \emph{把差异分成两类}：约束差异（RTTI、异常、容器策略）与
+        表述差异（命名、缩进、注释词）。前者值得借，后者只需择一而稳。
+  \item \emph{分清正文与演化史}。Chromium 式的``逐条开洞''提醒我们：
+        规范文本是切片，裁定记录才是机制。引用支系时注明你引用的是
+        哪一层。
+\end{enumerate}
+
+第三条正是本书第二部分要处理的引线。\DomGo 条款中有一批属于
+``策略驱动''——它们不是语言层面的告诫，而是公司代码库规模、
+工具与流程约束下的裁定（例如对某些语言设施的全面禁用、对命名
+形制的统一钉死）。这类条款在翻译与转述中最容易被误读成
+``语言本身不推荐''，从而被错误地移植到不具备同等约束环境的项目。
+\DomLlvm 的例子恰好提供了反证：同样禁用异常，编译器基础设施的动机
+是产物确定性与威胁模型，与浏览器进程的动机并不同源；条文相似、
+约束不同、代价自然也不同。
+
+\begin{guideline}[title={本章收束：约束与借鉴的检查单}]
+\begin{itemize}
+  \item 借鉴 \DomLlvm 惯用法前，确认本项目的编译开关与威胁模型：
+        没有关掉异常与 RTTI 的项目，强行改用 \Fn{dyn\_{\Bk}cast}
+        与 \Lib{Expected} 只会造成双轨并存。
+  \item 用 \Tp{clang-format} 时，把基线当宪法、把覆写键当修正案，
+        修正案宜短。
+  \item 异常相关条款的\emph{代价分析}（性能、代码体积、可组合性）
+        在本书讨论异常与错误处理的专章展开，本章只回答
+        ``风格为何长成这样''；引用他处时请以章节主题描述定位，
+        勿凭本段落下的只言片语直接转引。
+\end{itemize}
+\end{guideline}
+
+
+% ---- frag_ch04.tex ----
+\chapter{Mozilla、WebKit 与大型代码库的务实边界}
+\label{ch:ch04-mozilla}
+
+\DomGo 与 \DomLlvm 之外的世界里，Mozilla 与 WebKit 提供了两种最有价值的``反例''。它们的条款并非更松或更严，而是更诚实地暴露了一个事实：当代码库带着冻结的二进制接口、上千万行遗留源码和庞大的外部贡献者群体时，风格指南必须回答的问题不再是``什么写法最优雅''，而是``什么写法能让我们十年内不改架构也能演进''。本章沿着两条线索展开：Mozilla 风格的历史分层，以及 WebKit 用自制工具绕开语言限制的务实手法；随后把五族指南放在同一张对比表下，追问``为什么同一问题各家结论不同''，最后落到一条防止手册腐烂的元条款。
+
+\section{Mozilla 风格：一条被 ABI 压出来的历史分层线}
+\label{sec:ch04-mozilla-history}
+
+Mozilla 的 \CPP 代码风格不是一份平铺的规则清单，而是按年代分层的沉积岩。最底层来自 NSPR 时代：那一时期的基础库用 \Tp{PRBool}、\Tp{PRInt32}、\Tp{PRStatus} 这类自带前缀的类型定义跨平台基本量，用 \Tp{nsresult} 返回码做错误传播。这些类型当年是为了在 \CL 边界上保证尺寸与调用约定一致而设计的，它们随后被编进了共享库的导出符号表。
+
+这就是``遗留 ABI 锁死风格''的机制：一旦某个类型进入对外发布、并被外部代码（扩展、绑定层、第三方嵌入者）按名字与布局消费，改名字就不再是风格问题，而是二进制兼容性问题。指南里那些看起来古旧的条款——保留 \Tp{PRBool} 之类旧前缀、接口层继续用 \Tp{nsresult}——并不是编写者偏爱它们，而是链接器与发布流程不允许替换。
+
+\begin{guideline}[title={遗留 ABI 如何锁死风格}]
+当类型名、结构体布局或调用约定出现在跨动态库边界的导出符号里，风格改造的成本会从``改代码''升级为``改 ABI 并强制所有下游重编''。Mozilla 指南中大量看似保守的条款，实际是在这条边界前止步：边界内可以自由现代化，边界外的名字必须原地保留或成对过渡。判断一条旧规则能不能改，先问它是否踩在冻结接口上。
+\end{guideline}
+
+把这套机制说得更直白些：Mozilla 的浏览器主体长期以一个巨大的共享库形态发布，接口定义语言描述的对象层被多个绑定语言消费，绑定生成器又按名字与签名生成胶水代码。于是一个类型名的变更会沿着``头文件——IDL——绑定——外部扩展''的链条放大成四次协调发布。指南选择让旧类型原地存活、新代码在内部使用新写法，是在四条链条之间插入缓冲区：风格上的``新旧并存''，本质是发布工程付不起一次性切换的成本。
+
+在 ABI 边界之内，演化确实在发生。该指南历史上长期禁止异常与 RTTI，这与九十年代末嵌入 \Tp{XPCOM} 接口、跨 \CL 模块抛异常不可行是一致的；后来逐步放宽：现代条款允许在新增的、不外露于旧接口的边界内使用异常，并明确鼓励从 \cpp{11} 起的现代特性——\Tp{auto}、\Tp{constexpr}、\Tp{nullptr}、移动语义、\Tp{std::string\_view} 与标准容器。换句话说，读 Mozilla 的条款必须带时间戳，把它当成单一 ``现行真相''去读几乎必然读到过期层。
+
+同一函数在两个年代的典型形状对照如下（示意改写，不是仓库原文）：
+
+\begin{lstlisting}[style=diffstyle,caption={同一个解析函数在 ``返回码时代''与现代条款下的两种形状（示意对照）},label={lst:ch04-nspr-evolution}]
+@@ ConfigReader.cpp -- same function, two eras @@
+-#include "nsACString.h"
+-
+-nsresult ParsePort(const nsACString& aText, PRInt32* aOutPort)
+-{
+-    if (nullptr == aOutPort)
+-        return NS_ERROR_NULL_POINTER;
+-
+-    PRInt32 value = 0;
+-    nsresult rv = ToInteger(aText, &value);
+-    if (NS_FAILED(rv))
+-        return rv;
+-
+-    *aOutPort = value;
+-    return NS_OK;
+-}
++#include <string_view>
++#include "Maybe.h"
++
++nsresult ParsePort(std::string_view aText, int32_t* aOutPort)
++{
++    Maybe<int32_t> value = ParseInt32(aText);
++    if (value.isNothing())
++        return NS_ERROR_ILLEGAL_VALUE;
++
++    *aOutPort = value.value();
++    return NS_OK;
++}
+\end{lstlisting}
+
+\ref{lst:ch04-nspr-evolution} 值得注意的不是``新写法更干净''，而是两代写法各自解决什么问题：旧式的 \Tp{nsresult} 加出参可以安全穿过每一个 \CL 调用点；新式把``可能失败''编码进返回值类型，出参只剩纯粹的赋值目的地。Mozilla 的务实在于没有强制后者覆盖前者——对外接口仍返回 \Tp{nsresult}，内部实现换成了 \Tp{Maybe}。风格迁移在这里是分层推进，而不是一次性宣判旧写法有罪。
+
+\begin{warning}[title={把历史禁令读成现行禁令}]
+二手资料里流传的``Mozilla 禁用异常''多半摘自早期版本；``Mozilla 全面转向现代 \CPP''则是另一端的过度概括。两份说法都省略了同一个约束：冻结 ABI 边界。移植这类条款到自己团队之前，先确认你的项目里有没有对应的边界——没有的话，你抄到的只是一段别人历史问题的解，而不是你问题的解。
+\end{warning}
+
+\section{WebKit 的例外：checked\_cast 与不依赖 RTTI 的向下转型}
+\label{sec:ch04-webkit-checkedcast}
+
+WebKit 与 \DomGo、\DomLlvm 一样禁用 \Tp{dynamic\_\allowbreak cast}，理由也相似：依赖 RTTI 会拖慢编译、撑大二进制，并且让类型转换在性能敏感的渲染与布局代码里变成隐形开销。但 WebKit 的条款没有停在``禁止''上，它回答了一个更根本的问题：禁 \Tp{dynamic\_\allowbreak cast} 的理由，并不构成禁向下转型本身的理由。树遍历代码拿到一个基类指针、需要安全地取回派生类视角，这个需求不会因为一条禁令消失，只会换一个实现。
+
+WebKit 给出的答案是编译期类型证明加调试期校验的组合：类型谓词（形如 \Tp{is}\Tp{<T>()}）配合 \Fn{downcast{\Bk}} 或 \Fn{checked{\Bk}cast}。后者是不依赖 RTTI 的类模板工具：模板实例化时先用类型特征断言两个类型确属同一继承链，调试构建里再核对节点自带的类型标志，release 构建则退化为零开销的 \Tp{static\_cast}。示意骨架如下：
+
+\begin{lstlisting}[style=cppstyle,caption={checked\_cast 的示意骨架：编译期链条断言加调试期标志校验},label={lst:ch04-checkedcast}]
+// 示意实现，不是仓库原文：类型链条在编译期证明，
+// 调试构建再核对对象自带的类型标志。
+template <typename Target, typename Source>
+inline Target checked_cast(Source source) {
+  static_assert(RelatedTypes<Target, Source>::value,
+                "checked_cast: 两个类型必须可比");
+  return static_cast<Target>(source);
+}
+\end{lstlisting}
+
+\ref{lst:ch04-checkedcast} 的关键在第三行与第五行：\Tp{static\_assert} 把``这条转换在类型系统上成立''固化为编译期事实，函数体因此只需一次 \Tp{static\_cast}。也就是说，安全不是运行时查表查出来的，而是被约束在``只有链条成立的实例才会编译通过''这一层。这正是``禁令不等于需求消失''的工程化回答。
+
+\begin{warning}[title={checked\_cast 不是类型系统的替身}]
+链条成立只保证两个类型可比，不保证指针此刻装的就是那个派生类型。用 \Fn{checked{\Bk}cast} 之前必须存在类型谓词守卫（如 \Tp{is}\Tp{<T>()} 为真），否则调试构建的断言一旦在生产构建被剥离，误转会静默通过。反过来，把每个 \Tp{dynamic\_\allowbreak cast} 都机械替换成 \Fn{checked{\Bk}cast} 也是错的：跨模块边界、类型链条由外部代码决定的场景，编译期证明根本不存在。
+\end{warning}
+
+\subsection{禁令不等于消灭需求：checked\_cast 的三段论}
+\label{sec:ch04-checkedcast-syllogism}
+
+\begin{guideline}[title={一条禁令应有的三段论结构}]
+WebKit 这一节的论证结构值得原样记录：第一，\Tp{dynamic\_\allowbreak cast} 引入 RTTI 与体积成本，禁令有成立的理由；第二，向下转型是树状遍历代码的真实需求，需求不会因为禁令而消失；第三，因此指南必须同时给出替代实现，禁令才完备。只写第一条与禁令、不写第二、三段的指南，最终会被团队自行补全——补全的方式几乎总是裸的 \Tp{static\_cast}，比被禁的写法更糟。审阅别家条款时，可以用``这条禁令配套的需求承接在哪''作为通过与否的判据。
+\end{guideline}
+
+\subsection{命名：单词类名与 camelCase 函数}
+\label{sec:ch04-webkit-naming}
+
+命名上，WebKit 风格同样有辨识度：类名倾向简短的单词形态（\Tp{Node}、\Tp{Element}、\Tp{Document}），少用长串限定词嵌套；函数用首字母小写的 camelCase（\Fn{setInnerHTML}、\Fn{getBoundingClientRect}），成员变量带 \Tp{m\_} 前缀，局部参数不加修饰。这些约定单看平平无奇，价值在于与 \Tp{is}\Tp{<T>()} 加 \Fn{downcast{\Bk}} 这类短小的惯用式配合时，一行代码读起来接近一句短语：``if is Document, downcast to Document''。命名规则与惯用转换形状互相咬合，是这份指南比``风格属于审美''更硬的一处证据。
+
+这类约定还有一个不太被供应商用文档强调的收益：评审吞吐。约定越接近``形状''，评审者越不需要查表——\Tp{m\_} 打头即成员、小写开头连写即函数、类型谓词出现即转换守卫，模式匹配替代了记忆检索。对外部补丁量大的项目，这是把评审时间还给语义本身的手段，与第~\ref{sec:ch04-contributor-pressure} 节的压力项直接对应。
+
+\section{五族对照：同一维度上的五种答案}
+\label{sec:ch04-compare-table}
+
+把 \DomGo、\DomLlvm（连同继承其立场的 Chromium）、Mozilla、WebKit 与 Linux 内核放进同一张表，可以直观看到：六个维度上没有任何一行出现``五家答案相同''的情况。内核列只作占位，细节留给下一章。
+
+{\small\begin{longtable}{%
+  >{\raggedright\arraybackslash}p{0.11\textwidth}%
+  >{\raggedright\arraybackslash}p{0.14\textwidth}%
+  >{\raggedright\arraybackslash}p{0.14\textwidth}%
+  >{\raggedright\arraybackslash}p{0.15\textwidth}%
+  >{\raggedright\arraybackslash}p{0.14\textwidth}%
+  >{\raggedright\arraybackslash}p{0.12\textwidth}}
+
+\caption{五个代码库在六个维度上的立场速览（立场按年代有松动，读法见第~\ref{sec:ch04-why-differ} 节）}\label{tab:ch04-threefamilies}\\
+\toprule
+维度 & \DomGo & \DomLlvm/{\Bk}\allowbreak Chromium & Mozilla & WebKit & Linux 内核 \\
+\midrule
+\endfirsthead
+\toprule
+维度 & \DomGo & \DomLlvm/{\Bk}\allowbreak Chromium & Mozilla & WebKit & Linux 内核 \\
+\midrule
+\endhead
+\midrule
+\multicolumn{6}{r}{\footnotesize 接下页}\\
+\endfoot
+\bottomrule
+\endlastfoot
+异常 & 主体代码库禁用；该禁令历史上分层修订，需带时间戳读 & 禁用；Chromium 继承此立场并把错误处理词汇进一步收窄 & 历史上禁；现代条款允许新边界使用，对外接口仍以返回码为主 & 整体上不鼓励，个别模块在约束下可用 & 占位，见下一章 \\
+\addlinespace
+RTTI 与 \Tp{dynamic\_\allowbreak cast} & 禁 \Tp{dynamic\_\allowbreak cast} & 禁；以 \Tp{isa}/{\Bk}\Tp{dyn\_\allowbreak cast} 一类编译期证明替代 & 历史上禁；后有限放宽，新代码仍优先其他机制 & 禁 \Tp{dynamic\_\allowbreak cast}，用 \Fn{checked{\Bk}cast} 与类型谓词补位 & 无此概念（\CL 项目），占位 \\
+\addlinespace
+STL 使用 & 历史上大范围禁用并列出例外，后转向自家基础库 & 可用但限推荐清单；接口层偏爱 \Tp{StringRef} 等轻量类型 & 冻结 ABI 边界之外鼓励标准容器与字符串 & 长期以自研 \Lib{WTF} 容器与字符串为主，std 用法按年代松紧不一 & 占位，见下一章 \\
+\addlinespace
+智能指针 & \Tp{unique\_\allowbreak ptr} 优先；观察指针经自家类型包装 & \Tp{std::unique\_\allowbreak ptr} 配合自研 \Tp{raw{\Bk}\_ptr} & \Tp{RefPtr} 与 \Tp{UniquePtr}；侵入式计数配 \Tp{already{\Bk}\_add{\Bk}\_ref} & \Tp{Ref}、\Tp{RefExact} 等侵入式引用计数，不以 \Tp{shared\_ptr} 管寿命 & 引用计数体系自成一体，占位 \\
+\addlinespace
+格式化器 & 专用 clang-format 风格全库统一 & 仓库内 \Tp{.clang-\allowbreak format}；Chromium 要求格式化单独成提交 & 仓库内 \Tp{.clang-\allowbreak format}，采用 Mozilla 风格 & 历史上用自研风格检查，不做整文件自动重排 & 补丁风格检查与自带格式化脚本，占位 \\
+\addlinespace
+lint 工具 & 对外 \Tp{cpplint} 配合内部静态分析器 & 仓库内 \Tp{.clang-tidy} 与项目专有 checks & clang-tidy 加自研扩展与分阶段豁免清单 & \Tp{webkitpy} 风格检查与按语言 linter & 专用补丁检查器，占位 \\
+\end{longtable}}
+
+表~\ref{tab:ch04-threefamilies} 里``禁''与``允''的并排本身就构成论据：这些维度不是 \CPP 语言的正确性分歧，而是工程约束的差异。第~\ref{sec:ch04-why-differ} 节展开这组压力函数；在此之前只需记住一条读表纪律——每个单元格都隐含一个年代，``历史上''三个字在表里出现的频率比你想的高。
+
+\begin{note}[title={给每个单元格补年代戳的方法}]
+公开可查的仓库历史足以复核本表大部分单元格：看仓库根目录有没有 \Tp{.clang-\allowbreak format} 与 \Tp{.clang-tidy}、看风格文档当前版本如何描述异常、看提交历史里有没有一次性全库重排的记录。复核动作本身比结论重要——五个单元格里有三个会和你先入为主的印象不一致，这正是``传闻条款''与``现行条款''的落差。
+\end{note}
+
+\section{为什么同一问题各指南结论不同}
+\label{sec:ch04-why-differ}
+
+对比表最容易被误读成``五家公司水平不同所以规则不同''。更准确的说法是：每条条款是一组工程压力的解，而五家面临的压力函数几乎处处不同。下面四类压力解释了表里大部分分歧。
+
+\subsection{内存安全事件响应}
+\label{sec:ch04-memsafe-pressure}
+
+浏览器是内存安全漏洞的高价值靶场，安全团队的漏洞报告直接回馈进风格条款。历史上可以看到：某一段时期密集的原生崩溃与漏洞赏金案例之后，指南会收紧对裸指针、手写 \Tp{new}/{\Bk}\Tp{delete} 与 C 风格缓冲的容忍，同时出现``新组件优先考虑内存安全语言实现''这类条款。这类规则看起来像审美裁决，实际是对事件流水线的响应；抄进没有同等漏洞压力的团队，收益会远低于预期。
+
+另一条反馈回路是模糊测试。持续运行的 fuzzing 基础设施会以统计意义暴露哪类写法反复产生越界与释放后使用，风格条款随后把这些统计结论固化成禁令——例如对裸所有权转移、对手写缓冲切分的整体不信任。值得注意的是条款的``来源链''在文档里通常被抹平：读到的只是最终禁令，看不到背后的样本量与事故编号。这也是本章反复强调重建压力函数的原因——来源链断裂的条款最容易被神化，也最难被正确地退役。
+
+\subsection{崩溃报告与 unwinder 可用性}
+\label{sec:ch04-unwinder-pressure}
+
+\Tp{dynamic\_\allowbreak cast} 依赖运行时类型信息，异常展开依赖 unwind 表——两者都要付出二进制体积与加载成本，而且对崩溃采集系统有连锁影响：一个大型客户端产品的崩溃聚合服务如果拿不到可靠栈回溯，报告分组就会退化。禁异常与禁 RTTI 常常与``自建展开器 + 采样式崩溃报告''的基建决策捆绑出现。Mozilla 后来放宽异常，一个外部条件是它的崩溃管线已经能吃下带异常展开的栈；没有这层基建的团队先抄禁令或先抄放宽，都属于倒果为因。
+
+编译选项在这一层同样深度参与：支持异常意味着保留展开表与相关元数据，禁令往往与 \Opt{fno-exceptions} 一类开关互相锁定。也就是说，``禁异常''在工程上从来不只是 API 风格问题，它还决定了产物的构成方式。当某个模块需要解禁时，真正要动的是构建配置的传播链，而不是文档里的一行字——这解释了为什么各家指南的放宽几乎总从模块粒度开始，而从不全库一步到位：开关是按目标逐个打开的，条款只能跟着现实走。
+
+\subsection{跨 ABI 边界}
+\label{sec:ch04-abi-pressure}
+
+第~\ref{sec:ch04-mozilla-history} 节已经展示过：冻结接口让 \Tp{PRBool}、\Tp{nsresult} 原地保留，也让异常止步于边界。COM 式接口、C 导出层、多运行时混编（静态链接与动态链接混用）都有同效。Chromium 与 \DomLlvm 系没有历史包袱一样的发布级 ABI，于是它们对现代特性的态度更统一；WebKit 的边界更多是渲染管线内性能边界，于是它的替代方案（\ref{lst:ch04-checkedcast}）也偏零开销方向。边界两侧写法差异的最直观形态，是一个薄薄的 \CL 链接外壳罩住现代化的内部实现：
+
+\begin{lstlisting}[style=cppstyle,caption={示意：边界内自由演进，边界外只保留扁平的 C 链接入口},label={lst:ch04-abi-shell}]
+// 示意代码：extern "C" 入口只做参数翻译，不承载业务逻辑。
+extern "C" nsresult GeckoParsePort(const char* aText,
+                                   int32_t* aOutPort) {
+  return internal::ParsePort(std::string_view(aText), aOutPort)
+      .release();
+}
+\end{lstlisting}
+
+\ref{lst:ch04-abi-shell} 这种``壳''模式在这几家的公开代码里都能找到变体：边界处的函数签名是 ABI 契约，必须僵硬；它调用的一切在壳后面自由演进。看懂这个分层，才能看懂为什么 Mozilla 的指南同时写着``保留返回码接口''与``鼓励现代错误处理''却并不矛盾——两句话说的不是同一层代码。
+
+\subsection{外部贡献者比例}
+\label{sec:ch04-contributor-pressure}
+
+一个主要靠内部员工维护的代码库，和一个每周接收大量一次性补丁的代码库，需要不同强度的``机器可检查规则''。外部贡献比例高的项目倾向于：把可自动裁决的判断前移到 lint 与格式化（表~\ref{tab:ch04-threefamilies} 后三行），把留在人审层面的条款写短、写少例外——因为评审者无法假设贡献者读过全部指南。内部主导的项目则敢保留更多依赖上下文的条款。``规则条数''与``贡献者规模''的负相关，在五家公开仓库的评审文化中清晰可见。
+
+\begin{bestpractice}[title={读指南先重建压力函数}]
+移植别家条款之前，用三行字把它的需求侧写清楚：这条规则防的是哪类事故（内存安全、崩溃聚合、ABI 破坏、评审带宽）；触发频率在你的代码库里是否成立；替代方案的代价你能否承担。三行里任何一行对不上，这条款就该改写或放弃——你移植的应当是解与需求之间的映射，而不是解本身。
+\end{bestpractice}
+
+把四类压力压缩成一张可携带的检查表，移植任何条款前先过一遍：
+
+\begin{itemize}
+  \item 事故压力：该条款对应的事件类型在你的缺陷库里是否存在？没有同类事件历史，禁令的收益近似为零。
+  \item 基建压力：你的崩溃管线、展开器与符号化流程，能否承接条款放宽后的代价（体积、回溯质量）？
+  \item 边界压力：代码库里有没有冻结的对外接口、跨语言绑定或混编运行时？有的话，先划定豁免区再谈现代化。
+  \item 人员压力：外部或一次性贡献者的比例有多高？比例越高，可自动裁决的规则越应当前移到人审之前。
+\end{itemize}
+
+四条全中才谈照抄；命中部分，就改写。这个检查表本身也是对表~\ref{tab:ch04-threefamilies} 的再读法：五家在每个单元格上的立场，几乎都可以在这四轴上找到对应的坐标。
+
+\section{务实边界的写法：``本地惯例优先''这条元条款}
+\label{sec:ch04-surrounding}
+
+五份指南里几乎都能找到一句相似的话，英文原文常见措辞是 ``surrounding code takes precedence''：改一段代码时，若显式条款与文件、模块里占主流的现状冲突，现状优先。这句话表面上是客气退让，实际上是整本手册最重要的防腐层——它决定了指南能否在代码库里活过十年。
+
+\begin{compare}[title={有 / 无这条元条款的两个团队，十年之后}]
+有这条元条款的团队：风格冲突在``局部''层面就被裁决完毕，不需要为每个新写法开一纸豁免令；历史文件保持内部一致，git 追溯没有被周期性大重排打断；代价是同一项目里可以合法地共存几种世代的写法，新人会问``到底哪种对''，答案需要人来给：``在这个文件里对''。
+
+没有这条元条款的团队：要么每隔若干年做一次全库强制重排，每次都产生海量格式化噪声，blame 断链、缺陷二分失效，而且很快再次烂掉；要么让显式条款与现状硬碰，评审意见变成风格辩论，资深工程师的时间被反复消耗在同一类争执上。两条路都在十年尺度上比前者贵。
+\end{compare}
+
+元条款还有第二个功能：它把``谁对''改写成``哪里适用''，从而让指南可以滞后于代码而不失效。Mozilla 分层推进 ABI 边界内的现代化（第~\ref{sec:ch04-mozilla-history} 节）与 WebKit 容忍历史命名遗留，都是这条元条款的具体行使方式。与之配套的是把格式化噪声隔离在语义变更之外的提交卫生：
+
+\begin{lstlisting}[style=shellstyle,caption={格式化独立成提交，让元条款的行使痕迹可审计},label={lst:ch04-blame-split}]
+$ git log --oneline -3
+9f2c1ad style: run clang-format over ConfigReader.cpp
+5b7e042 fix: reject trailing comma in ParsePort
+31ac9f0 feat: switch ParsePort to std::string_view
+$ git show --stat 9f2c1ad | tail -n 1
+ 1 file changed, 14 insertions(+), 9 deletions(-)
+\end{lstlisting}
+
+\begin{warning}[title={元条款不是评审逃逸舱}]
+``本地惯例优先''的适用范围是局部与边缘：同一文件内部的世代混杂、模块内部的既有惯用式。它不能用来豁免项目级红线——内存安全类条款、未定义行为、越界访问不属于``惯例''范畴，这些位置没有多数决可言。判别办法很简单：被这条元条款保护的写法，是否让评审者无法构造出具体的故障场景？构造得出，就轮不到惯例说话。
+\end{warning}
+
+\begin{guideline}[title={怎么写这条元条款}]
+把它写成可执行的三段式：一、冲突判定——列出触发条件（条款是 SHOULD 级、文件内主流写法占比明显、改动范围与新增代码行数）；二、优先级裁决——项目级 MUST 恒高于局部惯例，SHOULD 级条款让位于惯例；三、收敛机制——规定``以惯例为由的逃逸''必须留下的记录（注释标记、lint 豁免清单、或像 \Tp{.clang-tidy} 那样按文件配置的抑制项），避免局部现状变成永久黑洞。
+\end{guideline}
+
+把三段式落到仓库里，通常对应这么几件具体的事：
+
+\begin{itemize}
+  \item 在指南开头用一节写清 MUST/SHOULD 的分级语义，并声明元条款只作用于 SHOULD 级；
+  \item 给每个豁免机制设定失效条件（文件重写、模块迁移、达到某个覆盖率），逃逸记录要可枚举、可清理；
+  \item 把格式化、lint 判定接入 CI，让人只做语义评审，风格裁决交给机器与元条款；
+  \item 定期抽样``惯例区''：统计仍维持旧惯例的文件数变化曲线，曲线长期不降，说明收敛机制失效。
+\end{itemize}
+
+\section{本章小结}
+\label{sec:ch04-recap}
+
+Mozilla 教给我们的是时间维：条款分层沉积，禁令与放宽都带年代戳，读它必须先读 ABI 边界在哪里。WebKit 教给我们的是替代维：语言级禁令从不消灭需求，工程上它要么被零成本工具（\ref{lst:ch04-checkedcast}）接住，要么以更差的形态回流。两者共同指向表~\ref{tab:ch04-threefamilies} 的读法：分歧是压力函数的解，不是水平差距。而贯穿全表的元条款（第~\ref{sec:ch04-surrounding} 节）是使这些解能在各自代码库里长期存续的机制。
+
+还有一个容易忽略的共性：这两家指南都没有假装规则是推导出来的。它们的行文方式是``我们在这些地方撞过墙，以下是绕开的方式''，而不是``以下规则由语言原理导出''。这种经验主义文风乍看不如一份精简的``十诫''好用，但它有一个``十诫''永远不具备的性质——每一条都可以被追溯到压力、被压力变化所废止。一份能退役条款的指南，和一份只有新增的指南，区别在于前者承认自己会过时。
+
+写团队自己的手册时，这个姿态值得模仿：给重要条款附上``为什么''与``何时可以重新讨论''两个字段，让后来者既能继承结论，也能继承推翻结论的权利。
+
+\begin{note}[title={指南不是语言}]
+最后提醒本章真正想说的风险：把任何一份大厂指南当成 \CPP 语言真理照抄，正是第二部分要反复剖析的错误温床——译本滞后的条款会被当成``官方语义''引用，基于旧编译器现实写下的禁令会在现代标准下悄悄失效。第二部分将沿 \DomTra 与 \DomMod 两条线，逐条核对这类条款在今天语言层面的真实状态。在此之前，请养成给每条规则标年代与出处的习惯。
+\end{note}
+
+最后一句提醒落在记号之外：当条款与语言语义纠缠时，先分清你在引用哪一年的哪一份文本。下一章转向 Linux 内核，表~\ref{tab:ch04-threefamilies} 里最后一列的占位符将被真正填满。
+
+
+% ---- frag_ch05.tex ----
+\chapter{\DomMod 规范层：C++ Core Guidelines 与最佳实践书系}
+\label{ch:ch05-coreg}
+
+前面各章的 \DomGo 风格、\DomLlvm 风格都属于\underline{排版层}：它们回答
+``缩进多少、括号放哪、标识符叫什么''。本章进入另一层：以
+\Tp{C++{\Bk}Core{\Bk}Guidelines}（下文简称 Core Guidelines）为代表的
+\DomMod 规范层，加上围绕它的最佳实践书系。这一层回答的是
+``这个签名有没有所有权、这条错误路径该不该抛''——它与字体、行宽无关，
+却与代码在五年后是否还经得起改动强相关。本章只讲三件事：这一层的
+定位与编号体系、它如何被 \Tp{clang-tidy} 之类的检查器半自动接住、
+以及它与排版层指南互相矛盾时应当怎么裁决。
+
+\section{定位：一套语义约定，不是排版手册}
+\label{sec:ch05-position}
+
+Core Guidelines 由 Bjarne Stroustrup 与 Herb Sutter 发起，公开托管、
+持续修订，措辞的目标是\textbf{为 \cpp{14} 及以上（含 \cpp{17}、\cpp{20}）
+代码写出安全惯用法}。它不是 ISO 标准，也不假装是标准：标准只定义
+什么是合法的程序，Core Guidelines 定义什么是好的写法。违反前者得到
+编译错误，违反后者只得到一次冗长的代码评审。
+
+条款按主题聚成六大块，最常见的五块是接口（interface）、所有权
+（ownership）、资源管理（resource）、内存与类型安全（memory），以及
+以检查画像（profile）为手段的验证建议；第六块是位于顶层的哲学论述
+（philosophy），解释前五块为什么这样推荐。每条条款带系列前缀加序号
+的编号：例如哲学系列用 ``P''，接口系列用 ``I''，函数系列用 ``F''，
+类系列用 ``C''，枚举与语句系列用 ``ES''。本书引用这一层时只说
+系列名与主题，不逐条复述原文——条款内容随语言演进会改，编号对应的
+具体措辞请以你锁定的那个修订快照为准。
+
+\begin{note}[title={语义层与排版层的分工}]
+判断对象、承载工具、冲突解决方式三个维度可以把两层干净切开。混用
+两层是团队风格文档最常见的结构性错误：把排版层的禁令（例如某仓库
+沿用多年的禁异常条款）当成语义层事实来引用。
+\end{note}
+
+\begin{table}[h]
+\centering
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.16\textwidth}
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}X}
+\toprule
+维度 & 排版层 & \DomMod 语义层 \\
+\midrule
+判断对象 & 缩进、花括号位置、行宽、命名形态 & 所有权、生命周期、错误传播、类型安全 \\
+承载工具 & \Tp{clang-format} 等格式化工具 & \Tp{clang-tidy} 检查族、评审清单 \\
+违规代价 & 可自动重排，无须争论 & 需要改写代码，必然伴随争论 \\
+代表文档 & \DomGo/{\Bk}\DomLlvm 风格指南 & Core Guidelines 与书系 \\
+\bottomrule
+\end{tabularx}
+\caption{两层规范在判断对象与工具承载上的分工}
+\label{tab:ch05-layers}
+\end{table}
+
+\section{关键约定，以及 \Tp{clang-tidy} 能接住的部分}
+\label{sec:ch05-conventions}
+
+语义层条款密度最高的四个主题，几乎覆盖了日常评审意见的大半：
+
+\begin{itemize}
+\item RAII：资源生命周期绑定到对象生命周期，构造获取、析构释放，
+  用 \Tp{unique{\Bk}ptr}、锁守卫等类型替代手工配对操作。
+\item rule of zero 与 rule of five：类若不直接管资源，就一个
+  特殊成员函数都不写（zero）；若直接管资源，就五个一起写全
+  （five），不要写一半留给编译器补一半。
+\item 所有权参数：转移所有权用返回 \Tp{unique{\Bk}ptr} 或显式
+  \Fn{move}；只借用不空指针的，用 \Fn{not{\Bk}null} 这类
+  \Lib{GSL} 指针族表达约束；批量读写序列用 \Tp{gsl{\Bk}span}。
+\item \Tp{const} 正确性与避免裸 \Tp{new}/{\Bk}\Tp{delete}：不改变对象
+  状态的成员函数标 \Tp{const}；分配与释放交给 \Fn{make{\Bk}unique}
+  一类辅助函数，让 ``谁分配'' 在签名层面无从谈起。
+\end{itemize}
+
+这四类里相当一部分条款的关键词会直接出现在函数签名上，因此可以被
+\Tp{clang-tidy} 的 cppcore\allowbreak guidelines-\allowbreak \_* 与 modernize-\_* 两个检查族
+半自动验证。对比看一对签名：
+
+\begin{lstlisting}[style=cppstyle,caption={所有权与约束由类型承载：上例靠注释约定，下例靠签名表达},label={lst:ch05-ownership}]
+// 负例：签名不表达所有权与空值约束，靠注释和默契
+Resource* create();                  // 谁负责释放？
+void update(Resource* p);            // p 允许为空吗？
+
+// 正例：所有权、非空约束、只读视图都写进类型
+std::unique_ptr<Resource> create();             // 返回所有权
+void update(gsl::not_null<Resource*> p);        // 非空，不拥有
+void collect(gsl::span<const Event> batch);     // 只读视图
+\end{lstlisting}
+
+\begin{lstlisting}[style=cppstyle,caption={rule of zero 的实际形态：成员自治，类本体不写特殊成员函数},label={lst:ch05-zero}]
+class Session {          // rule of zero：不手写五大函数
+public:
+    explicit Session(std::string id) : id_(std::move(id)) {}
+private:
+    std::string id_;                // 成员自管资源
+    std::vector<Event> queue_;      // 拷贝/移动/析构由编译器生成
+};
+\end{lstlisting}
+
+命令行上一次性启用两个检查族的写法如下（代码块内即命令原样，星号
+不必转义）：
+
+\begin{lstlisting}[style=shellstyle,caption={用 \Tp{clang-tidy} 同时启用两个语义检查族},label={lst:ch05-tidy-cli}]
+# 单文件检查：-- 之后是传给编译器的参数
+clang-tidy src/session.cpp \
+  --checks='cppcoreguidelines-*,modernize-*' \
+  --header-filter='include/.*' \
+  -- -std=c++20 -Iinclude
+\end{lstlisting}
+
+项目级做法是把它固化进 \Tp{.clang-tidy}，让每次构建都生效：
+
+\begin{lstlisting}[style=yamlstyle,caption={.clang-tidy 的最小语义层配置},label={lst:ch05-tidy-yaml}]
+# 两个检查族对应 Core Guidelines 的可验证子集
+Checks: 'cppcoreguidelines-*,modernize-*'
+WarningsAsErrors: 'cppcoreguidelines-owning-memory'
+HeaderFilterRegex: 'include/.*'
+\end{lstlisting}
+
+\begin{note}[title={检查族与条款编号不是一一对应}]
+cppcore\allowbreak guidelines-\allowbreak \_* 的多数检查确实源自对应条款，但既有条款被多个
+检查分摊、也有条款没有任何检查覆盖（例如 ``接口应当窄''）；
+modernize-\_* 则面向把 \cpp{98} 时代惯用法改写成现代写法，与条款
+体系只有松耦合。把 ``检查全绿'' 表述成 ``符合 Core Guidelines''
+是夸大，准确说法是 ``通过了该文档中可机检的子集''。
+\end{note}
+
+\begin{bestpractice}[title={两个检查族的引入节奏}]
+先以全量 \Opt{checks} 打开 modernize-\_* 跑基线，把报告按目录切成
+小批改写、逐批提交；稳定后再打开 cppcore\allowbreak guidelines-\allowbreak \_*，并把其中
+与所有权相关的少数检查升级为错误级。一次性把两族都设成阻断，
+第一次 CI 就会产出四位数告警，然后整个措施通常会被回滚。
+\end{bestpractice}
+
+\section{书系谱系：每本书都有自己的标准年代戳}
+\label{sec:ch05-books}
+
+Core Guidelines 不是孤立文档，它站在一批最佳实践书系之上，而这些书
+各自假设了不同年份的语言：
+
+\begin{itemize}
+\item \Tp{Effective{\Bk}C++} 与 \Tp{More{\Bk}Effective{\Bk}C++}：
+  \cpp{98} 时代的经典条目体，讨论裸指针语义、拷贝代价与库设计，
+  成书于移动语义出现之前。
+\item \Tp{C++{\Bk}Coding{\Bk}Standards}：Sutter 与 Alexandrescu
+  合著的百条规则式清单，覆盖设计与维护，同样早于 \cpp{11}。
+\item \Tp{Effective{\Bk}Modern{\Bk}C++}：Meyers 面向 \cpp{11}/{\Bk}\cpp{14}
+  的条目体，移动语义、智能指针与并发内存模型是主轴，可以看作
+  Core Guidelines 可阅读性最好的对照读物。
+\item \Tp{C++{\Bk}Functional{\Bk}Style} 等更晚的书：以 \cpp{17} 之后
+  的纯函数、不可变数据与小 lambda 惯用法为主线，代表这一层仍在
+  随标准继续生长。
+\end{itemize}
+
+引用这一层书系时的第一条纪律：\textbf{先问它假设哪一年的语言}。
+早于 \cpp{11} 的书里的拷贝代价论证、返回构造的处理建议、对共享
+所有权默认乐观的用量建议，有一部分已被移动语义与分配器实践推翻；
+晚出的书则会反过来把旧书的结论当作反例讲。把 ``某本书 Item
+若干'' 直接抄进你的风格文档之前，标注它的年代戳比标注页码更重要。
+
+\begin{warning}[title={过时年代戳的三种典型症状}]
+其一，书中 ``避免按值传递一切对象'' 的绝对化结论，在 \cpp{11} 之后
+需要按是否转移所有权重新划线；其二，把 \Tp{shared{\Bk}ptr} 当默认
+共享手段的示例代码，现代语义层更倾向默认 \Tp{unique{\Bk}ptr} 加
+显式设计；其三，以 ``异常代价不可控'' 为由的全面禁令，其证据基础
+远早于现代实现中零开销异常表与 \Tp{noexcept} 的移动路径优化。
+三种症状的共同根源都是拿旧语言版本回答新问题。
+\end{warning}
+
+\section{与 \DomGo 指南的镜像关系}
+\label{sec:ch05-mirror}
+
+Core Guidelines 与旧版 \DomGo 风格指南之间存在一个几乎对称的现象：
+前者积极推荐的若干惯用法，恰是后者明确限制或禁止的。逐条对照如下。
+
+\begin{compare}[title={同一主题、两侧说法：\DomGo 旧条款与 Core Guidelines}]
+\begin{itemize}
+\item 错误传播：\DomGo 旧条款整体限制异常，要求以返回值或状态对象
+  传递错误；Core Guidelines 把异常作为``预期之外''错误的首选手段，
+  并要求用 \Tp{noexcept} 标注不回传的边界。
+\item RTTI：\DomGo 禁用 \Tp{dynamic{\Bk}cast} 与 \Tp{typeid}；
+  Core Guidelines 允许在受控的多态恢复场景有限使用，态度是
+  ``克制而非为零''。
+\item \Tp{auto}：\DomGo 限定在右侧类型显而易见处；Core Guidelines
+  鼓励用它削减冗余类型噪音、凸显意图。
+\item 移动语义：\DomGo 旧文本对它着墨极少；Core Guidelines 把移动
+  当作所有权词汇表的核心条目。
+\item 裸 \Tp{new}/{\Bk}\Tp{delete}：两侧\textbf{同样}不推荐——镜像关系
+  并非处处相反，资源管理上的收敛恰好说明这一点是语言事实层面的
+  共识。
+\end{itemize}
+\end{compare}
+
+关键判断：这些分歧是\underline{策略}分歧，不是\underline{语言事实}
+分歧。异常怎么展开、\Tp{dynamic{\Bk}cast} 何时返回空指针、移动
+构造调用哪个重载，标准文本写得很清楚，两侧并没有争论；争论的是
+超大规模单仓里可接受的编译时间、二进制体积与团队经验成本。策略
+问题随组织规模、目标平台变化，所以你在 A 项目照 \DomGo 禁异常、在
+B 项目按 Core Guidelines 用异常，两边都不算违背事实。本章只标出
+分歧的坐标；异常开销与展开策略的语义细节，留待本书第二部分
+inline 与异常的深剖处理。
+
+\begin{note}[title={多项目风格文档的分层引用法}]
+一份横跨多个项目的风格文档，排版层统一引用一个格式化风格即可；
+语义层则按项目分别声明 ``本项目采用异常传播'' 或 ``本项目仅用
+返回码''，并把声明放在离检查配置最近的目录。把两种策略混写进
+同一份总文档，两份互相矛盾的 CI 规则迟早会同时挂在流水线上。
+\end{note}
+
+\section{可检查化的边界}
+\label{sec:ch05-lintable}
+
+语义层条款按 ``能否落成机器规则'' 天然分成三层，分层对待是这一层
+规范落地的核心操作。
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.14\textwidth}
+  >{\raggedright\arraybackslash}p{0.30\textwidth}
+  >{\raggedright\arraybackslash}p{0.20\textwidth}
+  >{\raggedright\arraybackslash}p{0.15\textwidth}}
+\caption{语义层条款的可检查化分层}\label{tab:ch05-lint}\\
+\toprule
+层级 & 例子 & 工具归属 & 落地方式 \\
+\midrule
+\endfirsthead
+\toprule
+层级 & 例子 & 工具归属 & 落地方式 \\
+\midrule
+\endhead
+机械层 & 命名形态迁移、裸 \Tp{new} 替换为智能指针、
+  初始化写法统一 & readability-\_*、modernize-\_* &
+  CI 阻断，差异以 diff 复核 \\
+\addlinespace
+模式层 & 裸指针所有权不明、数组隐式退化、越界访问风险 &
+  cppcore\allowbreak guidelines-\allowbreak \_*、bugprone-\_* &
+  出告警，误报人工分诊后再定级 \\
+\addlinespace
+判断层 & 优先组合而非继承、接口应当窄、函数拆分粒度 &
+  无工具归属 & 评审清单与架构文档 \\
+\bottomrule
+\end{longtable}
+
+机械层的条款之所以可阻断，是因为它们的违规形态是\emph{局部}的：
+一个标识符、一次分配、一对括号。检查器看得到局部，所以判得准。
+模式层稍差一档：告警是可靠的线索，不是可靠的结论，例如
+cppcore\allowbreak guidelines-\allowbreak \_* 对某个裸指针报的所有权疑点，可能需要结合
+调用图才能定夺，因此适合 ``告警加分诊'' 而不是直接阻断。
+
+判断层是真正的边界之外。``优先使用组合'' 是一个关于演化成本的
+预测，不是关于当前这段代码的事实——同样的继承，在稳定的
+多态框架里是对的，在三个部门共用一份头文件的仓库里是灾难。
+没有任何检查器能在单文件编译单元的视野里评估演化成本，这类
+条款只能进评审清单。
+
+\begin{warning}[title={把无法 lint 的条款写进强制 CI 的后果}]
+实践中这条边界总有被越过的时刻：某位负责人把 ``类应当优先组合''
+之类判断层要求塞进阻断级检查（无论靠自研规则还是靠关键词扫描），
+随后通常按以下顺序恶化：第一，开发者用大范围抑制注释换取流水线
+通过，抑制注释的密度开始超过代码本身的信息量；第二，CI 长期
+红色让人麻木，真正该阻断的所有权错误被淹没在同款报错里；
+第三，评审争论从 ``这里会不会错'' 退化为 ``这里能不能豁免''；
+第四，团队私下要求给检查器 ``降级''，连带把机械层的有效规则也
+一起关掉。越界的代价不是漏掉几条设计原则，而是赔上整层规范
+的公信力。
+\end{warning}
+
+\begin{guideline}[title={读 Core Guidelines 的正确顺序}]
+第一步不是读条款，而是读 philosophy 与 source 两页：前者解释
+``为什么这样推荐''，后者声明文档面向的语言版本——当前措辞以
+\cpp{14} 为底、按 \cpp{17} 与 \cpp{20} 演进。跳过这两页，你引用
+的每条建议都没有时间戳。第二步读接口与所有权两块，它们与排版层
+指南的跨层冲突几乎都爆发在这里。第三步才按需要翻其余系列，并且
+把每条准备入册的条款标上两栏：假设的语言年代、有没有检查器归属。
+两栏写得出来的进 CI 配置，写不出来的进评审清单——这一层规范
+从此就有了可执行的边界。
+\end{guideline}
+
+
+% ---- frag_ch06.tex ----
+\chapter{Linux 内核风格：语言子集如何决定风格}
+\label{ch:ch06-kernel}
+
+很多风格条款读起来像审美：缩进用几个空格、花括号换不换行、函数放哪儿。但
+Linux 内核的编码规范几乎每一条都能在物理层找到出处。本章把内核风格当作一个
+样本，演示一个反复贯穿全书的判断方法——\underline{先问约束，再谈偏好}。内核
+风格不是从某本风格书里抄来的教条，而是\CPP 之前那代编译器与一个特殊运行时共
+同投影到源码上的影子。理解了这条因果链，第二部分那些看似武断的条款就不再需要
+死记。
+
+\section{风格是约束的投影，不是审美偏好}
+\label{sec:ch06-projection}
+
+内核源码只接受一个受限的 GNU \Lang{C} 子集。这个子集的边界本身就在替作者写代码：
+
+\begin{itemize}
+  \item 禁变长数组（VLA）。栈深度在受限环境里必须可静态估量，VLA 让一帧的大
+        小取决于运行期数据，与内核的栈预算直接冲突。
+  \item 禁字符串拼凑一类取巧的预处理技巧。宏展开在跨架构、跨编译器版本时行为
+        漂移，内核宁可多写一层显式代码，也不依赖预处理的边角语义。
+  \item 库不是``系统给的东西''，而是内核自己提供的那一份。标准库的头文件、
+        \texttt{malloc}、\texttt{printf} 在这里都不存在，能用到的只有内核导
+        出的接口。
+\end{itemize}
+
+真正决定错误处理风格的，是这套运行环境，而不是所谓``异常太贵''。内核态没有
+可展栈的展开表、没有 RTTI、也没有一个能接住异常的宿主帧；一旦出错而无人接
+住，后果是整块机器的 \texttt{panic} 边界。于是内核选择了与宿主语言完全相反
+的约定：\textbf{返回负 errno 作失败码}，用 \Tp{goto} 搭一条自外向内的撤销阶
+梯。清单~\ref{lst:ch06-goto} 是这一模式的原型。
+
+\begin{lstlisting}[style=cstyle,caption={内核式 goto 撤销阶梯：申请顺序与释放顺序严格镜像},label={lst:ch06-goto}]
+static int demo_open(struct device *dev)
+{
+	struct buf *b;
+	int ret;
+
+	b = alloc_buf(dev);		/* 第 1 步：最外层资源 */
+	if (!b)
+		return -ENOMEM;
+
+	ret = request_irq(dev->irq, demo_irq, 0, "demo", dev);
+	if (ret)
+		goto err_free_buf;	/* 撤销已到手的 b */
+
+	ret = sysfs_create_group(&dev->kobj, &demo_group);
+	if (ret)
+		goto err_free_irq;	/* 逆序撤销 irq, 再落到 buf */
+
+	dev_set_drvdata(dev, b);
+	return 0;
+
+err_free_irq:
+	free_irq(dev->irq, dev);
+err_free_buf:
+	free_buf(b);
+	return ret;
+}
+\end{lstlisting}
+
+这段代码里没有一句是在``表演整洁''。标签放在函数尾部、撤销块按申请的逆序排
+列，是因为多入口的资源申请天然需要一条单一的退出走廊。返回码用负 errno，是
+因为调用者要在用户态与内核态边界上把它翻回正的 errno；若在核里抛异常，就没有
+任何一帧能承接。换句话说，异常缺席是\textbf{错误处理模型}的推论，而不是对
+性能的一时妥协。
+
+\begin{warning}[title={把``约束''错记成``性能建议''，会推广出错误的规则}]
+很多人记住的是``内核不用异常，因为异常慢''。这个记忆是有害的：它把一条环境决
+定论，降级成一条可调优的性能偏好。一旦你以为理由是性能，就会在``性能不再是问
+题''的新环境里把规则丢掉，或在根本用不了异常的地方硬造一个近似异常。正确的记
+法是：\textbf{因为无承接帧、栈不可展、边界是 panic}，所以返回码加撤销阶梯。
+理由记错，推广方向就会反。这与第二部分那些把 \DomTra 条款背成``旧机器太慢才
+要省''的记忆是同一种病。
+\end{warning}
+
+\section{制表符、80 列与声明顺序}
+\label{sec:ch06-tabs}
+
+内核坚持真实制表符且 \texttt{tab=8}。这不是怀旧，而是一个视觉约定：在
+\texttt{tab=8} 下，一层缩进恰好等于八个字符宽，代码的嵌套深度一眼可数；而
+续行用 \texttt{tab} 加 \texttt{space} 对齐到上一行的表达式起点。约定一旦如
+此具体，任何把它``归一化''成空格的转换都会破坏可读性。
+
+80 列的限制同样来自物理：并排开两三个终端窗口读补丁时，超过 80 列就要横向滚
+动，破坏对照。它不是排版洁癖，而是审阅工作流的约束。
+
+函数内变量的声明也讲顺序：先指针、后整型，按用途而非出现顺序集中声明在函数
+开头。这是为了配合早期编译器把声明放在语句之前的要求，也让人一眼能在函数顶
+部盘点局部状态。命名一律小写加下划线，例如把设备私有数据挂上去的那个接口，
+读作者在正文里称 \Tp{dev\_set\_drvdata}，与用户态驼峰或匈牙利前缀分道扬镳。
+
+\begin{note}[title={内联判据交给编译器，而不是人}]
+内核文档明确不鼓励在函数声明上手工写 \Tp{inline}。理由很直白：一个函数是否
+值得内联取决于调用点、寄存器压力与优化器的全局视图，人只能盯着一行源码猜，而
+编译器看得到整个翻译单元。手工 \Tp{inline} 于是被当成一种``以审美僭越数据''
+的噪声，除非确有静态分配、跨编译单元等硬需求。
+\end{note}
+
+这里要留一个伏笔，但先不下结论：这一立场，与旧谷歌风格里那类``让作者按可见
+性/长度自行决定 \Tp{inline}''的条款正相抵牾。两条规则把同一个决定权交给了相
+反的一方——一方交给优化器，一方交给写代码的人。它们为何会分叉、哪一种在当代
+编译器与 \cpp{11} 之后的语义下更站得住，第二部分会专门处理；本章只指出内核把
+它交给编译器，是因为它的运行环境里有足够的证据支持这个选择。
+
+\Tp{-Wmissing-prototypes} 这类编译选项在核内被默认打开，作用是强制``任何对外
+函数都要有可见的声明''，把跨文件的接口约定钉在头文件里。它体现的是一种可机检
+的风格：不靠评审者肉眼盯，而靠编译器把关。
+
+\section{工具链：checkpatch 与 clang-format 的分工}
+\label{sec:ch06-toolchain}
+
+内核把``凡是能被机器判定''的风格条款，尽量交给脚本判定，而不是留给人情化的互
+评。\Tp{checkpatch.pl} 就是这道门槛：它把制表符、行尾空格、80 列、括号与空格
+这些可确定性检查的项做进提交流水，补丁过不了脚本，就进不了邮件列表。于是这
+部分风格的``执法者''从人变成了工具，争议从``我觉得这样好看''收窄到``脚本这一项
+没过''。
+
+但内核同时反复强调：格式化器是辅助，不是法律。clang-format 有 Linux 基线
+（清单~\ref{lst:ch06-clangfmt}），它能把大段代码刷成统一外观，可它不懂撤销阶
+梯为什么要逆序、不懂某个空行为什么要留着分隔逻辑块。所以规范的原话倾向是：
+格式化器用于批量整理，最终判断仍以人的可读性与上面那些物理约束为准，不要把
+格式化器的输出当成正确性的证明。
+
+\begin{lstlisting}[style=yamlstyle,caption={一份 BasedOnStyle=Linux 的 clang-format 基线，注意 UseTab 与 ColumnLimit 呼应前文的物理约束},label={lst:ch06-clangfmt}]
+# 内核里把它当辅助, 不当法律
+BasedOnStyle:      Linux
+IndentWidth:       8
+TabWidth:          8
+UseTab:            ForIndentation
+ColumnLimit:       80
+BreakBeforeBraces: Linux
+\end{lstlisting}
+
+\begin{bestpractice}[title={用工具筛掉可机检项，把评审精力留给不可机检项}]
+让 \Tp{checkpatch.pl} 处理缩进、行宽、行尾空白这类零歧义检查，让
+clang-format 处理跨文件的批量对齐；把节省下来的评审注意力集中到撤销阶梯的
+顺序、锁的获取次序、错误码是否被吞掉这些脚本判不了的语义问题。风格工具的价值
+不在``格式化一切''，而在``把人从可格式化的一切里解放出来''。
+\end{bestpractice}
+
+\section{嵌入式与裸机 C 的继承：MISRA C}
+\label{sec:ch06-misra}
+
+内核不是孤例。同一套``语言子集决定风格''的逻辑，在裸机与 RTOS 世界
+里被标准化成了 MISRA C。它同样在收窄 \Lang{C} 可用面：限制动态内存、对递归设限、
+禁止可能未定义或不可静态验证的构造。内核禁 VLA、MISRA 限动态内存与递归，背
+后是同一种诉求——让栈与堆的行为在受限或缺乏这些设施的运行时里可预测。
+
+但两者并不等同，混淆它们会引出表~\ref{tab:ch06-misra} 里的错位。内核运行在
+一个\textit{有}调度器、\textit{有}成熟分配器（\Tp{kmalloc}）的宿主里，它的
+约束是性能与并发正确性；MISRA 面向的常常是\textit{没有}这些设施、要在认证流
+程里拿出可追溯证据的场景，它的很多禁令是为了静态可验证与安全认证。同一个``少
+用动态内存''，内核的理由是可睡眠路径与碎片，MISRA 的理由可能是``运行时根本不
+保证有堆''。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}
+                  >{\raggedright\arraybackslash}p{0.31\textwidth}
+                  >{\raggedright\arraybackslash}p{0.31\textwidth}@{}}
+\caption{内核风格与 MISRA C：同源不同因的对照}\label{tab:ch06-misra}\\
+\toprule
+维度 & 内核的出发点 & MISRA C 的出发点 \\
+\midrule
+\endfirsthead
+\multicolumn{3}{@{}l}{表~\thetable\ （续）}\\
+\toprule
+维度 & 内核的出发点 & MISRA C 的出发点 \\
+\midrule
+\endhead
+\midrule\multicolumn{3}{r@{}}{接下页}\\
+\endfoot
+\bottomrule
+\endlastfoot
+动态内存 & 有分配器但慎用：睡眠路径、碎片、原子上下文 & 常无堆保证：为静态可验证与认证而限 \\
+递归 & 栈深度预算与并发路径考量 & 栈用量须可静态界定，多直接禁用 \\
+错误处理 & 负 errno 返回码加 goto 撤销阶梯 & 返回码与状态检查，禁吞掉失败 \\
+语言子集 & 受限 GNU \Lang{C}：禁 VLA、慎用预处理技巧 & 收窄的 \Lang{C} 子集：禁未定义/不可验证构造 \\
+执法方式 & 编译告警加脚本门槛 & 静态分析规则集，逐条编号可追溯 \\
+\end{longtable}
+
+\begin{warning}[title={把 MISRA 编号当教条，与把约束当性能建议，是同一种错}]
+两类读者犯了结构相同的错。一类把 MISRA 的规则编号背成``某条编号天然禁止递
+归''，忘了先问它为什么禁；另一类把内核的``不用异常''记成``因为慢''。两者都把一
+条\textit{有物理出处}的规则，抽成了\textit{无背景的禁令或偏好}。后果也一样：
+换个场景就把规则用错方向——在真有堆的地方照抄 MISRA 的禁动态内存，或在根本无
+法展栈的地方硬套异常。这与本章开头那个 inline 之误同构：理由记错，推广即反。
+读任何一条风格，先把``它从哪个约束来''补回去。
+\end{warning}
+
+\section{\CPP 在内核生态的交界位置}
+\label{sec:ch06-cxx-boundary}
+
+内核本体是 \Lang{C}，但内核生态不全是。趋势是把驱动往用户态搬：uio/vfio 这类机制
+把设备交给用户态程序，DPDK 一类的数据面库运行在核外。这些核外组件常常用
+\CPP 写，因为它要管理复杂对象生命周期，而这套管理在用户态里有异常、有 RAII、
+有可展栈的宿主帧来支撑。于是同一套设备栈里出现了两种风格：核内是返回码加撤销
+阶梯，核外是异常或 expected 式的值。
+
+两种风格的接缝，就是一份显式的错误处理翻译层。\CPP 边界上不能把内核返回的负
+errno 直接扔进异常了事，也不能把 \CPP 异常穿透回 \Lang{C} 帧（那是未定义行为）。
+清单~\ref{lst:ch06-externc} 给出一个克制的做法：\Tp{extern ``C''} 边界只暴露
+C 兼容的返回码，\CPP 侧把它收敛成携带错误码的期望值类型，异常与否留给上层决
+定。
+
+\begin{lstlisting}[style=cppstyle,caption={extern ``C'' 边界上的 errno 到期望值翻译层：越界处只走返回码，语义在 C++ 侧收敛},label={lst:ch06-externc}]
+// 核内导出给核外的 C ABI：只以返回码说话
+extern "C" int demo_open_fd(const char *path);
+
+template <class T>
+class [[nodiscard]] KResult {           // 轻量 expected：不跨 ABI 抛异常
+public:
+    static KResult ok(T v)    { return KResult(std::move(v), 0); }
+    static KResult fail(int e){ return KResult(T{}, e); }
+
+    bool has_value() const noexcept { return code_ == 0; }
+    int  error()     const noexcept { return code_; }
+    T   &value()           noexcept { return val_; }
+
+private:
+    KResult(T v, int c) : val_(std::move(v)), code_(c) {}
+    T   val_;
+    int code_;
+};
+
+inline KResult<int> openDevice(const char *path) {
+    int fd = demo_open_fd(path);        // C 侧：失败返回负 errno
+    if (fd < 0)
+        return KResult<int>::fail(-fd); // 翻成正错误码, 停在值类型里
+    return KResult<int>::ok(fd);
+}
+\end{lstlisting}
+
+这里的取舍不是``哪种语言更高级''，而是两种运行环境在边界上各自要守住的东西：
+\Lang{C} 侧守住可展栈性为零的现实，只用返回码；\CPP 侧守住 ABI 不泄漏异常，把失败
+封进值。翻译层写得显式，是承认两套风格的约束不同，而不是假装它们能互相穿透。
+
+\begin{compare}[title={核内 vs 核外：同一设备的两套错误处理}]
+核内（\Lang{C}）：无承接帧、边界即 panic，错误以负 errno 返回，资源以逆序
+\Tp{goto} 阶梯撤销，是否内联交给优化器。核外（\CPP）：有宿主帧与 RAII，
+错误可表达为异常或 expected 值，资源随对象作用域析构，内联与可见性由作者按
+\cpp{11} 之后的语义把握。两套都自洽，冲突只在接缝处，而接缝靠一份显式翻译层
+收口。
+\end{compare}
+
+\section{收束：读任何风格条款先问三件事}
+\label{sec:ch06-three-questions}
+
+内核这一章想沉淀的不是几条具体规则，而是一套可迁移的拆解动作。面对任何一条
+风格条款，先问三件事，三问都答上来，条款的适用边界就清楚了。下面这个 guideline
+把三问固化成检查表。
+
+\begin{guideline}[title={三问：语言子集、错误处理模型、运行环境}]
+任何风格条款落笔前，依次自问：
+\begin{enumerate}
+  \item \textbf{语言子集}：这份代码被允许使用标准的哪些部分？禁了 VLA、禁了
+        异常，还是禁了某类预处理技巧？子集边界往往就是风格的第一因。
+  \item \textbf{错误处理模型}：失败如何表达与传播？返回码、goto 撤销、异常、
+        还是 expected 值？模型决定了资源与控制的写法，比``好看''重要得多。
+  \item \textbf{运行环境}：有没有可展栈的帧、有没有堆、栈预算多大、出错是重
+        试还是 panic？这些物理事实决定了前两个问题的可行解集。
+\end{enumerate}
+把这三问当作默认视角：条款是约束的投影，先找约束，再谈偏好。理由记错，推广
+方向就会反——这正是本章 inline 之误、MISRA 之误的共同教训。
+\end{guideline}
+
+这三问不只对内核有效。第二部分会把它对准 \DomTra：那些被背成``旧机器慢才要
+省''``作者应自行决定 \Tp{inline}''的滞后条款，用三问一照，就能看到它们的语言
+子集早已随 \cpp{11} 及之后改变、错误处理模型已能承载更多、运行环境也给编译器
+和库提供了当年没有的证据。届时会发现，本章反复强调的那句——先问约束、再谈偏
+好——足以拆穿大部分被当成教条的历史条款。
+
+
+% ---- frag_ch07.tex ----
+\part{国内谷歌风格译本：不更新与错译}
+
+\chapter{译本的现状：不更新、错译与二次传播}
+\label{ch:ch07-version}
+
+第一部分建立的坐标是：风格指南是\emph{策略文档}，不是语言标准。
+本章开始第二部分，把镜头对准国内读者最常接触的那一类策略文档——
+谷歌 \DomGo 风格指南的中文译本，并回答三个问题：
+它译自哪个年代的上游？失真是在哪一步发生的？拿到一份手头指南时如何鉴别它的年代感？
+本章不评判任何译者的工作质量；译者停止跟上游同步是常态，
+问题出在停止同步之后，文本仍被当作``现行官方规范''引用与执行。
+本章给出的是鉴别方法，结论请读者带着自己的文本逐条核对。
+
+\section{活文档与静态快照}
+\label{sec:ch07-upstream}
+
+谷歌 \DomGo 英文上游是一份\emph{活文档}（living document）。
+它以较高的频率修订，修订的一个主要动力是语言本身的演进：
+上游在 \cpp{03} 时代成形，随后经历了 \cpp{11} 普及、
+\cpp{14} 补充与 \cpp{17} 落地这几个阶段，每个阶段都迫使它重新表态。
+这里的表态不是``允许使用某特性''一句话这么简单，而是逐条改写
+该特性在代码评审中的可接受边界。几个有代表性的轨迹如下。
+
+\begin{itemize}
+  \item \Tp{auto} 类型推导：上游早期对它持限制态度，
+        大致立场是仅在迭代器、绑定 \Tp{make\_} 系列工厂函数返回值等
+        少数场景可用；随着 \cpp{11} 基线稳固，措辞逐步放宽为
+        ``在类型不言自明处可用''这一类条件性许可。
+        注意这是\underline{措辞边界的移动}，不是从``禁止''直接跳到``鼓励''。
+  \item Lambda 表达式：\cpp{11} 之前上游禁止；
+        \cpp{11} 之后经历``限制到接受''的转向，
+        最终承认短小回调是正常写法，同时保留对隐式捕获的谨慎提示。
+  \item 移动语义：上游对右值引用的态度长期是``理解其存在、
+        谨慎使用其语法''，这与它禁止异常的策略纠缠在一起——
+        异常禁令的理由里有一条是析构路径与资源释放的可审计性，
+        而移动语义恰好也走同一条析构路径。
+  \item 智能指针：早期快照里出现的是谷歌自研的 \Tp{scoped\_ptr} 一类
+        名字（\cpp{11} 之前尚无标准库等价物）；
+        \cpp{11} 之后标准位由 \Tp{std::unique\_ptr}、
+        \Tp{std::shared\_ptr} 接管，上游文本相应改写，
+        但``所有权必须显式''这条原则从始至终没有变。
+  \item 格式细节：这是变化最彻底的一块。上游后来把行宽、缩进、
+        大括号位置这类机械条款整体\underline{让位给格式化器基线}，
+        正文改写为以 \Tp{clang{\Bk}format} 的某个预置风格为准，
+        人不再逐条争论空格——这是一个元条款（meta rule），
+        它的出现本身就是年代戳（第~\ref{sec:ch07-dating}节将用它做鉴别特征）。
+\end{itemize}
+
+与之对照，中文译本大多停在\underline{较早的快照}：
+译者在某个时间点选取了当时的上游版本全文翻译，
+此后上游继续演进，译本停留在原地。
+这本身无可指摘——停止翻译是任何译者的自由。
+真正造成第二部分全部问题的是后续环节：
+停止同步的译本并没有退出流通，反而以``谷歌官方风格''的姿态
+在博客、公众号、内网 wiki 与面试题库里持续流转。
+版本戳在传播中消失，``这是 \DomGo 的公司策略''这层限定语也在传播中消失，
+于是\underline{一份静态快照被误读为现行规范}。
+
+\begin{note}[title={本节只做一件事：确立``上游在动、译本静止''}]
+  后文所有对具体条款的讨论都建立在这个不对称之上。
+  如果你手头译本里有一条让你困惑的禁令，先问的不是``这条对不对''，
+  而是``这条译自上游哪一年的版本、当年是否附带限定语''。
+  第~\ref{sec:ch07-dating}节给出可操作的鉴别清单。
+\end{note}
+
+\section{传播链失真模型}
+\label{sec:ch07-chain}
+
+失真不是发生在``翻译''那一步，而是发生在翻译之后的每一跳。
+把常见的流通路径画出来，是一条五级链：
+
+\begin{enumerate}
+  \item 英文上游（活文档，带版本、带限定语、带元条款）；
+  \item 中文译本（静态快照，带部分限定语，版本戳开始弱化）；
+  \item 博客与公众号转抄（脱离原书排版，限定语被当作``废话''删减）；
+  \item 培训教材与课件（条目被重组为``必背清单''，语境彻底消失）；
+  \item 代码评审口头禅与面试题库（``谷歌风格规定不能这么写''成为终审句）。
+\end{enumerate}
+
+每一跳丢失的东西可以列成一张表。
+表中``丢失率''不是统计数字，而是定性档位，
+表示该信息在这一跳中被抹掉的倾向有多强。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}
+  >{\raggedright\arraybackslash}p{0.20\textwidth}
+  >{\raggedright\arraybackslash}p{0.16\textwidth}
+  >{\raggedright\arraybackslash}p{0.26\textwidth}@{}}
+  \caption{传播链逐跳失真模型：每一跳保留什么、丢失什么}\label{tab:ch07-chain}\\
+  \toprule
+  环节 & 输入形态 & 主要丢失项 & 输出形态 \\
+  \midrule
+  \endfirsthead
+  \multicolumn{4}{l}{\footnotesize 表~\ref{tab:ch07-chain}（续）}\\
+  \toprule
+  环节 & 输入形态 & 主要丢失项 & 输出形态 \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  1.\ 上游 & 活文档，版本可溯 & ——（源头） & 带版本戳的策略文本 \\
+  2.\ 译本 & 单语转多语 & 版本号、更新提示 & 静态快照，限定语尚存 \\
+  3.\ 博客转抄 & 摘段复制 & 版本戳、``公司策略''限定语 & 无出处的``规范摘录'' \\
+  4.\ 培训教材 & 条目化重组 & 理由与适用前提 & ``必背 N 条''清单 \\
+  5.\ 评审口头禅 & 口语化引用 & 全部语境，仅留禁令外壳 & 被当语言真理执行的过时条款 \\
+  \end{longtable}
+
+\DomTra 这个标签在本章的定义就位：
+\underline{被当成语言真理引用的过时策略条款}。
+它有两个来源轴，缺一不可判别：
+时间轴上它来自旧快照（上游已改，它未改）；
+身份轴上它是策略被冒充为事实（\DomGo 内部工程约束，被读成
+``\CPP{} 不该这样写''）。
+第二部分的第八、九、十章解剖的具体条款，都会先按这两个轴归位。
+
+\begin{compare}[title={同一句话在链条两端的样子}]
+  上游（示意）：本指南基于若干内部约束限制异常的使用；
+  该约束与语言无关，其他代码库应自行评估。
+
+  三跳之后（评审现场）：``\CPP{} 不许用异常，谷歌都禁。''
+
+  丢失清单：版本号、``内部约束''、``与语言无关''、``自行评估''。
+  留下的只有禁令，且禁令被转述成了语言属性。
+\end{compare}
+
+\section{鉴别手头指南的年代}
+\label{sec:ch07-dating}
+
+要让传播链失真可防御，需要一套不依赖出处的自证方法：
+拿到一份中文指南（无论号称哪一年版），
+通过它的\underline{措辞}判断它对应的上游年代。
+下面五项判据按检索的先后顺序排列。
+其中最后一项（元条款）鉴别力最强，因为它在时间上是``有无''之别
+而非``多寡''之别：早期快照里根本不存在这类条款。
+
+\begin{guideline}[title={五特征断代法：拿到指南先查这五处措辞}]
+  \begin{enumerate}[label=\arabic*., leftmargin=2.6em]
+    \item \Tp{auto}：若正文把它描述为``尽量少用''或只允许两三个
+          列举场景，快照大概率在 \cpp{11} 基线确立之前或刚确立时；
+          若出现``类型不言自明处可用''式条件许可，则已跟进 \cpp{11} 后期。
+    \item 智能指针：出现 \Tp{scoped\_ptr} 等谷歌自研名字而未提
+          \Tp{std::unique\_ptr}，可断定快照早于 \cpp{11} 标准化。
+    \item \Tp{override}：\cpp{11} 引入的显式覆写标记若全文未提，
+          或仍在建议用注释表示覆写关系，快照停留在 \cpp{03} 语境。
+          同一层的 \Tp{nullptr} 与 range-for 措辞可作旁证：
+          这两者也是 \cpp{11} 引入，老快照会把它们列为``禁用特性''。
+    \item 异常的理由：解释禁令时若给``异常代价高、影响性能''一类
+          \textbf{技术性理由}，这是旧快照且理由本身值得单独审查；
+          若给``与本代码库的错误处理基础设施、跨边界约束有关''一类
+          \textbf{环境性理由}，说明快照较新、且诚实。
+          区分这两种理由是本章最重要的单项技能。
+    \item 元条款：检索``格式化''``clang{\Bk}format''相关段落。
+          存在``格式细节以格式化器为准，人不再争论''式元条款的，
+          必为较新快照；通篇手工规定空格与换行的，为格式让位之前的版本。
+  \end{enumerate}
+\end{guideline}
+
+把上面的判据整理成对照表，便于评审现场快速过一遍：
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \begin{tabularx}{0.9\textwidth}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
+    >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+    \toprule
+    措辞特征 & 指向的年代 & 说明 \\
+    \midrule
+    \Tp{auto} 仅个别场景可用 & \cpp{03} 前后或 \cpp{11} 初期 & 限制式清单 \\
+    出现 \Tp{scoped\_ptr} 且无标准智能指针 & 早于 \cpp{11} & 自研库时代的强特征 \\
+    无 \Tp{override}、建议注释表覆写 & \cpp{03} 语境 & 显式标记尚未落地 \\
+    手工 inline 小函数被建议用于``提速'' & \cpp{03} 及更早 & 详见第九章 \\
+    异常理由为``性能代价'' & 旧快照或二手转抄 & 现代上游不以此立据 \\
+    存在格式化器元条款 & \cpp{11} 之后的较新阶段 & 最强单点判据 \\
+    \bottomrule
+  \end{tabularx}
+  \caption{措辞特征与上游年代的对应关系（定性判据，非精确断代）}\label{tab:ch07-dating}
+\end{table}
+
+一个直观的例子：格式条款的两种写法并置，能立刻看出代际差。
+下面用统一 diff 展示同一节的两个版本，删除行与新增行分属两个年代。
+\begin{lstlisting}[style=diffstyle]
+- 每行不得超过 80 个字符；布尔运算符放在行首。
+- 参数换行时，续行与首参数对齐，或再缩进 4 格。
++ 本节的具体格式规则由 clang-format 基线决定；
++ 与格式化工具输出不一致的手写规则以工具为准。
+\end{lstlisting}
+
+删除线那两行是``人管格式''时代的典型条款——每条都可以引发评审争论；
+新增两行是``工具管格式''时代的元条款——它不再规定细节，
+而是\underline{把细节的仲裁权整体移交格式化器}。
+译本里若还在逐条翻译被删除的那类规则，几乎可以断定它译自移交之前。
+
+\begin{bestpractice}[title={断代结论要写进引用格式}]
+  在 wiki 或规范汇编里引用条款时，把``译自上游 \DomGo 指南某年快照''
+  写进引用块本身，而不是写在参考文献角落。
+  理由：第~\ref{sec:ch07-stale}节会看到，条款被引用时带走的是正文，带不走参考文献；
+  版本信息必须寄生在正文可见处才能活过每一跳传播。
+\end{bestpractice}
+
+\section{错译的两类来源}
+\label{sec:ch07-mistrans}
+
+不更新之外，第二类失真才是字面意义的``错''。
+按丢失的信息类型，可以把错译分成两层。
+
+\subsection{术语层错译}
+\label{sec:ch07-term}
+
+术语层错译发生在词对词的映射上：源语词的一个义项被选中，
+而该义项在目标语读者脑中激活的是另一个概念。
+本章开篇的第一个案例是 \Tp{inline}：上游在某一节用 \Tp{inline}
+谈论的是\emph{链接语义}（多重定义规则、定义可以出现在多个翻译单元），
+译成``内联''之后，中文读者——包括以规范自居的评审者——
+把它与编译器的\emph{函数内联优化}画等号，
+于是产出了``给每个小函数加 \Tp{inline} 提速''这类上游从未说过的规则。
+这个完整拆解放在第九章；本章只登记它的类型：术语层错译。
+
+\subsection{语境层丢失}
+\label{sec:ch07-context}
+
+语境层丢失不改变任何词的意思，它删掉的是\emph{修饰整句的限定语}。
+上游条款常见这样的引导结构（示意）：
+``本指南在 \cpp{03} 时代的例外处理前提下……''、
+``除非你的代码库另有约束……''、
+``这一限制源自我们的构建与测试基础设施……''。
+这类限定语在中文里往往位于句首或句尾的从句位置，
+翻译时被拆散、被当作冗词省略的概率最高；
+省略之后，条件性禁令变成无条件禁令，
+公司工程约束变成普适语言规则。
+语境层丢失比术语层错译更隐蔽，因为它不产生任何``看起来不对''的字面。
+
+\begin{note}[title={后续两章正好各解剖一个案例}]
+  第八章处理 \Tp{nullptr} 与零值写法的条款：
+  那里两类失真同时在场——旧快照把 \cpp{03} 时代的字面量建议原样保留，
+  转抄又把``本代码库历史原因''读成``\cpp{} 语法要求''。
+  第九章处理 \Tp{inline}：术语层错译的主案发现场，
+  ``内联''一词如何生产出一整套无中生有的评审规则。
+  本章只建立类型学；条款级解剖从第八章开始。
+\end{note}
+
+\section{为什么``不更新''比``错译''更有害}
+\label{sec:ch07-stale}
+
+直觉上错译更恶性——它毕竟``错''了。
+但从流通后果看，不更新是更常见也更难治愈的那一类。
+原因有三条，构成一个不对称。
+
+\begin{itemize}
+  \item \textbf{可纠正性不对称。} 错译只要有人读原文就能当场纠正：
+        词对不上，争论一个词义，一轮闭环。
+        过时条款无法这样纠正——它\underline{在译出的那个年代就是对的}，
+        反驳它需要引入``上游后来改了''这一外部事实，
+        而评审现场通常无人持有这一事实。
+  \item \textbf{权威外壳不对称。} 错译被发现的瞬间会引发对译本的怀疑，
+        反而促进校对。过时条款以``官方风格''面貌流通，
+        引用它的人越是规范地注明出处，失真就越稳固。
+  \item \textbf{生产后果不对称。} 一条过时禁令每天在生产代码库里
+        持续制造符合旧规范、违背新规范的新代码；
+        这些代码之后还会被当作先例引用。错译顶多误导理解，
+        过时条款直接量产过时代码。
+\end{itemize}
+
+团队级症状值得列出——如果你在某次评审里听到下面这几句，
+它们大概率就是 \DomTra 在现行流程里发作。
+这里点到即止，每个症状的条款级分析留给后续章节。
+
+\begin{itemize}
+  \item 有人引用旧条款否决 \Tp{constexpr}：
+        理由往往是``风格指南没提到''——
+        而指南没提到，恰恰可能因为快照早于该特性进入日常语言。
+  \item 有人要求给每个小函数加 \Tp{inline}：
+        术语层错译（第九章）与过时性能迷信（第八章）的复合症状。
+  \item 有人``禁止异常''并连带禁止一切标准库错误传播工具：
+        把异常策略扩大解释为``错误必须全部走返回码''，
+        进而排斥 \Tp{std::optional}（\cpp{17} 引入）
+        这类与异常毫无关系的可选值表达。
+        禁令的传染方式是给一个约束套上整个语族的帽子。
+\end{itemize}
+
+\begin{warning}[title={引用条款前先核对三件事}]
+  在评审意见、规范汇编或培训课件里引用任何一条``官方风格''之前，
+  依次核对：
+  \begin{enumerate}[label=(\roman*), leftmargin=2.6em]
+    \item \textbf{上游版本}：这条出自哪一年的快照？
+          上游现行版本还有没有这条？
+    \item \textbf{限定语境}：原文是否附带``本代码库''``内部约束''
+          一类前提？限定语被删掉的引用一律降级为``待查证''。
+    \item \textbf{工具接管}：这条是否早已被格式化器、静态分析器
+          或编译器接管（第~\ref{sec:ch07-dating}节的元条款特征）？
+          已被工具接管的规则不应再以人工条款形式进入评审——
+          它只会制造与工具输出的无意义分歧。
+  \end{enumerate}
+  三问都过关，条款才配得上``现行规范''四个字。
+\end{warning}
+
+本部分的后续章节就是这套方法的一次次实例：
+第八、九章各解剖一个条款（\Tp{nullptr} 与 \Tp{inline}），
+逐一走完``上游版本——限定语境——工具接管''三问；
+第十章把三问推广成可以贴在评审模板里的检查表。
+本章提供的只有前置判断：
+在你打开任何一份中文指南时，先假设它是快照而非现行规范，
+然后按第~\ref{sec:ch07-dating}节的五特征法给它断代——
+顺序反过来（先信再查），传播链就仍然在对你生效。
+
+
+% ---- frag_ch08.tex ----
+\chapter{inline 的真实语义：链接与 ODR，不是提速开关}
+\label{ch:ch08-inline}
+
+先把本章的靶子立在最显眼的位置。\DomTra 的流行说法是：
+``小函数（例如不超过十行）应当声明为 inline，以提升性能。''
+配套的说法还有把 \Tp{inline} 一律译作``内联函数''，让中文读者以为这个
+关键字命令编译器展开函数调用。本章先立靶，后拆靶：\Tp{inline} 的真实语义
+是对链接器和 ODR 的声明，展开与否由编译器的内联启发式决定；``不超过十行
+就写 inline'' 在 \CPP 的现代实现上既非必要也不充分。拆完之后，
+第~\ref{sec:ch08-legitimate} 节会给出这个关键字真正正当的风格用法清单，
+第~\ref{sec:ch08-symptoms} 节给出反面症状表，末尾的对比框为第九章留下
+一个钩子：这条旧条款究竟为什么会存在，它残留的合理内核是什么。
+
+\begin{note}[title={术语概括：翻译单元、ODR、合并为一份}]
+本章反复使用三个术语，先以概括口径统一：翻译单元（TU）指一个源文件经
+预处理后形成的独立编译产物；ODR（One Definition Rule，唯一定义规则）
+要求具有外部链接的函数与对象在整个程序中只能有一份定义；``合并为一份''
+指实现允许同一链接单元内出现多份逐字节相同的 \Tp{inline} 定义，链接器
+保留其一、丢弃其余。涉及具体机制时，ELF 目标文件常用弱符号承载，COFF
+与 PE 格式常用 COMDAT 分组承载；这是实现层面的概括说法，不是标准措辞。
+\end{note}
+
+\section{\DomTra 的靶子：``不超过十行就 inline''}
+\label{sec:ch08-target}
+
+旧式中文风格材料里常见这样一条：小函数（例如不超过十行）应当声明为
+inline 以提升性能；与之配套的译法是把 \Tp{inline} 函数称作``内联函数''，
+仿佛写了关键字，调用就被展开。这两句话合起来构成一个完整但错误的叙事，
+它把三件不同的事搅在一起：
+\begin{itemize}
+  \item 把关键字当成给编译器的展开命令（语义错位，见
+        第~\ref{sec:ch08-semantics} 节）；
+  \item 把三十年前的编译器水平当成今天的参照系（历史错位，见
+        表~\ref{tab:ch08-standardline}）；
+  \item 把无法复现的收益写进规范（度量错位，见第~\ref{sec:ch08-decision}
+        节末尾的实验错误）。
+\end{itemize}
+
+这条条款为什么流传极广？一个诚实的回答是：它并非凭空捏造。在 \Tp{inline}
+刚出现的年代，它确实被用作展开提示，当时的编译器也大体尊重这个提示；
+教材与早期译文把那个时代的经验原样抄进了新时代，之后二十年没人重新验证。
+本章的工作就是重新验证：先讲清它到底是什么，再讲展开决策权在谁手里，
+最后给出仍然需要写它的正当理由。
+
+\section{语义正名：对链接器和 ODR 的声明}
+\label{sec:ch08-semantics}
+
+\subsection{标准真正给了什么}
+\label{sec:ch08-odr}
+
+\Tp{inline} 在标准文本中兑现的是链接层面的豁免：它允许函数在多个翻译
+单元里各有一份定义，这些定义逐字节相同（同样以 token 序列一致为准）时
+不违反 ODR；链接阶段把多份定义合并为一份，同一链接单元内的多重定义被
+合并（概括说法：ELF 弱符号、COFF 的 COMDAT 分组）而不是被当作错误。
+换句话说，inline 买到的是一张``多 TU 定义许可证''，而不是一张``展开
+保证券''。展开与否由优化器决定，与是否书写这个关键字无关或几乎无关：
+主流编译器对两者的实际待遇差别只在启发式的微小权重上，方向也绝不是
+``写了就展开''。
+
+\subsection{不写 inline，链接器会说什么}
+\label{sec:ch08-odrdemo}
+
+下面用一个最小例子把上述语义钉死。头文件里给出函数定义，并让两个
+翻译单元各自看到它：
+
+\begin{lstlisting}[style=cppstyle]
+// geometry.h —— 函数定义直接可见的头文件
+#pragma once
+
+struct Vec2 {
+  double x;
+  double y;
+};
+
+// inline 在这里的作用是：允许两个 TU 各有一份定义
+inline double NormSquared(const Vec2& v) {
+  return v.x * v.x + v.y * v.y;
+}
+\end{lstlisting}
+
+两个使用方都通过预处理把 \Tp{geometry.h} 的文本并入自身（包含行从简，
+直接用注释标注，避免和主题无关的风格分叉）：
+
+\begin{lstlisting}[style=cppstyle]
+// a.cpp —— 顶部已包含 geometry.h
+double SquaredA() {
+  const Vec2 v{3.0, 4.0};
+  return NormSquared(v);   // OK：多 TU 定义被链接器合并为一份
+}
+
+// b.cpp —— 顶部同样已包含 geometry.h
+double SquaredB() {
+  const Vec2 v{1.0, 2.0};
+  return 2.0 * NormSquared(v);
+}
+\end{lstlisting}
+
+现在做唯一一处改动——删掉头文件里的 \Tp{inline} 关键字，其余一字不动：
+
+\begin{lstlisting}[style=diffstyle]
+- inline double NormSquared(const Vec2& v) {
++ double NormSquared(const Vec2& v) {
+    return v.x * v.x + v.y * v.y;
+  }
+\end{lstlisting}
+
+结果不是``函数不再被展开''，而是根本链接不起来：
+
+\begin{lstlisting}[style=shellstyle]
+g++ -o demo a.o b.o
+/usr/bin/ld: b.o:(.text+0x18): multiple definition of
+  `NormSquared(Vec2 const&)'; a.o:(.text+0x0): first definition here
+collect2: error: ld returned 1 exit status
+\end{lstlisting}
+
+结论可以背下来：\Tp{inline} 关键字影响的是``这份定义能不能合法地再出现
+一次''，它不参与``这次调用要不要展开''的决策。把关键字删掉，程序只是
+失去了在头文件里放函数定义的资格，展开行为本身并不因此改变——写了
+inline 不保证展开，删了 inline 也不保证不展开，这正是下一节要展开讲的
+两句话。
+
+\section{标准年代线：关键字语义的三次扩容}
+\label{sec:ch08-standardline}
+
+表~\ref{tab:ch08-standardline} 给出与 \Tp{inline} 相关的标准节点。
+读表前先立一个提醒：``特性首次出现于某标准''是简化说法，多数特性在
+该标准定稿之前就已经在实现里存在多年。
+
+\begin{longtable}{
+  >{\raggedright\arraybackslash}p{0.25\textwidth}
+  >{\raggedright\arraybackslash}p{0.12\textwidth}
+  >{\raggedright\arraybackslash}p{0.46\textwidth}}
+\caption{inline 相关特性、标准与语义关系}\label{tab:ch08-standardline}\\
+\toprule
+特性 & 标准 & 与 inline 的关系 \\
+\midrule
+\endfirsthead
+\multicolumn{3}{l}{\footnotesize 表~\ref{tab:ch08-standardline}（续）}\\
+\toprule
+特性 & 标准 & 与 inline 的关系 \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\Tp{inline} 关键字与展开提示 & \cpp{98} &
+诞生于 C with Classes 时代编译器较弱的年代，作为展开提示被尊重；标准
+文本同时给出多 TU 定义的 ODR 豁免，链接语义从一开始就在 \\
+类内成员函数定义隐含 inline & \cpp{98} &
+类体内写出的成员函数定义已经是 inline 的，再手写关键字纯属冗余 \\
+优化器全面接管展开决策 & \cpp{11} 时代实现 &
+\cpp{11} 前后的主流编译器早已基于调用图、体积阈值与启发式自行决定
+展开；关键字与展开之间没有可依赖的因果关系 \\
+\Tp{constexpr} 函数隐含 inline 语义 & \cpp{11} &
+constexpr 函数天然允许多 TU 定义，不需要也不应再手写 inline \\
+inline 变量 & \cpp{17} &
+命名空间作用域变量与 static 成员可用 inline 定义在头文件里，链接时
+合并为一份，是头文件全局状态的正确姿势 \\
+模块 & \cpp{20} &
+include 防火墙话题淡出；inline 的链接语义原样不变，只是可合法定义
+的位置格局改变 \\
+\Tp{[[...]]} 属性族 & \cpp{11} 语法，\cpp{23} 扩充 &
+标准属性族与 inline 无关，没有任何标准属性命令展开；控制展开的是
+实现扩展属性，见第~\ref{sec:ch08-attr} 节 \\
+\end{longtable}
+
+\subsection{C with Classes：提示义的出身}
+\label{sec:ch08-cwc}
+
+\Tp{inline} 的出身确实带着性能承诺。C with Classes 年代的转换器与早期
+编译器优化薄弱，``你声明 inline，我就在调用点贴一段函数体''是那个年代
+可以兑现的契约；而把类内函数体直接写进类定义，本来就是当年省掉外部
+函数头的默认做法，隐含 inline 即由此而来。\cpp{98} 把这两层语义都写进
+了标准，但此后实现演化的方向是：展开提示这一层逐渐被优化器接管，
+链接豁免这一层始终稳定生效。旧条款只记得前一层的历史，没跟上后一层的
+现实，这是它成为靶子的根本原因。
+
+\subsection{\cpp{11}：constexpr 的隐式 inline}
+\label{sec:ch08-constexpr}
+
+\begin{lstlisting}[style=cppstyle]
+// clamp.h —— constexpr 函数：定义必须留在头文件里
+#pragma once
+
+constexpr int Clamp(int v, int lo, int hi) {
+  return (v < lo) ? lo : ((v > hi) ? hi : v);
+}
+\end{lstlisting}
+
+\cpp{11} 的 \Tp{constexpr} 函数隐含 inline 语义：它天然被允许多个翻译
+单元各有一份定义，链接时合并。因此在 \Tp{constexpr} 函数上再写
+\Tp{inline} 既非必要也不应提倡，它只增加读者误以为``这是性能开关''
+的机会。要注意因果顺序：是 constexpr 携带了链接豁免，不是 inline
+赋予了 constexpr 能力；若某个 constexpr 函数最终没有被用于常量求值，
+它就只是一个普通的、可多 TU 定义的函数，展开仍由优化器决定。
+
+\subsection{\cpp{17}：inline 变量与头文件全局状态}
+\label{sec:ch08-var}
+
+\begin{lstlisting}[style=cppstyle]
+// counters.h —— inline 变量：头文件里的全局状态
+#pragma once
+#include <atomic>
+
+// 所有 TU 共享同一个对象；不写 inline 则多个 TU 各得一份，
+// 或者需要另行解决重复定义
+inline std::atomic<int> g_frame_count{0};
+\end{lstlisting}
+
+\cpp{17} 把 ODR 豁免从函数扩容到变量：命名空间作用域的变量声明为
+inline 后，可以在头文件里定义并被多个翻译单元包含，链接器保证全程序
+只有一份实体——这是跨 TU 全局状态在现代 \CPP 里的正确姿势。在此之前，
+头文件里只能声明、由某个 cpp 独占定义，或者绕道函数内 static 引用。
+语义上它与函数版同源：管的是``谁有几份''，不是``跑多快''。
+
+\subsection{\cpp{20}：模块与 include 防火墙的淡出}
+\label{sec:ch08-modules}
+
+\cpp{20} 的模块（modules）让``实现细节是否随头文件暴露''这一问题进入
+新的框架：按模块的导入与导出模型，接口单元与实现单元有显式区分，围绕
+include 构建防火墙的传统话题因此淡出。但 \Tp{inline} 的关键字语义原样
+不变：在仍未模块化的代码里（也就是当今绝大多数存量代码），它继续履行
+多 TU 定义豁免这一份原始职责。不要把``模块化是未来''误读成``inline
+语义变了''。
+
+\subsection{属性边界：控制展开的从来不是 inline}
+\label{sec:ch08-attr}
+
+到 \cpp{23} 的语境下，\Tp{[[...]]} 属性族已经相当庞大，但没有任何一个
+标准属性承诺或禁止展开；属性语法本身自 \cpp{11} 起进入标准，此后逐年
+扩充，扩充的方向是语义标注（如 \Tp{[[nodiscard]]}、\Tp{[[maybe{\Bk}\_unused]]}），
+不是代码生成命令。真正与展开决策直接相关的控制全部来自实现扩展：GNU
+扩展属性 \Tp{[[gnu::always{\Bk}\_inline]]} 与 \Tp{[[gnu::noinline]]}，
+MSVC 的 \Tp{\_\_forceinline} 与 \Tp{\_\_declspec(noinline)}。把它们
+和 \Tp{inline} 摆在一起对照就能看清分工：关键字管链接，实现扩展属性
+才管展开；两者不在同一个语义平面上。GNU 属性在声明处使用（写作
+\Tp{[[gnu::noinline]]} 加在函数声明前）是 GCC 与 Clang 都接受的形式，
+细节以所用编译器的文档为准。
+
+更要紧的是这两个方向的强度\textbf{并不对称}，而多数转抄文本把它们写成
+对称的一对。\Tp{noinline} 这一向是\textbf{硬保证}：标了它的函数，编译器
+不会把函数体并入调用者，``顺手展开''这个选项被整个没收；调用点最后若真的
+消失，那是常量折叠把整个调用算成了常量，属于删除调用而非展开。
+\Tp{always\_inline} 那一向只是\textbf{尽力而为加一次申报失败}：函数体
+不可得（跨翻译单元且未开 LTO）、调用点与定义的目标属性不匹配、经由函数
+指针或虚派发抵达、可变参数与不可展开的控制流形态，都会让展开落空。落空
+时各家表现还不一样——GCC 把失败报成编译错误（\Tp{inlining failed in call to}
+后接函数名），Clang 降级成警告（\Tp{always{\Bk}\_inline function could not be
+inlined}），MSVC 的 \Tp{\_\_forcein{\Bk}line} 文档则直言不保证展开：取过函数
+地址、位于结构化异常处理块内、非优化构建这些情形下它就不展开。
+
+所以强制属性的真实收益是\textbf{可诊断性}而不是\textbf{确定性}：它把
+``优化器自行决定''换成``编译器必须尝试，做不到就明确告诉你做不到''。把它
+当成``写了就必然展开''的开关，仍旧是把控制权错认成承诺，与关键字那笔旧账
+是同一种误读的两个方向。
+
+\section{展开决策权在编译器：机理与失效}
+\label{sec:ch08-decision}
+
+\subsection{优化器如何决定展开}
+\label{sec:ch08-heuristics}
+
+现代编译器的内联决策是一套独立的优化 pass，典型输入包括：
+\begin{itemize}
+  \item 函数体积与参数复杂度：超过内部预算阈值的候选直接放弃；GCC
+        用 \Opt{param} 暴露的若干 max-inline-insns 系列阈值可调，
+        Clang 用调用点收益预算打分；
+  \item 调用频率与热路径信息：静态预估之外，可交给 PGO（profile-guided
+        optimization，用 \Tp{-fprofile-use} 等喂入实测轮廓）乃至
+        BOLT（链接后二进制再布局）做数据驱动决策；
+  \item 递归深度与调用图形态：递归与深层调用链通常被剪枝；
+  \item 视野范围：LTO（\Tp{-flto}）把跨 TU 的函数放进同一张调用图，
+        很多``必须写 inline 才会展开''的旧印象，其实来自非 LTO 时代
+        编译器根本看不见别的 TU 的函数体。
+\end{itemize}
+优化等级决定这套 pass 开多少：\Tp{-O0} 下内联几乎完全关闭（只保留
+极个别平凡情况），\Tp{-O1} 起逐步打开，\Tp{-O2} 与 \Tp{-O3} 的差异
+之一正是更激进的展开预算。
+
+\subsection{``手工 inline 提速''的失效机理}
+\label{sec:ch08-failure}
+
+把两句话写死：写了 \Tp{inline} 不保证展开——体积大、调用复杂、
+预算不够时，编译器直接无视关键字；删了 \Tp{inline} 也不保证不展开——
+只要定义可见（类内定义、模板实例、static 函数、LTO 视野内的跨 TU
+函数），优化器随时可以自行展开。既然两个方向都不受关键字控制，
+``小函数加 inline 提速''这条规则就失去了可操作性：它既不能增产
+展开，也不损失展开，唯一确定的作用是改变链接语义。还有一处常被忽略
+的相互作用：\Tp{virtual} 函数经由基类引用或指针调用时走的是分派，
+展开它需要先确定动态类型；这是虚调用内联受限的原因，与关键字无关。
+
+\begin{warning}[title={在 {\Tp{-O0}} 下测性能，再拿结果给 inline 定罪}]
+最常见的实验错误：在 \Tp{-O0} 或调试构建下给同一函数写与不写
+\Tp{inline}，比较耗时或观察汇编，发现``加了也没展开''或者``删了
+反而慢了''，于是得出``inline 控制展开''的结论。\Tp{-O0} 下内联 pass
+基本不开，测到的差异来自别的东西；而``没展开''恰恰是优化等级的决定，
+不是关键字的决定。正确姿势只有一条：用生产优化等级（例如 \Tp{-O2}）
+构建，比较的对象应该是展开后的汇编与整体性能，并且要用足量重复次数
+排除噪声；在此之下，加不加关键字通常测不出差别——测不出差别正是
+本章的论点。
+\end{warning}
+
+\subsection{真正需要强制展开的场景}
+\label{sec:ch08-force}
+
+需要``强制''展开的场景极少，而且每一处都要写实现扩展属性
+（如 \Tp{[[gnu::always{\Bk}\_inline]]}），不是写 \Tp{inline}。典型例子
+是一个极小的热函数，你希望它在任何优化配置下都被尝试展开；代价也要
+一并接受——保持可单步的调试形态与强制展开不可兼得，在 \Tp{-O0}
+调试时，被强制展开的函数会让单步直接跳过它。还要把预期摆正：属性换来
+的是``编译器必须尝试、尝试不了就报错或警告''，不是``必然展开''的担保
+（不对称的两个方向见 \S\ref{sec:ch08-attr}）。除非你确切知道自己在做
+这种取舍并有测量支撑，否则不要用强制手段。
+
+\begin{bestpractice}[title={验证 inline 相关改动的最小流程}]
+改动头文件里的 \Tp{inline}、\Tp{constexpr} 或属性标注后，按以下顺序
+验证，而不是凭感觉：其一，用生产优化等级重新构建并确认链接通过，
+这是关键字的本职；其二，反汇编目标文件检查调用点形态，并在需要跨
+TU 证据时对比 \Tp{-flto} 前后的调用点数量：
+\begin{lstlisting}[style=shellstyle]
+g++ -O2 -c a.cpp -o a_O2.o
+objdump -d --no-show-raw-insn a_O2.o | grep call
+\end{lstlisting}
+其三，性能结论只接受同机、同参、多轮的测量，且差异显著才作数。
+\end{bestpractice}
+
+\section{inline 的正当风格用法}
+\label{sec:ch08-legitimate}
+
+拆完靶子，这个关键字并没有失业——它在链接语义上有明确的正当岗位。
+
+\begin{guideline}[title={何时应当写 inline：四岗位清单}]
+\begin{enumerate}[label=(\arabic*)]
+  \item 头文件里必须给出的函数定义：非类内的访问器、模板式辅助函数、
+        小工具函数。定义要放进头文件供多个 TU 使用，\Tp{inline}
+        就是使这在 ODR 下合法的正规手段；
+  \item 测试中暴露内部接缝的 \Tp{virtual} 与 \Tp{inline} 组合（概括
+        说法）：\Tp{virtual} 提供测试替身的可替换性，\Tp{inline}
+        让替身基类的默认定义合法地留在头文件里；展开与否不影响这一
+        岗位的存在；
+  \item \Tp{constexpr} 与 header-only 库设计：小函数配 constexpr，
+        隐式携带链接豁免，因此这里不需要手写关键字（见
+        第~\ref{sec:ch08-constexpr} 节），但整个``定义留在头文件''的
+        设计正是建立在 inline 语义之上；
+  \item 跨 TU 的全局状态：\cpp{17} 起用 inline 变量在头文件里定义，
+        链接合并为一份（见第~\ref{sec:ch08-var} 节），不要再退回
+        ``声明在头、定义塞给某个 cpp''的旧式绕法。
+\end{enumerate}
+\end{guideline}
+
+清单的第 (1) 条最容易写错形态，示例如下：
+
+\begin{lstlisting}[style=cppstyle]
+// window.h —— 两类必须留在头文件里的定义
+#pragma once
+
+class Window {
+ public:
+  int width() const { return width_; }    // 类内定义：隐含 inline
+  void set_width(int w) { width_ = w; }   // 同上，不要再补关键字
+
+ private:
+  int width_ = 0;
+};
+
+// 类外自由函数：定义要对多个 TU 可见，inline 使其合法
+inline int DoubleWidth(const Window& w) {
+  return w.width() * 2;
+}
+\end{lstlisting}
+
+注意两个岗位的分界：类内定义已经隐含 inline，关键字写了是冗余；类外
+放在头文件里的定义才真正需要这个关键字来兑换 ODR 豁免。风格上把这
+一界线画清楚，评审时就不会再出现``满文件都是 inline''和``头文件里
+裸放函数定义''这两种相反的病症。
+
+\section{反面症状表}
+\label{sec:ch08-symptoms}
+
+表~\ref{tab:ch08-symptoms} 列出 \DomTra 做法的三种典型形态、各自的
+真实后果与 \DomMod 写法。
+
+\begin{table}[htbp]
+\centering
+\begin{tabularx}{\textwidth}{
+  >{\raggedright\arraybackslash}p{0.28\textwidth}
+  >{\raggedright\arraybackslash}p{0.24\textwidth}
+  >{\raggedright\arraybackslash}X}
+\caption{inline 相关的反面症状与纠正}\label{tab:ch08-symptoms}\\
+\toprule
+\DomTra 做法 & 真实后果 & \DomMod 写法 \\
+\midrule
+给类内定义的成员函数再补 \Tp{inline} 关键字 &
+类内定义已隐含 inline，关键字冗余，误导读者以为此处有特殊性能安排 &
+类内直接写定义，不补关键字；只有类外头文件定义才写 \\
+\addlinespace
+为``提速''把一个函数拆成一串 inline 小步 &
+碎函数阻碍优化器的全局视野与展开预算；是否展开仍不受控制；
+可读性净亏损 &
+按职责内聚划分函数粒度，展开决策交给 \Tp{-O2} 以上的优化器 \\
+\addlinespace
+头文件函数忘写 inline，靠把实现塞进单个 cpp 来绕过链接错误 &
+换来能链接，但失去 header-only 的组合性；对模板类定义根本不适用 &
+需要头文件定义时坦率写 inline；确需隔离实现时改用窄接口加单份实现 \\
+\addlinespace
+以``不超过十行''作为写 inline 的判据 &
+行数与展开决策、链接需求都无关；规则整体落空且制造评审噪声 &
+判据只有一个：这份定义是否需要合法地出现在多个 TU 里 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+三行主症状外加一行判据症状，覆盖了评审中最常遇到的 inline 误用。
+识别它们的共同捷径是问一个问题：``删掉这个关键字，程序还能不能链接？''
+能——说明它是冗余或性能幻想；不能——说明它是正当的链接声明，此时的
+注释该解释的是``为什么定义在头文件里''，而不是``为什么这能加速''。
+
+\section{收束：两种叙事的对比}
+\label{sec:ch08-close}
+
+\begin{compare}[title={``inline 是优化指令''与``inline 是链接语义标记''}]
+\textbf{旧叙事（\DomTra）}：inline 命令编译器展开小函数调用，写了
+就更少函数调用开销，性能更好；``内联函数''的译名让读者以为展开是
+关键字的直接效果。
+
+\textbf{现代事实（\DomMod）}：inline 是对链接器和 ODR 的声明，允许
+同一函数在不同翻译单元各有一份定义、链接时合并为一份；是否展开由
+编译器基于体积、频率、递归、LTO 视野以及 PGO 轮廓自行决定，与关键字
+无关或几乎无关。控制展开的正规手段是 \Tp{-O} 等级、PGO 与实现扩展
+属性，而不是这个关键字。
+\end{compare}
+
+最后一问留给下一章：既然叙事是错的，这条条款为什么会存在半个世纪？
+它残留的合理内核是什么？第九章 ``旧条款的历史坐标系'' 给出回答——
+它诞生于一个提示确实被尊重的年代，也在某个具体的优化形态里留下了
+今天仍需辨认的痕迹。
+
+
+% ---- frag_ch09.tex ----
+\chapter{``体积阈值''条款的解剖：从 C with Classes 到今天}
+\label{ch:ch09-threshold}
+
+第八章把若干滞后条款的``合理内核''问题摆上了桌面：一条规则在被转抄进本地手册时，往往同时保留了正确的观察与错误的结论，二者像骨折后长歪的骨痂一样粘在一起。本章选择其中最典型的一根骨头来做解剖---以行数（约十行）为界、规定``小型函数才允许 inline''的体积阈值条款。这条条款在 \DomGo 上游的 \CPP 风格指南里存活了很久，在中文技术写作的转抄链条里则被反复加工，最终变成了一条与上游语义相反的``义务''。它值得单独一章，因为它的错误不是数字选得不对，而是对象指认错误：\Tp{inline} 关键字从 \CPP 的前身 C with Classes 时代诞生之日起，就不是一个性能指令。
+
+本章按解剖顺序推进：\S\ref{sec:ch09-history} 固定转抄变形的现场事实；\S\ref{sec:ch09-kernel} 把条款里仍然正确的部分与其错误的对象分离；\S\ref{sec:ch09-costmodel} 说明行数为什么在单位上就无法充当内联决策的度量；\S\ref{sec:ch09-header} 处理寄生在体积条款上的头文件成本恐慌；\S\ref{sec:ch09-team} 与 \S\ref{sec:ch09-wording} 把解剖结论兑换成团队规程与可评审的条文；\S\ref{sec:ch09-observe} 提供前者共同依赖的观测工具箱。
+
+\section{历史语境：一条例外许可被转抄成义务}
+\label{sec:ch09-history}
+
+先如实转述上游。涉及 inline 的这一节在上游文本中的措辞，本质是一条\textbf{例外许可}：默认姿势是不要手写 \Tp{inline}；只有确实``仅为性能''而写的小型函数才\textit{被允许}使用它；并且附带一条自我限制的告诫---手工内联超过约十行的函数不值得做。注意这三句话的重心：上游假设``不写 inline''是常态，``写''是需要单独理由的例外，``十行''是给这个例外再套的一层笼头。
+
+中文转抄链条上的产物通常长什么样，下面用 diff 语法的注释体把两种文本并排摆出来，红色是上游原意的转述，绿色是转抄变形后的常见写法：
+
+\begin{lstlisting}[style=diffstyle]
+-// 上游原意（转述）：默认不写 inline；
+-// 只有纯粹为性能声明的小型函数属于例外，允许写；
+-// 超过约十行的函数不要手工内联——这是给例外加的笼头。
++// 转抄变形：小型函数就应该声明 inline；
++// 超过约十行的函数禁止 inline。
++// —— 许可被改写成了义务，笼头被改写成了禁令清单。
+\end{lstlisting}
+
+一词之差，规则的性质全变。``允许''意味着评审时问``性能理由在哪''；``就应该''意味着评审时问``你怎么没 inline''。前者把举证责任压在使用者头上，与优化器的默认行为相容；后者把举证责任压在不使用者头上，于是催生出一堆为了合规而写、实际上毫无作用的 \Tp{inline}。这正是第八章归纳的``不更新与错误引起的问题''的教科书样本：上游文本更新缓慢、转抄者按旧句式的字面搬运，而语义在搬运途中被整体倒置。
+
+\begin{note}[title={倒置的识别特征}]
+判断你手里的译本有没有翻车，看一个特征即可：原条款若出现在``例外''一节、或措辞中含``only when''一类限定，它几乎一定是许可；译本若把它放进``必须/应当''的祈使句列表，它已被改写为义务。转抄丢掉的往往是情态词，而不是数字。
+\end{note}
+
+上游为什么坚持用许可句式，也值得还原，因为它就是这条条款的真实使用场景。上游成文的那些年月，主流编译器在 \Tp{-O2} 下已经能够自行完成小函数展开；手写 \Tp{inline} 的实际收益趋近于零，而其维护成本（头文件扩散、重编译面扩大、评审争论）却清晰可见。所以``默认不写''不是保守，而是对``这个关键字在当代编译管线里已无性能作用''的工程判断。十行上限则是给剩下那一点例外（编译器判定不了的极端热路径）再设的止损线。
+
+十余年中文传播之后，这条条款在本地手册里通常发展出三种症状，可以拿它们当对照清单：
+
+\begin{itemize}
+  \item \textbf{情态翻转}：``只有 \ldots\ 才允许''被改写成``\ldots\ 就应该''，例外许可升级为默认义务。
+  \item \textbf{数字孤立}：``约十行''从修饰例外的限定语里被拆出来，单独升格为红线，甚至在二次转抄中被膨胀成``15 行''``20 行''这类更``宽松友好''的版本---数字越走越远，情态始终没人管。
+  \item \textbf{对象漂移}：上游说的是``不要手工内联''（针对强制展开行为），译本写成``不要写 \Tp{inline}''（针对关键字），条款的语义靶子在搬运中被整个替换。
+\end{itemize}
+
+前两种症状是纯粹的转抄损耗；第三种最隐蔽，因为改写后的句子读起来仍然像一条技术告诫，只是它管的事情与 \Tp{inline} 关键字再无关系。三种症状叠加，就得到本章开头 diff 里那两条几乎互为反义的文本。
+
+为什么倒置后的版本反而传播得更广？倒置条款给了初学者一个可执行的判据（数行数即可），而许可句式要求回答``性能理由在哪''---这个问题需要基准测试能力才能作答。手册作者偏爱带数字的规则，因为数字让条款看起来可检查；可检查性恰恰是行数条款唯一真实的优点，也是它被反复转抄的动力来源。至于上游文本自身更新缓慢、社区无人回头审计旧译本，则为倒置提供了保温层：错误版本从未被当面纠正过，自然``看起来一直是对的''。
+
+\section{合理内核：该挨打的是属性强制，不是关键字}
+\label{sec:ch09-kernel}
+
+这条条款没有死透的部分同样要如实清点。它背后的两条工程观察都是\underline{对的}：
+
+第一，手工用 \Tp{always\_inline} 这类属性强制展开，会剥夺优化器的调度自由。属性强制让编译器在指定点尽力复制函数体（复制不了就报错或警告，见 \S\ref{sec:ch08-attr}），代价模型被绕过；函数体一旦在后续版本里长大，强制点就变成体积炸弹，而且常常连带干扰寄存器分配与指令调度。第二，无视体积地把大函数摊进调用点，会抬高代码体积、冲刷 I-cache，热路径的收益被冷路径的损失吃掉。
+
+问题出在这些告诫的\textbf{对象}上。它们约束的是``对优化器下强制令''的行为---也就是 \Tp{always\Bk\_inline}、\Tp{noinline}、MSVC 的 \Tp{\_\_forcein{\Bk}line} 这类实现扩展属性；而不是 \Tp{inline} 关键字本身。在标准语义里，\Tp{inline} 是一个\textbf{链接语义声明}：它声明``本函数允许在多个编译单元各有一份定义，链接器负责合并''，附带才是一个``提示''---而且这个提示从 \cpp{98} 前后起主流编译器就基本不理睬（\cpp{11} 后更甚，许多编译器干脆把它当无提示处理）。把对属性的告诫转嫁到关键字上，是一次典型的概念挪用：
+
+\begin{compare}[title={两个互不相干的语义层}]
+\begin{itemize}
+  \item \Tp{inline}（关键字）：解决 ODR 豁免问题---头文件里的定义能跨多个编译单元共存。展开与否完全交给优化器，写或不写都不构成命令。
+  \item \Tp{always\_inline} / \Tp{noinline}（实现属性）：对优化器下强制令。两个方向不等价---禁止展开是硬保证，要求展开只是``必须尝试，尝试不了就申报失败''。这才是``体积告诫''真正该盯着的对象。
+\end{itemize}
+\end{compare}
+
+所以体积条款的当代正确读法是：``不要频繁对函数下强制展开令；若确需强制，被强制者必须小。''把它读成``小的 \Tp{inline} 该写、大的 \Tp{inline} 禁写''，等于用链接语义的词汇去翻译性能语义的告诫，两个错叠加得到一个看起来很像那么回事的规矩。
+
+混淆之所以顽固，是因为``inline''一词在日常讨论里同时背负三个互不等价的含义，值得先把术语拆干净：
+
+\begin{itemize}
+  \item 含义一，标准的 \Tp{inline} 限定符，即多定义豁免。它的规范内容是链接与 ODR 规则：带该限定符的函数可以在每个翻译单元各有一份定义（要求逐字一致），链接后视为同一实体。这一层语义从 C with Classes 起稳定至今。
+  \item 含义二，历史遗留的优化提示。早期编译器确实拿关键字当展开依据；但 \cpp{98} 以后主流实现改用成本模型独立决策，把这个提示当作无信息量输入，标准也从未规定写了就必须展开。
+  \item 含义三，口语动词 \textit{inlining}，指展开这个行为本身。它可以在没有关键字时发生（类内小函数、常量传播后的顺手展开），也可以在写了关键字之后照样不发生。
+\end{itemize}
+
+体积条款的灾难可以复述成一句话：条文用含义二的语言写成，执行时用含义三的期待去检查，而语言真正提供给项目的保障只有含义一。三者在同一个拼写上短路，评审意见就变成了各方都听不懂各方的鸡同鸭讲。
+
+至于含义二在现代代码里合法的后裔---强制展开属性---其正确用法长这样。属性是实现扩展，语法依厂商而定，语义是命令而非建议，因此每一处使用都是需要单独辩护的技术债：
+
+\begin{lstlisting}[style=cppstyle]
+// 强制展开属性属于实现扩展：语法随厂商变化，语义是命令而非建议。
+// 命令的内容是"必须尝试，做不到就申报"，不是"保证展开"：
+// GCC 报错、Clang 警告、MSVC 文档明言 __forceinline 不保证成功。
+#ifndef _MSC_VER
+#  define HOT_INLINE __attribute__((always_inline)) inline
+#else
+#  define HOT_INLINE __forceinline
+#endif
+
+// 值得付出上述代价的场景只剩一种：实测最热路径上的最内层
+// 函数，编译器反复未展开，且该未展开造成可测量的性能损失。
+// 评审材料：目标编译器与档位、改前/改后数字，缺一不可。
+// 注意 -O0 下这类函数往往根本展开不了，调试构建里的表现不作数。
+HOT_INLINE int low_bits(unsigned v) { return v & 0x3Fu; }
+\end{lstlisting}
+
+对照一下体积条款的历史形态就能看出挪用的路径：``超过约十行不要手工内联''最初是对上面这类强制令的告诫，转抄进风格手册后，约束对象从 \Tp{always\_inline} 换成了 \Tp{inline}，行数却原样保留---数字活着，意义死了。
+
+命令的另一方向 \Tp{noinline} 同样属于被告诫对象，只是代价形态不同，而且\textbf{这一向才是硬保证}：标了它，展开的选项对优化器整个没收，不像 \Tp{always\_inline} 那样只换来一次申报失败。它的代价是强制付出调用开销，把优化器``顺手展开''的可能一并取消。它并非永远无理---需要保留可观察的调用边界（让 LD\_PRELOAD 或链接包装能拦截该符号、让栈帧在故障转储中可辨认）时，\Tp{noinline} 是达成确定性的正当手段；正因为它是确定性的，这类需求才恰好只能用实现属性表达，标准关键字给不出这个强度。但这些场景的共同点是需求本身与性能无关，而是关于可观察性。换句话说，强制令的合理动机清单里没有``让它更快''这一项---想要快，恰恰应该把决定权还给优化器。
+
+\section{体积阈值为什么不成立}
+\label{sec:ch09-costmodel}
+
+阈值条款的另一个隐含假设是：存在一个跨项目通用的``合适体积''。真实情况恰恰相反。现代编译器的内联决策是一套多层成本模型：GCC 在早期内联、过程间内联与调用图阶段各自维护一套体积估算与阈值，Clang 则为普通优化与体积优化分别设阈，两者都允许被 profile 数据与属性强制覆盖。决策至少随下面这些维度摆动：
+
+\begin{itemize}
+  \item \textbf{调用点热度}：profile（\Opt{fprofile-{\Bk}generate} 再 \Opt{fprofile-{\Bk}use}，或 Clang 的 \Opt{fprofile-{\Bk}use}）数据下，冷调用点的展开会被否决，哪怕函数只有三行。
+  \item \textbf{编译档位}：\Tp{-O0} 几乎不内联（只服从强制属性）；\Tp{-Os} 以体积优先；\Tp{-O2} 走标准成本模型；\Tp{-O3} 与 \Tp{-Ofast} 更激进。同一函数四处结论相反。
+  \item \textbf{编译单元边界与 LTO}：不做 LTO 时，编译器只见得到本翻译单元内的调用点，``这个函数被调了几次''根本不是完整信息；开启 LTO 后决策被推迟到链接期，答案可能整个翻转。
+  \item \textbf{二次内联机会}：内联本身往往只是手段---展开后若发生常量传播，可能触发循环展开、死代码消除，进而把后续小函数``顺便''内联掉。成本模型评估的是这条连锁，行数评估不了。
+  \item \textbf{属性与可见性}：强制展开令（见 \S\ref{sec:ch09-kernel}）直接短路成本模型；符号可见性设置与链接方式（静态库还是可执行文件）改变展开的经济性；虚函数则受限于动态派发，多数调用点根本无法静态展开---这也是上游告诫``别对虚函数手工内联''的原因，它与行数无关。
+\end{itemize}
+
+最根本的错位在于计量单位：行数数的是\underline{源码行数}，成本模型看的是\underline{中间表示（IR）的节点体积与展开后的寄存器压力}。还有一层容易被行数掩盖的结构性事实：展开的成本是\textbf{逐调用点结算}的。阈值只审查被调用函数的体积，而优化器支付的是``函数体体积乘以被保留的调用点个数''这笔总账；一个函数被二十个翻译单元包含时，它的每一行都以二十倍的价格进入成本模型。两个具体机制也值得展开。I-cache（指令缓存）对代码膨胀的容忍度极低：一个展开点会把另一段热循环的常驻指令挤出缓存行，损失出现在被改动函数\textit{之外}的相邻代码上---``局部合理的优化''在局部恰恰不可判定。寄存器压力更隐蔽：展开后的 IR 体积可能不大，但函数体的临时量并入调用者的活跃值集合，可能把调用者所在循环的寄存器分配推过可用寄存器上限，使每轮迭代退化为内存溢出。这两种成本都不在行数里，都只在展开发生之后才可计算。一个三行的函数展开后可能吃掉八个活跃寄存器，把调用者所在的整个热循环打爆；一个四十行的函数展开后可能在常量传播下萎缩到只剩两条指令。下面三个反例覆盖了三种错位方向：
+
+\begin{table}[H]
+\centering
+\caption{行数阈值与成本模型的三组反例}
+\label{tab:ch09-threecase}
+\begin{tabularx}{\textwidth}{
+  >{\raggedright\arraybackslash}p{0.15\textwidth}
+  >{\raggedright\arraybackslash}p{0.10\textwidth}
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}p{0.24\textwidth}}
+\toprule
+场景 & 行数 & 成本模型看到的 & 对风格条款的含义 \\
+\midrule
+短而内联亏：一个三行的辅助函数被头文件扩散到几十处调用点，其中多数位于冷路径。展开使 I-cache 命中率可测量地下降。 & 三行 & 全项目调用点总量与冷热分布；展开是逐调用点复制的，体积成本乘以调用点个数。 & 阈值数的是单个函数的行数，成本是按调用点结算的，单位对不上。 \\
+\addlinespace
+短而二次炸开：五行的小函数参数恰为编译期常量，内联后常量传播把内部循环展开成上百个 IR 节点。 & 五行 & 展开\textit{之后}的连锁效应：传播、展开、再内联构成的级联体积。 & 行数静态可读，级联体积只有优化器在展开的那一刻才知道。 \\
+\addlinespace
+长而应当内联：四十余行、全项目唯一调用点，profile 判定为最热线路；内联后分支被常量条件消去大半。 & 四十行 & 单一调用点意味着体积成本只付一次；条件消去意味着实际净增远小于面值。 & 按条款它``禁止 inline''，然而它恰恰是收益最干净的一类。 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+阈值条款在这三类场景里都会给出与优化器相反的建议，而优化器掌握行数永远无法掌握的输入（调用图、profile、IR 级联）。结论可以直说：以源码行数为单位的手工内联阈值，在信息量上就注定输给成本模型，它不是``不够精确''，而是\textbf{用错了坐标系}。这一节的分析会在 \ref{sec:ch09-team} 节直接兑换成落地条款。
+
+\begin{note}[title={关键字的出生证明}]
+说行数与成本模型``单位对不上''，还要补一句更扎心的：\Tp{inline} 从出生起就没被设计成行数能对话的对象。C with Classes 时代，跨翻译单元共享函数体只有两条路---宏展开（类型不安全、调试困难、每次改动全量重编译）与头文件放定义（链接期重复定义冲突）。关键字的原始职责是开出第三条路：给多定义豁免，让``定义放进头文件、是否展开交给编译器''第一次成为可能。也就是说，它是一个打通链接通路的工具，``展开提示''只是名字带来的历史附带品。用体积去管一个链接语义开关，就像用重量去管电源插座。
+\end{note}
+
+\section{编译防火墙与头文件成本的误读}
+\label{sec:ch09-header}
+
+体积条款在本地化过程中还寄生出了第二条担忧：``把函数用 \Tp{inline} 定义在头文件里，会加重重编译耦合，改一行实现就要重编所有包含者。''这条担忧本身真实存在---但它的户口不在 \Tp{inline}，而在 include 管理。头文件之所以是编译防火墙的漏洞，是因为 \CPP 的文本包含模型让实现细节随头文件泄漏；对治它的手段是 PIMPL、前置声明、把定义移出公开头文件，以及 \cpp{20} 的模块化（\Tp{import} 替代文本包含）。在这些手段面前，\Tp{inline} 只是``定义恰好放在头文件里''这一事实的\textit{结果}，不是原因。禁止写 \Tp{inline} 不会拆除任何编译防火墙，只会拆除链接器。
+
+更麻烦的是：既然定义放在头文件里（这在 \CPP 里几乎不可避免---模板必须如此，值语义类的访问器通常也如此），标准就\textbf{要求}该定义具备多次定义豁免资格，而合法的姿势只有三种。若风格条款一面禁止``随意 inline 小型函数''，一面不给出替代姿势，它就是在成批量地制造链接期 multiple definition 错误。三种合规姿势对照如下：
+
+\begin{lstlisting}[style=cppstyle]
+// 姿势一：类内定义 —— 天然获得 inline 语义，无需写关键字。
+// 这是访问器与微小算子的首选：定义紧贴声明，链接语义免费。
+class Point {
+public:
+  double x() const { return x_; }       // 隐式 inline
+  void set_x(double v) { x_ = v; }      // 隐式 inline
+private:
+  double x_ = 0.0;
+};
+
+// 姿势二：constexpr 函数 —— 隐式具备 inline 资格
+// （constexpr 成员函数在类内时；自由 constexpr 函数自
+//   C++14 起也被标准按 inline 对待）。
+// 适合编译期可求值的纯小工具：语义上附带一份附加承诺，
+// 即该函数可以在常量语境（数组维度、模板实参等）中使用，
+// 这与展开与否无关。
+constexpr int clamp01(int v) { return v < 0 ? 0 : (v > 1 ? 1 : v); }
+
+// 姿势三：显式 inline —— 头文件定义、类外实现时的正当手段。
+// 这不是性能声明，而是链接声明：该定义允许在多个编译单元
+// 各出现一次，链接器负责把它们合并为同一份。
+inline std::size_t hash_combine(std::size_t seed, std::size_t v) {
+  return seed ^ (v + 0x9e3779b9u + (seed << 6) + (seed >> 2));
+}
+\end{lstlisting}
+
+三种姿势的共同点是：它们都在回答``这份头文件里的定义如何合法共存''，而不是``这个函数该不该展开''。把后一个问题从它们的语境里剥离，是本章对体积条款做的第二次手术；第一次在 \ref{sec:ch09-kernel} 节，剥离的是属性告诫。
+
+既然重编译耦合的担忧确有其事，就有必要把\textbf{真正}对症的技术列清楚，供条款作者把药开给正确的病，而不是继续向 \Tp{inline} 关键字问诊：
+
+\begin{itemize}
+  \item \textbf{前置声明与不透明类型}：调用方只需指针或引用时，让它不必看见实现细节，头文件依赖面随之缩小。
+  \item \textbf{PIMPL}：把私有实现整体挪到间接指针之后，实现细节的改动只重编译那一个翻译单元。
+  \item \textbf{定义出头条}：非热路径的函数定义移回 \Tp{.cpp}，头文件只留声明---重编译耦合与``是否展开''同时被解决，后者交给编译器在单元内自行判断。
+  \item \textbf{模块化（\cpp{20}）}：以编译过的接口单元取代文本包含，从机制上砍断头文件级重编译传播，是这条谱系的终点站。
+\end{itemize}
+
+这四件事没有一件需要动用``禁写 \Tp{inline}''；反过来说，一件都不做而只禁关键字，耦合一分不减，链接错误倒是照单全收。
+
+\begin{warning}[title={被``禁写 inline''逼出来的链接错误}]
+某团队手册照搬了``超过十行禁止 inline，小型函数非必要不 inline''的转抄条款。成员把一个十二行的工具函数\textit{定义}写进了公共头文件，又依条款不敢写 \Tp{inline}，也没有改用类内或 \Tp{constexpr} 姿势---链接期在六个目标文件里撞出六份定义的 multiple definition 错误。修复方式不是``破例加 inline''这种行政豁免，而是回到上面三种姿势之一。条款制造的问题，条款自己给不出解法，这就是该条款应当从手册中整条除名的实证理由。另注意 \cpp{17} 的 inline 变量（内联头文件里的静态成员与全局对象定义）同样属于这套链接语义家族，与性能无关。
+\end{warning}
+
+\section{团队落地：三分工条款}
+\label{sec:ch09-team}
+
+解剖到此，可以开处方。原条款里值得保留的工程直觉只有两条：别让强制令满天飞；别让没有证据的性能声明混进评审。把它们与链接语义正确归位后，得到``三分工''：
+
+\begin{bestpractice}[title={展开决策、链接姿势与强制令的三分工}]
+\begin{enumerate}
+  \item \textbf{是否展开，交给编译器与 profile。}风格条款不写``多少行该内联''；需要性能结论时，用 \ref{sec:ch09-observe} 节的观测手段与真实基准数据说话，而不是行数。
+  \item \textbf{是否允许多定义，交给链接语义选型。}定义进头文件就必须三选一：类内定义、\Tp{constexpr}、显式 \Tp{inline}（见 \ref{sec:ch09-header} 节）。这一层选择没有``性能''二字，写了 \Tp{inline} 不等于请求展开，不写也不构成禁止。
+  \item \textbf{强制展开的限制，交给属性加数据。}\Tp{always\_inline} 一类属性只允许出现在带注释的少数热路径上，且评审必须附测量数据（改前/改后基准），并写明目标编译器与档位。行数在这里可以重新入场作为\textit{辅助}审查信号---但对对象是属性强制点，不是关键字使用。
+\end{enumerate}
+\end{bestpractice}
+
+三分工的益处是可审计：每一条评审意见都能落到``证据''或``姿势''两个客观维度之一，不再有``这个函数看起来该不该 inline''这种主观审讯。
+
+落到评审动作上，四类情形各配一个有确定答案的问题，可以直接写进评审清单：
+
+\begin{itemize}
+  \item 头文件里出现函数定义---问题：三种合规姿势占了哪一种？没占，打回修改；占对了，通过，\textit{不许}再追问``为什么不强制展开''。
+  \item 出现裸的 \Tp{inline} 关键字---问题：这是链接声明还是性能声明？若是性能声明，请回答删掉关键字会改变什么；什么都改变不了，则该关键字本就不该为性能而写。
+  \item 出现 \Tp{always\_inline} 一类属性---问题：目标编译器与档位、改前/改后测量数字是否都附上了？缺任何一项，按证据不足拒绝。
+  \item 评审意见引用了行数（``超十行了''）---问题：引用的条款出自本章 \S\ref{sec:ch09-wording} 的哪一行？引用不出来，则该意见无效。
+\end{itemize}
+
+第四条是防回潮装置：转抄条款最顽固的复活方式，是老评审人凭肌肉记忆把行数重新说出口。清单里给``行数论证''设置一个必须自证出处的门槛，能把它挡在条文之外。
+
+\section{观测方法：编译器到底内联了没有}
+\label{sec:ch09-observe}
+
+三分工把``证据''立成了性能相关条款的唯一通货，那就要说清证据从哪来。验证内联是否发生，有三个由浅入深的渠道。
+
+渠道一：看汇编。把单个翻译单元编到目标档位，直接检查调用点附近是否还残留 \Tp{call}。渠道二：要优化器的正式报告。GCC 提供以 \Tp{-fopt-info-inline} 为核心的一组选项，可分别报告``已内联''与``未内联（含原因）''两类判定；Clang 则走优化 remark 机制，以 \Tp{-Rpass=inline}、\Tp{-Rpass-missed=inline} 一类开关报告同类信息。渠道三：查符号表。\Fn{nm} 与 \Fn{objdump} 可以回答``展开后是否仍留了线外副本''：带外部链接的 \Tp{inline} 函数通常留有一个弱符号（\Tp{nm} 输出里的 \Tp{W}/{\Bk}\Tp{w} 类标记），若被完全展开或受可见性控制，可能一个符号都不剩；模板实例化同理也是弱符号。
+
+\begin{lstlisting}[style=shellstyle]
+# 渠道一：编出汇编，检查调用点是否残留 call
+g++ -O2 -S caller.cpp -o - | grep -n 'call'
+
+# 渠道二：向编译器索要内联判定报告（GCC 系）
+g++ -O2 -fopt-info-inline=optimized caller.cpp -c -o caller.o
+g++ -O2 -fopt-info-inline=missed    caller.cpp -c -o caller.o
+
+# 渠道二（Clang 系）：优化 remark，报告命中与未命中
+clang++ -O2 -Rpass=inline -Rpass-missed=inline \
+        caller.cpp -c -o caller.o
+
+# 渠道三：查符号残留，-C 还原 C++ 签名，-P 单行便于 grep
+nm -C -P caller.o | grep 'clamp01'
+\end{lstlisting}
+
+渠道三的读法值得给一个具体样例：\Tp{nm -C -P} 的单行输出中，符号类型字段为 \Tp{W} 表示全局弱符号---这正是带外部链接的 \Tp{inline} 函数留下的线外副本的典型形态；\Tp{t}/{\Bk}\Tp{T} 则是普通本地/全局定义。
+
+\begin{lstlisting}[style=shellstyle]
+# 渠道三输出的典型形态（接上一条命令）：类型字段 W 即弱
+# 符号，说明 clamp01 在本单元仍保留线外副本。
+# 00000000000001b0 W clamp01(int)
+
+# 要看调用点的具体形态（残留 call 还是已展开为内联指令
+# 序列），交给 objdump：-d 反汇编，-C 还原签名。
+objdump -d -C caller.o | less
+\end{lstlisting}
+
+三个渠道的结论要互相印证：报告说``已内联''但符号表里仍有弱符号，并不矛盾---展开与保留线外副本可以同时发生；反过来，汇编里看不到 \Tp{call}，也可能是尾调用或常量折叠的假象。
+
+\begin{warning}[title={档位不同，结论可以完全相反}]
+在同一段代码上，\Tp{-O0} 下优化器基本不做成本模型内联（只有属性强制点会展开），\Tp{-Os} 下体积优先策略可能否决 \Tp{-O2} 下被接受的展开，\Tp{-O3} 下又可能出现 \Tp{-O2} 下没有的激进展开。用 \Tp{-O0} 或 \Tp{-Os} 的汇编截图去论证``这个 inline 没生效/生效了''，进而要求全项目补写 \Tp{inline}，是把观测条件当成了观测结论。风格评审引用的任何内联证据，必须写明编译器、版本与优化档位，否则按无效证据处理。
+\end{warning}
+
+还有一层容易忽略：没有 profile 数据时，编译器对``冷热线路''的判断只是静态猜测；一旦项目接入 \Opt{fprofile-generate} 与 \Opt{fprofile-use}（或 Clang 对应的 \Opt{fmiss-profile}、\Opt{fentry} 类数据通路），同一份代码的内联版图会整体重排。所以观测要服务于本项目的真实发布档位，而不是随手跑的 \Tp{-O2} 冒烟测试。
+
+观测还受链接方式的影响。开启 \Tp{-flto} 之后，内联决策被推迟到链接阶段，链接期看到各单元的摘要而非源码，上面三个渠道里针对单个目标文件的观察几乎全部失效---这时要么对最终产物做反汇编，要么向编译驱动索要链接阶段的优化报告。另外一条调试向的常识：若希望线外副本无论如何都保留（常见于断点需求），GCC 系提供 \Tp{-fkeep-inline-functions} 一类开关；它是调试辅助，不是风格决策的依据。
+
+\begin{note}[title={调试现场的``内联假象''}]
+在 \Tp{gdb} 单步里发现某函数的断点始终不落、变量视图与源码对不上，最常见的解释是编译器在调试档位上仍做了激进展开，而不是``编译器无视了你的 \Tp{inline}''。此时的正确处置是把相关翻译单元降到 \Tp{-O0} 或加 \Tp{-fno-inline} 重编以获得可复现的调试环境，而不是据此在全项目补写 \Tp{inline}---后者正是转抄条款诱发大规模无效标注的现实路径之一。
+\end{note}
+
+\section{收束：条款的当代写法}
+\label{sec:ch09-wording}
+
+解剖结束，把尸体换成正骨。如果只能在本手册里保留一条与``体积阈值''同域的规则，它应当不再提行数、不再提小函数义务，而把三个归位结果浓缩成可评审的文本。示范条文（三行，可直接抄入团队手册）：
+
+\begin{guideline}[title={示范条文：关于 inline 与展开的当代条款}]
+\begin{lstlisting}[style=cppstyle]
+// 条文原文：
+// 1. 不要用 inline 关键字表达性能意图；展开决策归编译器与 profile。
+// 2. 头文件中的函数定义一律采用类内、constexpr 或显式 inline 三选一。
+// 3. 确需强制展开时，使用实现属性标注，并在评审中附测量数据。
+\end{lstlisting}
+第 1 行切断概念挪用；第 2 行给出姿势、不制造链接错误；第 3 行让行数告诫在唯一合法的场所（属性强制点）重新生效。``评审中附测量数据''的具体通货，即 \ref{sec:ch09-observe} 节的三个观测渠道。
+\end{guideline}
+
+旧条款的迁移建议分三步走，缺一不可。第一步冻结：从下一次评审开始，行数条款不再作为打回理由，评审人引用它时按无效意见处理。第二步清淤：批量扫描存量代码里``为合规而写''的裸 \Tp{inline}---既不在类内、链接上又不需要的那一类，删除后跑完整基准与构建回归，用``删掉之后性能纹丝不动''这个事实本身完成说服。第三步改写：把上面的三行条文贴进手册，旧文本整段删除，只在修订记录里留一行废弃说明，防止它日后从记录里被再次捞起转抄。第二步最值得真正执行一次：它产出的证据对项目内部的说服力，超过本章全部论证之和。
+
+\begin{note}[title={与第八章的收束衔接}]
+本章演示的处理公式与第八章一致：找到条款的合理内核（属性强制的体积告诫、链接语义的共存需求），剥离转抄层（小函数义务、行数禁令、头文件耦合恐慌），按当代编译器的真实分工重写条文。体积阈值条款的独特价值在于它的内核与外壳连在同一个词（``小''）上，稍不留神就会连同正确的告诫一起扔掉，或者连同错误的义务一起保留---解剖必须逐句下刀。
+\end{note}
+
+
+% ---- frag_ch10.tex ----
+\chapter{异常处理的代价：零成本模型里真正付费的部分}
+\label{ch:ch10-ehcost}
+
+``异常代价高，所以禁用''大概是风格指南里被引用最多、被检验最少的一句话。
+本章不辩论该不该用异常，而是把主流编译器的实现机制摊开，逐项核对这张
+账单到底寄给了谁。读完你应该能回答三个问题：正常执行路径上异常到底花
+不花钱；钱花在哪些地方；以及在什么环境里禁用它是工程上成立的结论，而
+在什么环境里它只是把旧条款 \DomTra 原样抄进了不该抄的项目。
+
+\section{先立靶：``异常代价高''这句话到底说了什么}
+\label{sec:ch10-target}
+
+\DomTra 风格的条款常写成：异常运行时代价大，项目代码一律禁止。这条款
+最初生长的语境是硬实时固件与某些历史工具链；当它被搬进应用层 \CPP 项目
+时，语境里的限定语通常一起被丢掉了。要检验它，得先看实现。
+
+在主流 ABI（Itanium C++ ABI 谱系的桌面与服务器 \Lang{Linux} 工具链，
+以及 Windows x64 的结构化展开表路线）上，C++ 异常采用\underline{表驱动}
+实现。编译器为每个可能有清理动作或处理器的函数附带两类只读元数据：
+
+\begin{itemize}
+  \item \Tp{.eh\_frame}：调用帧信息（CFI），告诉展开器如何从任意一条
+        指令位置回溯到调用者帧、恢复寄存器；
+  \item \Tp{.gcc\_except\_table}（LSDA，Language Specific Data Area）：
+        call-site 表标注指令区间，记录该区间的调用抛出后该跳到哪个
+        清理入口、匹配哪些类型（连同 RTTI 指针）。
+\end{itemize}
+
+关键事实是：\underline{正常执行的指令流从不读这两张表}。进入 \Tp{try}
+不压栈、不注册、不写线程局部状态；离开 try 块同样没有收尾动作。全部
+运行时工作都被推迟到一次真正的抛出之后。Windows x64 的思路一致，只是
+表的形状不同：函数表 \Tp{.pdata} 与展开信息 \Tp{.xdata} 提供查表式回溯，
+C++ 语义架在这套元数据之上。因此 ``零成本抽象''（zero-cost exception
+model）不是营销词，它是对未抛出路径的准确描述：正常路径上，try/catch
+的进入与退出几乎不产生可测指令。
+
+\begin{lstlisting}[style=cppstyle]
+// 配置解析：Line::value() 只对畸形数据抛出 ParseError。
+// 这个循环位于服务热路径上。
+double sum_valid(const std::vector<Line> &lines) {
+  double total = 0.0;
+  for (const Line &l : lines) {
+    try {
+      total += l.value();
+    } catch (const ParseError &) {
+      log_skip(l);          // 冷路径：坏数据才会走到这里
+    }
+    // 正常路径：进出 try 不执行额外指令；
+    // 在热路径上，它几乎免费。
+  }
+  return total;
+}
+\end{lstlisting}
+
+\begin{guideline}[title={``零成本抽象''的准确含义}]
+表驱动异常模型下，付费点不在 try 块的进入退出，而在别处：二进制里的
+只读元数据、编译产物中为清理而让渡的优化空间、以及抛出事件本身。
+``异常代价高''作为一个无条件全称命题，在主流 ABI 的正常路径上是
+不成立的；它成立的那些场合，需要点名场合而不是点名语言。
+\end{guideline}
+
+某 32 位 Windows 工具链的历史实现曾在函数入口运行注册作用链的代码
+（码驱动路径），try 入口确有小额指令成本；较新的 32 位实现已大幅削弱
+这一路径。另有一些嵌入式移植默认 SjLj（setjmp/longjmp 语义）异常模型，
+进入 try 会真实执行保存指令。这两类是``正常路径不免费''的真实反例，
+但它们是\underline{工具链移植的属性}，不是语言语义的属性：引用结论
+之前先确认你脚下的 ABI。
+
+\section{付费点清单：账单到底寄到哪儿}
+\label{sec:ch10-paylist}
+
+表 \ref{tab:ch10-paylist} 列出表驱动模型的代价项。量级一栏是典型经验
+区间而非实测承诺；实测方法与口径见 \ref{sec:ch10-upper}。
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.15\textwidth}
+                  >{\raggedright\arraybackslash}p{0.34\textwidth}
+                  >{\raggedright\arraybackslash}p{0.19\textwidth}
+                  >{\raggedright\arraybackslash}p{0.15\textwidth}}
+\caption{表驱动异常模型的代价项清单。量级为典型经验区间；
+评审时应以本项目实测为准。}\label{tab:ch10-paylist}\\
+\toprule
+代价项 & 机理 & 量级 & 可控性 \\
+\midrule
+\endfirsthead
+\caption{表驱动异常模型的代价项清单（续）}\\
+\toprule
+代价项 & 机理 & 量级 & 可控性 \\
+\midrule
+\endhead
+\midrule
+\bottomrule
+\endfoot
+二进制体积与只读表 &
+  为含清理或处理器的函数发射 \Tp{.eh\_frame} 与 LSDA
+  （\Tp{.gcc{\Bk}\_except{\Bk}\_table}）&
+  常为 text 段个位数百分比；析构越多、受保护区间越宽，
+  call-site 表越长 &
+  可按翻译单元关闭；嵌入式 flash 预算敏感
+\\
+landing pad 与清理结构 &
+  抛出须落在调用边界并汇入统一清理入口；基本块在调用点被
+  切开，优化器视野变碎，部分场景抑制内联与循环优化 &
+  主要作用于清理密集的代码，代价多为间接 &
+  给不抛出的调用标 \Tp{noexcept} 可删除抛出边
+\\
+抛出路径本身 &
+  异常对象动态分配与拷贝；展开器逐帧查找（可能遍历动态
+  加载器登记的模块）、phase 1 匹配 RTTI、phase 2 执行析构 &
+  数百纳秒到微秒级，随栈深与加载库数增长 &
+  无法挪回正常路径；只能少抛
+\\
+调试器与展开器兼容 &
+  某些调试器对每次 throw（含被捕获者）默认断停，需要逐
+  异常配置；展开过程中单步跨帧不直观 &
+  开发体验成本，不进交付物 &
+  工具配置可解
+\\
+跨 DSO 与 ABI 摩擦 &
+  跨动态库抛出要求两侧共用展开器与运行时；类型匹配先比
+  指针、不等再比名字字符串；关 RTTI、隐藏可见性、混用
+  运行时都可能导致异常不被捕获 &
+  偶发但后果严厉（terminate） &
+  同一目标统一工具链与运行时
+\\
+实时路径确定性 &
+  最坏情况展开延迟无法静态界定：展开器内部含动态链接器
+  遍历、可能的内存分配与锁 &
+  对硬实时是决定性的 &
+  该环境应禁用的真实理由，见 \ref{sec:ch10-whoban}
+\\
+\end{longtable}
+
+下面展开三项最常被混淆的。
+
+\subsection*{体积：静态链接与嵌入式真正在意的部分}
+
+元数据是\underline{静态}代价：程序没抛过任何异常，表也躺在二进制里。
+对桌面与服务端应用，个位数百分比的体积通常无人问津；对按 flash 页数
+规划的固件，这几页就是真金白银。这也是 \Tp{-fno-{\Bk}exceptions} 在
+嵌入式工具链里长盛不衰的原因：表整个不发射。注意归因要干净：在
+x86-64 的某些平台工具链上，-O2 默认就发射 \Tp{.eh\_frame}
+（\Tp{-fasynchronous-{\Bk}unwind{\Bk}-tables} 开），纯 C 代码也一样，
+目的是让回溯、剖析与 core 分析有帧信息可用。做体积对比时必须把
+``展开表''与``异常表（LSDA）''分开称量，否则会把调试基础设施的钱记
+在异常头上。
+
+\subsection*{landing pad：优化器视野被切碎的地方}
+
+清理密集的代码里，每个可能抛出的调用都拖着一条指向清理入口的边：
+
+\begin{lstlisting}[style=cppstyle]
+// l.f() 与 l.g() 都可能抛出；无论哪条路径，
+// 已构造对象的析构都必须被执行。编译器为本函数
+// 生成统一清理入口（landing pad），两处抛出汇于它。
+void use(Local &l) {
+  int a = l.f();          // 抛出边 1 汇入 landing pad
+  int b = l.g(a);         // 抛出边 2 汇入 landing pad
+  l.commit(a + b);
+  return;                 // 正常路径：不经过上述机制
+}
+\end{lstlisting}
+
+正常路径依然不花钱，花的是编译期的优化空间：基本块在调用点被切开，
+寄存器分配必须让活值跨过清理边仍然可及，循环体里出现抛出调用时向量化
+与展开可能整个放弃，内联也常常因为``内联后清理边更难摆平''而却步。
+这类代价是\underline{间接的、代码形状相关的}，很难归因成单一数字，但
+它真实存在——给不抛出的接口标 \Tp{noexcept}，就是在删除这些抛出边。
+C 的 \Tp{goto cleanup} 惯例本质上就是手写的 landing pad，每一处提前
+返回都要人肉记得释放，对比一下就能看清两种语言在清理问题上把成本
+放在编译期还是放在程序员头上：
+
+\begin{lstlisting}[style=cstyle]
+/* C 手写清理：每个提前返回都要人肉核对已获资源 */
+int parse_frame(const uint8_t *buf, size_t len, Frame *out) {
+  Header *h = header_new();
+  if (!h) return ERR_NOMEM;
+  int rc = parse_header(buf, len, h);
+  header_free(h);          // 忘了这行就是泄漏
+  return rc;
+}
+\end{lstlisting}
+
+\subsection*{抛出路径：``异常当控制流''的直觉是对的，外推是错的}
+
+一次真实的抛出要做这些事：把异常对象复制到运行时分配的缓冲区
+（典型路径是一次堆分配），逐帧回溯并按 call-site 表匹配处理器，
+phase 1 全程扫描栈寻找捕获点，phase 2 再走一遍执行沿途析构。栈越
+深、加载的共享对象越多，查找越贵，量级在数百纳秒到若干微秒。所以
+``不要用异常做常规控制流''这个性能直觉完全正确。错误在于把它反向
+外推成``不抛出也要为此付费''：抛出路径的成本与正常路径的成本是两笔
+账，表驱动模型的设计目标恰恰就是把前者与后者彻底解耦。
+
+\section{``上层代价可忽略''的论证与评审口径}
+\label{sec:ch10-upper}
+
+应用层、业务层、服务后端的共同特征：异常发生在\underline{错误路径}，
+频率低（坏配置、断连接、超限输入），栈浅（错误多在入口层附近抛出），
+并且不在每帧预算或每包硬时限里。把同一调用路径上必然发生的开销摆出来
+对比：一次网络往返是数十微秒起，一次磁盘写毫秒量级，一次堆分配百纳秒
+量级——而表驱动异常给正常路径的增量是\underline{零条额外指令}。
+这个对比下，``异常性能差''在应用层热路径上测不出来的结论并不意外；
+能被测出来的是你有没有为错误路径写正确的处理逻辑。
+
+体积那笔账则要单独实测，口径是 ``同一翻译单元、开与关异常''：
+
+\begin{lstlisting}[style=shellstyle]
+# A/B 对比：同一翻译单元，开与关异常，比较体积
+# （前提：该 TU 不含 try/throw，否则关闭侧直接编译报错）
+g++ -O2 -fexceptions    -c parser.cpp -o with_exc.o
+g++ -O2 -fno-exceptions -c parser.cpp -o no_exc.o
+size with_exc.o no_exc.o
+# 把展开表与异常表分开称量，别把 .eh_frame 记成异常的钱
+readelf -S with_exc.o | grep -E 'eh_frame|except_table'
+\end{lstlisting}
+
+\begin{warning}[title={证明``异常慢''的两种经典实验错误}]
+第一种：在 -O0 下跑微基准。-O0 没有内联、没有调度、调试插桩密集，
+测出来的任何数字都推不到发布配置。第二种：在循环里抛出再捕获，
+算出``异常每秒吞吐低''的结论。这个实验测的是\textbf{抛出路径}，
+恰恰是本章认可其昂贵的部分；用它论证``try 也贵''，与本章开头
+\DomTra 那句丢限定语的禁令是同一种错误：把某个路径的成本外推成
+整个机制的成本。
+\end{warning}
+
+\begin{guideline}[title={评审口径：主张禁用者举证}]
+代码评审中有人以``异常代价高''主张禁用时，要求出示两者之一：
+（1）\underline{正常路径}的 A/B 对比测量（同编译器、同优化等级、
+同负载，且在发布配置下）；（2）\underline{体积}预算数据，说明本
+目标确实容不下异常表的静态开销。拿不出其中之一，则禁用提案按
+风格偏好处理，不按性能结论处理。
+\end{guideline}
+
+\section{对比要公平：返回码、异常与 \Tp{std::expected}}
+\label{sec:ch10-compare}
+
+禁了异常不等于没有成本，只是把成本从运行时账单换成别的账单。
+返回码至少有三笔账。第一笔是检查噪音：每层调用都要检查并转写错误码，
+样板在传播链上逐层复制。第二笔是值域侵占：0 或负数当错误码，就把
+这些值从合法返回值里划走，边界情况靠约定和运气。第三笔最隐蔽：
+错误处理路径挤掉 \Tp{noexcept} 语义的机会。历史上有一桩著名案例：
+\cpp{98}/{\Bk}\cpp{03} 时代 \Tp{vector} 扩容必须兑现强异常安全保证——
+失败时原容器完好无损。移动一个元素会掏空源对象，若移动到一半抛出，
+新旧两块缓冲里的元素状态都说不清；拷贝则没有这个问题（源对象原封
+不动）。于是当时的标准库只能在扩容时退回拷贝构造：不支持移动的
+大对象，每次翻倍都是整段深拷贝。\cpp{11} （2011 年发布）以
+\Tp{move{\Bk}\_if{\Bk}\_noexcept} 修复：移动构造标了 \Tp{noexcept}
+（或类型本身不可拷贝）才允许在扩容中使用移动。反过来说，今天仍然
+是``忘记给移动构造标 \Tp{noexcept}''在悄悄让 vector 退回拷贝时代——
+异常的代价在这里不是以指令的形式，而是以\textbf{类型系统}的形式
+流过你的代码：
+
+\begin{lstlisting}[style=cppstyle]
+struct Grid {
+  Grid(Grid &&src) : data_(src.data_), n_(src.n_) {
+    src.data_ = nullptr;
+  }
+  // 缺少 noexcept 标记：vector<Grid> 扩容时判定
+  // 该移动可能抛出，退回拷贝构造；
+  // 每次容量翻倍都退化为整段深拷贝。
+};
+\end{lstlisting}
+
+\cpp{23} 的 \Tp{std::expected<T, E>} 把第三笔账与第一笔账一起收敛：
+错误进入值的类型，正常路径与错误路径在同一返回类型里分叉；配对的
+monadic 组合子 \Fn{and\_then}、\Fn{or\_else}、\Fn{transform}、
+\Fn{transform{\Bk}\_error} 把逐层手写检查的样板压掉大半，使
+``显式错误传播''的成本第一次落到可维护的区间。本章只交代定位，
+用法与惯例留给后续错误传播章节。
+
+\begin{table}[htbp]
+\centering
+\caption{三种错误传播风格的\underline{定性}对比。本表是机理归纳，
+不是实测数据；量级与机理见 \ref{sec:ch10-paylist}。}\label{tab:ch10-styles}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}X@{}}
+\toprule
+维度（定性） & 返回码 & 异常 & \cpp{23} \Tp{std::expected} \\
+\midrule
+正常路径成本 &
+  每步显式检查与转写；分支可预测，但检查落在调用方 &
+  主流 ABI 表驱动下约等于零 &
+  值的包装与移动，几条寄存器操作
+\\
+错误路径成本 &
+  低，常数级 &
+  高：分配、展开、类型匹配 &
+  低
+\\
+代码噪音 &
+  高：检查样板逐层复制；0 与负数侵占合法值域 &
+  低：正常与错误路径在结构上分离 &
+  中：传播显式书写，monadic 组合可压低样板
+\\
+体积 &
+  无异常元数据 &
+  只读异常表，常为个位数百分比 &
+  无异常表；错误类型自身有代码体积
+\\
+确定性 &
+  强：无隐式控制流转移 &
+  弱：最坏展开延迟无法静态界定 &
+  强
+\\
+\end{tabularx}
+\end{table}
+
+\begin{compare}[title={公平对比的三条规则}]
+（1）同路径对比：比较异常就比异常的正常路径与抛出路径，比较返回码
+就带上检查噪音与值域约定的维护成本，各取一边等于不比。（2）同配置
+对比：所有数字出自发布配置与实测，-O0 的结论不进评审。（3）算全
+生命周期：检查噪音是每次改动都要付的利息，抛出成本是低频率的违约
+金——应用层通常利息更贵，硬实时里违约金的不可预算性才致命。
+\end{compare}
+
+\section{何时真该禁：列条件，不列教条}
+\label{sec:ch10-whoban}
+
+与旧条款的措辞无关，禁用异常成立的场合由环境约束定义，本章核对下来
+主要是三类。
+
+其一，硬实时的最热路径。理由不是``慢''，是\textbf{不可预算}：一次
+展开的耗时取决于栈深、加载模块数、处理器位置，展开器内部还要经过
+动态链接器遍历与可能的分配、锁；``每帧 200 微秒''这种预算无法对
+最坏情况展开给出上界。禁用它，换来的是展开延迟这个不确定性源整个
+消失。
+
+其二，受限固件。flash 与 RAM 按页计，异常表的静态体积是真开销，
+\Tp{-fno-{\Bk}exceptions} 把表整个省掉（某些工具链下 try/throw 随之
+成为编译错误）。同时要接住连带后果：内存分配失败的语义随异常模型
+一起改变——标准对分配失败如何通知留有实现定义的余地，无异常语境下
+有的运行时走终止、有的退化为空指针，工具链不同则行为不同，必须查
+该移植的手册并写死检查点，而不是假设 ``new 失败会返回 nullptr''。
+
+其三，跨 ABI 的 C 边界与某些插件宿主。异常跨过以 \Tp{extern}
+声明导出的 C 接口、或在自带错误模型的宿主（解释器扩展、图形
+引擎插件层）之间传播，属于未定义或不受支持的行为；两侧运行时与
+展开器不一致时，连``能被捕获''都没有保证。这类边界的正确姿势是把
+错误翻译成宿主约定（返回码、错误对象、挂起标志），异常止步于边界
+内侧。
+
+还有一类\textbf{反向}情形必须一并说清：有些场景里异常近似于\textbf{必须的}，禁用它并不消除失败处理，只是把失败处理的成本摊给每一个调用点。最典型的是自定义分配器，以及一切``获取即可能失败''的接口——\Tp{allocate} 的返回类型只有一个指针，失败要么编码成空指针，要么抛出；一旦选择空指针，每个构造点、每次容器扩容、每条 \Tp{make{\Bk}\_shared} 链路都得自带检查并把状态逐级回传，而标准契约本身是站在抛出这一侧的：\Tp{std::allocator::allocate} 失败抛 \Tp{bad{\Bk}\_alloc}，\Tp{vector} 扩容、智能指针构造都以此为前提。禁令落地时，这些检查不会消失，只是换成显式的错误出参、``合法但空''的对象状态与随之而来的误用面——用起来过于复杂且别扭，正是这一代条款在应用层被淘汰的原因。
+
+判据可以直接写进评审：禁令所覆盖的路径里，失败传播的责任是否被\textbf{整体下放到每个调用点}？下放了，就把这笔账重新计一次（检查噪音、漏检风险、可测性），按总成本裁决，而不是按``异常贵''这一句现成话裁决。
+
+\begin{bestpractice}[title={写异常禁令时，把三个限定语一起写进条款}]
+只写``禁用异常''四个字是教条。成立的最小写法是：（1）范围限定——
+点名哪类编译目标、哪层代码（如 ``仅硬实时线程与 C ABI 边界层''）；
+（2）理由限定——体积预算或最坏情况延迟，而不是泛化的 ``代价大''；
+（3）替代方案限定——写清改用返回码或错误对象时团队要承担的检查
+噪音与值域约定，并检查 noexcept 移动标记等连带修复。范围之外的
+代码默认允许异常，评审不再逐次辩论。
+\end{bestpractice}
+
+\section{收束：``异常禁令''的当代正确表述}
+\label{sec:ch10-close}
+
+把本章压缩成一条可直接写进指南的条款：
+
+\begin{guideline}[title={异常处理条款的正确结构}]
+在表驱动异常模型的主流 ABI 上，未抛出时正常路径开销接近零。
+任何异常禁令必须写成\textbf{范围限定}（哪类编译目标、哪层代码）
+加\textbf{理由限定}（体积预算、最坏情况展开延迟的不可预算性，
+而非泛化的 ``代价大''）加\textbf{替代方案限定}（改用返回码或
+\Tp{std::expected} 时要承担的检查噪音与值域成本）。三者缺一，
+条款按环境约束处理，不得作为性能结论引用。反过来，被禁范围内若含
+``获取即可能失败''的接口（分配器、构造期资源获取、容器扩容路径），
+条款还必须写明团队接管的是\textbf{等量的显式检查成本}：禁令删掉的是
+抛出语法，删不掉失败本身。
+\end{guideline}
+
+\DomTra 那句话的当代修正版本其实很短：异常在错误路径上确实贵，在
+体积上确实占，在硬实时上确实不可预算；唯独在应用层的正常路径上，
+它不收钱。在应用层按泛化代价论禁用异常，等于为不存在的开销支付
+代码质量的税——而税率是每处手写检查、每次值域协商、每个忘了标
+\Tp{noexcept} 的移动构造，账还常常记不到``省下了异常''的人头上。
+
+
+% ---- frag_ch11.tex ----
+\chapter{异常与 RTTI 禁令的语境：它当年在防什么}
+\label{ch:ch11-ban}
+
+本章不劝任何人改用异常，也不为禁令翻案。它要做的事只有一件：把
+\DomGo 系上游条款中异常与 RTTI 两条禁令放回它们被写下时的工程语境，
+分清哪些威胁是当时真实存在的，哪些是后来转抄过程中长出来的。
+\DomTra 口径的中文译本在这两处都留下了语义含混的句子，
+而含混正是夸大的温床。
+
+\begin{guideline}[title={本章立场}]
+\DomGo 式禁令当年的第一动机是\textbf{可用性与可审计性}：
+某些目标平台上展开器缺失或残缺、RAII 纪律尚未成为全员共识、
+跨语言宿主里存在两条互不知晓的错误通道。
+``异常代价大''是对这三条语境的\underline{事后压缩}，
+不是条款的原始论据。禁令的合理残余停在边界上；
+把边界条款普适成语言评价，才是本章要拆解的错误。
+\end{guideline}
+
+\section{语境还原：四条工程动因}
+\label{sec:ch11-context}
+
+\subsection{跨平台可移植性：防的是``不可用''，不是``慢''}
+\label{ch:ch11-port}
+
+在早期版本的上游条款里，异常禁令给出的首要理由是移植面，
+而不是性能。这个次序在转抄中丢失了。
+
+\CPP{} 的异常处理不是单靠语言前段实现的：它要求编译器与运行时库
+在目标平台上共同提供展开器（unwinder）、展开表与人格例程。
+在那个时期，游戏机、部分嵌入式操作系统与实时类目标平台的工具链
+要么根本不提供这套设施，要么提供得不完整、不一致。
+\textbf{禁令首先防的是：代码矩阵里某个目标上这个语言特征
+``不可用''，或者在不同目标上行为不一致。}
+这不是速度问题，而是同一份源码能否在所有目标上编译、链接、
+以相同语义运行的问题。
+
+第三条动因是 ABI 差异。在那个时期，不同厂商编译器对异常数据的
+编码格式、展开约定的实现未必互相兼容，同一程序里跨越编译器边界
+抛出再捕获在那个时期被视为不可依赖的行为。
+项目若同时接入多个第三方编译器产出的目标码，
+把 throw 排除在接口之外是最省事的全局不变式：
+配合 \Opt{fno-exceptions} 构建，产物里连展开表与相关符号都不存在，
+平台矩阵的可验证性一下子变得简单。
+
+把这一段语境压缩成一句话就是：
+\textbf{禁令防的是 availability（能不能用），
+转抄后人们复述的是 performance（快不快）}。
+两个命题的证据类型完全不同，不能互相代替。
+
+\subsection{没有 RAII 纪律的年代：真实风险是资源泄漏}
+\label{ch:ch11-raii}
+
+第二条语境是人的因素。那个时期的存量代码里有大量过渡形态：
+裸指针、手工 \Fn{new} 与 \Fn{delete}、\CL 风格的句柄
+（\Tp{FILE} 指针、socket 描述符）。在这种代码基础上，
+异常安全不是一个语言特性，而是一份\textbf{规范义务}：
+每个函数都要守住基本保证、强保证或不抛保证中的一级，
+这要求每一位贡献者都理解 RAII、理解提交点的安排、
+理解为什么半途抛出比顺序执行更容易留下破损状态。
+
+公司无法假设全员掌握强异常安全保证。于是真实的风险序列是：
+未被捕获或捕获点不当的异常沿栈展开，
+沿途每个未完成清理的资源都是一次泄漏或一次破损的全局状态；
+而泄漏是静默的，在那个诊断工具尚不普及的时期很难归因。
+禁令把这条风险整体拆掉：错误必须显式处理，
+否则程序根本不会以这种方式失败。
+
+\textbf{所以这一条防的是资源泄漏与状态破损，不是性能。}
+后来 RAII 成为主流教义——智能指针进入标准、
+Rule of Five 成为常识、容器普遍接管了所有权——
+这条动因的前提在托管语言风格的新代码里大体消失了。
+但它的残余仍然适用于一类场景：异常穿过\emph{没有}按 RAII
+纪律写的旧模块或桥接层，那时风险序列原样重现。
+
+\subsection{跨边界与混合语言：C 帧与宿主解释器}
+\label{ch:ch11-host}
+
+第三条语境到今天依然最坚硬，因为它不是偏好而是机制。
+
+其一，\CL 帧不识别 \CPP 的展开协议。标准明确：
+若 \CL 函数出现在抛出点与捕获点之间的调用栈上，
+跨越它的展开是未定义行为。把异常送过一段 \CL 栈，
+在那个时期通常的直接表现就是崩溃，而且崩在清理逻辑自己身上。
+
+其二，宿主解释器的语义冲突。在 \Lang{Python} 的 C-API
+宿主里，错误靠引用计数哨兵值与全局错误指示器传播；
+在 \Lang{Lua} 宿主里，错误机制建立在 \Fn{setjmp} 式跳转或
+解释器自有的展开之上。回调线程上抛出的 \CPP 异常要穿过
+解释器自己的 C 层帧——解释器不会为它清理内部状态，
+两条错误通道互不知情，结果是宿主状态与 \CPP 状态各自破损一半。
+这类语境下禁用异常不是保守，是唯一正确的边界协议。
+
+其三，插件与动态库边界。跨 DSO 抛接要求两侧
+编译器、标准库实现、异常模型全部一致，
+这在插件生态里几乎不可能是可验证的前提。
+所以``在模块边界上以错误码或状态对象交接、
+异常不外逸''的写法，即便在允许异常的工程里也长盛不衰——
+某家大型代码库走的就是相反方向的折中：允许异常，
+但在模块边界以 \Tp{noexcept} 收口，这里只作概括，不展开。
+
+\subsection{静态可审计性：崩溃路径与恢复路径分离}
+\label{ch:ch11-audit}
+
+第四条语境是大型代码库的可靠性治理。异常引入了一条
+\textbf{不可见的控制流边}：任何一行的函数调用都可能不返回本地、
+直接跳到某个动态匹配的捕获点。审计者要从静态代码回答
+``这个函数可能怎么失败''时，throw 与 catch 构成的恢复路径
+和崩溃路径搅在同一条通道里，逐个 catch 点排查吞错误的成本很高。
+
+\DomGo 式条款的选择是把两种失败模式在\emph{机制}上分开：
+程序性 bug 走 CHECK 类断言直接终止，留下最近的现场与核心转储；
+可预期的运行时错误走返回值，逐处在调用点可见。
+某家大型代码库的治理策略即在于此——不可恢复的错误
+不进恢复路径，宁可终止也不带病运行，
+因为恢复路径需要有人证明自己处理了它，
+而崩溃不需要：崩溃不会撒谎。
+测试视角同理：在那个时期，各测试框架对未捕获异常的默认处置并不一致，
+逃逸的异常有被记成通过的实例；终止则不可能被漏读。
+
+这一条今天不再以禁令形态存在，但偏好保留了下来，
+改叫``分层错误策略''。四条语境汇总如表~\ref{ch:ch11-tabctx}。
+
+\begin{table}[htbp]
+\centering
+\caption{异常禁令的四条语境：当年威胁与今天的状态}
+\label{ch:ch11-tabctx}
+\begin{tabularx}{\textwidth}{
+  >{\raggedright\arraybackslash}p{0.14\textwidth}
+  >{\raggedright\arraybackslash}p{0.25\textwidth}
+  >{\raggedright\arraybackslash}p{0.19\textwidth}
+  >{\raggedright\arraybackslash}X }
+\toprule
+\textbf{语境} & \textbf{当年的威胁} & \textbf{今天是否仍成立}
+& \textbf{今天的替代} \\
+\midrule
+跨平台移植 & 目标平台展开器缺失或残缺；第三方编译器 ABI 不一致
+& 主流桌面与服务器平台已收敛；受限平台仍成立
+& 平台矩阵测试；把 throw 限制在确认有展开器的层 \\
+RAII 纪律 & 全员规范无法保证；泄漏与破损状态静默扩散
+& 新代码大体不成立；旧模块与桥接层仍成立
+& 异常安全等级写入注释与评审清单 \\
+跨边界混语 & \CL 帧打断展开链；宿主解释器双通道冲突
+& 仍成立，且属机制而非偏好
+& noexcept 边界；错误码跨 ABI 交接 \\
+静态审计 & 恢复路径与崩溃路径混用，吞错误难排查
+& 偏好仍在，不再够得上禁令
+& 分层策略：边界层可恢复，核心层 fail-fast \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{上游条款实际给出的替代及其设计意图}
+\label{sec:ch11-alt}
+
+把禁令只读成``不许''是不完整的；条款同时给出了替代件，
+每个替代件都对应上面某条语境：
+
+\begin{itemize}
+\item \textbf{返回状态码}。函数返回值槽专门留给错误码，
+成功与否在调用点逐处可见。设计意图：不让任何一次失败隐身，
+对应静态可审计性一条。样板检查代码多，是当时的自觉代价。
+\item \textbf{CHECK / DCHECK 断言致命错误}。
+把``程序 bug''与``运行时错误''分流：前者直接终止、立刻留现场，
+后者才走返回值；DCHECK 只在调试构建生效。
+设计意图：崩溃路径与恢复路径机制性分离。
+\item \textbf{多返回值用 out 参数或结构体}。
+返回值槽被错误码占用后，结果本身经由指针形参写回，
+或打包成一个结构体整体返回。设计意图：在单返回值语言约束下
+把三条通道——错误码、致命性、值——各归其位。
+\end{itemize}
+
+\begin{note}[title={这些替代在 \cpp{11} 之后各自被语言特性升级}]
+上游替代件并未作废，而是换了载体：
+多返回值场景从 out 参数升级到 \cpp{17} 的结构化绑定与
+\Tp{std::tuple}，一次交接多个结果不再需要借形参；
+``可能失败的单值''从 out 参数升级到 \Tp{std::optional}，
+以及后来标准化的 \Tp{std::expected}（此前由
+\Tp{absl::{\Bk}StatusOr} 一类库方案先行承担），
+忘记检查从 review 问题变成编译器诊断问题。
+状态码本身则从裸 \Tp{int} 升级到带类型的错误枚举与
+错误值对象。可以说现代语义派写法是把替代件``吸收升级''，
+而非把禁令作废。
+\end{note}
+
+同一个解析函数，三代写法放在一起对读（清单见
+\ref{ch:ch11-code3}）：
+
+\begin{lstlisting}[style=cppstyle,
+  caption={同一错误处理的三代写法：状态码、异常、expected 风格},
+  label={ch:ch11-code3}]
+// ---- 第一代：状态码 + out 参数（上游原始口径的典型形态）----
+// 返回值槽只留给错误码，结果写进调用方提供的对象。
+// 接口故意无聊：每次失败都在调用点可见；
+// 代价是样板检查逐处手写，漏检只能靠评审拦截。
+enum ParseResult { kOk = 0, kErrorEmptyInput = 1 };
+
+ParseResult ParseHeader(const std::string& text, Header* out) {
+  if (text.empty()) {
+    return kErrorEmptyInput;
+  }
+  out->SetFromTrimmed(text);   // 假定调用方检查过返回值
+  return kOk;
+}
+
+// ---- 第二代：异常（禁令语境之外的主流社区写法）----
+// 错误走独立的展开通道，值返回槽被解放。
+// 但恢复路径成立的前提是每一层都守住异常安全等级，
+// 这在 RAII 纪律未普及的年代无法由接口自身保证。
+Header ParseHeaderOrThrow(const std::string& text) {
+  if (text.empty()) {
+    throw ParseError("input is empty");
+  }
+  Header h;
+  h.SetFromTrimmed(text);
+  return h;
+}
+
+// ---- 第三代：std::expected 风格（C++23 标准化，此前由库承担）----
+// 错误回到返回值槽，但被类型系统接管：
+// 忘记检查会触发编译器诊断，
+// 第一代靠人肉纪律守的部分由机器接手。
+std::expected<Header, ParseError> ParseHeaderChecked(
+    const std::string& text) {
+  if (text.empty()) {
+    return std::unexpected(ParseError("input is empty"));
+  }
+  Header h;
+  h.SetFromTrimmed(text);
+  return h;
+}
+\end{lstlisting}
+
+三代对读的结论：第一代赢在当时的可审计性，输在样板与漏检风险；
+第二代赢在接口简洁，输在安全等级依赖全员规范；
+第三代把第一代的显式通道和第二代的值语义合到同一个返回值里，
+是``吸收升级''路线上目前最完整的形态。
+
+\section{RTTI 禁令的同构分析}
+\label{sec:ch11-rtti}
+
+RTTI 条款与异常条款是同构的，连转抄失真的方式都一样。
+先看代价本身：\Fn{dynamic{\Bk}\_cast} 依赖 typeinfo 符号
+与类型名编码字符串，跨 DSO 场景还额外依赖链接器对
+typeinfo 弱符号的合并——同一类型的两份 typeinfo 副本一旦
+因为可见性设置或加载方式而分裂，
+\Fn{dynamic{\Bk}\_cast} 对明明相同的类型可能返回空指针。
+这类故障零散、难复现，排查要读链接图。
+注意这条代价在多数平台同样遵循``未使用才付费''的规律：
+不用 \Fn{dynamic{\Bk}\_cast} 时基本免费，
+\Opt{fno-rtti} 能再省下一点表与符号的体积；
+用了才谈代价，这与异常模型的冷热路径分账逻辑一致。
+
+所以``到处 dynamic\_cast''真正暴露的是\underline{设计}问题：
+虚函数树上层层试探类型，等于承认层级结构把本该由分发承担的
+行为表达成了类型枚举问题。禁令针对的是这种滥用的温床，
+而不是类型系统本身。
+
+编译期替代有三个谱系，回答的都是``我知道这个基类指针的实际类型''：
+
+\begin{itemize}
+\item \textbf{CRTP 向下转型}。派生类把自己作为模板实参交给基类，
+基类内以 \Fn{static{\Bk}\_cast} 安全回看，零运行期成本。
+\item \textbf{visitor 双分发}。类型试探变成对
+\Fn{visit}/{\Bk}\Fn{accept} 的一次重载解析，集合封闭时
+编译器可以替你查穷尽性。
+\item \textbf{\DomLlvm 系的 traits 方案}：\Fn{llvm::isa}、
+\Fn{llvm::dyn{\Bk}\_cast}、\Fn{llvm::cast}。每个 IR 节点类
+实现静态 \Fn{classof}，判定依赖节点自带的 kind 枚举而非
+typeinfo。它在 \DomLlvm 域流行有三个原因：
+编译器 IR 的类型集合是\textbf{封闭可枚举}的，kind 编码比
+RTTI 更便宜也更可控；switch 在枚举上的穷尽性警告免费可得；
+以及该代码库在那个时期本就整体关闭 RTTI 构建，
+traits 是禁令之下唯一顺手的类型试探通道。
+\end{itemize}
+
+最后是把禁令读歪的第二层失真：``禁 RTTI''被转抄成``禁多态''。
+条款限制的是运行时类型试探设施，\textbf{虚函数与动态分发
+不在限制之列}——恰恰是该代码库自己大量使用虚接口。
+把两者混为一谈，等于把``不许用镜子''抄成``不许照镜子''。
+
+\section{与第十章的衔接：禁令的合理残余}
+\label{sec:ch11-residue}
+
+第十章处理的是条款文本的滞后与误读；本章结论可以直接接上去：
+
+\textbf{合理残余}存在于特定边界，一共四类：
+\begin{enumerate}[label=(\arabic*)]
+\item \CL ABI 边界——异常不得穿越调用者提供的 \CL 帧；
+\item 硬实时热路径——未抛出路径要求可预测占用的场景；
+\item 受限固件——flash 与 RAM 预算容不下展开表的场景；
+\item 宿主插件与解释器桥——双错误通道冲突（\S\ref{ch:ch11-host}
+本章语境三已述）。
+\end{enumerate}
+
+\textbf{被夸大的部分}只有一处，但流传最广：把上述边界条款
+普适成对语言本身的评价。就语言事实而言，主流实现的异常模型
+是冷热路径分账的——未抛出路径近乎免费，
+成本集中在真正抛出的那一次；``异常代价大''作为全称命题
+在通用平台上并不成立。
+
+\begin{compare}[title={边界条款与普适断言的形态差异}]
+\textbf{边界条款}（上游原文的形态）：在 X 类平台上展开器缺失；
+在 Y 类边界上两条错误通道冲突；在 Z 纪律水平下无法保证安全。
+每一条都带着限定主语和可验证的谓词。\\[2pt]
+\textbf{普适断言}（转抄后的形态）：``\CPP 的异常慢、
+有隐藏成本、不该用。''主语换成了整个语言，谓词不再可验证。
+从前者到后者没有推理，只有压缩。
+\end{compare}
+
+\begin{warning}[title={转抄变形最典型的一句话}]
+``\DomGo 禁用异常，所以 \CPP 的异常性能差。''
+这是把\textbf{公司策略三段论}错接成了\textbf{语言事实三段论}：
+大前提其实是``某公司面向某平台矩阵与某纪律水平''，
+被省略；小前提其实是``该语境下显式通道更好审计''，
+被替换；结论其实是``故在其代码库内禁用''，
+被改写成了对语言的一般评价。补回被省略的前提，
+这个三段论就当场失效。
+\end{warning}
+
+\section{收束：团队如何做出自己的决定}
+\label{sec:ch11-decision}
+
+本章不输出结论条款，只输出决策流程。照抄任何一家公司的条款
+与照抄本章一样危险。
+
+\begin{bestpractice}[title={团队决策流程五步}]
+\begin{enumerate}[label=(\arabic*)]
+\item \textbf{列出代码库的边界与运行环境}：目标平台清单里
+有没有展开器缺失或残缺的一项；有没有 \CL、\Lang{Python}、
+\Lang{Lua} 之类的宿主桥；产物是否跨编译器或跨 DSO 交付。
+边界决定条款，而不是名声决定条款。
+\item \textbf{按层划定错误处理策略}：哪些层允许恢复路径
+（返回状态、optional、expected 风格），哪些层只许 fail-fast
+（断言终止）。在层与层的接缝处写明跨界协议。
+\item \textbf{需要禁的地方，写明禁的到底是什么}：
+是禁 throw 表达式、禁 catch 处理器，还是禁用 unwinder 运行时
+（\Opt{fno-exceptions}）；对 RTTI 同理，是禁
+\Fn{dynamic{\Bk}\_cast} 还是连带 typeinfo 构建。
+三者约束范围不同，混写会导致构建选项与评审口径对不上。
+\item \textbf{提供 lint 化检查}：把条款变成 \Lib{clang-tidy}
+检查、自定义编译诊断或评审脚本，让违规在合入前可见。
+没有机器执行的禁令只会退化成 folklore。
+\item \textbf{条款标注依据与复审日期}：每条限制旁边写清
+它对应本章四条语境中的哪一条、在哪些边界成立，
+并给出复审时间。语境消失时（例如砍掉某个目标平台），
+条款应随之松绑，而不是代代相传。
+\end{enumerate}
+\end{bestpractice}
+
+按此流程做出的决定，无论方向都成立；缺了流程的决定，
+无论方向都只是转抄。错误处理各风格的逐项横向对比
+（返回值、异常、断言、状态对象的接口形态与工具支持），
+留待本书的错误处理风格对比表一章集中给出；
+把本章五步落成可评审、可执行的团队风格手册文本的写法，
+见后续团队手册章节。
+
+
+% ---- frag_ch12.tex ----
+\chapter{其余失效条目盘点：被冻结在旧标准年代的条款}
+\label{ch:ch12-stale}
+
+前面两章分别处理了 inline 与异常这两个高争议点。但译本滞后条款（本章统一打
+\DomTra{} 标签）的规模远大于此：它们散落在类型推导、lambda、所有权、移动、泛型
+与继承等十几个主题里，每一条单独看都像 ``风格偏好''，批量照抄就会发现它们共享同
+一个病灶——条款写成的那一年，语言只有 \cpp{03}，编译器只有那几个版本，工程约束
+是 ``同一份头文件要能在十种工具链上编过''。本章按主题盘点这批条目，每条回答三件
+事：旧条款原本怎么说，语言后来怎么变，照抄到今天会具体伤在哪里。
+
+\section{auto 与显式类型：从一律禁止到按可见性约束}
+\label{sec:ch12-auto}
+
+\DomTra{} 年代流行的表述是 ``禁止在类型不可见处使用 \Tp{auto}，变量声明必须写出
+显式类型''。它并非凭空来的洁癖，而是针对 \cpp{03} 的两个真实痛点。其一是初始化
+晦涩：\cpp{03} 里没有统一初始化语法，\Fn{make\_pair} 之类的工厂函数返回类型层层
+嵌套，读者从声明行看不出对象到底是什么。其二是指针声明误读：\cpp{03} 时代
+\Tp{auto} 还是一个存储类别说明符（几乎无人使用），改义为类型占位符后，
+\Tp{const auto}、\Tp{auto*}、\Tp{auto\&} 三种写法混在一起，初读者容易把
+``auto 是类型'' 与 ``auto 只是类型的名字'' 搞混，从而在 \Tp{const} 推导上反复出错。
+
+\cpp{11} 把 \Tp{auto} 重定义为类型推导占位符，同时引入 range-for 与 lambda。此后
+泛型代码与函数式写法成为主流：容器嵌套层级变深、迭代器类型随容器改写、lambda 的
+闭包类型则是\emph{无名}的——标准里没有给出拼写它的语法。\cpp{17} 的结构化绑定与
+inline 变量进一步把 ``声明行写出完整类型'' 的成本抬高：\Tp{auto [key, value]} 是
+唯一现实的写法。照抄旧条款的伤害有三层，越靠后越难在评审里被发现。
+\begin{enumerate}[label=（\arabic*）]
+\item 手写长类型使容器换型变成全文件改动：\Tp{map} 换 \Tp{unordered\_map} 时，
+  所有迭代器声明行都要跟着改，编译器在每一行各报一次错。
+\item 强制显式类型使 \Tp{std::{\Bk}function} 成为中转站：因为写不出 lambda 的类型，
+  只能给它套一层类型擦除，代价是堆分配与间接调用，且失去内联机会。
+\item lambda 工厂函数按旧条款根本不能存在——返回类型无名，禁令等于 ``禁止这种
+  设计''，工程于是退回函数指针加 \Tp{void*} 上下文的老路子。
+\end{enumerate}
+
+\begin{lstlisting}[style=cppstyle,caption={限制 \Tp{auto} 后被迫写出的代码},label={lst:ch12-auto-legacy}]
+// 症状一：迭代器类型手写，容器一换就每行各报一次错
+std::map<Id, std::vector<Sample>>::const_iterator cit = buckets.cbegin();
+for (; cit != buckets.cend(); ++cit) {
+  Process(cit->second);
+}
+
+// 症状二：写不出 lambda 的类型，只好退回类型擦除包装
+typedef std::function<bool(const Row&, const Row&)> Cmp;
+Cmp cmp = MakeThresholdCmp(limit);   // 堆分配 + 间接调用，难以内联
+std::sort(rows.begin(), rows.end(), cmp);
+\end{lstlisting}
+
+\begin{lstlisting}[style=cppstyle,caption={同一逻辑的现代姿势：右侧类型可见或语义显而易见},label={lst:ch12-auto-modern}]
+// 右侧类型可见：迭代器类型由 cbegin() 决定，换容器不用改这一行
+for (auto cit = buckets.cbegin(); cit != buckets.cend(); ++cit) {
+  Process(cit->second);
+}
+
+// 语义显而易见：range-for 里按引用取值，具体类型不影响阅读
+for (const auto& bucket : buckets) {
+  Process(bucket.second);
+}
+
+// 闭包类型无名：这里显式类型写不出来，auto 是唯一可行姿势
+auto cmp = [limit](const Row& a, const Row& b) { return a.v < b.v; };
+std::sort(rows.begin(), rows.end(), cmp);
+\end{lstlisting}
+
+\begin{guideline}[title={把 \Tp{auto} 条款改写成可见性条款}]
+条款该管的不是 ``有没有用 \Tp{auto}''，而是 ``读者能否在声明行附近判断类型''。
+可执行的替代姿势有两条：右侧表达式的类型在同一行或同一函数内可见（工厂调用、
+\Fn{begin} 等）；或者类型对读代码的人不构成信息（range-for 的临时量、lambda 闭包）。
+两条都不满足时（例如函数返回值被赋给一个下游要长期持有的对象），才要求显式类型。
+\end{guideline}
+
+\begin{warning}[title={从 ``禁用 \Tp{auto}'' 直接跳到 ``处处 \Tp{auto}''}]
+这批条款的另一个常见翻车姿势是矫枉过正：\Tp{auto} 吞掉引用与指针语义。
+\Tp{auto v = vec[0]} 得到值拷贝，\Tp{auto\&} 才是引用；\Tp{auto} 遇
+\Tp{std::{\Bk}vector<bool>} 的代理类型会推导出一个只活到本语句的临时对象。旧条款的
+可读性诉求确实存在，正确的处理是加 ``推导来源必须可见'' 的约束，而不是取消推导。
+\end{warning}
+
+\section{lambda 与 std::function：复杂度禁令的前提换了}
+\label{sec:ch12-lambda}
+
+旧条款通常写作 ``不要写复杂 lambda，超过若干行的逻辑请提炼成具名函数或函数对象''。
+这条款的出身是 \Tp{bind} 时代：\cpp{11} 之前，标准库没有闭包语法，社区用组合子
+拼装回调，那些表达式（\Tp{boost::{\Bk}bind} 加占位符 \Tp{\_1}、\Tp{\_2}）确实是不可读
+的源头，于是 ``限制匿名函数复杂度'' 在当时是有效手段。
+
+语言在 \cpp{11} 引入了 lambda 与 \Tp{std::{\Bk}function}，\cpp{14} 又补上泛型 lambda 与
+初始化捕获，此后回调、算法参数、异步任务体几乎默认是 lambda。今天的现实是：
+\Fn{sort}、\Fn{for\_each}、\Fn{transform}、线程池 \Fn{Submit} 都要接收可调用对象，
+把它们全部改成具名函数对象，等于每个回调多写一个类与四到六行样板。
+
+照抄旧条款的具体伤害有三处。第一，回调退回 \Tp{void*} 上下文加函数指针，类型安全
+靠注释维持，上下文生命周期无人检查。第二，一次性比较器写成 struct 后与调用点分离，
+阅读算法意图需要跳到文件另一处。第三，也是最隐蔽的：禁令并不消除复杂度，只是将
+其搬家——被提炼出来的 ``小函数'' 需要额外参数把上下文传进去，签名从两个参数变成
+七个。
+
+真正值得约束的是捕获列表，不是 lambda 本身：
+
+\begin{itemize}
+\item 引用捕获一切（\Tp{[\&]}）与值捕获一切（\Tp{[=]}）是把纪律外包给编译器。
+  显式列出被捕获的名字，review 时才能逐条核对生命周期。
+\item 逃逸执行的 lambda（提交给线程池、注册为长期回调）中引用捕获局部量，就是
+  悬垂引用的标准生成器。需要跨线程存活的东西应按值或用初始化捕获搬进来。
+\item \Tp{[=]} 在旧标准里并不捕获 \Tp{this} 的语义细节，各指南解释不一；
+  需要成员状态时显式写 \Tp{[this]} 或 \Tp{[self = shared\_from\_this()]}。
+\end{itemize}
+
+\begin{lstlisting}[style=cppstyle,caption={捕获列表纪律：问题在捕获方式，不在匿名写法},label={lst:ch12-capture}]
+// 反面：引用捕获一切，job 异步执行时 limit 与 sink 都已离开作用域
+auto job = [&](const Sample& s) { sink->Push(limit, s); };
+pool.Submit(job);                     // limit 是栈上的局部量
+
+// 正面：显式列出捕获，需要跨线程存活的按值或用初始化捕获移入
+auto job = [limit, sink = std::move(sink)](const Sample& s) {
+  sink->Push(limit, s);
+};
+pool.Submit(std::move(job));
+\end{lstlisting}
+
+\begin{bestpractice}[title={给 lambda 条款换一个可检查的判据}]
+保留 ``复杂逻辑要提炼'' 的意图，但把判据从 ``是否匿名'' 换成三件可 grep 的事：
+捕获列表必须显式（禁 \Tp{[=]} 与 \Tp{[\&]} 的整形式）；lambda 体超过 15 行考虑提炼；
+提交给异步执行的 lambda 不得按引用捕获栈上对象。这三条在 \cpp{11} 之后的代码库里
+都还能落地，而 ``不要写复杂 lambda'' 单独一条无法落地，因为它没有定义复杂。
+\end{bestpractice}
+
+\section{智能指针：裸指针所有权约定已经无人执行}
+\label{sec:ch12-smartptr}
+
+旧条款的形态是 ``资源由创建它的模块负责释放，跨模块传递裸指针并在注释里写明
+调用方还是被调用方 delete''。这套约定的前提是没有可用的所有权类型：\cpp{03} 只有
+\Tp{auto\_ptr}（它会在拷贝时偷走所有权，因此不能放进容器），社区要么自造引用计数
+类，要么靠 ``谁 new 谁 delete'' 的口头契约。
+
+语言侧的变化很干脆：\cpp{11} 引入 \Tp{unique\_ptr} 与 \Tp{shared\_ptr}，\Tp{auto\_ptr}
+则在同版被标注废弃、此后从标准中移除。\cpp{14} 补上 \Fn{make\_unique}。正确性收益不是 ``优雅''，而是
+把三件容易出错的事变成类型系统保证：异常路径自动释放（旧条款的代码里每个提前
+\Fn{return} 都是一次泄漏候选）；所有权转移在调用点显式可见（\Fn{std::move} 之后
+源指针为空，再解引用是可直接定位的错误）；析构顺序不再依赖注释。
+
+残留禁令今天的伤害集中在跨边界处：接口继续要求裸指针，却不再解释这个裸指针到底是
+什么语义。新成员读到 \Tp{Node*} 参数时无法判断该不该释放它，于是出现两类典型事故
+——接收方 ``以防万一'' 地 delete 造成双重释放；或者双方都以为自己该释放，造成泄漏。
+现代分工可以一句话说明：只读且必定存在用 \Tp{const T\&}；可能为空且不拥有用裸指针
+（或文档化的可空视图）；值缺失用 \Tp{std::optional}（\cpp{17}）；拥有权用
+\Tp{unique\_ptr} 或 \Tp{shared\_ptr}。这套分工的完整讨论属于接口设计主题，本章不
+展开，只强调一点：裸指针作为 ``借用'' 出现完全正当，作为 ``带注释的所有权'' 出现
+则是失效条款。
+
+\begin{lstlisting}[style=cppstyle,caption={同一接口的两种所有权表达},label={lst:ch12-ownership}]
+// 旧条款写法：裸指针携带所有权，异常路径靠人记住 delete
+Node* n = CreateNode(cfg);
+if (!Validate(cfg)) { delete n; return Fail(); }   // 每个提前返回都要补一遍
+graph.Add(n);                                      // 归谁释放？只有注释知道
+
+// 现代写法：所有权写在类型里，借用与拥有不再靠约定区分
+auto n = std::make_unique<Node>(cfg);
+if (!Validate(cfg)) { return Fail(); }             // 离开作用域自动释放
+graph.Add(std::move(n));                           // 移交，n 此后为空
+
+void render(const Scene& s);        // 只读借用：必定存在，不负责释放
+Node* firstChild(Node& parent);     // 可空借用：nullptr 表示没有子节点
+\end{lstlisting}
+
+\begin{note}[title={为什么这条禁令会长期残留}]
+它残留不是因为有人反对智能指针，而是因为它常与另外两条捆绑出现：``禁止异常'' 与
+``公共 API 必须是 C 兼容类型''。前者使 RAII 的释放路径失去一半意义，后者使
+\Tp{unique\_ptr} 无法出现在导出接口上。拆解时要连着这两条一起看：内部实现用所有权
+类型，边界处按 ``可空借用'' 规则降级为裸指针或句柄，才是自洽的现代条款。
+\end{note}
+
+\section{移动语义与 noexcept：编译器不支持的理由已经过期}
+\label{sec:ch12-move}
+
+``禁止移动构造与移动赋值，一律用拷贝加 swap'' 是上一代大型代码库的常见条款。它的
+理由写在当年的评审记录里：目标工具链里有两个版本的编译器不完整支持 \cpp{11}，
+标准库实现也尚未跟进，只要有一处依赖移动，整个模块就得降级到共同子集。
+
+这个理由在两个方向上失效。工具链侧：主流编译器与 \Lib{libstdc++}、\Lib{libc++}
+对移动的支持早已是默认路径，工程若要维持共同子集，正确的旋钮是构建参数
+\Opt{std=c++03}，而不是逐条禁用语言特性。语言侧：\cpp{11} 之后出现了一批只能移动
+的类型，\Tp{unique\_ptr} 与 \Tp{thread} 都不可拷贝，禁令直接封死了
+``容器中存所有权句柄'' 与 ``工厂函数返回资源句柄'' 两条最常用的设计。
+
+照抄的伤害是可测量的。\Tp{vector} 扩容时如果元素没有可用的移动操作，只能逐个深
+拷贝；大对象按值返回在没有移动的年代依赖复制省略，而复制省略在标准里并非总是强制，
+于是接口被写成 ``传出参数加引用''。至于 \Tp{noexcept}，它和移动重载是绑定关系，
+结论可以直接引用异常章：容器的强异常安全保证要求扩容中途失败可回滚，因此
+\Fn{std::{\Bk}move\_if{\Bk}\_noexcept} 只有在移动操作声明为 \Tp{noexcept} 时才选移动，否则
+退回拷贝。写了移动却不写 \Tp{noexcept}，等于让容器替你选了拷贝；类型没有拷贝只有
+移动时，不 \Tp{noexcept} 的移动在扩容路径上是直接编译失败。
+
+\begin{lstlisting}[style=cppstyle,caption={移动重载与 \Tp{noexcept} 必须成对出现},label={lst:ch12-move}]
+class Buffer {
+public:
+  Buffer(Buffer&& o) noexcept;               // 不加 noexcept：扩容退回深拷贝
+  Buffer& operator=(Buffer&& o) noexcept;
+  Buffer(const Buffer&) = delete;            // 只移动类型：不加 noexcept 则
+                                             // vector 扩容直接编译失败
+private:
+  char*  data_;
+  size_t size_;
+};
+\end{lstlisting}
+
+\begin{lstlisting}[style=diffstyle,caption={禁令解除后的典型改写：手写深交换换成移动},label={lst:ch12-swap}]
+-void swap(Big& a, Big& b) {         // 老姿势：一份临时量加两次深拷贝
+-  Big tmp(a);
+-  a = b;
+-  b = tmp;
+-}
++void swap(Big& a, Big& b) noexcept { // 移动可用后：只搬指针
++  Big tmp(std::move(a));
++  a = std::move(b);
++  b = std::move(tmp);
++}
+\end{lstlisting}
+
+\begin{warning}[title={``支持弱'' 类理由的通病}]
+凡是理由写成 ``某些编译器不支持'' 的条款，都必须带一个可撤销条件：目标工具链清单
+与最低版本。缺这个条件的条款会在支持问题消失十年后继续生效，而且没人有权撤销它
+——评审记录早就找不到了。读到这类条款时，第一件事是查它列出的工具链是否还在
+CI 矩阵里；查不到，就当作过期处理。
+\end{warning}
+
+\section{函数模板与 SFINAE 限制：concepts 把前提反转了}
+\label{sec:ch12-concepts}
+
+旧条款形如 ``泛型接口需评审，模板参数必须用 \Fn{enable\_if} 显式约束，否则宁可写
+具体类型重载''。它的理由非常具体：\cpp{11} 年代的诊断信息在模板实例化失败时打印
+整条推导链，一个不匹配的参数能刷出上百行报错，新成员无法定位。限制泛型在当年是
+止血措施，不是审美判断。
+
+语言随后逐步改善了这条链路。\cpp{11} 的静态断言把诊断前移到接口处；\cpp{14} 的
+变量模板简化了约束写法；\cpp{17} 的 \Tp{if constexpr} 让分支不再靠重载集伪造；
+\cpp{20} 引入 concepts 与范围库，约束成为接口签名的一部分，不满足约束时的诊断
+直接指出哪条 requires 未成立。原条款的前提（``约束无法写进接口''）就此反转。
+
+照抄今天的具体伤害是三种。一是重复代码：为 \Tp{int32\_t}、\Tp{int64\_t}、
+\Tp{size\_t} 各写一份重载，逻辑改动要同步三次，漏掉一次就是只在某类型上出现的
+bug。二是窄化事故：手写重载的签名往往在整型宽度与符号性上不完全对齐，隐式转换
+在调用点悄悄发生。三是保留旧成本却没拿到旧收益：工程里手写一整套 \Fn{enable\_if}
+组合子，诊断仍然难读（约束埋在返回类型里），却比 concepts 写法长三倍。
+
+\begin{lstlisting}[style=cppstyle,caption={同一约束的两种表达：错误信息可读性差距的来源},label={lst:ch12-concepts}]
+// 旧式 SFINAE：约束藏在返回类型里，诊断在实例化之后才炸
+template <typename T>
+typename std::enable_if<std::is_integral<T>::value, T>::type
+clamp(T v, T lo, T hi);
+
+// C++20：约束进接口，不满足时诊断直接指向该 requires 子句
+template <std::integral T>
+T clamp(T v, T lo, T hi);
+
+// 自定义概念即文档，跨类型组合也能一句话说清
+template <typename T>
+  requires Addable<T> && Cost<T>
+T weightedTotal(const std::vector<T>& items, const std::vector<T>& cost);
+\end{lstlisting}
+
+\begin{compare}[title={限制泛型的旧条款 vs 约束接口的现代条款}]
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+旧条款（前提：约束无法写进接口） & 现代条款（前提：concepts 可用） \\
+\midrule
+泛型需逐个评审，默认写具体类型重载 & 约束写在 requires 子句，重载集由概念划分 \\
+必须配 \Fn{enable\_if} 才允许存在 & 概念不满足时编译器给出候选清单式诊断 \\
+模板错误算基础设施问题，需绕开 & 模板错误算接口问题，可在签名处修复 \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+\section{多继承与运算符重载：分清 ``已失效'' 与 ``仍可辩护''}
+\label{sec:ch12-strategy}
+
+最后一批案例提醒我们，失效条目盘点必须做二分，否则会把不该动的条款一起改掉。
+\DomGo{} 风格对多重继承的限制、以及 ``运算符重载一律视为可疑'' 的段落，常被
+归入 ``过时条款'' 一并废除——这是错的。
+
+多继承方面，限制的理由是语言事实本身：菱形继承的名字查找需要显式限定，虚继承
+带来对象布局与构造顺序的额外复杂度，跨库继承的布局差异还会踩到 ODR 边缘。这些
+代价不因标准版本变化而消失，所以 ``多重继承需要架构师批准'' 属于仍可辩护的工程
+策略。真正失效的是它附带的那句 ``继承只能有单一基类''——在无数据成员的接口混合
+（tag 类、能力混入）场景里，多重继承并没有引入上述任何代价。
+
+运算符重载同理。旧条款要求手写全部六个比较运算符、禁止重载 \Tp{operator\&} 与
+\Tp{operator,}。前半截已经失效：\cpp{20} 的三路比较运算符把 ``按字典序比较'' 的
+六个函数压成一行默认实现。后半截仍然成立：\Tp{operator\&} 被重载成取地址之外的
+含义、\Tp{operator,} 被重载成序列表达式，都会让读者的直觉与代码行为脱节。
+
+\begin{lstlisting}[style=cppstyle,caption={两种继承策略与两种重载策略并排},label={lst:ch12-inherit}]
+// 仍可辩护：无数据成员的抽象基类混合，不产生菱形，不需要虚继承
+class Loggable     { public: virtual void emit(Level) = 0; };
+class Timestamped  { public: virtual std::time_t stamp() const = 0; };
+class Audit : public Loggable, public Timestamped {
+public:
+  void emit(Level) override;
+  std::time_t stamp() const override;
+};
+
+// 已失效：旧条款要求手写六个比较运算符
+struct Version {
+  int major, minor, patch;
+  auto operator<=>(const Version&) const = default;   // C++20 一行
+};
+\end{lstlisting}
+
+\begin{compare}[title={已失效条款 vs 仍可辩护策略}]
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+已失效条款（前提已反转，照抄有代价） & 仍可辩护策略（理由独立于标准版本） \\
+\midrule
+``禁止 \Tp{auto}，除非声明行写出完整类型'' & ``公共 API 不做隐式转换构造''：重载
+决议与调用点歧义是恒久成本 \\
+``禁止移动构造与移动赋值''（编译器支持弱） & ``析构函数不做可能失败的操作''：
+与所有权类型同时代仍然成立 \\
+``跨边界传裸指针并用注释规定 delete 方'' & ``多重继承需架构师批准''：菱形与
+ODR 边缘不随版本消失 \\
+``泛型接口需逐个评审，默认写具体重载'' & ``禁止重载 \Tp{operator\&} 与
+\Tp{operator,}''：语义脱离直觉，与语言年代无关 \\
+\bottomrule
+\end{tabularx}
+\end{compare}
+
+\begin{note}[title={为什么两类条目要分开处理}]
+把仍可辩护的策略当失效条款废除，会在下一个评审周期被原样加回来，并且附带一条
+``上次改动未经论证'' 的记录；把失效条款当策略保留，则让整份指南失去可信度——
+读者无法区分哪条有依据。盘点的产出必须是两张清单，而不是一张 ``全部现代化''
+的改写清单。
+\end{note}
+
+\section{标准容器与算法：先造轮子的条款前提已经反转}
+\label{sec:ch12-stl}
+
+同一批译本里还有一族给标准库设限的条款：``接口层不得出现标准容器''、
+``容器一律用自研版本''、``标准库设施按白名单放行''，以及把 ``用标准库''
+写成需要逐次申请的特例。它们当年的理由同样具体，而且不是性能迷信：
+\cpp{03} 的容器没有移动语义，按值返回与 \Tp{vector} 扩容各付一次深拷贝；
+调试器看 \Tp{std::map} 的内部结构近乎天书，没有可用的可视化脚本；
+各家实现与工具链的 ABI 互不兼容，容器跨过 DLL 边界传出去就是崩溃；
+异常安全等级在实现之间参差，容器在异常路径上的行为无法审计。
+这四条在 ``同一份头文件要能在十种工具链上编过'' 的工程语境里都成立。
+
+反转仍然发生在 \cpp{11} 及之后，而且逐条对得上：移动语义与 \Fn{emplace}
+系列让按值返回和原地构造不再拷贝；主流调试器与各大标准库实现自带的
+printer 让标准容器可读；单一编译器版本贯穿全项目后，跨边界传容器的主要
+风险消失；异常安全等级被写进标准并被实现普遍遵守。更关键的是口径换了
+——现代文本把标准库放在 ``先看一眼有没有'' 的第一位，自研设施要为绕过它
+单独辩护，而不是反过来让标准容器为使用它辩护。表~\ref{tab:ch04-threefamilies}
+里各家在 STL 这一行的分歧（大范围禁用、限推荐清单、冻结 ABI 边界之外鼓励、
+长期自研）正是这条默认姿势\textbf{尚未}统一的地方，读的时候要按年代取。
+
+照抄旧条款的代价分三层，越靠后越难在评审里被发现。
+
+\begin{enumerate}[label=（\arabic*）]
+\item 自研容器承担的是长期维护责任：迭代器类别、异常安全等级、
+  \Tp{noexcept} 移动标记这些契约都要自己补齐，补齐之前它比被替换掉的标准
+  容器更弱。第~\ref{sec:ch12-move} 节那条 \Fn{move{\Bk}\_if{\Bk}\_noexcept}
+  的故事在这里同样成立——标准容器漏标 \Tp{noexcept} 会退回深拷贝，
+  自研容器退回的是一条没人审计过的拷贝路径。
+\item ``接口层不得出现标准类型'' 会把表达力最强的类型赶出签名：
+  \Tp{std::string{\Bk}\_view}、\Tp{std::span}、\Tp{std::optional} 这些
+  \cpp{17}/{\Bk}\cpp{20} 的边界类型被迫换成 ``指针加长度'' 的裸组合，空值语义
+  退回魔数指针，越界检查退回约定。
+\item 白名单式放行让标准算法几乎不出现在代码里：手写循环顶替
+  \Fn{find{\Bk}\_if} 与 \Fn{sort}，丢掉的不仅是行数，还有算法签名自带的
+  契约（复杂度、前置条件、迭代器类别）与后续改造入口
+  （\cpp{17} 的执行策略、\cpp{20} 的范围库都是直接换算法即可迁移）。
+\end{enumerate}
+
+\begin{guideline}[title={标准库优先条款的三级写法}]
+一、先在标准库里找：容器、算法，以及 \Tp{string{\Bk}\_view}、
+\Tp{span}、\Tp{optional}、\Tp{variant} 这一类边界类型；二、找不到再看
+标准的当代扩展（\cpp{20} 范围库、\Tp{std::format}）；三、只有能列出标准
+设施的\textbf{具体缺口}才允许自研或引入第三方——固定容量与栈上分配、
+侵入式引用计数、内存布局与分配器控制、跨 ABI 的稳定契约，都属于可列的
+缺口，``更快'' ``更小'' 不属于。缺口要写进注释或评审记录，条款才是双向
+可检查的。反向一句同样要写进条款：不得以泛化的性能或体积理由否决标准
+容器，这类理由在 \cpp{11} 之后基本不成立。
+\end{guideline}
+
+``优先'' 不等于 ``只用''，这一点必须写进条款，否则本册就变成自己解剖过
+的那种倒置文本。大厂代码库至今保留自家基础库，理由是可列的而不是审美的：
+\DomGo 系转向自家设施是因为它要覆盖的平台矩阵与内部工具链比标准库当时的
+能力更早触顶；WebKit 长期以自研容器与字符串为主，是因为渲染路径对内存布局
+与分配策略有具体要求；\DomLlvm 与 \DomMod 则把标准设施限制在推荐清单内，
+接口层偏爱轻量视图类型。这三条与 ``编译器不支持'' 一类的旧理由不同，它们
+是\textbf{当代仍然成立的工程约束}，所以属于第~\ref{sec:ch12-strategy} 节
+说的 ``仍可辩护的策略''，而不是本章说的失效条款。判别办法与全章一致：
+把理由还原成一句可判真伪的话，再检查这句话在你的代码库里是否成立。
+
+\section{全章盘点表}
+\label{sec:ch12-table}
+
+表~\ref{tab:ch12-stale} 汇总本章各节的对照结论，供评审时逐条取用。
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.11\textwidth}
+                >{\raggedright\arraybackslash}p{0.18\textwidth}
+                >{\raggedright\arraybackslash}p{0.19\textwidth}
+                >{\raggedright\arraybackslash}p{0.17\textwidth}
+                >{\raggedright\arraybackslash}p{0.18\textwidth}}
+\caption{\DomTra{} 批量条目的失效原因与替代姿势}\label{tab:ch12-stale}\\
+\toprule
+条目 & 旧条款要点 & 前提反转点 & 照抄症状 & 现代建议 \\
+\midrule
+\endfirsthead
+
+\multicolumn{5}{r}{（续表~\ref{tab:ch12-stale}）}\\
+\toprule
+条目 & 旧条款要点 & 前提反转点 & 照抄症状 & 现代建议 \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+
+\Tp{auto} 与显式类型 &
+类型不可见处禁用 \Tp{auto}，声明须写全类型 &
+\cpp{11} 起 lambda 闭包类型无名，\cpp{17} 结构化绑定无显式写法 &
+迭代器手写导致换容器全文件改；被迫上 \Tp{std::{\Bk}function} &
+改为可见性条款：右侧类型可见或语义显而易见即可用 \\
+
+lambda 与 \Tp{std::{\Bk}function} &
+不写复杂 lambda，改用函数对象或 \Tp{bind} &
+\cpp{11} 引入 lambda，\cpp{14} 加泛型与初始化捕获 &
+回调退回函数指针加 \Tp{void*}；参数列表膨胀 &
+约束落在捕获列表：显式捕获，逃逸任务禁按引用捕获栈量 \\
+
+智能指针与所有权 &
+裸指针传所有权，注释规定由谁 \Fn{delete} &
+\cpp{11} 有 \Tp{unique\_ptr}，\cpp{14} 有 \Fn{make\_unique} &
+双重释放或双方都不释放；异常路径漏删 &
+所有权进类型；边界处按可空借用降级，语义写明 \\
+
+移动与 \Tp{noexcept} &
+禁用移动，一律拷贝加 swap &
+\cpp{11} 起有只移动类型；容器用移动需 \Tp{noexcept} &
+扩容深拷贝；\Tp{vector} 存不下所有权句柄 &
+允许移动并把 \Tp{noexcept} 与移动重载绑定 \\
+
+函数模板与约束 &
+泛型需评审，须配 \Fn{enable\_if}，否则写重载 &
+\cpp{20} concepts 让约束进接口，诊断指向 requires &
+同逻辑多份重载；漏改一种类型即 bug &
+用概念表达约束，保留具体重载只作特化 \\
+
+多继承与运算符重载 &
+单一基类；比较运算符逐个手写 &
+无成员基类混合不产生菱形；\cpp{20} 三路比较可默认 &
+多余的显式限定；六个函数的样板与不一致 &
+策略保留但写明适用条件；比较运算默认化 \\
+
+标准容器与算法 &
+接口层禁标准容器，容器优先自研，设施按白名单放行 &
+\cpp{11} 移动与 \Fn{emplace}、调试可视化、单一 ABI 矩阵、异常安全等级入标准 &
+自研契约补齐前更弱；边界类型退回指针加长度；手写循环丢算法契约 &
+默认标准库优先，自研须列出具体缺口（固定容量、侵入计数、布局控制） \\
+\end{longtable}
+
+\section{收束：条款考古法四问}
+\label{sec:ch12-fourq}
+
+\begin{guideline}[title={条款考古法：任何一条风格条款都可以这样查}]
+\begin{enumerate}[label=（\arabic*）]
+\item \textbf{它针对的语言年代。} 条款成文时标准是哪个版本？它引用的特性
+  （\Tp{auto\_ptr}、\Tp{bind}、手写六个比较运算符）还在不在？
+\item \textbf{它针对的工程年代。} 理由里提到的工具链、CI 矩阵、目标平台今天还
+  在吗？``某些编译器不支持'' 有没有附带的最低版本清单？
+\item \textbf{前提是否还在。} 把条款的理由还原成一句可判真伪的话，检查这句话
+  在当前代码库是否成立。成立则它是仍可辩护的策略，原样保留；不成立则它是失效
+  条目，进入第 4 问。
+\item \textbf{替代姿势是否给出。} 废止一条却没有替代写法的改动不算完成；
+  新条款必须能落成可检查的形式（一条静态检查、一个判据或一段示例代码）。
+\end{enumerate}
+这套四问不专属于 \DomTra{} 标签的这批条目。第一部分的各份主流指南
+（\DomGo{}、\DomLlvm{} 与各家现代风格集）都各自冻结了一批条款，冻结原因高度
+相似：写条款的人遇到了当时能解决、如今已经不是问题的事。评审任何一份指南时都可
+以带着这四问进场；同时记住本章最后一节的二分——第 3 问回答 ``不成立'' 的是失效
+条目，回答 ``仍然成立'' 的是可辩护策略，两者在改动清单里必须分列。
+\end{guideline}
+
+\begin{bestpractice}[title={把考古结论写成条款变更单}]
+每条废止或修订都要留下四行：原条款文字、原判据、失效证据（标准特性与引入年代，
+或工具链清单）、新条款文字加一段示例代码。缺 ``新条款可检查'' 一行的变更，
+半年后会被同一条款以原样回归——评审人只会看到代码里出现了它当初想禁止的东西。
+\end{bestpractice}
+
+
+% ---- frag_ch13.tex ----
+\part{让风格为开发服务}
+
+\chapter{把条款变成机器：\Tp{clang-format}、\Tp{clang-tidy} 与 \Tp{IWYU}}
+\label{ch:ch13-tools}
+
+前两部分把条款逐条摆开，也逐条暴露了同一种脆弱：凡是只存在于文档里、
+靠人来背诵和自觉遵守的约定，都会在第三次人员轮换之后开始腐烂。
+本章换一个提问方式——不再问``这条风格该怎么写''，而是问
+``这条风格能不能不由人来执行''。\Tp{clang-format}、\Tp{clang-tidy} 与
+\Tp{IWYU} 三件工具各管一层，层与层之间边界清楚；管不到的那一层，
+才是评审与团队手册真正要花力气的地方。
+
+\section{三层分工：先想清楚哪一层归谁}
+\label{sec:ch13-layers}
+
+把风格手册里的条款按``机检可行性''切开，大致落在四层里。
+总图如下，后面各节逐一展开：
+
+\begin{itemize}
+  \item \underline{格式化层}，交给 \Tp{clang-format}。空白、换行、括号断行、
+        include 分组排序这类确定性的排版重排，全部由 \Lib{libclang} 解析出的
+        AST 驱动：它是在理解语法结构之后重排 token，而不是文本替换。
+        这一层的条款不该出现在评审意见里，出现了说明门禁没装好。
+  \item \underline{语义约定层}，部分交给 \Tp{clang-tidy}。它以检查族
+        （check family）为单位开关规则，能给出一部分自动修复。
+        命名偏好、旧写法升级、明显的误用模式属于这里。
+  \item \underline{依赖层}，交给 \Tp{IWYU} 与 include 顺序检查。
+        ``谁真正用了这个符号、谁就该自己 include''这类问题，
+        可以从评审口径变成机器口径，见 \S\ref{sec:ch13-iwyu}。
+  \item \underline{设计判断层}，\underline{无法自动化}。所有权归属、
+        接口切分、错误传播策略、什么时候该用异常——这些条款依赖上下文
+        里的意图，工具至多提出疑问，回答仍然要靠评审。
+\end{itemize}
+
+第二部分的教训正好为这张图作注：凡是当年就能自动化的条款
+（缩进、括号位置、include 顺序）几乎没有一条腐烂；
+腐烂最厉害的两类——\DomTra 时代的 \Tp{inline} 语义条款与异常安全条款——
+恰恰是当年没有机器可检口径、只能写成人读散文的条款。
+散文条款的保质期等于作者的在职时间。
+
+\begin{guideline}[title={手册的演化方向}]
+风格手册每修订一次，都应顺手做一次分拣：能把语义条款``降级''成排版规则、
+或``升级''成某条检查（哪怕只是提高告警噪音）的，立刻交给工具；
+确实交不出去的，就在手册里明确标注它的策略属性——这是设计约定，
+由评审执行，并写明评审时该问什么。不要留下既无法自动、又假装可以
+靠自觉执行的中间态条款，那正是腐烂的起点。
+\end{guideline}
+
+\section{\Tp{clang-format} 实操要点}
+\label{sec:ch13-format}
+
+配置放在项目根，文件名 \Tp{.clang-format}。工具对被格式化的每个文件
+向上搜索，命中的第一个 \Tp{.clang-format} 生效；子目录可以放自己的
+一份来覆盖整个子树，但在 \CPP 项目里，一份根配置加少量例外目录
+通常比层层碎片好维护。一份文件内部还可以按 \Tp{Language} 键分节，
+用 YAML 文档分隔符把 \CPP 与 \Lang{Proto}、\Lang{Java} 等其他
+语言的排版规则隔开，互不拖累。
+
+配置的心智模型是``继承链加最小覆盖''：\Tp{BasedOnStyle} 选定一个
+上游风格（\DomGo 的 Google、\DomLlvm 的 LLVM、\Tp{Mozilla} 等），
+之后只写你真正要改的键。键越少，升级工具时行为漂移的面越小。
+include 排序由 \Tp{SortIncludes} 与 \Tp{IncludeBlocks} 控制，
+分组本身用 \Tp{IncludeCategories} 的正则类别表达：每条正则匹配
+include 指令的完整文本（尖括号包含从开尖括号起匹配，引号包含从
+开引号起匹配），\Tp{Priority} 数字小的组排前面，同一组内按字典序。
+命令行 \Opt{style} 的优先级高于一切文件配置，\Opt{style=file} 表示
+仍去找 \Tp{.clang-format}，找不到时回落到 \Opt{fallback-style}——
+CI 里应当把 fallback 显式钉死，避免未覆盖到的文件被另一种默认风格洗过。
+
+\begin{lstlisting}[style=yamlstyle]
+# 项目根 .clang-format：按 Language 分节，只写要覆盖的键
+---
+Language: Cpp
+BasedOnStyle: LLVM          # 继承链的根；本地覆盖越少越好
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+AccessModifierOffset: -4    # 与 IndentWidth 4 配对：访问修饰符顶格
+DerivePointerAlignment: false
+PointerAlignment: Left
+SortIncludes: true          # 也可取更严的按大小写敏感排序的值
+IncludeBlocks: Regroup      # 重排成组，而不是只组内排序
+IncludeCategories:
+  - Regex:    '^<.*>$'      # 尖括号：标准库与第三方，组内字典序
+    Priority: 2
+  - Regex:    '.*'          # 兜底：项目自身的引号 include
+    Priority: 1
+---
+Language: Proto             # 其他语言各起一节，改动互不影响
+BasedOnStyle: Google
+\end{lstlisting}
+
+\begin{warning}[title={版本不一致等于没有门禁}]
+\Tp{clang-format} 在不同大版本之间会改排版决策，这是设计行为不是缺陷。
+开发者本机 16、CI 镜像 18，结果是同一段代码两个人轮流``格式化''出
+乒乓 diff。必须把版本号钉进 CI 与 pre-commit 配置，并让本机工具
+来自同一包源；升级工具版本本身要像 big-bang reformat 一样
+单独成提交（见 \S\ref{sec:ch13-ci}）。
+\end{warning}
+
+\section{CI 门禁与``谁改谁洗''}
+\label{sec:ch13-ci}
+
+接入 \Tp{clang-format} 绕不开一次历史债务清算，两条路线各有代价。
+
+第一条是``大爆炸''：一次性把全仓库洗成目标风格。它干净、彻底、
+一次痛完，但会污染 blame——此后任何人 \Tp{git blame} 一行老代码，
+看到的作者都是洗格式的那位和那一天。隔离办法是仓库根放
+\Tp{.git-blame-ignore-revs} 文件，登记纯格式化提交的哈希，
+再让每个克隆配置一次忽略：
+
+\begin{lstlisting}[style=shellstyle]
+# 1) 全量洗：单独成一次提交，绝不夹带任何逻辑改动
+find src include -name '*.h' -o -name '*.hpp' -o -name '*.cpp' \
+  | xargs clang-format --style=file -i
+git add --all
+git commit -m 'style: repo-wide clang-format sweep'
+
+# 2) 把这次提交的哈希登记进忽略名单，随仓库提交
+git rev-parse HEAD >> .git-blame-ignore-revs
+
+# 3) 每个克隆配置一次，blame 与 log 自动跳过格式化提交
+git config blame.ignoreRevsFile .git-blame-ignore-revs
+\end{lstlisting}
+
+\begin{compare}[title={大爆炸 vs 谁改谁洗}]
+\textbf{大爆炸}：一次巨型提交，历史一刀切断；适合刚接入工具、
+团队交接的窗口期。之后回归``谁改谁洗''即可。\\
+\textbf{谁改谁洗}（增量）：只格式化本次 diff 触及的行，历史 blame
+基本完好；代价是长期存在新旧两种排版并存的文件，读起来不如全量统一。
+多数 \CPP 团队最终选择``大爆炸开局、增量维持''的组合。
+\end{compare}
+
+增量格式化有两种成熟实现思路，概括如下。其一是\underline{脚本式按行过滤}：
+用 \Tp{git diff} 解析出本次改动的行号区间，交给 \Tp{clang-format}
+的 \Opt{lines} 选项（接受 \Tp{起始:结束} 区间列表），只洗这些行；
+对未跟踪或改名文件要额外处理。其二是直接用 \Tp{git-clang-format}
+这个官方脚本，它把上述流程打包成一个子命令，默认对比暂存区或指定
+rev 做增量格式化，并支持 \Opt{git-diff-base} 之类的选项。
+两种路线都要求流水线把``格式化后仍有未洗的行''当作失败退出，
+门禁才有效力。
+
+提交前的最后一道闸是 pre-commit 钩子，把工具版本连同参数一起钉死
+在配置里，克隆即得：
+
+\begin{lstlisting}[style=yamlstyle]
+# .pre-commit-config.yaml：只洗本次暂存的文件
+repos:
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v18.1.8.0            # 与 CI 镜像同一版本，钉死
+    hooks:
+      - id: clang-format
+        args: [--style=file, --in-place]
+        types_or: [c++, c]
+\end{lstlisting}
+
+\section{\Tp{clang-tidy} 按风格族配置}
+\label{sec:ch13-tidy}
+
+\Tp{clang-tidy} 的规则以前缀分族组织，族名即检查名单里的通配段。
+按``它到底在管什么''来选择族，比逐条挑检查省力得多：
+
+{\small\begin{longtable}{>{\raggedright\arraybackslash}p{0.17\textwidth}
+                  >{\raggedright\arraybackslash}p{0.23\textwidth}
+                  >{\raggedright\arraybackslash}p{0.27\textwidth}
+                  >{\raggedright\arraybackslash}p{0.16\textwidth}}
+\caption{\Tp{clang-tidy} 检查族速览}\label{tab:ch13-families}\\
+\toprule
+族前缀 & 性质 & 典型检查 & 自动修复 \\
+\midrule
+\endfirsthead
+\multicolumn{4}{r}{（接表 \ref{tab:ch13-families}）}\\
+\toprule
+族前缀 & 性质 & 典型检查 & 自动修复 \\
+\midrule
+\endhead
+\Tp{bugprone-\allowbreak \_*} & 疑似错误语义模式，多数默认在列 &
+  \Tp{bugprone-\allowbreak unused-\allowbreak return-value}、\Tp{bugprone-\allowbreak exception-\allowbreak escape} &
+  极少，以诊断为主 \\
+\addlinespace
+\Tp{performance-\allowbreak \_*} & 隐性热路径开销 &
+  \Tp{performance-\allowbreak unnecessary-\allowbreak value-\allowbreak param}、
+  \Tp{performance-\allowbreak move-\allowbreak const-arg} & 部分可修 \\
+\addlinespace
+\Tp{modernize-\allowbreak \_*} & 把 \DomTra 写法升级为 \DomMod 写法 &
+  \Tp{modernize-\allowbreak use-nullptr}（\cpp{11} 起弃用 \Tp{NULL}）、
+  \Tp{modernize-\allowbreak use-\allowbreak override} & 大多一键可修 \\
+\addlinespace
+\Tp{cppcore-\allowbreak guidelines-\allowbreak \_*} & \CPP Core Guidelines 的机器化条款 &
+  \Tp{cppcore-\allowbreak guidelines-pro-type-\allowbreak cstyle-\allowbreak cast}、
+  \Tp{cppcore-\allowbreak guidelines-avoid-c-\allowbreak arrays} & 少数可修，噪音偏大 \\
+\addlinespace
+\Tp{readability-\allowbreak \_*} & 可读性与风格偏好，最接近``风格条款'' &
+  \Tp{readability-\allowbreak braces-around-\allowbreak statements}、
+  \Tp{readability-\allowbreak magic-numbers} & 大多可修 \\
+\addlinespace
+\Tp{misc-\allowbreak \_*} & 杂项与聚合类，默认关闭居多 &
+  \Tp{misc-const-\allowbreak correctness}、\Tp{misc-include-cleaner} & 部分可修 \\
+\addlinespace
+\Tp{abseil-\allowbreak \_*} & Abseil 库的 API 迁移专用 &
+  \Tp{abseil-string-\allowbreak find-str-\allowbreak contains} & 大多可修，仅在用 Abseil 的仓库开 \\
+\bottomrule
+\end{longtable}}
+
+\Tp{clang-tidy} 需要真实编译参数才能工作，靠
+\Tp{compile\_commands{\Bk}.json} 编译数据库获取；数据库怎么生成、
+怎么随构建更新是他册主题，本书只约定一句：
+\textbf{没有新鲜数据库，就没有可信的 tidy 结果}。
+
+配置同样放项目根（\Tp{.clang-tidy}），思路仍是``开族、逐条关、
+挑几条升级为错误''：
+
+\begin{lstlisting}[style=yamlstyle]
+# 项目根 .clang-tidy：按族开，按条退，重点条升级为错误
+Checks: >-
+  bugprone-*,
+  performance-*,
+  modernize-*,
+  readability-*,
+  -modernize-use-trailing-return-type,
+  -readability-magic-numbers
+WarningsAsErrors: >-
+  modernize-use-nullptr,
+  modernize-use-override,
+  readability-braces-around-statements
+HeaderFilterRegex: '^(src|include)/.*\.h(pp)?$'
+CheckOptions:
+  - key: readability-function-size.LineThreshold
+    value: 80
+\end{lstlisting}
+
+\Tp{WarningsAsErrors} 决定哪几条检查从告警升级为流水线失败，
+这是``族级宽松、条级严厉''的落点：族全开保证看得见，
+升级列表控制痛感，其余先当噪音观察一个迭代周期再定去留。
+逐条豁免走源码内注释，支持带检查名的 \Tp{NOLINT(检查名)}、
+跨行的 \Tp{NOLINTNEXTLINE} 与成对的 \Tp{NOLINTBEGIN}/{\Bk}\Tp{NOLINTEND}：
+
+\begin{lstlisting}[style=cppstyle]
+void tick() {
+  // 回调签名由框架定死，异常在此吞掉是设计决定而非疏漏
+  // NOLINTNEXTLINE(bugprone-exception-escape)
+  run_hooks();
+}
+\end{lstlisting}
+
+\begin{warning}[title={裸 NOLINT 当消音}]
+不带检查名的 \Tp{NOLINT} 会压制\emph{该行的全部}检查——三年后没人
+说得清当初消掉的是哪条、为什么。纪律只有三条：一、豁免必须带
+检查名，精确到条；二、必须紧跟一句理由，写的是设计决定而不是
+``工具错了''；三、评审对新增 \Tp{NOLINT} 与新增代码同等看待，
+滥用豁免的门禁应当比豁免本身更严。
+\end{warning}
+
+\section{\Tp{IWYU} 与 include 秩序}
+\label{sec:ch13-iwyu}
+
+第二部分说过，include 块最大的问题不是排得不齐，而是\underline{顺序掩盖依赖缺失}：
+头文件 A 恰好先包含了 B，C 用了 B 的符号却不 include B，编译照样通过，
+直到某天有人重排 A，C 在无改动提示下崩掉。这类问题在评审里几乎抓不到——
+评审人看的是``这个 include 块看着对不对''，而不是``少了哪个''。
+\Tp{IWYU} 的思路是反过来：让每个翻译单元基于真实使用
+（哪个符号定义在哪个头）报告``该加什么、该删什么''，
+把依赖缺失从观察问题变成机器问题。它同样吃编译数据库：
+
+\begin{lstlisting}[style=shellstyle]
+# 复用编译数据库；mappings 目录是项目自定的头文件映射规则
+iwyu_tool.py -p build -- \
+  --mapping_file=mappings/project.imp --max_line_length=100 src/widget.cpp
+\end{lstlisting}
+
+\Tp{IWYU} 的输出不能无脑照抄，前置声明是它最需要人来把关的部分。
+它鼓励把``只需要指针/引用''的依赖降级为前置声明，这会让头文件更瘦、
+重编更少；但第二部分的 \Tp{inline} 教训在这里重新出现：内联函数体、
+模板定义、按值成员与基类列表都必须见到完整类型，头文件里大量内联
+实现会顶掉大部分前置声明收益。合理的再平衡是：先按 \Tp{IWYU} 的
+报告补齐真正的自身依赖（\Tp{IWYU pragma: keep}/{\Bk}\Tp{export} 之类的
+标注用来固化有意为之的聚合头），再人工决定哪些单元值得为前置声明
+重排内联实现；\Tp{misc-include-cleaner} 可以提供第二意见，
+但两者都不替你做``接口该不该切''的判断。
+
+\begin{note}[title={include 秩序的两件工具如何分工}]
+\Tp{clang-format} 管\emph{已存在的} include 怎么分组、排序、去重噪音；
+\Tp{IWYU} 管\emph{应该存在}的 include 是哪些。先装前者、后装后者，
+否则每次 IWYU 改写之后都会被格式化再挪一次，看起来像两台机器打架。
+\end{note}
+
+\section{收束：条款到自动化的映射表法}
+\label{sec:ch13-mapping}
+
+本章的方法论可以压缩成一张表：给手册的每一类条款登记``自动化程度、
+落点工具、评审剩余''。这张表是下一章（团队手册怎么写）的核心素材——
+手册里每个条款条目都应当能从表中找到自己的那一行。
+
+\begin{table}[htbp]
+\centering
+\caption{条款类型与自动化落点的映射表}\label{tab:ch13-map}
+\begin{tabularx}{\textwidth}{@{}
+  >{\raggedright\arraybackslash}p{0.17\textwidth}
+  >{\raggedright\arraybackslash}p{0.15\textwidth}
+  >{\raggedright\arraybackslash}p{0.19\textwidth}
+  >{\raggedright\arraybackslash}X@{}}
+\toprule
+条款类型 & 可自动化程度 & 落点工具 & 评审剩余 \\
+\midrule
+排版与空白 & 完全 & \Tp{clang-format} + CI 版本钉死 & 仅风格选型争议 \\
+\addlinespace
+include 顺序与依赖 & 高 & \Tp{SortIncludes}、\Tp{IWYU} & 分层架构是否被绕过 \\
+\addlinespace
+命名与旧写法升级 & 半自动 & \Tp{clang-tidy} readability、modernize & 名字是否切中语义 \\
+\addlinespace
+语义约定（\Tp{inline}、异常） & 部分 & \Tp{clang-tidy} 特定条 + 编译选项 & 边界与策略仍是判断 \\
+\addlinespace
+设计与所有权 & 不可 & 无 & 全部交给评审 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{guideline}[title={装完三件工具之后手册该变成什么样}]
+工具接进来只是前半段。后半段是把手册同步改写：凡落入``完全/高''
+两档的条款，从正文规范降为附录一句话（``由 \Tp{clang-format} 执行''），
+腾出篇幅给``部分''与``不可''两档——写清楚评审该问的问题、
+该看的证据和豁免的登记办法。手册的字数应当随门禁的覆盖率
+下降而把评审的质量上升，这正是下一章的主题。
+\end{guideline}
+
+
+% ---- frag_ch14.tex ----
+\chapter{选型、迁移与长期维护}
+\label{ch:ch14-decide}
+
+前十章把坐标建齐了：风格指南是策略文档而非语言标准，
+被当真理引用的旧快照会持续生产过时代码，同一条错误处理策略在不同基线上的代价并不相同。
+本章是正文的收束，不再引入新条款，只回答三个流程问题：
+拿到陌生代码库时\emph{选哪套基线}；跑了几十年的老条款\emph{怎么考古、怎么打版本戳}；
+存量代码\emph{怎么迁}、评审现场\emph{怎么吵完并收尾}。
+三个问题合起来就是手册的长期维护机制——会腐烂的规范，与知道自己什么时候腐烂的规范，差别全在这套流程上。
+
+\section{按约束选基线}
+\label{sec:ch14-baseline}
+
+选型不是挑自己喜欢的风格，而是让外部约束先把候选集削减到一组。
+下面这棵决策树以文字形式给出：五问按顺序问，\textbf{第一个命中的问题直接决定基线}，
+后面的问题不再重新表决。
+
+\begin{guideline}[title={五问定基线：命中即停}]
+  \begin{enumerate}[label=\arabic*., leftmargin=2.6em]
+    \item \textbf{构建开关是否已封死异常与 RTTI？} 只要出现 \Tp{-fno-exceptions}、
+          \Tp{-fno-rtti} 或等价的 \Tp{/GR-}、\Tp{/EHs-c-}，基线就落在 \DomLlvm 式的
+          返回值加断言：错误用值表达，类型识别用标签枚举手写。
+          这类约束由链接配置与运行时决定，风格讨论无从置喙。
+    \item \textbf{是否运行在硬实时或固件位置？} 有截止期、有中断上下文、
+          有栈深度上限的，基线是内核式返回码加确定性路径：
+          分配点前移到初始化期、热路径无隐藏控制流、错误沿调用链逐层上抛整数码。
+    \item \textbf{是否要跨 ABI 边界交付？} 导出符号被别的编译器或别的语言消费时，
+          基线是 \Lang{C} 风格导出面加内部现代实现，异常绝不出边界。
+    \item \textbf{是否已有几百个文件的历史代码库？} 是——本地惯例优先，
+          条款只做增量，排版交给工具统一。
+    \item \textbf{以上都不是？} 应用层默认路径：\DomMod 基线、\cpp{17} 起步，
+          错误处理在异常与 \Tp{std::expected} 之间择一，选定后不再混用。
+  \end{enumerate}
+\end{guideline}
+
+把决策树摊平成条件到建议的映射表，评审现场可以直接查行。
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \begin{tabularx}{0.83\textwidth}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}
+    >{\raggedright\arraybackslash}p{0.18\textwidth} X@{}}
+    \toprule
+    约束条件 & 建议基线 & 一句话理由 \\
+    \midrule
+    \Tp{-fno-exceptions} 已在构建里 & \DomLlvm 式错误处理 & 抛出即当场终止，谈不上风格偏好 \\
+    \Tp{-fno-rtti} 已在构建里 & 标签枚举加显式下行转换 & \Tp{dynamic\_cast} 不可用，多态需自建判别式 \\
+    硬实时、有截止期 & 内核式返回码 & 确定性路径可审计，异常展开时间不可预算 \\
+    固件、RAM 以 KB 计 & \DomBare 式精简 \CPP{} 或 \CL & 展开表与类型信息本身就是尺寸成本 \\
+    跨编译器或跨语言 ABI & \Lang{C} 导出面加内部现代 & 异常没有跨实现的标准 ABI \\
+    数百文件的存量库 & 本地惯例优先加增量条款 & 一次性统一会让历史查询与评审同时失效 \\
+    新建应用层项目 & \DomMod 基线，\cpp{17} 起 & 无外部约束时按语言现行能力写 \\
+    \bottomrule
+  \end{tabularx}
+  \caption{外部约束到风格基线的映射（命中多行时按决策树顺序取先）}\label{tab:ch14-baseline}
+\end{table}
+
+\subsection{编译器选项约束：无 RTTI、无异常}
+\label{sec:ch14-noexcept-target}
+
+第一问命中的项目里，构建系统已经把运行时特性关掉，而关掉它不是风格决定，是二进制尺寸、链接约束或平台决定。
+正确动作是\emph{承认既成事实}：错误处理整体换成值语义，并在手册里明确写下``本项目不用异常''——
+不是因为异常不好，而是这台构建不允许。理由必须这样表述，
+否则新人会把它读成第三部分解剖过的那种``性能迷信式禁令''。配置侧的最低组合如下。
+
+\begin{lstlisting}[style=yamlstyle]
+# .clang-format —— 排版交给工具，人不再逐条争论
+BasedOnStyle: LLVM
+IndentWidth: 2
+ColumnLimit: 80
+SortIncludes: CaseSensitive
+
+# .clang-tidy —— 只开与本代码库约束一致的组
+Checks: >
+  bugprone-*,
+  modernize-use-nullptr,
+  modernize-use-override,
+  readability-magic-numbers
+WarningsAsErrors: ''
+HeaderFilterRegex: 'src/.*\.h'
+\end{lstlisting}
+
+\subsection{硬实时与固件：内核式返回码与确定性路径}
+\label{sec:ch14-rtos-baseline}
+
+第二问的约束来自调度与内存，不是审美。基线要点有三条，都落在错误处理之外的结构上：
+\textbf{分配点前移}——运行期的容器与字符串增长要么不存在，要么只在初始化期发生；
+\textbf{热路径无隐藏控制流}——不放析构有副作用的对象，不在中断路径调用可能阻塞的接口；
+\textbf{错误逐层上抛整数码}——日志与计数只在最外层做一次，中间层不解释、不吞码。
+配置上常见的是保留 8 列制表符，与上一小节的 2 空格基线互不兼容：
+它们服务于两类项目，手册里应当并置而非统一。
+
+\begin{lstlisting}[style=yamlstyle]
+# .clang-format —— 保守排版，评审 diff 越少越好
+BasedOnStyle: GNU
+IndentWidth: 8
+UseTab: ForIndentation
+ColumnLimit: 80
+AllowShortIfStatementsOnASingleLine: false
+
+# .clang-tidy —— 静态分析优先，风格类检查后置
+Checks: >
+  clang-analyzer-*,
+  bugprone-*,
+  cert-*,
+  -modernize-use-trailing-return-type
+\end{lstlisting}
+
+\subsection{应用层：\DomMod 基线，异常与 \Tp{std::expected} 择一}
+\label{sec:ch14-app-baseline}
+
+没有外部约束时，真正的决策点只剩一个：错误用\emph{抛}还是用\emph{返回值}表达。
+两条都成立，但\textbf{不能同时出现在同一层}。判据是错误在调用链上的传播密度：
+多数调用都可能失败、失败要逐层上浮的，返回值更诚实；
+错误是稀有路径、中间层多半只是透传的，异常更省事。
+选定之后把另一套从手册里删掉，或者明确划出适用区间（例如``构造函数与运算符用异常，其余接口用 \Tp{expected}''）。
+命名与指针细节交给工具，配置如下。
+
+\begin{lstlisting}[style=yamlstyle]
+# .clang-format —— 现代基线，标准版本显式写出
+Language: Cpp
+BasedOnStyle: Google
+Standard: c++17
+IndentWidth: 2
+ColumnLimit: 100
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+# .clang-tidy —— 命名约定写进检查项，不靠评审口头强调
+Checks: 'clang-analyzer-*,performance-*,readability-*'
+CheckOptions:
+  - { key: readability-identifier-naming.NamespaceCase, value: lower_case }
+  - { key: readability-identifier-naming.FunctionCase, value: camelBack }
+\end{lstlisting}
+
+\subsection{跨 ABI 边界：\Lang{C} 风格导出加内部现代}
+\label{sec:ch14-abi-baseline}
+
+第三问的关键认知是：边界两侧属于两套基线，而手册常常只写了里面那一套。
+正确写法是把边界本身单独立条款：导出面只使用 \Lang{C} 的链接约定
+（\Tp{extern} 声明的导出符号、不透明句柄、显式长度参数、调用方持有的缓冲区），内部实现随意现代化。
+这里唯一没有商量余地的规则是\textbf{异常不出边界}：它不是偏好，
+是不同实现之间没有标准化展开接口这一事实，按下一小节的分类属于语言事实。
+返回码在边界上必须成体系——统一错误码枚举，``零表示成功''或``负值表示失败''二选一，
+每个导出函数的所有权归属写进声明处注释。排版沿用第三小节，但导出头文件建议单独收紧行宽。
+
+\subsection{既有大代码库：本地惯例优先加增量条款}
+\label{sec:ch14-legacy-baseline}
+
+第四问命中时，手册的态度应当从``规定''切换成``登记''：
+先登记现有惯例（哪怕它和 \DomGo 或 \DomMod 都不一致），再判断哪些惯例值得改动。
+判据只有一个——\emph{这条改动能不能在增量评审中被单独验证}。
+不能的（全库重排参数顺序、把整层接口从返回码改成异常），要么配一次专门的机械提交，要么放弃。
+这一类项目\textbf{不应引入新的格式手工条款}：排版由格式化器接管，人只讨论命名、所有权与错误传播。
+遗留代码具体怎么挪，是第三节的内容。
+
+\section{旧条款的考古与更新流程}
+\label{sec:ch14-archaeology}
+
+第二部分给出了鉴别单个条款年代的方法；本节把它升级成流程，
+因为手册作为整体也需要断代与复审。第一步是给\emph{每一条}条款打类别标签，只允许三类之一。
+
+\begin{itemize}
+  \item \textbf{语言事实}：依据是语言标准或链接规则，可被一段代码或标准文本证伪。
+        例如``异常没有跨实现的标准 ABI''。它随标准版本演进，不随团队偏好演进。
+  \item \textbf{工程策略}：依据是本代码库的构建、测试、部署或人员约束，
+        例如``本库禁用 RTTI''。这类条款\emph{必须带限定语}写明约束来自何处；
+        限定语一丢，它当场变成 \DomTra。
+  \item \textbf{工具接管}：仲裁权已交给格式化器、静态分析器或编译器。
+        正确形态是一条元条款加一份配置文件；正文里再抄一遍具体规则就是失真源头。
+\end{itemize}
+
+三类标签决定了版本戳写什么、由什么触发复审、复审时做什么。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.11\textwidth}
+  >{\raggedright\arraybackslash}p{0.21\textwidth}
+  >{\raggedright\arraybackslash}p{0.18\textwidth}
+  >{\raggedright\arraybackslash}p{0.21\textwidth}@{}}
+  \caption{三类条款的版本戳与复审节奏}\label{tab:ch14-revision}\\
+  \toprule
+  类别 & 版本戳写什么 & 复审触发条件 & 复审时的动作 \\
+  \midrule
+  \endfirsthead
+  \multicolumn{4}{l}{\footnotesize 表~\ref{tab:ch14-revision}（续）}\\
+  \toprule
+  类别 & 版本戳写什么 & 复审触发条件 & 复审时的动作 \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  语言事实 & 依据的标准年代（如 \cpp{17}、\cpp{20}）与条款编号 & 标准升级、编译器基线上移 & 对照标准改写措辞 \\
+  工程策略 & 约束来源与判定日期（构建开关、平台、审计要求） & 约束消失或上游指南更新 & 约束仍在则保留，消失则删除 \\
+  工具接管 & 配置文件路径与工具版本 & 配置改动、工具升级 & 正文只留元条款，细节从配置生成 \\
+  \end{longtable}
+
+版本戳有一条硬要求：\textbf{戳要寄生在正文可见处}。第七、八章都见过原因——条款被引用时带走正文，带不走参考文献段落。
+做法是在条款正文末尾加一行固定格式的依据注（``依据：ISO/IEC 14882:2020；上游：\DomLlvm 指南 2025-03 快照''），
+并把它列为条款模板的必填字段。
+复审节奏不必按日历一刀切，更好的组合是\emph{事件驱动为主、年度盘点为辅}：
+标准基线上移、工具版本升级、构建开关变更各触发对应类别的复审，年度盘点只核对依据的上游日期是否已经超过一年。
+争议解决路径同样只有一条：\textbf{评审引用条款编号，不引用口头立场}。
+双方各自给出编号与依据行，给不出的当场撤回；都给了而结论冲突，进第四节的判例流程。
+
+\begin{warning}[title={机读清单是抽查工具，不是正文的替代品}]
+  把条款元数据写成结构化清单的收益很直接：脚本能定期抽查依据年代是否过旧、
+  复审日期是否逾期、哪些条款缺依据行。代价是清单与正文会漂移。
+  两条防线：清单由正文的条款模板字段\emph{生成}，不手写；
+  生成脚本挂进 CI，正文改了而清单没更新就构建失败。
+  任何时候都不要允许``先改清单再补正文''这种提交顺序。
+\end{warning}
+
+\begin{lstlisting}[style=jsonstyle]
+{
+  "manifest": "style-rules",
+  "generated": "2026-10-14",
+  "rules": [
+    { "id": "ERR-014", "category": "language-fact",
+      "title": "异常不得跨 ABI 导出边界",
+      "basis": "ISO/IEC 14882:2020", "upstream": "LLVM Standards 2025-03",
+      "review_due": "2027-03-31" },
+    { "id": "ERR-021", "category": "engineering-policy",
+      "title": "本库禁用 RTTI，多态用标签枚举",
+      "basis": "构建开关 -fno-rtti", "upstream": "内部决定 2024-11",
+      "review_due": "2025-11-30" },
+    { "id": "FMT-003", "category": "tool-enforced",
+      "title": "排版以 .clang-format 为准",
+      "basis": "clang-format 19", "upstream": "元条款",
+      "review_due": "2026-12-31" }
+  ]
+}
+\end{lstlisting}
+
+清单里 \Tp{review\_due} 与 \Tp{category} 两个字段就够脚本做三件事：
+列出逾期条款；统计``工程策略''里有多少条\emph{没写依据来源}（那是 \DomTra 候选名单）；
+检查``工具接管''类是否还残留手工规则。
+
+\section{存量代码迁移策略}
+\label{sec:ch14-migration}
+
+选定基线、给条款打戳之后，剩下最贵的一步：把既有代码挪过去。
+迁移策略的选择并不影响终态，只影响过程成本，而成本的大头在评审噪声与历史可追溯性。
+
+\subsection{格式化：一次性大爆炸配 blame 忽略}
+\label{sec:ch14-bigbang}
+
+排版类改动（第二节分类里的``工具接管''那类条款）适合一次性做干净：按目录跑格式化器，单独一个提交，
+提交信息写明``纯格式化，无逻辑改动''，并把该提交哈希登记进 \Tp{.git{\Bk}-blame{\Bk}-ignore{\Bk}-revs}，让历史查询跳过它。
+不忽略的后果很具体：所有 \Tp{git blame} 结果都指向这次机械提交，后续每次改动都要先翻一层无用 diff——
+这是大爆炸格式化最常见的失败方式。反过来把格式化拆成逐文件顺带做，
+会让每个功能评审混进几十行无关排版，争论焦点从语义滑向空格，成本更高。
+
+\begin{compare}[title={两种增量策略的适用面并不重叠}]
+  按目录分批：适合模块边界清晰、目录所有权明确的库。一批一次提交，评审者可按批抽查，回滚粒度是目录；
+  代价是长期存在两种风格并存的窗口期，需要约定窗口期规则。\\[4pt]
+  触及即改（boy scout）：适合改动集中在少数高频文件的场景，谁改谁顺手把附近对齐基线；
+  代价是收敛速度不可控，且必须禁止``顺带''扩大成整文件重排，否则每一颗糖都是一次独立评审的负担。\\[4pt]
+  常用组合是二者混合：目录分批定基调，触及即改收尾。
+\end{compare}
+
+\subsection{错误处理迁移：三套并存的过渡层}
+\label{sec:ch14-err-migration}
+
+最难的一类迁移不是命名或排版，是错误处理。异常、\Tp{std::expected} 式返回值、
+整数码返回码常同时存在于一个中型库里，且分处不同层次：老接口抛、中间层返回码、新代码用值。
+此时不要试图``选一套赢''，正确动作是\textbf{在每处交界放一个薄包装函数}，
+把翻译责任集中到那一行，其余代码各自留在自己的风格里。
+包装函数三条纪律：边界处唯一的捕获点、显式 \Tp{noexcept}、不在包装里做业务补救。
+
+\begin{lstlisting}[style=cppstyle]
+// 过渡层：把遗留异常实现挡在导出边界之外。
+// 纪律一：异常绝不跨 ABI 边界，边界只做一次捕获与翻译。
+// 纪律二：包装函数标 noexcept，调用方不必为它另设异常假设。
+// 纪律三：这里不补救业务，只把一种错误表达换成另一种。
+namespace legacy_bridge {
+// 旧接口：可能抛任何 std::exception 派生对象。遗留，不改。
+int legacyParse(const char* text, Record* out);
+// 新接口：错误用值表达。本函数是两种风格的唯一交界。
+Expected<Record, Error> parseRecord(std::string_view text) noexcept {
+  try {
+    Record rec;
+    const int code = legacyParse(text.data(), &rec);
+    if (code != 0) {
+      return Unexpected(Error::fromCode(code));  // 返回码也在这里翻译
+    }
+    return rec;
+  } catch (const std::exception& e) {
+    return Unexpected(Error::fromText(e.what()));
+  } catch (...) {
+    // 未知异常也必须落地成值：展开到此为止，不放行。
+    return Unexpected(Error::internal());
+  }
+}
+
+}  // namespace legacy_bridge
+\end{lstlisting}
+
+上面这段有一个值得在评审里单独讨论的点：\Tp{noexcept} 与 \Tp{try} 并存，意味着异常真跑不完捕获链时程序就地终止。
+这不是疏漏，而是边界上的有意选择——比让异常穿过 \Lang{C} 链接界面或跨实现调用可控得多。
+反过来的写法（包装不带 \Tp{noexcept}、让异常继续上浮）只有在整条调用链都不跨边界时才成立。
+
+\begin{warning}[title={迁移期最容易犯的四个错}]
+  \begin{enumerate}[label=\arabic*., leftmargin=2.6em]
+    \item 在过渡层顺手``优化''错误码，把两种失败并成一个，调用方的分支语义当场改变。
+    \item 让包装函数长成新逻辑的聚集地——``反正都要经过这里''。过渡层必须薄到一眼读完。
+    \item 忘了登记退出条件：过渡层是临时结构，要在清单里写明它服务哪次迁移、何时拆。
+    \item 把三套并存合理化成``本库风格宽松''从此不再收敛。并存是迁移状态，不是终态。
+  \end{enumerate}
+\end{warning}
+
+\subsection{迁移检查单：只读扫描加机器报告}
+\label{sec:ch14-checklist}
+
+迁移需要一个能反复跑的检单，用来回答``还剩多少''与``改坏了没''。骨架思路是三段式，全部只读。
+第一段\textbf{特征摸底}：以 \Tp{grep} 级扫描统计旧风格特征（裸 \Tp{NULL}、缺 \Tp{override} 的虚函数、跨边界的 \Tp{throw}），
+产出按目录排序的计数表，用来决定下一批改哪。第二段\textbf{边界核对}：列出导出符号清单，逐条检查是否有 \Tp{noexcept} 与所有权注释。
+第三段\textbf{工具报告}：让静态分析器输出机器可读格式交脚本聚合，指标只取``新增告警数''，不追求清零——清零会逼着迁移提交塞进无关修改。
+它不必写成完整脚本，留在评审模板里当人肉过场也够用；下面是扫描骨架的形制。
+
+\begin{lstlisting}[style=shellstyle]
+# 1) 特征摸底：旧风格特征计数，按目录排序决定下一批
+grep -rn --include='*.cpp' -E '\bNULL\b|throw ' src/ | cut -d/ -f1-2 | sort | uniq -c
+# 2) 边界核对：导出符号成清单，缺 noexcept 的进待办
+grep -rl 'extern' include/ | sort > abi-symbols.txt
+# 3) 工具报告：tidy 输出结构化，脚本只比对新增数
+clang-tidy --checks='-*,bugprone-*' -p build $(cat abi-symbols.txt) \
+  | grep -c 'DiagnosticId' > tidy-count.txt
+# 4) 判定：新增数为 0 才允许合并，非 0 则本批回退重查
+\end{lstlisting}
+
+\section{评审文化}
+\label{sec:ch14-review}
+
+技术选型与迁移流程都会遇到同一个终点：两个人在评审里意见不一致。规范能不能长期活着，取决于这里有没有流程，而不是有没有权威。
+
+\subsection{时间盒：超阈值就升级为条款修订}
+\label{sec:ch14-timebox}
+
+风格争论的成本可以量化：一条意见往返三轮仍未收敛，它消耗的时间已经超过``把条款写清楚''的成本。
+所以规则很简单——\textbf{给争论设时间盒}。盒内允许往返，盒满则停止在单个改动上继续拉扯，
+改走一条固定出路：把争议点上升为条款修订提案，由条款负责人给出唯一答案，之后的同类争论只引用编号。
+这条流程的价值不只在省时间，在于\emph{强制把口头共识变成文本}；没有它，同一个问题半年后会被同样两个人再争一遍。
+
+\begin{bestpractice}[title={判例库：让每个争议只处理一次}]
+  每条有争议的评审意见结案时归档成一条判例，字段固定：争议摘要、引用条款编号、
+  双方给出的依据行、最终裁定、是否触发条款修订。
+  归档位置就是手册附录的候选素材——判例集读起来比条款正文更有用，因为它写明了边界情况。
+  两个约束：判例必须可被条款编号反查；判例不引入新规则（要新规则就改条款）。
+  做不到第二条的判例库，两年内会长成第二份互相冲突的规范。
+\end{bestpractice}
+
+\subsection{新人手册：第一周只读三页}
+\label{sec:ch14-onboarding}
+
+完整规范不适合第一周读。可执行的方案是给新人三页纸，顺序固定，读完能干活即可。
+\begin{enumerate}[label=\arabic*., leftmargin=2.6em]
+  \item \textbf{格式化器配置}：本仓库用哪个基线、配置文件在哪、保存时是否自动格式化，
+        外加一条最重要的元条款——``排版以工具输出为准，评审不争论空格''。
+  \item \textbf{命名表}：四类标识符（命名空间、类型、函数、成员）各一行格式与本库真实例子，
+        表末附一句``表内没有的场景查 tidy 的 naming 检查项''。
+  \item \textbf{错误处理约定}：本库用哪一套、边界在哪一层翻译、
+        新代码\emph{不允许}引入的另一套是什么。
+\end{enumerate}
+三页的共同点是都能被机器校验：第一条由格式化器保证，第二条由 tidy 保证，第三条由第三节的扫描检单保证。
+\textbf{能被工具执行的约定才不需要在第一周被记住}——它只需要在 CI 失败时被读到。
+
+\section{两条主线在这里合并}
+\label{sec:ch14-merge}
+
+本册从头到尾在讲两件事。第一条：\emph{手册会腐烂}。第二部分的每一条 \DomTra 条款都不是当年写错，
+而是当年写对之后上游继续演进、文本静止；腐烂发生在传播链上，不在写作现场。
+第二条：\emph{对抗腐烂的手段是给条款带上版本戳与依据}，并按``语言事实/工程策略/工具接管''分派不同的失效方式与复审节奏。
+两句话合成一句可执行的原则：\textbf{没有依据行的条款不配进入评审，没有复审日期的依据行等于没有依据}。
+选型、迁移与评审文化都是这条原则在不同场景的展开——选型是承认约束的来源，
+迁移是给旧条款安排退场，评审文化是让新争议不再生产下一次腐烂。
+
+\begin{guideline}[title={全书最后一页速查：十条}]
+  \begin{enumerate}[label=\arabic*., leftmargin=2.6em]
+    \item 先问构建开关，再问截止期，最后才问风格偏好；命中即停。
+    \item ``指南没提到''不是否决理由，除非那份指南就是你项目的现行规范。
+    \item 引用任何条款前先给出依据行：标准年代、约束来源或配置文件。
+    \item 工具已经接管的规则从正文删掉，只留一条元条款加一份配置。
+    \item 异常与返回值可以在迁移期并存，但必须集中在薄包装函数里翻译。
+    \item 异常不跨 ABI 边界：这是事实不是偏好，标签要打对。
+    \item 一次性格式化配 blame 忽略，否则历史查询会被机械提交淹没。
+    \item 争议超出时间盒就升级为条款修订，不要在单个改动上继续拉扯。
+    \item 判例必须能反查条款编号，且不引入条款里没有的新规则。
+    \item 每年盘点一次，只查一件事：有多少条款的依据已经过期。
+  \end{enumerate}
+\end{guideline}
+
+\begin{note}[title={附录预告：正文之后还有三份查表材料}]
+  正文到此收束，后面三个附录都是\emph{查表用}的，不承担论证。
+  附录 A 是术语与缩写字表，收录正文出现过的标准编号、工具开关与缩写，遇到不确定的写法可以先翻它。
+  附录 B 是各指南条款的横向对照表，把排版、命名、所有权、错误处理、特性使用这几个议题
+  在 \DomGo、\DomLlvm、\DomMod 三条源流上的现行立场并排列出，并标注每格的上游日期，
+  适合在``别家怎么写''的争论里直接引用。
+  附录 C 是排障速查，按症状组织：格式化器输出与正文不符、tidy 报告异常膨胀、
+  迁移期出现重复错误码、工具找不到编译数据库等，每条给排查顺序而不给结论。
+  三份材料都不新增规范内容：正文与附录冲突时，以正文为准。
+\end{note}
+
+
+% ---- frag_apA.tex ----
+\appendix
+\chapter{术语与缩写}
+\label{apx:terms}
+
+本附录把全书用到的术语与缩写收成一册速查。每条释义只给一行：它是定位用的
+钩子，不是完整论证；要回正文展开，看最后一列 ``首次出现的主题''。主题列用文
+字描述（如 ``inline 语义章'' ``异常代价章''），不做跨文件编号引用，以免正文
+章节重排时术语册跟着失效。年代敏感的条目一律在释义里标注 ``\cpp{11} 起''
+这类版本戳——这本身就是本书的一条主张：脱离版本谈语言事实，正是译本漂移的
+起点。
+
+\begin{note}[title={怎么读这张术语册}]
+条目按主题分组，组内大致按字母序。同一术语可能在多个主题里出现，收录的分组
+以它承担最大论证责任的那一章为准；例如 \Tp{ODR} 记在 ``语言与链接''，因为
+内联与链接的整条因果链都压在它上面。缩写列给出的是原文写法，展开列给出英文
+全称，二者与代码中的拼写逐字一致，可以直接拿去全文搜索。
+\end{note}
+
+\section{语言与链接}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+                  >{\raggedright\arraybackslash}p{0.21\textwidth}
+                  >{\raggedright\arraybackslash}p{0.32\textwidth}
+                  >{\raggedright\arraybackslash}p{0.14\textwidth}@{}}
+\caption{术语册：语言与链接}\label{tab:apA-lang}\\
+\toprule
+术语/缩写 & 展开 & 一句话释义 & 首次出现的主题 \\
+\midrule
+\endfirsthead
+\multicolumn{4}{@{}l}{表~\thetable\ （续）}\\
+\toprule
+术语/缩写 & 展开 & 一句话释义 & 首次出现的主题 \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\Tp{ADL} & Argument-Dependent Lookup & 非限定调用会连带搜索参数类型关联的命名空间，运算符因此可在类所在命名空间被找到 & 语言事实章 \\
+\Tp{COMDAT} & Common Data（概念概括） & 链接器对多个 \Tp{TU} 产出的同名可合并节去重保留一份，是 inline 函数多定义得以成立的底层机制 & 链接与 ODR 章 \\
+\Tp{constexpr} & constant expression & \cpp{11} 起，可在编译期或运行期求值的常量表达；\cpp{14} 起放宽函数体限制 & 语言事实章 \\
+\Tp{consteval} & immediate function & \cpp{20} 起，只求编译期结果的即时函数，运行期调用不合法 & 语言事实章 \\
+\Tp{dynamic{\Bk}\_cast} & 运行时向下转型 & 依赖 RTTI 的向下转型；指针形失败得 \Tp{nullptr}，引用形抛 \Tp{std::bad{\Bk}\_cast} & 语言事实章 \\
+前置声明 & forward declaration & 头文件里只宣告名称而不引入定义，切断编译期传播，与 \Tp{IWYU} 互补 & 头文件防火墙章 \\
+\Tp{inline} 变量 & inline variable & \cpp{17} 起，静态数据成员与命名空间变量可写在头文件并由链接器并成一份实体 & inline 语义章 \\
+\Tp{inline} 函数 & 链接规定而非速度指令 & 允许每个 \Tp{TU} 各带一份定义、链接时合并；是否真展开由优化器决定 & inline 语义章 \\
+Itanium ABI & Itanium C++ ABI & GCC 与 Clang 共用的名字修饰、对象布局与展开约定，Linux 上的事实标准 & 插件 ABI 章 \\
+lambda & lambda 表达式 & \cpp{11} 起，就地生成的闭包函数对象，捕获列表决定它对外层作用域的访问方式 & 核心模式章 \\
+移动语义 & move semantics & \cpp{11} 起，把资源从将亡值移交走，免掉深拷贝 & 核心模式章 \\
+\Tp{ODR} & One Definition Rule & 非 inline 实体全程序仅允许一处定义；inline 函数每 \Tp{TU} 至多一份定义且各份必须逐字一致 & inline 语义章 \\
+完美转发 & perfect forwarding & \cpp{11} 起，\Tp{std::forward} 把实参的左/右值性原样带到目标构造或调用 & 核心模式章 \\
+range-for & 范围 for 循环 & \cpp{11} 起，按 \Tp{begin}/{\Bk}\Tp{end} 遍历容器，脱糖为手写迭代器循环 & 语言事实章 \\
+\Tp{RTTI} & Run-Time Type Information & 挂在虚表上的运行期类型识别设施，\Tp{dynamic\_cast} 与 \Tp{typeid} 的地基 & 语言事实章 \\
+\Tp{SFINAE} & Substitution Failure Is Not An Error & 模板实参替换失败只把该候选移出重载集，不构成编译错误 & 语言事实章 \\
+智能指针 & \Tp{unique{\Bk}\_ptr} / \Tp{shared{\Bk}\_ptr} & \cpp{11} 起，独占所有权与引用计数共享两种 RAII 包装，另有 \Tp{weak{\Bk}\_ptr} 破环 & 核心模式章 \\
+结构化绑定 & structured bindings & \cpp{17} 起，把元组成员或公有字段拆成若干具名变量 & 核心模式章 \\
+\Tp{TU} & Translation Unit & 源文件连同全部传递包含经预处理后的整体，编译与链接的粒度 & 链接与 ODR 章 \\
+\Tp{typeinfo} & \Tp{std::type{\Bk}\_info} & RTTI 产出的类型描述对象；其 \Tp{name()} 字符串的格式因编译器而异 & 语言事实章 \\
+头文件防火墙 & include firewall & 以指向实现的指针或抽象接口挡开实现头，编译传播与私有布局一并切断 & 头文件防火墙章 \\
+\end{longtable}
+
+\section{内联与优化}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+                  >{\raggedright\arraybackslash}p{0.21\textwidth}
+                  >{\raggedright\arraybackslash}p{0.32\textwidth}
+                  >{\raggedright\arraybackslash}p{0.14\textwidth}@{}}
+\caption{术语册：内联与优化}\label{tab:apA-inln}\\
+\toprule
+术语/缩写 & 展开 & 一句话释义 & 首次出现的主题 \\
+\midrule
+\endfirsthead
+\multicolumn{4}{@{}l}{表~\thetable\ （续）}\\
+\toprule
+术语/缩写 & 展开 & 一句话释义 & 首次出现的主题 \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\Tp{always{\Bk}\_inline} & GCC/Clang 属性 & 命令式内联，但只承诺``必须尝试''：做不到时 GCC 报错、Clang 警告，MSVC 的 \Tp{\_\_forcein{\Bk}line} 文档直言不保证展开 & inline 语义章 \\
+\Tp{noinline} & GCC/Clang 属性 & 禁止把函数体并入调用者，这一向是硬保证；代价是调用开销与优化自由 & inline 语义章 \\
+\Tp{BOLT} & Binary Optimization and Layout Tool & 链接之后按真实执行轨迹重排热代码，补编译器看不到的运行期视角 & 链接期优化章 \\
+启发式内联 & heuristic inlining & 编译器按函数规模、调用深度与优化等级打分决定展不展开；作者的 \Tp{inline} 只是一票 & inline 语义章 \\
+\Tp{I-cache} & Instruction Cache & 取指按缓存行搬运；内联摊大热路径可能抬高缺失率，反吞掉收益 & 缓存与布局章 \\
+\Tp{LTO} & Link-Time Optimization & 把跨 \Tp{TU} 的内联与死代码消除挪到链接期，突破单文件视野 & 链接期优化章 \\
+\Tp{PGO} & Profile-Guided Optimization & 插桩或采样收集真实执行路径，回报给第二次编译据以决策 & 链接期优化章 \\
+\end{longtable}
+
+\section{异常与错误处理}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+                  >{\raggedright\arraybackslash}p{0.21\textwidth}
+                  >{\raggedright\arraybackslash}p{0.32\textwidth}
+                  >{\raggedright\arraybackslash}p{0.14\textwidth}@{}}
+\caption{术语册：异常与错误处理}\label{tab:apA-exc}\\
+\toprule
+术语/缩写 & 展开 & 一句话释义 & 首次出现的主题 \\
+\midrule
+\endfirsthead
+\multicolumn{4}{@{}l}{表~\thetable\ （续）}\\
+\toprule
+术语/缩写 & 展开 & 一句话释义 & 首次出现的主题 \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\Tp{CHECK}/{\Bk}\Tp{DCHECK} & Google 系断言宏 & 前者失败即终止进程，后者仅调试构建生效，发布构建里 \Tp{DCHECK} 零残留 & 风格指南谱系章 \\
+错误码 & error code / errno & 以返回值编码失败，靠调用方自觉检查，不触发析构级联 & 异常安全模式章 \\
+\Tp{expected} & \Tp{std::expected} & \cpp{23} 起，值或错误二选一的对象，把失败当数据传而非当控制流抛 & 异常安全模式章 \\
+landing pad & 着陆区 & 展开器把异常分派进函数后的清理入口，GCC/Clang 生成的处理前导 & 异常代价章 \\
+\Tp{LSDA} & Language-Specific Data Area & \Tp{.gcc{\Bk}\_except{\Bk}\_table} 中逐段描述捕获与清理范围的数据区，展开查找的输入 & 异常代价章 \\
+\Tp{noexcept} & 不抛异常承诺 & \cpp{11} 起，违约即 \Tp{std::terminate}；同时是移动与容器扩容走快路的前提 & 异常代价章 \\
+RAII & Resource Acquisition Is Initialization & 资源寿命绑定对象作用域，正常与异常路径都保证析构执行 & 核心模式章 \\
+sjlj & Setjmp/Longjmp 异常模型 & 以 \Tp{setjmp}/{\Bk}\Tp{longjmp} 实现异常：省掉展开表，代价是正常路径不再免费 & 异常代价章 \\
+强异常安全保证 & strong exception safety guarantee & 操作失败时状态回到调用之前：不留半成品，不泄漏 & 异常安全模式章 \\
+栈展开 & stack unwinding & 自抛出点逐帧回溯，途中执行析构并寻找能接住的处理器 & 异常代价章 \\
+unwinder & 展开器 & 依展开表驱动逐帧查找的运行时部件，GCC 系即 \Tp{\_Unwind{\Bk}*} 一族接口 & 异常代价章 \\
+零成本异常 & zero-cost exception & 正常路径不设检查动作，代价推迟到抛出时按表外数据查；名字里的``零''只指正常路径 & 异常代价章 \\
+\end{longtable}
+
+\section{风格指南与工具}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+                  >{\raggedright\arraybackslash}p{0.21\textwidth}
+                  >{\raggedright\arraybackslash}p{0.32\textwidth}
+                  >{\raggedright\arraybackslash}p{0.14\textwidth}@{}}
+\caption{术语册：风格指南与工具}\label{tab:apA-tool}\\
+\toprule
+术语/缩写 & 展开 & 一句话释义 & 首次出现的主题 \\
+\midrule
+\endfirsthead
+\multicolumn{4}{@{}l}{表~\thetable\ （续）}\\
+\toprule
+术语/缩写 & 展开 & 一句话释义 & 首次出现的主题 \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+\Tp{Based{\Bk}OnStyle} & clang-format 基准选项 & 从 \DomGo、\DomLlvm、\Lang{Linux} 等基线派生整套排版规则 & 工具链章 \\
+big-bang reformat & 一次性全量重排 & 全库格式化单独成提交，须配合 blame ignore 保住归属线索 & CI 门禁章 \\
+blame ignore & \Tp{.git-blame-{\Bk}ignore-{\Bk}revs} & 列在案的重排提交被 \Tp{git blame} 跳过，格式波不污染归属 & CI 门禁章 \\
+boy scout 规则 & 童子军规则 & 让代码比接手时干净一点，小修随日常提交走而不攒成重排 & 判例库章 \\
+\Tp{clang-{\Bk}format} & 格式化器 & \DomLlvm 系的源码排版引擎，只管可机检的格式 & 工具链章 \\
+\Tp{clang-{\Bk}tidy} & 静态检查器 & \DomLlvm 系的 lint 驱动，按 \Tp{.clang{\Bk}-tidy} 分组启用检查项 & 工具链章 \\
+\Tp{compile{\Bk}\_commands{\Bk}\_.json} & 编译数据库 & 构建系统导出的逐文件完整编译命令，\Tp{clang-tidy} 与 \Tp{IWYU} 的前置输入 & 工具链章 \\
+\Tp{IWYU} & Include What You Use & 检查包含是否既充分又必要，与前置声明搭配收窄依赖图 & 工具链章 \\
+MISRA & MISRA C & 面向安全认证的 C 编程规范，收窄语言子集且逐条可追溯 & 风格指南谱系章 \\
+\Tp{NOLINT} & 抑制标记 & 行内豁免 \Tp{clang-tidy} 告警，须附理由否则只是掩盖欠账 & 工具链章 \\
+checkpatch & \Tp{checkpatch.pl} & 内核补丁的脚本门槛，制表符、行宽、行尾空白一律机检 & 风格指南谱系章 \\
+pre-commit & 提交前框架 & 在 Git 提交钩子里跑格式与 lint，把问题挡在 CI 之前 & CI 门禁章 \\
+风格指南谱系 & style guide lineage & \DomGo、\DomLlvm、内核等指南的源流关系，各自对应不同约束与执法方式 & 风格指南谱系章 \\
+译本漂移 & translation drift & 中文译本落后于英文原文与标准演进，引条款须先对版本 & 译本漂移章 \\
+语言事实条款 & language-fact clause & 有语言或实现行为支撑的条款，只在标准与版本约束内成立 & 译本漂移章 \\
+策略条款 & policy clause & 无语言依据的团队偏好（命名、布局类），可改可豁免，不必找物理出处 & 译本漂移章 \\
+版本戳 & version stamp & 为条款解读标注所依据的标准与工具链版本，防跨版本误读 & 译本漂移章 \\
+判例库 & casebook & 从真实提交沉淀的正反例，用证据而非口吻支撑条款适用 & 判例库章 \\
+\end{longtable}
+
+\section{实时与受限环境}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
+                  >{\raggedright\arraybackslash}p{0.21\textwidth}
+                  >{\raggedright\arraybackslash}p{0.32\textwidth}
+                  >{\raggedright\arraybackslash}p{0.14\textwidth}@{}}
+\caption{术语册：实时与受限环境}\label{tab:apA-rt}\\
+\toprule
+术语/缩写 & 展开 & 一句话释义 & 首次出现的主题 \\
+\midrule
+\endfirsthead
+\multicolumn{4}{@{}l}{表~\thetable\ （续）}\\
+\toprule
+术语/缩写 & 展开 & 一句话释义 & 首次出现的主题 \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+确定性路径 & deterministic path & 执行上界可静态分析的代码路径：无隐藏分配、无界循环与任意阻塞 & 实时约束章 \\
+\Tp{-fno{\Bk}-exceptions} & 禁异常编译选项 & \Tp{throw} 成为编译错误；外来异常穿入本帧即导向 \Tp{std::terminate} & 实时约束章 \\
+\Tp{-fno-rtti} & 禁 RTTI 编译选项 & 不再生成 \Tp{typeinfo} 与虚表类型信息，\Tp{dynamic\_cast}、\Tp{typeid} 不可用 & 实时约束章 \\
+硬实时 & hard real-time & 错过截止时间即系统失效，确定性优先于平均吞吐 & 实时约束章 \\
+插件 ABI 边界 & plugin ABI boundary & 宿主与插件只经窄 C 接口和版本协商会面，不穿复杂对象、不传异常 & 插件 ABI 章 \\
+\end{longtable}
+
+\section{中英对照速查}
+
+表~\ref{tab:apA-zh} 收释义之外最常见的中文译名对照，供读正文与写提交说明
+时回查。译名以书中用法为准；社区另有通行译法的，以原文写法为准搜代码更可靠。
+
+\begin{table}[htbp]
+\centering
+\begin{tabularx}{0.83\textwidth}{@{}>{\raggedright\arraybackslash}p{0.30\textwidth} X@{}}
+\toprule
+中文 & 原文/缩写 \\
+\midrule
+翻译单元 & \Tp{TU}（Translation Unit） \\
+一元定义规则 & \Tp{ODR}（One Definition Rule） \\
+参数依赖查找 & \Tp{ADL}（Argument-Dependent Lookup） \\
+替换失败非错误 & \Tp{SFINAE} \\
+即时函数 & \Tp{consteval}（immediate function） \\
+链接期优化 & \Tp{LTO}（Link-Time Optimization） \\
+性能剖析引导优化 & \Tp{PGO}（Profile-Guided Optimization） \\
+二进制重排 & \Tp{BOLT} \\
+栈展开 & stack unwinding \\
+着陆区 & landing pad \\
+零成本异常 & zero-cost exception \\
+强异常安全保证 & strong exception safety guarantee \\
+值或错误类型 & \Tp{std::expected} \\
+头文件防火墙 & include firewall \\
+童子军规则 & boy scout rule \\
+\bottomrule
+\end{tabularx}
+\caption{中英对照速查}\label{tab:apA-zh}
+\end{table}
+
+\section{易混术语辨析}
+
+术语册里最容易互相顶替的是下面三组。它们字面几乎一样，指向的却是不同层面的
+事实；混用一组，正文相应章节的论证就会被读反。逐组辨析如下。
+
+\begin{compare}[title={\Tp{inline} 关键字 vs 函数内联优化}]
+\Tp{inline} 是链接层的承诺：允许定义出现在多个 \Tp{TU}，由链接器合并成一份，
+从而豁免 \Tp{ODR} 的单定义要求；它同时是发给优化器的一票建议。函数内联优化
+则是代码生成层的决定：展不展开由启发式（规模、调用深度、\Tp{PGO} 热度）打
+分裁定，编译器完全可以无视 \Tp{inline} 不展开，也可以在没写 \Tp{inline}
+的地方展开。写 \Tp{inline} 不等于代码变快，删 \Tp{inline} 也不等于变慢——
+在 \cpp{17} 的 inline 变量上，这个关键字更是与展开毫无关系，只管多重定义
+的合并。旧指南里``按可见性与长度自行决定 \Tp{inline}''的条款，正是把这两层
+捏成了一层。
+\end{compare}
+
+\begin{compare}[title={零成本异常 vs 异常路径零成本}]
+零成本异常（zero-cost exception）只承诺\textbf{正常路径}零成本：不抛异常时
+不查表、不设防、不多执行一条指令。抛出那一侧恰恰相反——查 \Tp{LSDA}、逐帧
+展开、级联析构，整体是普通返回的成百上千倍，所以``零成本''绝不能读成``异常
+免费''。sjlj 模型把账翻过来记：正常路径要付登记跳转缓冲的钱，抛出反而快。
+两组词差的只是一个字，站错的账本却是整个异常代价章的结论：在高频失败、截止时间
+严苛的路径上，零成本异常照样是奢侈品。
+\end{compare}
+
+\begin{compare}[title={策略条款 vs 语言事实条款}]
+策略条款没有语言依据：缩进宽度、命名风格、参数个数上限，这些是团队偏好，可
+以改、可以局部豁免，追问``物理出处''是问错了方向。语言事实条款背后是标准或
+实现行为：例如``\Tp{dynamic{\Bk}\_cast} 依赖 RTTI''在 \CPP 标准与 Itanium ABI
+的约束内成立，改不动，只能改环境或改代码。译本漂移最常见的两种病都出在把这
+两组词对错位置：把已随 \cpp{11} 之后标准失效的旧语言事实当策略硬背，或把
+纯策略当不可违抗的语言定律去抬杠。引条款前先做这个二分，再补版本戳。
+\end{compare}
+
+\begin{warning}[title={术语册不能替代论证}]
+本附录的释义都是一行钩子，压缩过就意味着可能压掉了前提：版本、实现、边界条
+件。据此下结论前，回到 ``首次出现的主题'' 那一章把论证完整读一遍；尤其涉及
+年代敏感条目时，先核对版本戳再引用——术语册没有页码级的新鲜度，正文才有。
+\end{warning}
+
+
+% ---- frag_apB.tex ----
+\chapter{各指南条款横向对照}
+\label{apx:matrix}
+
+本附录把前面各章分散讨论的条款收进一张表，供评审现场与规范编写时快速定位。
+表的用法与阅读顺序需要先在正文之外说明白，否则很容易被误读成``第四份风格指南''。
+它不是规范，也没有执法权：它做的是\emph{索引}——
+就同一个主题，把\DomGo 旧译本在流传中形成的说法、\DomGo 上游当代的大致立场、
+\DomLlvm 系的做法，以及剥离公司语境之后剩下的语言事实并列摆放，
+让读者自己判断某条规则``是谁在什么前提下说的''。
+
+三列对比里，第一列（``\DomGo 旧译本常见说法''）尤其要谨慎对待。
+它\emph{不是逐字原文}，也不是上游任何一个历史版本的忠实转写，
+而是国内流通语境里反复出现的那类措辞的综合转述：
+博客摘录、培训课件、面试题库与评审口头禅中被磨平了出处的版本。
+之所以仍单列一栏，是因为真正在代码库里生效的就是这一层的措辞；
+它的价值在于``认出来''，而不在于``引用''。
+要把手头文本与上游对齐，请回到第~\ref{sec:ch07-dating} 节的五特征断代法，
+以及该节末尾的三问核对（上游版本、限定语境、工具接管）；
+本表每行都只是这三问的答案摘要，不能替代核查本身。
+
+第二点要说明的是行前缀。表中每行的最后一列以 ``策略：'' 或 ``事实：'' 开头，
+这两个词决定了该行的争议该如何处理：
+
+\begin{itemize}
+  \item \textbf{事实：}该行说的内容由语言标准、编译器实现或构建配置决定，
+        不随某个代码库的偏好改变。风格指南在这里能做的只有跟随，
+        与之冲突的条款要么已被工具接管，要么就该失效。
+  \item \textbf{策略：}该行仍是工程语境的取舍，不同代码库给出不同答案是合理的。
+        争议应当就``前提是否成立''展开，而不是就``哪个指南更大''展开。
+\end{itemize}
+
+把这个区分记住，比记住任何一行结论更有用：\DomTra 症状的典型形态，
+就是把标着 ``策略：'' 的那一行当成 ``事实：'' 来执行。
+
+{\footnotesize
+\begin{longtable}{%
+  >{\raggedright\arraybackslash}p{0.13\textwidth}
+  >{\raggedright\arraybackslash}p{0.17\textwidth}
+  >{\raggedright\arraybackslash}p{0.17\textwidth}
+  >{\raggedright\arraybackslash}p{0.15\textwidth}
+  >{\raggedright\arraybackslash}p{0.19\textwidth}@{}}
+  \caption{条款矩阵：同一主题在四条轴上的位置}\label{tab:apx-matrix}\\
+  \toprule
+  条款主题 & \DomGo 旧译本常见说法 & \DomGo 上游当代概况 & \DomLlvm 系 & 现代语言事实下的建议 \\
+  \midrule
+  \endfirsthead
+  \multicolumn{5}{l}{\footnotesize 表~\ref{tab:apx-matrix}（续）}\\
+  \toprule
+  条款主题 & \DomGo 旧译本常见说法 & \DomGo 上游当代概况 & \DomLlvm 系 & 现代语言事实下的建议 \\
+  \midrule
+  \endhead
+  \bottomrule
+  \endfoot
+  小函数手工 \Tp{inline} & ``小函数要加 \Tp{inline} 才快'' &
+    已不再让作者按长度自行标记，决定权交给编译器（以当日版为准） &
+    类内定义本就是 \Tp{inline}，不鼓励重复书写 &
+    事实：关键字表达链接属性，不承诺任何优化 \\
+  \Tp{inline} 的性能含义 & ``不加就退化成一次调用'' &
+    不以性能为由立据 &
+    明确反对把关键字当性能暗示使用 &
+    事实：真要强制内联用的是 \Tp{always\_{\Bk}inline} 一类属性 \\
+  异常：\Tp{throw} 侧 & ``\CPP{} 禁止抛异常'' &
+    仍不使用异常，理由落在本库错误处理基础设施与跨边界（以当日版为准） &
+    构建禁用异常，换取体积与可预测性 &
+    策略：无展开表与无承接帧处不可用；其余看环境 \\
+  异常：\Tp{catch} 边界 & ``任何地方都不许出现 \Tp{try}'' &
+    未逐条规定写法，内部一律走返回状态 &
+    只在最外层承接第三方库抛出的异常 &
+    策略：内部用返回值，边界集中一次转换 \\
+  RTTI 与 \Tp{dynamic\_{\Bk}cast} & ``禁止一切运行时类型判断'' &
+    避免使用，个别场景（如测试）可例外（以当日版为准） &
+    构建关闭 RTTI，改用手写 \Tp{isa<>} 与 \Tp{dyn\_{\Bk}cast<>} &
+    事实：关掉 RTTI 后 \Tp{dynamic\_{\Bk}cast} 直接不可用，与喜好无关 \\
+  \Tp{auto} 类型推导 & ``尽量少用，只许两三处'' &
+    转为可读性判据：类型不言自明处可用（以当日版为准） &
+    仅当提升可读性或可维护性时使用 &
+    事实：推导规则由标准定义，用与不用纯属风格 \\
+  range-for & ``未列出即不允许'' &
+    已接受为遍历常规写法（以当日版为准） &
+    常规写法，注意容器是否被修改 &
+    事实：\cpp{11} 起的语言特性，无须指南背书 \\
+  Lambda & ``禁止 lambda'' &
+    已接受短小回调，捕获须显式（以当日版为准） &
+    常规写法，多行按代码块排版 &
+    事实：捕获生命周期是正确性问题，不是风格问题 \\
+  \Tp{std::\Bk function} 回调 & ``回调只能用函数指针'' &
+    未见专条限制（以当日版为准） &
+    接受单个 callable 的 API 可用它，也可用模板参数 &
+    策略：热路径在意开销时用模板参数，接口处用之更清晰 \\
+  智能指针 & ``用 \Tp{scoped\_{\Bk}ptr} 一类自研类型'' &
+    以 \Tp{std::unique\_{\Bk}ptr} 显式表达所有权转移 &
+    用 \Tp{std::\Bk unique\_ptr} 表达独占所有权 &
+    事实：所有权由类型表达，注释与约定不作数 \\
+  裸 \Tp{new} 与 \Tp{delete} & ``一律禁止裸 \Tp{new}'' &
+    优先工厂函数与封装，构造点集中 &
+    大量分配走自有 arena 分配器 &
+    策略：收敛分配点是选择；不泄漏是 RAII 的硬要求 \\
+  移动语义与 \Tp{noexcept} & ``右值引用太高级，回避'' &
+    鼓励显式转移；\Tp{noexcept} 正确即标注 &
+    常规使用，返回值语义靠移动表达 &
+    事实：\Tp{noexcept} 决定容器与算法能否选到移动重载 \\
+  多继承 & ``多继承一律禁止'' &
+    接口继承可用，多实现继承被明确不鼓励 &
+    未见专条，以类层次简单为准 &
+    策略：二义性与菱形是事实约束，是否继承是设计选择 \\
+  运算符重载 & ``禁止重载运算符'' &
+    审慎使用，仅限与既有惯例一致处 &
+    \Tp{<<} 与比较运算符属常规工具 &
+    策略：可读性判断；语义被扭曲才是真问题 \\
+  模板与 SFINAE & ``避免泛型，宁写重复代码'' &
+    允许，但限制元编程复杂度 &
+    模板基础设施密集使用 &
+    事实：\cpp{20} 起 concepts 可替代手写 SFINAE 探测 \\
+  C 风格转换 & ``\Tp{(int)x} 更简洁'' &
+    使用命名转换，不用括号式写法 &
+    明确要求 \Tp{static\_{\Bk}cast} 等命名形式 &
+    事实：命名转换可检索、可机检、可区分意图 \\
+  \Tp{typedef} 与 \Tp{using} & ``用 \Tp{typedef} 是传统'' &
+    未见专条（以当日版为准） &
+    别名声明 \Tp{using} 为常见写法 &
+    事实：模板别名只有 \Tp{using} 能表达 \\
+  \Tp{NULL} 与 \Tp{nullptr} & ``用 \Tp{NULL} 或 \Tp{0}'' &
+    统一到 \Tp{nullptr}（以当日版为准） &
+    \Tp{nullptr} &
+    事实：\cpp{11} 起空指针字面量就是 \Tp{nullptr} \\
+  宏常量与 \Tp{constexpr} & ``常量写成 \Tp{\#define}'' &
+    已接受常量表达式（以当日版为准） &
+    \Tp{constexpr} 与 \Tp{const} 为默认手段 &
+    事实：\Tp{constexpr} 有类型、作用域与诊断，宏没有 \\
+  全局状态 & ``禁止一切全局变量'' &
+    静态存储期对象须平凡析构 &
+    生命周期与初始化顺序显式管理 &
+    策略：可测性与并发代价是取舍；平凡析构是硬要求 \\
+  头文件里的 \Tp{using{\Bk} namespace} & ``不置可否'' &
+    明确禁止 using 指令 &
+    不用 \Tp{using{\Bk} namespace std}，显式加前缀 &
+    事实：头文件中的 using 指令会污染全部包含者 \\
+  错误码、异常与 \Tp{expected} & ``错误只能用 \Tp{int} 返回码'' &
+    内部以状态对象类工具为主（以当日版为准） &
+    自有 \Tp{Expected<>} 与错误传播机制 &
+    策略：三者取决于边界；\cpp{23} \Tp{std::expected} 已是语言事实 \\
+  标准库与自研设施 & ``容器优先自研，接口层不得出现标准容器'' &
+    标准库为默认装备，另有一套内部基础库（以当日版为准） &
+    推荐清单内使用标准库，接口层偏爱轻量视图类型 &
+    策略：默认标准库优先；自研要列出固定容量、侵入计数、布局控制这类具体缺口 \\
+\end{longtable}
+}
+
+读这张表的正确方式，是把它当作\emph{提问清单}而不是答案清单。
+纵向看，同一列内部并不自洽：\DomGo 列在两三行之间就会从``限制''滑向``允许''，
+因为上游对每条特性的表态发生在不同年代、依据的是不同的内部前提；
+横向看，最后一列与前四列之间常常对不上，
+因为前四列回答的是``某份文档怎么说''，最后一列回答的是``标准与实现怎么表现''。
+对不上正是本表想呈现的东西——它是条款争议的成因，不是排版失误。
+第~\ref{sec:ch07-chain} 节描述的传播链在那里解释了第一列为何长成那样；
+而第三列里反复出现的括号说明，则是在提醒读者：
+本表的\DomGo 上游当代概况\emph{不附版本戳}，凡引用必当日核对。
+
+\begin{note}[title={``以当日版为准''不是免责声明，而是操作步骤}]
+  表中凡写``（以当日版为准）''的行，意思是：这一行的上游立场处在移动中，
+  且移动方向对本表读者不利——你可能据此改代码，也可能据此否决别人的代码。
+  核对动作在第~\ref{sec:ch07-dating} 节：先定位上游文本段落，
+  再看它是否附带``本代码库''``内部约束''一类限定语，
+  最后确认这条是否已被格式化器或静态分析器接管。
+  三问走完，这一格才有一个可引用的答案。
+\end{note}
+
+\section{inline 与异常两行深挖}
+\label{sec:apx-deep}
+
+矩阵里有两行的争议密度远高于其余：一行是 \Tp{inline}，一行是异常。
+它们的共同特点是：旧译本给出的说法并非全然荒谬，
+而是\emph{把一件真实的事接到了另一件事上}。
+下面把这两行各自拆开一段，并给出一组三行代码作为可粘贴的判据。
+
+\subsection{inline：链接问题的标记被读成性能开关}
+\label{sec:apx-inline}
+
+\Tp{inline} 在标准里承担的本职是链接语义：它许可一个函数（或变量）的定义
+出现在多个翻译单元中而仍能通过 ODR 检查，最终由链接器归并为一份符号。
+没有它，头文件里的自由函数、\Tp{constexpr} 函数与某些模板辅助函数就无法成立。
+函数是否真的被内联展开，由优化器依据调用点频次、体积、寄存器压力与跨单元视图决定，
+关键字在这件事上既非必要也不充分。旧译本``小函数加 \Tp{inline} 提速''之所以流传广，
+是因为它把两个都真实存在的现象（内联展开确实快、\Tp{inline} 确实常出现在小函数上）
+误接成因果关系。而类内定义的函数\emph{已经}隐式 \Tp{inline}，
+再手写一次这个动作连语义增量都没有。
+\cpp{17} 的内联变量与 \Tp{constexpr} 静态数据成员进一步说明：这个关键字的舞台是链接，
+不是代码生成。
+\DomLlvm 系的措辞（类内定义无须重复书写）与内核把决定权交给编译器的立场（见第~\ref{sec:ch06-projection} 节）
+其实是同一件事的两种说法，而两者都与``手工标记提速''不相容。
+
+\begin{lstlisting}[style=cppstyle,caption={inline：合规用法与症状用法并置},label={lst:apx-inline}]
+inline int VertexCount(const Mesh& m) { return m.faces.size(); } // 合规：定义在头文件，inline 让它可多重出现
+class Mesh { int Area() const { return a_; } };                  // 症状：类内定义本已隐式 inline，再写是空操作
+[[gnu::always_inline]] void Tick();                              // 真要强制展开：这是属性，不是 inline 关键字
+// 属性也不担保展开：做不到时 GCC 报错、Clang 警告、MSVC 文档明言不保证
+\end{lstlisting}
+
+一句话结论：\textbf{inline 解决 ODR 不解决性能}。
+凡在评审里以性能为由要求补写 \Tp{inline} 的意见，
+请当场要求对方给出基准数据与优化器视图证据（\Tp{-fopt-info-inline} 一类输出），
+而不是引用任何一份风格指南。
+
+\subsection{异常：泛化代价被读成普遍代价}
+\label{sec:apx-exception}
+
+异常的真实代价集中在三处：抛出时展开栈与查找处理帧的运行期开销；
+为展开而常驻的表（\Tp{.eh\_frame} 一类）带来的镜像体积；
+以及它给控制流带来的不可见跳转，使跨模块审计变难。
+值得强调的是第一处的形态：当代主流实现走零成本表驱动路线，
+代价在抛出与展开路径上，正常路径近乎没有额外指令，
+未抛出程序的性能差异通常落在测量噪声内。
+因此``异常慢''作为一个普遍命题并不成立；它成立的情形是
+在循环里把它当控制流使用、或在根本没有人承接的宿主环境里勉强铺设展开表。
+内核（第~\ref{sec:ch06-projection} 节）与 \DomLlvm 系（表规模与可预测性）给出的禁令，
+理由都是环境与体积，不是泛化的执行代价；\DomGo 上游当代文本
+把理由落在内部基础设施与跨边界上，同样是环境性理由而非技术性理由。
+这正是第~\ref{sec:ch07-dating} 节要求区分的两种立据方式。
+
+\begin{lstlisting}[style=cppstyle,caption={异常：边界集中转换与把它当控制流并置},label={lst:apx-exception}]
+std::optional<Frame> Decode(std::string_view s) noexcept;   // 合规：失败是返回值，不是跳转；正常路径没有额外指令
+void Run() { for (;;) { if (auto f = Decode(line)) Draw(*f); } }  // 热循环：既不抛也没人接，异常慢的说法在此无从发生
+void Batch(std::string_view in) { try { Decode(in)->Draw(); } catch (...) {} }  // 症状：把异常当控制流，坏输入才付展开账
+\end{lstlisting}
+
+一句话结论：\textbf{表驱动实现让正常路径近乎免费，禁令的正当边界在环境与体积不在泛化代价}。
+补一句反向的边界：接口形态本身就是``获取即可能失败''的地方（自定义分配器、
+容器扩容、构造期资源获取），异常是标准契约给的那条通路，禁掉它等于把失败
+传播改成每个调用点的显式检查——这是设计成本，不是性能收益。
+据此，``要不要异常''仍是策略行的问题（宿主能承接吗、边界几层、体积预算多少），
+而``异常很慢所以别用''这种论证在事实上已经过期。
+
+\section{按场景选基线速查}
+\label{sec:apx-baseline}
+
+前面各章反复给出的判断是：基线跟着约束走。本节把这个判断压缩成一张速查表，
+面向``我这一类项目该从哪份文本起步''的问题。
+表里的工具开关只是\emph{开关的位置}，不是取值建议；
+每个开关都会反向决定哪些条款在你这里成为硬要求——
+\Tp{-fno-rtti} 一开，\Tp{dynamic\_{\Bk}cast} 相关条款立即从策略升为事实。
+行与行之间可以叠加：一个跨语言 SDK 的内部实现可能同时取用两到三行的做法。
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.16\textwidth}
+  >{\raggedright\arraybackslash}p{0.32\textwidth}
+  >{\raggedright\arraybackslash}p{0.31\textwidth}}
+\caption{按场景选取风格基线与对应工具开关（定性建议，需按自身约束裁剪）}\label{tab:apx-baseline}\\
+\toprule
+场景 & 推荐基线 & 主要工具开关 \\
+\midrule
+\endfirsthead
+\toprule
+场景 & 推荐基线 & 主要工具开关 \\
+\midrule
+\endhead
+应用服务（企业后端、业务系统） & \DomGo 系为骨架，错误处理换状态对象；格式交格式化器 & \Tp{clang-format} 基线、\Tp{clang-tidy} 规则集、\Tp{-Wall} \Tp{-Wextra} \\
+游戏引擎（主机、PC 实时渲染） & \DomLlvm 系接近：少继承、显式所有权、集中诊断；禁运行时类型判断 & \Tp{-fno-\Bk exceptions}、\Tp{-fno-rtti}、自有分配器 \\
+嵌入式实时（MCU、控制回路） & 内核风格的投影：子集语言、返回码加撤销阶梯、无动态内存 & \Tp{-fno-exceptions}、\Tp{-Os}、静态分配检查 \\
+编译器与开发基础设施 & \DomLlvm 系原文，含 \Tp{isa<>}、\Tp{dyn\_{\Bk}cast<>} 与错误传播约定 & \Tp{-fno-rtti}、覆盖率与净化器、格式化器强制 \\
+内核与驱动 & 内核规范：制表符、80 列、声明顺序、可机检条款 & \Tp{checkpatch.pl}、\Tp{-nostdlib}、警告即错误 \\
+跨语言 SDK 与插件边界 & 对外 C ABI 稳定，内部现代 \CPP{} 基线；边界一次异常转换 & \Tp{-fvisibility=hidden}、边界处显式 \Tp{extern} 声明、符号版本脚本 \\
+科研计算与数值库 & 以标准与库生态为准，模板与 concepts 不受限；数值语义优先 & \Tp{-O3} 与向量化报告、\Tp{-ffast-math} 慎用、静态分析 \\
+图形与多媒体管线 & 热路径手工所有权与显式分配；冷路径允许标准设施 & \Tp{-fno-\Bk exceptions}（热路径）、剖析驱动优化 \\
+Web 后端 \CPP（网关、存储引擎） & 现代 \CPP{} 基线加分层边界：接口 \Tp{std::function}，内核模板 & 净化器、\Tp{-fno-omit-frame-\Bk pointer}、模糊测试 \\
+面试求职向知识体系 & 以标准文本与权威参考为准，指南条款标注出处与年代 & 无编译开关；用第~\ref{sec:ch07-dating} 节三问自校 \\
+\bottomrule
+\end{longtable}
+
+\begin{bestpractice}[title={先定开关，再写条款}]
+  表中第二列与第三列的顺序应当反过来执行：先把编译与静态分析开关定下来，
+  再决定哪份风格文本作为基线。理由是开关会吞掉大量条款——
+  格式化器接管行宽与缩进之后，那些逐条规定空格的旧文本只会制造与工具输出的无意义分歧
+  （第~\ref{sec:ch07-chain} 节传播链的最后一跳正是从这里开始的）。
+  被工具接管却仍以人工条款形式留在规范里的规则，本身就是一条应当删除的条款。
+\end{bestpractice}
+
+\begin{warning}[title={别把这张表当成``行业共识''}]
+  本表的每一行都是\emph{建议}，不是\emph{调查结论}：它没有统计基础，
+  也不声称任何行业实际这样写。它的唯一用途是缩短``从哪里起步''的讨论时间。
+  一旦你的项目出现表里没有的前提（混合托管语言、强认证要求、遗留代码规模压过一切），
+  就回到第~\ref{sec:ch06-projection} 节的方法：先列约束，再从约束推条款。
+  推出来的东西和某份指南不一致，是完全正常的结果。
+\end{warning}
+
+
+% ---- frag_apC.tex ----
+\chapter{排障速查与配方}
+\label{apx:trouble}
+
+本附录是症状索引的实操延伸：正文各章解释原理，这里只回答一个问题——
+遇到这件事下一步做什么。每个配方给最小可复制片段，机制看不明白时
+按末尾框内指路回正文对应章。
+
+\section{编译与链接症状}
+
+\begin{longtable}{%
+  >{\raggedright\arraybackslash}p{0.24\linewidth}%
+  >{\raggedright\arraybackslash}p{0.24\linewidth}%
+  >{\raggedright\arraybackslash}p{0.28\linewidth}}
+\caption{四类高频链接症状与配方位置}\label{tab:trouble-link}\\
+\toprule
+症状与报错关键词 & 第一反应 & 修法所在\\
+\midrule
+\endfirsthead
+\multicolumn{3}{@{}l}{\footnotesize 表~\thetable：四类高频链接症状（续）}\\
+\toprule
+症状与报错关键词 & 第一反应 & 修法所在\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+multiple definition of \Fn{clamp}，定义在头文件
+& 同一实现进了多个翻译单元
+& 四格修法与决策顺序\Bk\\
+\addlinespace
+undefined reference to \Fn{present}，声明可见
+& 定义没参与链接或签名不匹配
+& 五步排查清单\Bk\\
+\addlinespace
+inline 函数改了却没生效
+& 重建范围或静态库陈旧
+& 重建配方（shellstyle）\Bk\\
+\addlinespace
+模板成员函数放 .cpp 后链接失败
+& 使用点没有可见定义可实例化
+& 三种修法与对比框\Bk\\
+\end{longtable}
+
+\subsection{头文件函数多重定义：四种修法与决策顺序}
+
+先钉住语义：inline 是给链接器的指令——允许多个翻译单元出现
+逐字相同的定义并合并为同一符号；它不是优化请求，也不保证展开。
+同类问题还有一份数据侧变体：\cpp{17} 的 inline 变量，
+用来解决头文件里的全局状态。
+
+\begin{lstlisting}[style=cppstyle]
+// geom.hpp -- 修法一：inline 自由函数。
+// 约束：所有翻译单元中的定义必须逐字相同（ODR），
+// 且不得依赖匿名命名空间或静态局部变量。
+inline int clamp_to_char(unsigned char v) {
+  return v > 127 ? 127 : static_cast<int>(v);
+}
+
+// 修法二：constexpr 函数自 C++11 起隐式 inline。
+constexpr int round_up_pow2(int v) { return v | (v >> 1); }
+\end{lstlisting}
+
+\begin{lstlisting}[style=cppstyle]
+// 修法三：类内定义--成员函数写在类体内即隐式 inline。
+class Window {
+ public:
+  Window(int w, int h) : width_(w), height_(h) {}
+  int area() const { return width_ * height_; }
+  virtual void present() = 0;
+ private:
+  int width_, height_;
+};
+
+// 修法四（数据侧）：C++17 起可写
+//   inline constexpr double kPi = 3.14159265358979;
+// 更早标准：constexpr 静态数据成员另需在某个 .cpp 补类外定义。
+\end{lstlisting}
+
+\begin{guideline}[title={四种修法的决策顺序}]
+\begin{enumerate}
+\item 先问该不该放头文件：只有实现必须公开的（模板、constexpr、
+      极短访问器）才继续往下排；否则直接走第 4 步，争议最少。
+\item 函数体短、不触碰全局与静态局部状态：用 inline 函数，
+      并在注释里写明 ODR 约束。
+\item 函数携带共享状态：inline 救不了——把状态收进类或退回
+      .cpp，再回第 4 步。
+\item 类成员优先类内定义：少写一个关键字，也少一处声明与定义
+      不同步的机会。
+\item 自由函数且实现较长：定义移出头文件，头文件只留声明。
+\end{enumerate}
+\end{guideline}
+
+\subsection{undefined reference：五步排查}
+
+报错含义：声明可见，链接期找不到定义。按顺序排，多数三步定位：
+
+\begin{itemize}
+\item 实现文件是否真的进了构建：检查 target\_sources 列表；
+      对产物做 \Tp{nm -C libcore.a} 再搜符号名，看定义在不在。
+\item 签名逐字比对：命名空间、const 限定、引用与值、默认参数
+      都参与匹配；改了声明忘同步定义是第一高频根因。
+\item 条件编译吞掉定义：确认宏组合与声明处一致，用预处理
+      输出核对展开后定义是否存在。
+\item C 与 \CPP 链接规格错配：C 头文件被 \CPP 包含时整段需要
+      链接规格包裹；符号名带不带修饰就是最直接的线索。
+\item 模板未实例化：定义在 .cpp 且无显式实例化——跳到本节
+      第四小段的三种修法。
+\end{itemize}
+
+\subsection{inline 函数改了行为却没有变}
+
+两个高频原因：头文件改动没有触发依赖重建；静态库陈旧——
+归档里还是旧目标文件，链接器照单全收。
+
+\begin{lstlisting}[style=shellstyle]
+# 一、强制重建受影响目标
+touch include/geom.hpp
+make -B build/window_test      # 或 ninja -t commands 查依赖
+
+# 二、验证归档新鲜度：成员时间戳与符号内容
+ar tv libcore.a
+nm -C libcore.a | grep clamp
+
+# 三、重新打包后刷新索引（部分平台必需）
+ar rc libcore.a build/geom.o
+ranlib libcore.a
+\end{lstlisting}
+
+仍不生效时，检查是否存在两份同名头文件（安装目录与源码目录
+各一份）：用 \Tp{-H}（gcc 与 clang 通用）打印包含链，一眼看出
+实际吃进去的是哪份。
+
+\subsection{模板成员函数放进 .cpp 的链接失败}
+
+根因一句话：模板使用点必须看得见定义，否则无法实例化。
+三种修法：定义整体回头文件；定义留在 .cpp 并补显式实例化；
+定义拆到 xxx-impl.hpp 由头文件末尾包含。
+
+\begin{lstlisting}[style=cppstyle]
+// grid2d.hpp：只放声明。
+template <class T>
+class Grid2d {
+ public:
+  T at(int x, int y) const;
+};
+
+// grid2d.cpp：定义 + 显式实例化，覆盖用到的每个特化。
+template <class T>
+T Grid2d<T>::at(int x, int y) const { return cells_[x + y]; }
+template class Grid2d<int>;     // 使用点若出现 Grid2d<double>
+template class Grid2d<float>;   // 仍会在链接期报 undefined
+\end{lstlisting}
+
+\begin{compare}[title={回头文件 versus 显式实例化}]
+定义回头文件：使用点随便实例化，代价是编译期变长、实现细节
+公开。显式实例化：实现保密、编译快，代价是新类型组合必须
+记得回 .cpp 补一行，忘了就晚一步在链接期暴雷。头文件末尾
+包含 -impl.hpp 介于两者之间：实现不算公开接口，但每个包含者
+仍会实例化，编译期收益为零。团队约定全项目只用一种，混用会让
+报错出现在意料外的翻译单元。
+\end{compare}
+
+\section{性能疑云配方}
+
+\subsection{怀疑没有内联：读编译器的自述}
+
+先让编译器自己交代，再谈改代码。gcc 与 clang 各有一条报告开关：
+
+\begin{lstlisting}[style=shellstyle]
+# GCC：逐条打印内联决策；-missed 后缀只报告未成功的条目
+gcc -O2 -fopt-info-inline-missed -c heatsink.c
+# clang：pass 报告；missed 与 analysis 分级递细
+clang++ -O2 -Rpass=inline -Rpass-missed=inline -c widget.cpp
+\end{lstlisting}
+
+报告读法：每行以 ``文件:行:列''开头，后接函数与原因短语。原因
+三类，处置不同：函数体过大或成本超阈值——调整调用方粒度；
+只看得见声明、函数体不可得——查头文件定义与跨单元优化开关；
+属性或间接调用挡路（noinline、虚函数、函数指针）——语义问题
+而非阈值问题。先分类计数再动手，不要拿单条报告改签名。
+两条补充判据：其一，\Tp{noinline} 是硬保证，报告里若显示它被展开，
+真相必是别的构造（同名的另一个重载、或调用点被整体消除），不要怀疑
+属性失效；其二，标了 \Tp{always{\Bk}\_inline} 却仍出现在 missed 报告里，
+GCC 会直接编译失败、Clang 只给警告，所以``编译过了''不等于``展开了''，
+这类调用点要单独归因（跨单元、目标属性不匹配、经指针或虚派发抵达）。
+
+\subsection{怀疑异常拖慢：先证明它在被当控制流用}
+
+顺序不能反：先量抛了多少次，再讨论要不要禁用异常。
+
+\begin{itemize}
+\item 抛出计数：在 catch 块入口挂原子计数器，或临时以日志
+      代替重抛，跑一轮真实负载拿次数分布。
+\item profiler 看展开热点：不抛出时接近零成本；一旦高频抛出，
+      火焰图上会出现一条独立向下的展开与析构例程分支，
+      与业务调用栈明显分层——这个形态比总耗时更能定性。
+\item 结论分岔：计数接近零——性能疑云与异常无关，去查别处；
+      高频抛出且发生在循环内——这是把异常当控制流的设计问题，
+      修调用契约，不是编译选项的锅。
+\end{itemize}
+
+\subsection{I-cache 压力与过度内联的权衡}
+
+内联把函数体摊进调用点，热点路径指令数随之膨胀，指令缓存
+未命中率上升，收益会在某个规模后转负。线索：代码段体积明显
+增长、剖析工具显示 icache miss 与展开规模同向恶化。回调手段：
+收紧内联预算（gcc 的 \Tp{-finline-limit=N}），或对膨胀单元
+整体降级 \Tp{-Os}；用上一小节报告定位被摊进大函数的候选，
+逐个改回普通调用并加 \Tp{-fno-inline-functions} 做对照。
+
+\subsection{-O0 的陷阱}
+
+一句话：-O0 下测出的差异只反映调用开销，与 -O2 生产形态
+几乎无相关性，任何以 -O0 为基线的性能结论都不成立。
+
+\begin{warning}[title={三条最常见的实验设计错误}]
+\begin{enumerate}
+\item 同时改两个变量：换了编译器选项又顺手动数据结构，归因
+      必失败；每次实验只动一个因素。
+\item 单次计时、无预热：首跑含缺页与缓存冷启动；至少取十次
+      去掉极值看中位数，并报离散程度。
+\item 拿调试构建数据外推发布构建：优化前后代码形态判若两程序。
+\end{enumerate}
+\end{warning}
+
+\section{评审与治理配方}
+
+\subsection{被旧条款压制时的应对三步}
+
+评审中遇到``风格手册第 N 条要求如此''挡住了更好的方案时：
+
+\begin{enumerate}
+\item 查上游当日版：确认条款是否已被修订或废止——\DomGo 与
+      \DomLlvm 指向的上游指南都在持续变动，本地抄本可能落后
+      数月；以上游当日版为准重新引一次原文。
+\item 判条款类别：事实类（语言与标准的规定）不可争，照办；
+      策略类（团队取舍，如行宽、命名）可走修订提案；工具类
+      （格式化器写死的输出）先问工具能否配置，能配置就不成文。
+\item 要数据：策略类分歧要求双方各给证据——真实缺陷案例、
+      度量数字或一次受控实验；拿不出证据的一方默认让步。
+\end{enumerate}
+
+\subsection{``要不要禁用异常''的会议议程模板}
+
+禁用异常是策略类条款中争议最大的一个，按固定议程开，
+避免滑成立场辩论：
+
+\begin{itemize}
+\item 环境清单（会前由工程侧填完）：运行平台是否要求 RTTI；
+      依赖闭包里多少第三方库以异常为唯一错误通道；当前
+      \Tp{-fno-exceptions}、\Tp{-fno-rtti} 已覆盖哪些目标。
+\item 体积与性能预算：会前定好阈值（代码段体积下降百分之几、
+      最坏延迟改善多少），当场用一次受控构建验证增益是否
+      达到阈值；达不到，议题自动关闭。
+\item 替代方案成本：错误码与 expected 风格改写涉及多少调用点、
+      新增检查负担多重、历史代码迁移窗口多长。
+\end{itemize}
+
+三栏填满前不表决；结论落进判例库，注明适用组件，不做全仓库一刀切。
+
+\subsection{新人最小三页手册内容清单}
+
+\begin{itemize}
+\item 第一页（十分钟读完）：十条以内硬规则，每条一行，
+      附格式化器与静态检查对应的选项或检查名。
+\item 第二页（动手）：格式化与静态分析的单条命令、IDE 接入
+      方式、提交前自检清单。
+\item 第三页（求助）：判例库入口、评审人分配规则、风格争议
+      的正式提出渠道。
+\end{itemize}
+
+超出三页的内容一律回正文原理章，手册只留索引。
+
+\subsection{判例库条目模板}
+
+四段式：背景（场景与冲突条款）、引用条款（编号加上游当日版
+链接）、裁定（允许或禁止，附适用边界）、修订建议（可选，
+指向未来条款改动）。
+
+\begin{note}[title={两个示范条目}]
+条目 A（inline 语义）。背景：某 .hpp 中非 inline 自由函数被
+两个翻译单元包含，链接报 multiple definition；有成员主张
+``给函数加 static''。引用条款：inline 语义一节。裁定：驳回
+static 方案——它使每个单元各得一份内部链接副本，头文件状态
+从此不再同步；按决策顺序改用 inline 函数，其本就无共享状态。
+修订建议：在四种修法清单补一行``static 不是多重定义的修法''。
+条目 B（异常语境）。背景：嵌入式组件申请以 \Tp{-fno-exceptions}
+构建，但同一二进制链路的网络栈依赖库以异常报错。引用条款：
+禁用异常议程模板。裁定：按目录豁免——仅该组件与其独占的
+翻译单元禁用；体积实测达到阈值，但共享头文件里会被展开进来
+的库代码必须留在异常可用的单元。修订建议：无。
+\end{note}
+
+\section{工具配置速查}
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.20\textwidth}
+  >{\raggedright\arraybackslash}p{0.24\textwidth}
+  >{\raggedright\arraybackslash}p{0.34\textwidth}}
+\caption{工具配置速查：想做的事、命令或键、最小示例。表中开关只标位置不标取值。}\label{tab:apc-tooling}\\
+\toprule
+想做的事 & 命令或键 & 最小示例\\
+\midrule
+\endfirsthead
+\toprule
+想做的事 & 命令或键 & 最小示例\\
+\midrule
+\endhead
+继承 Google 基线只改列宽
+& \Tp{BasedOnStyle}、\Tp{ColumnLimit}
+& \Tp{BasedOnStyle: Google} 配 \Tp{ColumnLimit: 90}\\
+\addlinespace
+C 与 \CPP 分节配置
+& 就近目录各放一份 \Tp{.clang-format}
+& src/c 一份、src/cpp 一份，互不串味\\
+\addlinespace
+格式化单个文件
+& \Tp{-i}
+& \Tp{clang-format -i src/window.cpp}\\
+\addlinespace
+只格式化指定行段
+& \Opt{lines}
+& \Tp{clang-format -i \Opt{lines=10:42} window.cpp}\\
+\addlinespace
+增量：只洗改动行
+& \Tp{git clang-format}
+& \Tp{git clang-format main}\Bk（对相对 main 的差集改写）\\
+\addlinespace
+tidy 按检查族开关
+& \Opt{checks}
+& \Tp{clang-tidy \Opt{checks='-*,\allowbreak{}readability-\allowbreak *'} win.cpp}\\
+\addlinespace
+tidy 全部警告提为错误
+& \Opt{warnings-as-\allowbreak errors}
+& \Tp{clang-tidy \Opt{warnings-as-errors='*'} -p build win.cpp}\\
+\addlinespace
+单行豁免 tidy
+& \Tp{NOLINT}
+& \Tp{int n = 8; // NOLINT(readability-\allowbreak{}magic-\allowbreak{}numbers)}\\
+\addlinespace
+big-bang 提交不污染 blame
+& \Tp{git config blame{\Bk}.ignore{\Bk}Revs{\Bk}File}
+& \Tp{git config blame{\Bk}.ignore{\Bk}Revs{\Bk}File .git-blame-ignore-\allowbreak{}revs}\\
+\addlinespace
+CI 只检查不改写
+& \Opt{dry-run}、\Opt{Werror}
+& \Tp{clang-format \Opt{dry-run} \Opt{Werror} src/*.cpp}\\
+\addlinespace
+生成编译数据库
+& CMake 开关
+& \Tp{cmake -B build -DCMAKE{\Bk}\_EXPORT{\Bk}\_COMPILE{\Bk}\_COMMANDS=ON}\\
+\addlinespace
+配置找不到时兜底
+& 仓库根放一份 \Tp{.clang-format}
+& clang-format 自文件目录向上找，根份保底\\
+\bottomrule
+\end{longtable}
+
+\begin{guideline}[title={本附录的使用法}]
+按症状查节：链接与编译报错看第一节，性能疑云看第二节，评审与
+治理争议看第三节，动手配置查第四节速查表。按节回正文原理章：
+第一节的机制在 inline 语义与 ODR 相关章，第二节的机制在优化
+诊断与异常成本两章，第三节的类别判定在规范生命周期一章。
+本附录只给配方，原理与例外一律以正文为准；正文与本附录冲突
+时，以正文当日版为准并回报勘误，冲突条目按判例库模板入册。
+\end{guideline}
+
+\end{document}
