@@ -83,6 +83,44 @@ function Resolve-Project {
     return $projects[$Name]
 }
 
+# A tabularx whose column spec has no X cannot stretch: every row then ends as
+# "Underfull \hbox (badness 10000) in alignment at lines A--B" and the table ships under-filled.
+# Such an environment is a tabular wearing the wrong name, so refuse it before invoking xelatex.
+function Find-NoXTabularx {
+    param([string]$Text)
+
+    $hits = @()
+    $key = '\begin{tabularx}'
+    $i = 0
+    while ($true) {
+        $p = $Text.IndexOf($key, $i, [System.StringComparison]::Ordinal)
+        if ($p -lt 0) { break }
+        $j = $p + $key.Length
+        $specs = @()
+        for ($g = 0; $g -lt 2; $g++) {
+            while ($j -lt $Text.Length -and $Text[$j] -match '[ \t\r\n]') { $j++ }
+            if ($j -ge $Text.Length -or $Text[$j] -ne '{') { $j = -1; break }
+            $d = 0; $s = $j
+            while ($j -lt $Text.Length) {
+                if ($Text[$j] -eq '\') { $j += 2; continue }
+                if ($Text[$j] -eq '{') { $d++ }
+                elseif ($Text[$j] -eq '}') { $d--; if ($d -eq 0) { break } }
+                $j++
+            }
+            if ($j -ge $Text.Length) { break }
+            $specs += $Text.Substring($s + 1, $j - $s - 1)
+            $j++
+        }
+        if ($j -lt 0) { break }
+        $i = $j
+        if ($specs.Count -lt 2) { continue }
+        $bare = [regex]::Replace($specs[1], '[<>@!]\{[^{}]*\}', '')
+        $bare = [regex]::Replace($bare, '([pmb])\{[^{}]*\}', '$1')
+        if ($bare -cnotmatch 'X') { $hits += ($specs[1] -replace '\s+', ' ') }
+    }
+    return $hits
+}
+
 function Invoke-Build {
     param([string]$Name, [hashtable]$Info)
 
@@ -97,7 +135,16 @@ function Invoke-Build {
 
     if (-not (Test-Path -LiteralPath $buildScript)) {
         Write-Host "  [MISSING] build.ps1 not found!" -ForegroundColor Red
-        return [PSCustomObject]@{ Name=$Name; Status='MISSING'; Errors=-1; PlainErr=0; Overfull=-1; Refs=0; MultDef=0; NotConv=0; Pages=-1; SizeKB='?' }
+        return [PSCustomObject]@{ Name=$Name; Status='MISSING'; Errors=-1; PlainErr=0; Overfull=-1; Refs=0; MultDef=0; NotConv=0; Align=0; Pages=-1; SizeKB='?' }
+    }
+
+    $srcTex = Join-Path $projDir $Info.tex
+    if (Test-Path -LiteralPath $srcTex) {
+        $noX = @(Find-NoXTabularx (((Get-Content -LiteralPath $srcTex -Raw -Encoding UTF8) -replace '(?<!\\)%.*', '')))
+        if ($noX.Count -gt 0) {
+            Write-Host "  [tabularx 无 X 列] $($noX.Count) 处，列声明: $(($noX | ForEach-Object { '|'.$_.'|' }) -join ' ')" -ForegroundColor Red
+            return [PSCustomObject]@{ Name=$Name; Status='FAIL'; Errors=0; PlainErr=0; Overfull=-1; Refs=0; MultDef=0; NotConv=0; Align=0; Pages=-1; SizeKB='?' }
+        }
     }
 
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
@@ -131,7 +178,7 @@ function Invoke-Build {
     # Pages comes from the "Output written on X.pdf (N pages, M bytes)" trailer; -1 means
     # the log holds no such line, i.e. xelatex never reached \end{document}.
     $dangling = 0; $pages = -1
-    $plainErr = 0; $multdef = 0; $notConv = 0
+    $plainErr = 0; $multdef = 0; $notConv = 0; $align = 0
     $logRaw = ''
     if (Test-Path -LiteralPath $logPath) {
         $logRaw = Get-Content -LiteralPath $logPath -Raw -Encoding UTF8
@@ -152,6 +199,10 @@ function Invoke-Build {
         # disagree with the printed contents. Either one is a misplaced or incomplete TOC online.
         $multdef = ([regex]::Matches($lastRun, 'multiply defined')).Count
         $notConv = ([regex]::Matches($lastRun, 'Label\(s\) may have changed|Rerun to get|There were undefined references')).Count
+        # "Underfull \hbox (badness 10000) in alignment at lines A--B" is a *table* report: the
+        # counter that only walks "in paragraph at lines" misses the whole class, and an
+        # un-stretchable tabularx produces one per row. \s+ so a 79-column log wrap cannot hide it.
+        $align = ([regex]::Matches($lastRun, 'in\s+alignment\s+at\s+lines')).Count
     }
 
     # Completeness probe: TeX writes \newlabel into the .aux as it *reaches* each \label, so
@@ -171,19 +222,43 @@ function Invoke-Build {
     $failed = $fullText -match '\u7f16\u8bd1\u5931\u8d25'
     # pages -le 0 = no "Output written" trailer at all, i.e. xelatex never finished the document.
     $status = if ($failed -or $errors -gt 0 -or $exitCode -gt 0 -or $unwritten -gt 0 -or
-                 $plainErr -gt 0 -or $multdef -gt 0 -or $notConv -gt 0 -or $pages -le 0) { 'FAIL' }
+                 $plainErr -gt 0 -or $multdef -gt 0 -or $notConv -gt 0 -or $align -gt 0 -or $pages -le 0) { 'FAIL' }
               elseif ($overfull -gt 0)       { 'OVERFULL' }
               elseif ($dangling -gt 0)       { 'BADREF' }
               elseif ($errors -eq 0)         { 'OK' }
               else                           { 'UNKNOWN' }
 
     $color = switch ($status) { 'OK'{'Green'} 'OVERFULL'{'DarkYellow'} 'BADREF'{'DarkYellow'} 'FAIL'{'Red'} default{'Gray'} }
-    Write-Host "  [$status] Err=$errors PErr=$plainErr Ov=$overfull Ref=$dangling MD=$multdef NC=$notConv Pg=$pages Exit=$exitCode ${sizeKB}KB ${elapsed}s" -ForegroundColor $color
+    Write-Host "  [$status] Err=$errors PErr=$plainErr Ov=$overfull Al=$align Ref=$dangling MD=$multdef NC=$notConv Pg=$pages Exit=$exitCode ${sizeKB}KB ${elapsed}s" -ForegroundColor $color
     if ($unwritten -gt 0) {
         Write-Host "  [TRUNCATED] $unwritten label(s) never reached the .aux - the run stopped before \end{document}" -ForegroundColor Red
     }
 
     if ($status -eq 'FAIL') {
+        # build.ps1's own error-context print sits at the failing pass, and the CI log only ever
+        # carried the last 45 lines of the whole run -- so a CI-only Err>0 reached the summary with
+        # its message truncated away. Scan the captured output for every error shape and print its
+        # context first; the tail dump then still shows where the run stopped.
+        $allOut = @($fullText -split "`r?`n")
+        $shown  = @{}
+        $hits   = 0
+        for ($k = 0; $k -lt $allOut.Count; $k++) {
+            if ($allOut[$k] -match '^![ \t]*[A-Za-z=]' -or
+                $allOut[$k] -match '\.(?:tex|sty|cls):\d+:\s*(Extra |Missing |Undefined control sequence|Runaway argument|LaTeX Error|Package .* Error|Paragraph ended before|Emergency stop|You can)') {
+                $hits++
+                if ($hits -gt 4) { break }
+                Write-Host "    ---- error hit $hits (line $k) ----" -ForegroundColor Red
+                $from = [Math]::Max(0, $k - 6); $to = [Math]::Min($allOut.Count - 1, $k + 8)
+                for ($j = $from; $j -le $to; $j++) {
+                    if ($shown.ContainsKey($j)) { continue }
+                    $shown[$j] = $true
+                    Write-Host ('    ' + $allOut[$j]) -ForegroundColor DarkRed
+                }
+            }
+        }
+        if ($hits -eq 0) {
+            Write-Host '    ---- no error-shaped line in build.ps1 output (see tail below) ----' -ForegroundColor DarkYellow
+        }
         # 45 lines: enough to keep the whole error-context window build.ps1 prints
         # (header + 6 before + hit + 8 after), 15 used to cut off the message head.
         $output | Select-Object -Last 45 | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkRed }
@@ -195,7 +270,7 @@ function Invoke-Build {
         }
     }
 
-    return [PSCustomObject]@{ Name=$Name; Status=$status; Errors=$errors; PlainErr=$plainErr; Overfull=$overfull; Refs=$dangling; MultDef=$multdef; NotConv=$notConv; Pages=$pages; SizeKB=$sizeKB }
+    return [PSCustomObject]@{ Name=$Name; Status=$status; Errors=$errors; PlainErr=$plainErr; Overfull=$overfull; Align=$align; Refs=$dangling; MultDef=$multdef; NotConv=$notConv; Pages=$pages; SizeKB=$sizeKB }
 }
 
 function Invoke-Clean {
@@ -291,7 +366,7 @@ switch ($Action) {
 
         foreach ($r in $results) {
             $c = switch ($r.Status) { 'OK'{'Green'} 'OVERFULL'{'DarkYellow'} 'BADREF'{'DarkYellow'} 'FAIL'{'Red'} default{'Gray'} }
-            Write-Host ('  {0,-16} {1,-10} Err={2} PErr={7} Ov={3} Ref={4} MD={8} NC={9} Pg={5} {6}KB' -f $r.Name,$r.Status,$r.Errors,$r.Overfull,$r.Refs,$r.Pages,$r.SizeKB,$r.PlainErr,$r.MultDef,$r.NotConv) -ForegroundColor $c
+            Write-Host ('  {0,-16} {1,-10} Err={2} PErr={7} Ov={3} Al={10} Ref={4} MD={8} NC={9} Pg={5} {6}KB' -f $r.Name,$r.Status,$r.Errors,$r.Overfull,$r.Refs,$r.Pages,$r.SizeKB,$r.PlainErr,$r.MultDef,$r.NotConv,$r.Align) -ForegroundColor $c
         }
 
         $tt = '{0:F1}' -f $totalSw.Elapsed.TotalSeconds
