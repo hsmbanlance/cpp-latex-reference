@@ -103,6 +103,21 @@ PROJECTS = [
     ("LSPTools",        "lsp_clang_tools.pdf",
      "语言服务器与代码质量工具",
      "clangd·libclang·LSP 三层解剖与 compile_commands.json 的生成排错（CMake·compiledb·Bear）；LSP 生命周期与请求-通知模型、.clangd 配置与索引代价、ccls·cpptools·CDT·JDT 对比、DAP 与 CMake Tools 闭环；clang-format 机制与 .clang-format 逐字段、CI 门禁与增量格式化、uncrustify·astyle；clang-tidy 架构与 checks 族、cppcheck·IWYU·Coverity·CodeQL 与 sanitizer 的分界、CMakePresets 一键质量门。"),
+    ("SimGame",         "simulation_and_games.pdf",
+     "仿真与游戏引擎的 C/C++ 脚本",
+     "非实时仿真软件与引擎脚本层的扩展方式：Ansys 的 APDL·Workbench 脚本层次与 C/C++ 可介入点、Fluent UDF 的 C 宏库与 DEFINE_* 族、Mechanical 用户材料与 Custom Results、Abaqus UMAT/VUMAT 与 C 混编、OpenFOAM 求解器与自定义边界条件、网格 I/O 与区域分解；Unreal 的 UHT·UObject 与模块构建、Unity 原生插件与 IL2CPP/Burst、Godot GDExtension、PhysX·Havok·Jolt 的 C++ 接口、Lua·sol2·AngelScript 绑定与反射代价、硬件在环仿真与确定性时间步、USD·glTF·VTK·CGNS 数据交换与选型决策。"),
+    ("AvDev",           "audio_video_development.pdf",
+     "音视频开发的 C/C++",
+     "音频侧的采样与时钟、缓冲与抖动补偿，ALSA·PipeWire·WASAPI·CoreAudio·JACK 与 ASIO 的 C API 边界；视频侧的采集路径与像素格式（V4L2、Media Foundation、SDI、YUV 与 chroma 次采样、stride 对齐）；编解码内核的 C ABI：libavcodec 的帧与包模型、x264/x265/libaom/SVT-AV1/libvpx/Opus 的参数与码控（CQP·CRF·VBV·ABR）、DXVA2/QSV/VA-API/NVDEC/VideoToolbox 硬件解码与零拷贝、libswscale/swresample 与 libavfilter 滤镜图；封装与同步（MP4·MKV·TS 的时间基、PTS/DTS、edit list、丢包与错误隐藏）；实时链路（RTMP·RTSP·SRT·RIST·LL-HLS·CMAF·WebRTC、无锁音频回调与背压丢帧、GStreamer 与引擎/WASM 集成）；投递层的字幕与图文轨（WebVTT·TTML·CEA-608/708·SRT 的表示与时间轴对齐、多语言轨与清单里的 ext-x-media）、加密投递（HLS Sample-AES、CENC/CBSC 与 ISO BMFF 保护方案、密钥轮换与授权链路）和 fMP4/CMAF 分片与清单表示，及选型决策。"),
+    ("Render",          "rendering_shaders.pdf",
+     "渲染与着色器的 C/C++",
+     "GPU 绘图管线的可编程阶段与固定约定：顶点装配、光栅化、深度与混合；着色语言的三种形态 GLSL·HLSL·MSL 与 SPIR-V 中间表示，glslang·glslc·dxc·slang 编译与 spirv-cross·spirv-opt 后处理；Vulkan 的对象模型、命令缓冲、同步原语与显式内存绑定，Direct3D 12 与 Metal 的对应差异，OpenGL/EGL 的历史包袱；渲染算法侧的 PBR 光照、阴影级联、前向+ 与延迟渲染、DXR/OptiX 光线追踪；计算着色器与 GPU 驱动管线（视锥剔除、粒子、间接绘制）、纹理压缩与资源绑定、帧图与多趟渲染；窗口与文字侧的上下文来处（GLFW·SDL·XCB·Wayland·Cocoa·ANativeWindow 的创建与事件泵、surface 生命周期与 DPI 缩放、跨平台 vsync 与帧节拍）以及字形管线（FreeType 光栅与 hinting、HarfBuzz shaping、SDF/位图字形图集与文本排版）；调试与性能（RenderDoc、GPU 时间戳、带宽与显存预算）及 bgfx·wgpu·Filament 与引擎选型。"),
+    ("EmbRt",           "embedded_realtime.pdf",
+     "嵌入式与硬实时的 C/C++",
+     "确定性从何而来：硬实时与软实时、近实时的度量口径（最坏延迟、抖动分布、利用率与 WCET 思路）；启动链与镜像布局（复位向量、Bootloader 交接、链接脚本 SECTIONS、.data 与 .bss 重定位、构造函数与早期栈堆约束）；中断与延迟构成（NVIC·GIC·APIC 的优先级分组、中断线程化、响应到入口到服务到唤醒的四段分解与测量）；时间与计数器（单调时钟、tick 与 tickless、体系结构定时器与 TSC、PTP 与 gPTP）；裸机超循环与表驱动状态机；RTOS 内核对象与调度（FreeRTOS·Zephyr·RTEMS·VxWorks，任务与栈定形、优先级反转与继承/天花板、静态创建与内存方案）；实时 Linux 与用户态硬实时（PREEMPT_RT、SCHED_FIFO 与 DEADLINE、isolcpus·nohz_full·mlockall 与缺页、cgroup 节流与透明大页等破坏确定性的因素）；无锁与确定性数据结构（SPSC/MPSC 环形缓冲、序列计数器、固定对象池）；实时 I/O 形态（ADC 触发扫描、DMA 双缓冲与循环、CAN 与 CAN-FD 总线负载、EtherCAT 分布式时钟与 TSN 调度类）；可观测性（cyclictest·oslat·ftrace·LTTng·ETM/ITM 与尾延迟统计）；失效安全与可靠性（窗口看门狗、超时与降级、ECC 与故障注入、IEC 61508·ISO 26262·DO-178 的可追溯性）；平台与工具链选型（MCU/MPU/实时 Linux 的边界、CMSIS·HAL·Zephyr devicetree、交叉工具链与 QEMU/Renode·HIL 在环验证）及按症状索引的排障手册。"),
+    ("CodeStyle",       "code_style.pdf",
+     "代码风格与风格指南的 C/C++",
+     "风格从哪来：主流风格指南的谱系与条款解剖（Google C++ Style Guide 的命名、头文件与 include 秩序、类与函数规则；LLVM 的 RTTI/异常与 STL 取舍及其对 Chromium、Fuchsia 的分化影响；Mozilla 与 WebKit 的折中；C++ Core Guidelines 与 Linux 内核编码风格的边界）；命名方案、缩进与空白规则、花括号与行宽的跨风格对比；格式化与静态检查的落地（clang-format 的逐字段配置、各风格基线差异、clang-tidy 命名检查与 CI 门禁、pre-commit 与增量格式化）。译本问题专论：国内流传的谷歌中文风格手册不更新与错译引发的问题：inline 条款停留在"C with Classes"时代——C++11 之后 inline 首先是 ODR 与链接语义（多次定义合法、constexpr 函数隐含 inline、C++17 内联变量、头文件里的 inline 不是为了快），"小于 10 行才 inline"的性能理由在现代编译器启发式内联、LTO、PGO/BOLT 面前基本失效；异常条款的代价误读——表驱动零成本模型下未抛出路径与上层调用的代价可忽略，真实代价在代码体积、landing pad 对优化的干扰与实时热路径，而非"throw 慢所以全禁"；RTTI 禁令、auto/lambda/智能指针条款的历史语境与今日上游的演化差异；如何按现代标准重写一份不过时的团队风格手册及跨风格选型决策表。"),
 ]
 
 HTML_TEMPLATE = """\

@@ -346,6 +346,10 @@
     halign=center,valign=center,nobeforeafter,left=0pt,right=0pt,
     top=0pt,bottom=0pt]\small\bfseries C++26\end{tcolorbox}}
 
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 % ── 封面 ──
@@ -1049,7 +1053,7 @@ json to_json_rttr(const rttr::instance& obj) {
 \end{lstlisting}
 
 \begin{compare}[title={反射序列化方案对比}]
-\begin{tabularx}{\textwidth}{l p{3.2cm} p{3.2cm} p{3.2cm}}
+\begin{tabular}{l p{3.2cm} p{3.2cm} p{3.2cm}}
 \toprule
 \textbf{特性} & \textbf{Boost.PFR} & \textbf{雅兰亭 iguana} & \textbf{RTTR} \\
 \midrule
@@ -1060,7 +1064,7 @@ JSON 支持 & 需自建 & 内置 & 需自建 \\
 性能 & 极快（内联） & 极快（内联） & 中等（查表） \\
 C++ 标准 & $\ge$14 & $\ge$20 & $\ge$11 \\
 \bottomrule
-\end{tabularx}
+\end{tabular}
 \end{compare}
 
 % ═══════════════════════════════════════════════
@@ -1478,7 +1482,7 @@ json j = player;  // only AFTER writing the above
 \caption{C++ vs C\# 序列化技术维度对比}
 \label{tab:tech-compare}
 \small
-\begin{tabularx}{\textwidth}{
+\begin{tabular}{
   >{\raggedright\arraybackslash}p{2.8cm}
   >{\raggedright\arraybackslash}p{4.5cm}
   >{\raggedright\arraybackslash}p{4.5cm}
@@ -1506,7 +1510,7 @@ AOT 支持 & 天然 AOT & 需源生成器（.NET 6+） \\
 \addlinespace
 编译期零开销 & 是（模板内联） & 需源生成器 \\
 \bottomrule
-\end{tabularx}
+\end{tabular}
 \end{table}
 
 \section{序列化生态对比}\label{sec:eco-compare}
@@ -1794,7 +1798,7 @@ magic-enum 的主要限制包括：仅支持 MSVC、GCC、Clang（含 Apple Clan
 \caption{C++26 反射前的序列化六大困境}
 \label{tab:dilemma-summary}
 \small
-\begin{tabularx}{\textwidth}{
+\begin{tabular}{
   >{\raggedright\arraybackslash}p{3cm}
   >{\raggedright\arraybackslash}p{4.5cm}
   >{\raggedright\arraybackslash}p{4cm}
@@ -1809,7 +1813,7 @@ magic-enum 的主要限制包括：仅支持 MSVC、GCC、Clang（含 Apple Clan
 字节序问题 & 平台二进制不兼容 & 不影响（仍需处理） \\
 版本手动管理 & 条件分支 + 版本号 & 可生成版本兼容代码 \\
 \bottomrule
-\end{tabularx}
+\end{tabular}
 \end{table}
 
 这些困境的共同根源是同一个：\textbf{C++ 在编译后丢失了类型的结构信息}。C++26 静态反射通过在编译期保留并暴露这些信息，使得 ``编译器代替开发者完成序列化样板代码'' 成为可能。

@@ -203,6 +203,10 @@
 \newcommand{\Tp}[1]{\texttt{#1}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -693,7 +697,7 @@ AddressSanitizer（简称 ASan）是 LLVM/Clang 内置的内存错误检测工�
 ASan 的核心机制包含三个部分：
 
 \begin{enumerate}[nosep]
-  \item \textbf{编译器插桩}：在每次 \texttt{malloc}/\texttt{free}（以及 \texttt{new}/\texttt{delete}）
+  \item \textbf{编译器插桩}：在每次 \texttt{malloc}/\allowbreak{}\texttt{free}（以及 \texttt{new}/\allowbreak{}\texttt{delete}）
     调用前后插入检查代码。
   \item \textbf{影子内存}：使用额外的内存映射来记录每个 8 字节内存块的可访问性状态。
   \item \textbf{红区（Red Zones）}：在每块已分配内存的两侧插入不可访问的"毒化"区域，
@@ -742,7 +746,7 @@ SUMMARY: AddressSanitizer: 400 byte(s) leaked in 1 allocation(s).
   \item \textbf{性能开销}：CPU 开销约为 $2\times$，内存开销约为 $2$--$3\times$，
     不适合直接用于生产环境。
   \item \textbf{平台依赖}：在 Windows/MSVC 上的支持有限，
-    主要用于 Linux/macOS + Clang/\allowbreak GCC 环境。
+    主要用于 Linux/macOS + Clang/\allowbreak{}\allowbreak GCC 环境。
   \item \textbf{无法检测所有逻辑泄漏}：如果程序仍然持有指针（即使逻辑上不再需要），
     ASan 不会将其报告为泄漏——因为从技术上讲，内存仍然"可达"。
 \end{itemize}
@@ -1014,7 +1018,7 @@ std::vector<int, TrackingAllocator<int>> tracked_vec;
 \centering
 \caption{主要检测工具对比}
 \label{tab:comparison}
-\begin{tabularx}{\textwidth}{lXXXXX}
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{特性} & \textbf{ASan} & \textbf{MSVC CRT} & \textbf{Valgrind} & \textbf{自定义} \\
 \midrule
@@ -1384,7 +1388,7 @@ Rust 的所有权系统和借用检查器在编译期消除了绝大多数内存
 但并不能完全杜绝泄漏：
 
 \begin{itemize}[nosep]
-  \item \textbf{\texttt{Rc}/\texttt{Arc} 循环引用}：与 C++ 的 \texttt{shared\_ptr}
+  \item \textbf{\texttt{Rc}/\allowbreak{}\texttt{Arc} 循环引用}：与 C++ 的 \texttt{shared\_ptr}
     循环引用完全类似，Rust 中的引用计数智能指针 \texttt{Rc} 和 \texttt{Arc}
     在形成循环时同样无法释放。Rust 提供了 \texttt{Weak} 来打破循环，
     但这依赖开发者主动使用。

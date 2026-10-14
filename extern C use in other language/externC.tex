@@ -488,6 +488,10 @@
 \usepackage{tikz}
 
 % ===================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -563,7 +567,7 @@ C ABI 相对简单且高度稳定——几乎所有操作系统都定义了平�
 \cpp{} ABI 则复杂得多：不同编译器（GCC、Clang、Apple Clang、MSVC）的 \cpp{} ABI 互不兼容，甚至同一编译器的不同版本之间也可能存在差异。
 
 \begin{tcolorbox}[guideline={C ABI 的通用性}]
-C ABI 是操作系统级别的二进制标准。无论是 Windows 的 \texttt{stdcall}/\texttt{cdecl}，还是 Linux x86-64 的 System~V ABI，C 函数调用的二进制格式都有明确且稳定的规范。这使得任何能生成符合 C ABI 机器码的语言，都可以互相调用对方的函数。
+C ABI 是操作系统级别的二进制标准。无论是 Windows 的 \texttt{stdcall}/\allowbreak{}\texttt{cdecl}，还是 Linux x86-64 的 System~V ABI，C 函数调用的二进制格式都有明确且稳定的规范。这使得任何能生成符合 C ABI 机器码的语言，都可以互相调用对方的函数。
 \end{tcolorbox}
 
 \section{C++ 名称修饰（Name Mangling）}
@@ -591,7 +595,7 @@ public:
 不同编译器生成的修饰名称如下：
 
 \begin{center}
-\begin{tabular}{lp{4cm}p{5cm}}
+\begin{tabular}{l>{\raggedright\arraybackslash}p{4cm}>{\raggedright\arraybackslash}p{5cm}}
 \toprule
 \textbf{函数} & \textbf{GCC/Clang (Itanium)} & \textbf{MSVC} \\
 \midrule
@@ -613,7 +617,7 @@ C++ 标准\textbf{未定义}名称修饰规则。GCC、Clang 和 Apple Clang 使
 
 调用约定规定了函数参数如何传递、栈如何清理。常见的调用约定有：
 
-\begin{longtable}{lp{3cm}p{4cm}p{3cm}}
+\begin{longtable}{l>{\raggedright\arraybackslash}p{3cm}>{\raggedright\arraybackslash}p{4cm}>{\raggedright\arraybackslash}p{3cm}}
 \toprule
 \textbf{约定} & \textbf{参数传递} & \textbf{栈清理} & \textbf{典型用途} \\
 \midrule
@@ -640,7 +644,7 @@ AAPCS & 前 4 个参数入 r0--r3 & --- & ARM (32-bit) \\
 \end{itemize}
 
 \begin{tcolorbox}[note={x86-64 下的简化}]
-在 x86-64 和 ARM64 平台上，调用约定的差异大幅减少。Windows x64 和 System~V AMD64 各有统一的调用约定，\texttt{cdecl}/\texttt{stdcall}/\texttt{fastcall} 的区别主要存在于 32 位 x86 平台。但名称修饰问题在所有架构上依然存在。
+在 x86-64 和 ARM64 平台上，调用约定的差异大幅减少。Windows x64 和 System~V AMD64 各有统一的调用约定，\texttt{cdecl}/\allowbreak{}\texttt{stdcall}/\allowbreak{}\texttt{fastcall} 的区别主要存在于 32 位 x86 平台。但名称修饰问题在所有架构上依然存在。
 \end{tcolorbox}
 
 \section{C++ 对象模型的复杂性}
@@ -685,7 +689,7 @@ AAPCS & 前 4 个参数入 r0--r3 & --- & ARM (32-bit) \\
 \end{longtable}
 \end{tcolorbox}
 
-因此，从 Java、C\#、Rust、Python、JavaScript 等语言调用 C/\cpp{} 代码时，\textbf{必须}将导出函数声明为 \texttt{extern "C"}，或者使用各语言提供的专用绑定工具（如 pybind11、C++/CLI 等）来处理 \cpp{} 特有的复杂性。
+因此，从 Java、C\#、Rust、Python、JavaScript 等语言调用 C/\allowbreak{}\cpp{} 代码时，\textbf{必须}将导出函数声明为 \texttt{extern "C"}，或者使用各语言提供的专用绑定工具（如 pybind11、C++/CLI 等）来处理 \cpp{} 特有的复杂性。
 
 
 % ===================================================================
@@ -917,7 +921,7 @@ Java 提供两种机制调用本地代码：JNI（Java Native Interface）是官
 
 \section{JNI——Java Native Interface}
 
-JNI 是 Java 平台的标准本地方法接口，需要在 Java 端声明 \texttt{native} 方法，在 C/\cpp{} 端实现对应的 JNI 函数。
+JNI 是 Java 平台的标准本地方法接口，需要在 Java 端声明 \texttt{native} 方法，在 C/\allowbreak{}\cpp{} 端实现对应的 JNI 函数。
 
 \subsection{Java 端声明}
 \javalabel
@@ -1041,7 +1045,7 @@ JNA 自动完成以下工作：
 \end{itemize}
 
 \begin{tcolorbox}[compare={JNI 与 JNA 对比}]
-\begin{longtable}{lp{5cm}p{5cm}}
+\begin{longtable}{l>{\raggedright\arraybackslash}p{5cm}>{\raggedright\arraybackslash}p{5cm}}
 \toprule
 \textbf{特性} & \textbf{JNI} & \textbf{JNA} \\
 \midrule
@@ -1054,7 +1058,7 @@ JNA 自动完成以下工作：
 性能               & 直接调用，性能最优          & 反射 + 动态绑定，略有开销 \\
 类型映射           & 手动处理 JNIEnv           & 自动映射 \\
 回调支持           & 完整支持                    & 通过 \Tp{Callback} 接口 \\
-错误处理           & 手动检查异常                & 自动抛出 \Tp{LastErrorException} \\
+错误处理           & 手动检查异常                & 自动抛出 \Tp{Last\allowbreak{}Error\allowbreak{}Exception} \\
 适用场景           & 性能敏感、复杂交互          & 快速原型、简单调用 \\
 \bottomrule
 \end{longtable}
@@ -1385,7 +1389,7 @@ Rust FFI 调用必须放在 \texttt{unsafe} 块中，因为编译器无法保证
 
 手动编写 FFI 声明容易出错，Rust 社区提供了两个重要工具：
 
-\textbf{bindgen}：自动解析 C/\cpp{} 头文件，生成 Rust FFI 绑定代码。
+\textbf{bindgen}：自动解析 C/\allowbreak{}\cpp{} 头文件，生成 Rust FFI 绑定代码。
 \begin{itemize}[nosep]
 \item 自动处理结构体布局、枚举映射、函数签名
 \item 支持 \texttt{bindgen} CLI 或 \texttt{build.rs} 集成
@@ -1404,7 +1408,7 @@ Rust FFI 调用必须放在 \texttt{unsafe} 块中，因为编译器无法保证
 \chapter{Python 调用 C/C++}
 % ===================================================================
 
-Python 提供了丰富的 C/\cpp{} 互操作方案，从底层的 ctypes 到高级的 pybind11，覆盖了不同复杂度和性能需求。
+Python 提供了丰富的 C/\allowbreak{}\cpp{} 互操作方案，从底层的 ctypes 到高级的 pybind11，覆盖了不同复杂度和性能需求。
 
 \section{ctypes}
 
@@ -1572,7 +1576,7 @@ Node.js 通过 N-API（原 n-api）提供 ABI 稳定的原生扩展接口，也�
 
 \section{N-API}
 
-N-API 是 Node.js 官方推荐的 C/\cpp{} 扩展开发接口，其最大优势是 ABI 稳定性——用 N-API 编译的扩展可以在不同版本的 Node.js 上运行，无需重新编译。
+N-API 是 Node.js 官方推荐的 C/\allowbreak{}\cpp{} 扩展开发接口，其最大优势是 ABI 稳定性——用 N-API 编译的扩展可以在不同版本的 Node.js 上运行，无需重新编译。
 
 \jslabel
 \begin{lstlisting}[style=jsstyle]
@@ -1832,7 +1836,7 @@ fn parse(handle: *mut c_void, input: &str) -> Result<(), String> {
 
 \section*{x86-64 调用约定}
 
-\begin{longtable}{lp{4cm}p{5cm}}
+\begin{longtable}{l>{\raggedright\arraybackslash}p{4cm}>{\raggedright\arraybackslash}p{5cm}}
 \toprule
 \textbf{平台} & \textbf{整型参数寄存器} & \textbf{浮点参数寄存器} \\
 \midrule
@@ -1841,7 +1845,7 @@ System V AMD64 & RDI, RSI, RDX, RCX, R8, R9 & XMM0--XMM7 \\
 \bottomrule
 \end{longtable}
 
-在 x86-64 平台上，\texttt{cdecl}/\texttt{stdcall}/\texttt{fastcall} 的区别消失，统一为平台标准调用约定。GCC、Clang 和 Apple Clang 的 \texttt{\_\_attribute\_\_((cdecl))} 等在 64 位平台上被忽略。
+在 x86-64 平台上，\texttt{cdecl}/\allowbreak{}\texttt{stdcall}/\allowbreak{}\texttt{fastcall} 的区别消失，统一为平台标准调用约定。GCC、Clang 和 Apple Clang 的 \texttt{\_\_attribute\_\_((cdecl))} 等在 64 位平台上被忽略。
 
 \section*{各语言 FFI 默认调用约定}
 
@@ -1867,7 +1871,7 @@ C\# 的 \Tp{DllImport} 默认使用 \texttt{stdcall}（因为 Win32 API 的惯�
 \chapter{C/C++ 动态加载共享库}
 % ===================================================================
 
-除了编译期链接（linker 静态绑定），C/\cpp{} 还支持在运行时动态加载共享库（DLL/SO/DYLIB），按需查找和调用其中的函数。这种方式使程序可以在不重新编译的前提下加载插件、切换实现或延迟加载大型库。
+除了编译期链接（linker 静态绑定），C/\allowbreak{}\cpp{} 还支持在运行时动态加载共享库（DLL/SO/DYLIB），按需查找和调用其中的函数。这种方式使程序可以在不重新编译的前提下加载插件、切换实现或延迟加载大型库。
 
 \section{Windows：LoadLibrary / GetProcAddress}
 
@@ -1950,7 +1954,7 @@ POSIX 系统使用 \texttt{dlfcn.h} 提供的三个函数：
 \toprule
 \textbf{函数} & \textbf{作用} \\
 \midrule
-\Fn{dlopen}  & 打开共享库（\texttt{.so}/\texttt{.dylib}），返回句柄 \\
+\Fn{dlopen}  & 打开共享库（\texttt{.so}/\allowbreak{}\texttt{.dylib}），返回句柄 \\
 \Fn{dlsym}   & 按名称查找符号，返回函数或变量指针 \\
 \Fn{dlclose} & 减少引用计数，计数归零时卸载 \\
 \Fn{dlerror} & 返回最近一次错误的描述字符串 \\
@@ -2104,12 +2108,12 @@ int main() {
 
 \subsection{Boost.DLL 加载模式}
 
-\begin{longtable}{lp{7cm}}
+\begin{longtable}{l>{\raggedright\arraybackslash}p{7cm}}
 \toprule
 \textbf{标志} & \textbf{含义} \\
 \midrule
-\texttt{load\_mode::default\_mode} & 等价于 \texttt{RTLD\_LAZY}（POSIX）或 \texttt{LoadLibrary}（Windows） \\
-\texttt{load\_mode::append\_decorations} & 自动添加 \texttt{lib} 前缀和 \texttt{.so}/\texttt{.dll} 后缀 \\
+\texttt{load\_\allowbreak{}mode::default\_\allowbreak{}mode} & 等价于 \texttt{RTLD\_LAZY}（POSIX）或 \texttt{LoadLibrary}（Windows） \\
+\texttt{load\_\allowbreak{}mode::append\_\allowbreak{}decorations} & 自动添加 \texttt{lib} 前缀和 \texttt{.so}/\allowbreak{}\texttt{.dll} 后缀 \\
 \texttt{load\_mode::rtld\_now} & 等价于 \texttt{RTLD\_NOW}，立即解析所有符号 \\
 \texttt{load\_mode::rtld\_global} & 等价于 \texttt{RTLD\_GLOBAL}，符号全局可见 \\
 \texttt{load\_mode::search\_system\_folders} & 在系统目录中搜索库文件 \\
@@ -2117,7 +2121,7 @@ int main() {
 \end{longtable}
 
 \begin{tcolorbox}[compare={三种动态加载方式对比}]
-\begin{longtable}{lp{3.5cm}p{3.5cm}p{3.5cm}}
+\begin{longtable}{l>{\raggedright\arraybackslash}p{3.5cm}>{\raggedright\arraybackslash}p{3.5cm}>{\raggedright\arraybackslash}p{3.5cm}}
 \toprule
 \textbf{特性} & \textbf{Win32 API} & \textbf{POSIX dlopen} & \textbf{Boost.DLL} \\
 \midrule
@@ -2130,7 +2134,7 @@ int main() {
 句柄管理      & 手动 FreeLibrary   & 手动 dlclose        & RAII 自动管理      \\
 错误获取      & GetLastError       & dlerror             & 抛出异常           \\
 类型安全      & 手动强转函数指针   & 手动强转函数指针    & 模板指定签名       \\
-符号搜索      & GetProcAddress     & dlsym               & \Fn{get}/\Fn{import} \\
+符号搜索      & GetProcAddress     & dlsym               & \Fn{get}/\allowbreak{}\Fn{import} \\
 外部依赖      & 无（系统 API）     & 无（系统 API）      & 需要 Boost         \\
 适用场景      & Windows 专用代码   & POSIX 专用代码      & 跨平台项目         \\
 \bottomrule
@@ -2258,7 +2262,7 @@ UE 在 Windows 上禁用 \cpp{} 异常（\texttt{/EHs-c-}），不能使用 \tex
 \end{tcolorbox}
 
 \begin{tcolorbox}[note={打包分发}]
-Windows 上使用延迟加载（\texttt{PublicDelayLoadDLLs}）时，必须通过 \texttt{RuntimeDependencies.Add} 将 DLL 注册为运行时依赖，否则打包后的游戏找不到 DLL。Linux/macOS 上若使用静态库（\texttt{.a}），则无需额外分发。
+Windows 上使用延迟加载（\texttt{Public\allowbreak{}Delay\allowbreak{}LoadDLLs}）时，必须通过 \texttt{Runtime\allowbreak{}Dependencies.\allowbreak{}Add} 将 DLL 注册为运行时依赖，否则打包后的游戏找不到 DLL。Linux/macOS 上若使用静态库（\texttt{.a}），则无需额外分发。
 \end{tcolorbox}
 
 % -------------------------------------------------------------------
@@ -2515,7 +2519,7 @@ GDExtension 动态库的路径在 \texttt{.gdextension} 文件中按平台配置
 \section{Android NDK 调用 extern "C" 库}
 % -------------------------------------------------------------------
 
-Android 原生开发通过 NDK 使用 C/\cpp{} 代码（NDK 即 Native Development Kit）。
+Android 原生开发通过 NDK 使用 C/\allowbreak{}\cpp{} 代码（NDK 即 Native Development Kit）。
 Java/Kotlin 通过 JNI 调用 \cpp{} 代码，\cpp{} 代码再链接 \texttt{extern "C"} 库；或者直接在 JNI 函数中调用 C 库函数。
 
 \subsection{JNI 桥接层}
@@ -2772,7 +2776,7 @@ xcodebuild -create-xcframework \
 \section{各平台集成方式对比}
 % -------------------------------------------------------------------
 
-\begin{longtable}{lp{2.6cm}p{2.6cm}p{2.6cm}p{2.6cm}}
+\begin{longtable}{l>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.6cm}}
 \toprule
 \textbf{特性} & \textbf{UE} & \textbf{Unity} & \textbf{Android} & \textbf{iOS/macOS} \\
 \midrule
@@ -2784,7 +2788,7 @@ xcodebuild -create-xcframework \
 调用语言    & \cpp{}       & C\#          & Java/Kotlin  & Swift/ObjC \\
 桥接机制    & 直接 \#include & P/Invoke   & JNI          & Bridging Header \\
 库格式      & .lib/.a/.dll & .dll/.so/.a & .so          & .a / XCFramework \\
-构建配置    & Build.cs     & Editor 导入 & CMake/ndk-build & Xcode \\
+构建配置    & Build.cs     & Editor 导入 & CMake/\allowbreak{}\allowbreak{}ndk-\allowbreak{}build & Xcode \\
 动态库支持  & 全平台       & 桌面+Android & 是           & 仅 macOS \\
 异常限制    & 禁用         & 无           & 无           & 无 \\
 \bottomrule
@@ -2794,7 +2798,7 @@ xcodebuild -create-xcframework \
 \begin{enumerate}[nosep]
 \item \textbf{始终提供 extern "C" 头文件}：即使库内部用 \cpp{} 实现，公开接口必须用 \texttt{extern "C"} 导出。这是所有平台通用的最低要求。
 \item \textbf{按平台准备产物}：Windows 需要 \texttt{.dll} + \texttt{.lib}，Linux/Android 需要 \texttt{.so}，iOS 需要 \texttt{.a}（静态），macOS 可用 \texttt{.dylib} 或 \texttt{.a}。
-\item \textbf{避免跨边界分配内存}：由库分配的内存必须由库提供的函数释放，不要依赖调用方的 \texttt{free}/\texttt{delete}。
+\item \textbf{避免跨边界分配内存}：由库分配的内存必须由库提供的函数释放，不要依赖调用方的 \texttt{free}/\allowbreak{}\texttt{delete}。
 \item \textbf{注意 CRT 版本}：Windows 上确保库和宿主应用使用相同版本的 MSVC 运行时，否则跨 DLL 边界的内存操作会崩溃。
 \item \textbf{回调函数指针}：所有平台都支持通过函数指针实现回调，但 Unity IL2CPP 需要 \texttt{[MonoPInvokeCallback]} 标记，Android JNI 回调需要通过 \texttt{JNIEnv} 调用 Java 方法。
 \end{enumerate}

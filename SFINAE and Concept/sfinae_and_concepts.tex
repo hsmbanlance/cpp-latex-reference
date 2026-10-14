@@ -176,6 +176,10 @@
 \newcommand{\Tp}[1]{\texttt{#1}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -544,7 +548,7 @@ void foo();
 \section{将 Concepts 转换为 SFINAE}
 % ═══════════════════════════════════════════════════════════
 
-本节是全文的核心：给出系统性的方法，将 C++20 的 Concepts 改写为 C++11/\allowbreak 14/\allowbreak 17 可用的\allowbreak SFINAE 代码。
+本节是全文的核心：给出系统性的方法，将 C++20 的 Concepts 改写为 C++11/\allowbreak{}\allowbreak 14/\allowbreak{}\allowbreak 17 可用的\allowbreak SFINAE 代码。
 
 \subsection{简单类型约束 $\to$ \texttt{enable\_if}}
 

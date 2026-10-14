@@ -176,6 +176,10 @@
 \newcommand{\Tp}[1]{\texttt{#1}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -957,7 +961,7 @@ public:
 };
 \end{lstlisting}
 
-任何包含 \texttt{tcp\_client.h} 的翻译单元都会被迫编译 WinSock 的全部声明。更严重的是，\texttt{winsock2.h} 中的 \texttt{min}/\texttt{max} 宏、\texttt{ERROR} 宏等会与标准库或用户代码冲突。
+任何包含 \texttt{tcp\_client.h} 的翻译单元都会被迫编译 WinSock 的全部声明。更严重的是，\texttt{winsock2.h} 中的 \texttt{min}/\allowbreak{}\texttt{max} 宏、\texttt{ERROR} 宏等会与标准库或用户代码冲突。
 
 \subsubsection*{解决方案：PImpl 隔离}
 
@@ -1464,7 +1468,7 @@ CRTP 和 PImpl 并非银弹，以下场景应避免使用：
 \centering
 \caption{反模式：何时不使用 CRTP / PImpl}
 \label{tab:anti-pattern}
-\begin{tabular}{@{}p{3.5cm}p{3.2cm}p{7.8cm}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.5cm}>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}p{7.8cm}@{}}
 \toprule
 \textbf{场景} & \textbf{不推荐} & \textbf{原因与替代} \\
 \midrule
@@ -1501,7 +1505,7 @@ CRTP 和 PImpl 并非银弹，以下场景应避免使用：
 \centering
 \caption{完整技术选型指南}
 \label{tab:full-decision}
-\begin{tabular}{@{}p{4.2cm}p{4cm}p{1.5cm}p{4.5cm}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{4cm}>{\raggedright\arraybackslash}p{1.5cm}>{\raggedright\arraybackslash}p{4.5cm}@{}}
 \toprule
 \textbf{场景} & \textbf{推荐技术} & \textbf{C++ 标准} & \textbf{关键理由} \\
 \midrule
@@ -1523,7 +1527,7 @@ ABI 稳定的动态库接口   & PImpl + unique\_ptr & $\geq$11  & 实现变更�
 \centering
 \caption{最佳实践速查}
 \label{tab:best-practice}
-\begin{tabular}{@{}p{0.15\textwidth}p{0.8\textwidth}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.8\textwidth}@{}}
 \toprule
 \textbf{模式} & \textbf{要点} \\
 \midrule

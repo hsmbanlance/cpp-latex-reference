@@ -228,6 +228,10 @@
 \makeindex
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 % ------------------------------------------------------------
@@ -467,7 +471,7 @@ Logger.Instance.Log("App started");
 \begin{compare}[title={CRTP vs 自引用泛型 Singleton}]
 \textbf{构造机制}：C++ CRTP 利用局部静态变量（语言保证线程安全）；C\# 利用 \texttt{Lazy<T>} + \texttt{Activator.CreateInstance}（反射调用私有构造函数）。
 
-\textbf{类型安全}：C++ CRTP 的 \texttt{static\_cast} 在编译时完成，零开销；C\# 的 \texttt{Activator.CreateInstance} 涉及反射，有少量运行时开销。
+\textbf{类型安全}：C++ CRTP 的 \texttt{static\_\allowbreak{}cast} 在编译时完成，零开销；C\# 的 \texttt{Activator.\allowbreak{}Create\allowbreak{}Instance} 涉及反射，有少量运行时开销。
 
 \textbf{安全约束}：C++ 用 \texttt{friend} 限制基类构造；C\# 用 \texttt{protected} 构造函数 + \texttt{sealed} 防止外部实例化。
 
@@ -529,7 +533,7 @@ public class OrderProcessor
 
 \textbf{C++ 特殊问题}：析构顺序（静态局部变量析构顺序与构造相反）、多线程初始化竞态（C++11 已解决）、全局状态导致的测试困难。
 
-\textbf{C\# 优势}：DI 容器是一等公民，\texttt{AddSingleton}/\texttt{AddScoped}/\texttt{AddTransient} 提供了更灵活的生命周期管理。
+\textbf{C\# 优势}：DI 容器是一等公民，\texttt{AddSingleton}/\allowbreak{}\texttt{AddScoped}/\allowbreak{}\texttt{AddTransient} 提供了更灵活的生命周期管理。
 \end{compare}
 
 \section{常用使用场景}
@@ -725,7 +729,7 @@ public class WordApp : Application
 
 \section{常用使用场景}
 
-\begin{longtable}{p{4.5cm} p{8.5cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{4.5cm} >{\raggedright\arraybackslash}p{8.5cm}}
 \toprule
 \textbf{场景} & \textbf{说明} \\
 \midrule
@@ -737,10 +741,10 @@ public class WordApp : Application
 \bottomrule
 \endfoot
 文档/文件解析器 & 根据文件扩展名创建对应的解析器（PDF、Word、Excel 等） \\
-数据库连接工厂 & 根据配置字符串创建 MySQL/PostgreSQL/SQLite 连接对象 \\
+数据库连接工厂 & 根据配置字符串创建 MySQL/\allowbreak{}\allowbreak{}PostgreSQL/\allowbreak{}\allowbreak{}SQLite 连接对象 \\
 插件系统 & 通过工厂方法延迟具体插件类型的实例化，核心框架不依赖具体插件 \\
-UI 控件创建 & 根据操作系统创建原生控件（Win32/Cocoa/GTK 按钮等） \\
-序列化器 & 根据数据格式（JSON/XML/Protobuf）创建对应的序列化器实例 \\
+UI 控件创建 & 根据操作系统创建原生控件（Win32/\allowbreak{}\allowbreak{}Cocoa/\allowbreak{}\allowbreak{}GTK 按钮等） \\
+序列化器 & 根据数据格式（JSON/\allowbreak{}\allowbreak{}XML/\allowbreak{}\allowbreak{}Protobuf）创建对应的序列化器实例 \\
 测试替身 & 在测试中用 Mock 工厂创建桩对象，替换真实依赖 \\
 \end{longtable}
 
@@ -854,12 +858,12 @@ public class MacFactory : IGUIFactory
 
 \textbf{产品族扩展}：两种语言中，新增产品族（如 Linux 风格）只需添加新的工厂类和产品类；但新增产品类型（如 Slider）需要修改所有工厂，这是抽象工厂的固有限制。
 
-\textbf{现代替代方案}：在 C\# 中，依赖注入容器（如 Microsoft.Extensions.DependencyInjection）已经接管了大部分抽象工厂的职责。C++ 也有类似的 DI 库（如 Boost.DI），但不如 C\# 生态普及。
+\textbf{现代替代方案}：在 C\# 中，依赖注入容器（如 Microsoft.\allowbreak{}Extensions.\allowbreak{}Dependency\allowbreak{}Injection）已经接管了大部分抽象工厂的职责。C++ 也有类似的 DI 库（如 Boost.DI），但不如 C\# 生态普及。
 \end{compare}
 
 \section{常用使用场景}
 
-\begin{longtable}{p{4.5cm} p{8.5cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{4.5cm} >{\raggedright\arraybackslash}p{8.5cm}}
 \toprule
 \textbf{场景} & \textbf{说明} \\
 \midrule
@@ -870,7 +874,7 @@ public class MacFactory : IGUIFactory
 \endhead
 \bottomrule
 \endfoot
-跨平台 UI 工具包 & 创建同一风格族的控件（Windows/macOS/Linux 按钮、文本框、菜单） \\
+跨平台 UI 工具包 & 创建同一风格族的控件（Windows/\allowbreak{}\allowbreak{}macOS/\allowbreak{}\allowbreak{}Linux 按钮、文本框、菜单） \\
 数据库驱动切换 & 根据环境创建整套驱动（Connection + Command + DataReader） \\
 主题/皮肤系统 & 一次切换整套视觉主题（浅色/暗色主题的按钮、背景、字体） \\
 多供应商集成 & 不同支付网关的完整客户端套件（支付宝/微信/PayPal 的认证+支付+退款） \\
@@ -1121,7 +1125,7 @@ public class QueryBuilder
 
 \section{常用使用场景}
 
-\begin{longtable}{p{4.5cm} p{8.5cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{4.5cm} >{\raggedright\arraybackslash}p{8.5cm}}
 \toprule
 \textbf{场景} & \textbf{说明} \\
 \midrule
@@ -1133,8 +1137,8 @@ public class QueryBuilder
 \bottomrule
 \endfoot
 HTTP 请求构建 & 组装 URL、Headers、Body、Timeout、认证信息等可选参数 \\
-SQL 查询构建 & 动态组合 SELECT/FROM/JOIN/WHERE/ORDER BY 等子句 \\
-Protobuf/消息构建 & Google Protobuf 的 Message.Builder 是经典应用 \\
+SQL 查询构建 & 动态组合 SELECT/\allowbreak{}\allowbreak{}FROM/\allowbreak{}\allowbreak{}JOIN/\allowbreak{}\allowbreak{}WHERE/\allowbreak{}\allowbreak{}ORDER BY 等子句 \\
+Protobuf/消息构建 & Google Protobuf 的 Message.\allowbreak{}Builder 是经典应用 \\
 复杂配置对象 & 多字段配置（数据库连接串、线程池参数、日志级别等） \\
 测试数据工厂 & 在单元测试中快速构建具有不同属性组合的测试对象 \\
 文档生成器 & 构建结构化文档（HTML 页面、PDF 布局、邮件模板） \\
@@ -1406,7 +1410,7 @@ source.WriteData("Hello World");
 
 \section{常用使用场景}
 
-\begin{longtable}{p{4.5cm} p{8.5cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{4.5cm} >{\raggedright\arraybackslash}p{8.5cm}}
 \toprule
 \textbf{场景} & \textbf{说明} \\
 \midrule
@@ -1417,7 +1421,7 @@ source.WriteData("Hello World");
 \endhead
 \bottomrule
 \endfoot
-I/O 流处理 & Java 的 \texttt{BufferedInputStream(new GZIPInputStream(new FileInputStream(...)))} 是经典案例 \\
+I/O 流处理 & Java 的 \texttt{Buffered\allowbreak{}Input\allowbreak{}Stream(new GZIPInput\allowbreak{}Stream(new File\allowbreak{}Input\allowbreak{}Stream(...)))} 是经典案例 \\
 HTTP 中间件 & ASP.NET Core 的中间件管道（认证 → 日志 → 压缩 → 路由）本质是装饰器链 \\
 网络协议栈 & TCP → TLS → HTTP → WebSocket 的逐层封装 \\
 日志增强 & 在已有服务上叠加时间戳、关联 ID、脱敏等日志装饰器 \\
@@ -1515,7 +1519,7 @@ lazyImage.Value.Display();  // 此时才加载
 
 \section{常用使用场景}
 
-\begin{longtable}{p{4.5cm} p{8.5cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{4.5cm} >{\raggedright\arraybackslash}p{8.5cm}}
 \toprule
 \textbf{场景} & \textbf{说明} \\
 \midrule
@@ -1526,7 +1530,7 @@ lazyImage.Value.Display();  // 此时才加载
 \endhead
 \bottomrule
 \endfoot
-延迟加载（虚拟代理） & ORM 中的关联对象延迟加载（如 Hibernate/NHibernate 的 Lazy 加载） \\
+延迟加载（虚拟代理） & ORM 中的关联对象延迟加载（如 Hibernate/\allowbreak{}\allowbreak{}NHibernate 的 Lazy 加载） \\
 RPC 客户端（远程代理） & gRPC Stub、WCF ClientProxy 将远程调用封装为本地方法调用 \\
 访问控制（保护代理） & 为敏感操作添加权限检查，不修改原始类代码 \\
 缓存代理 & 为昂贵的计算/网络请求添加透明缓存层 \\
@@ -1647,7 +1651,7 @@ public class Directory(string name) : FileSystemNode(name)
 
 \textbf{属性 vs 方法}：C\# 用 \texttt{Size} 属性表达"计算大小"；C++ 用 \texttt{size()} 成员函数。
 
-\textbf{GC vs 所有权}：C\# 的 \texttt{List<FileSystemNode>} 存储引用即可；C++ 的 \texttt{vector<unique\_ptr>} 需要显式管理所有权。
+\textbf{GC vs 所有权}：C\# 的 \texttt{List<File\allowbreak{}System\allowbreak{}Node>} 存储引用即可；C++ 的 \texttt{vector<unique\_\allowbreak{}ptr>} 需要显式管理所有权。
 \end{compare}
 
 \section{常用使用场景}
@@ -1663,7 +1667,7 @@ public class Directory(string name) : FileSystemNode(name)
 \endhead
 \bottomrule
 \endfoot
-文件系统 & 文件与目录的树形结构，统一 \texttt{size()}/\texttt{list()} 操作 \\
+文件系统 & 文件与目录的树形结构，统一 \texttt{size()}/\allowbreak{}\texttt{list()} 操作 \\
 UI 控件树 & GUI 框架中的窗口 → 面板 → 按钮/文本框的嵌套层次 \\
 组织架构 & 公司 → 部门 → 团队 → 员工，统一的汇报/统计接口 \\
 编译器 AST & 表达式树（二元运算、函数调用、字面量）的统一遍历和求值 \\
@@ -1835,7 +1839,7 @@ market.SetPrice("AAPL", 150.0);
 \end{lstlisting}
 
 \begin{compare}
-\textbf{语言支持}：C\# 有原生的 \texttt{event}/\texttt{delegate} 以及 \texttt{IObservable<T>}/\texttt{IObserver<T>} 接口（配合 Rx.NET 提供强大的响应式流操作）；C++ 需要自行实现或使用 Boost.Signals2 / RxCPP。
+\textbf{语言支持}：C\# 有原生的 \texttt{event}/\allowbreak{}\texttt{delegate} 以及 \texttt{IObservable<T>}/\allowbreak{}\texttt{IObserver<T>} 接口（配合 Rx.NET 提供强大的响应式流操作）；C++ 需要自行实现或使用 Boost.Signals2 / RxCPP。
 
 \textbf{类型安全}：C++ 使用模板 + \texttt{std::function}；C++20 Concepts 进一步约束回调签名，编译时检查。
 
@@ -2023,7 +2027,7 @@ sorter.Sort(nums);
 \end{lstlisting}
 
 \begin{compare}
-\textbf{函数式策略}：C++ 的 \texttt{std::function} 和 C\# 的 \texttt{Action<T>}/\texttt{Func<T>} 都可以将 Lambda 作为策略使用，代码极其相似。
+\textbf{函数式策略}：C++ 的 \texttt{std::function} 和 C\# 的 \texttt{Action<T>}/\allowbreak{}\texttt{Func<T>} 都可以将 Lambda 作为策略使用，代码极其相似。
 
 \textbf{编译时 vs 运行时}：C++ 可以用模板 + Concepts 实现零开销的编译时策略，编译器可完全内联；C\# 的泛型虽然也避免了装箱，但仍通过委托间接调用，无法达到同等程度的内联优化。
 
@@ -2034,7 +2038,7 @@ sorter.Sort(nums);
 
 \section{常用使用场景}
 
-\begin{longtable}{p{4.5cm} p{8.5cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{4.5cm} >{\raggedright\arraybackslash}p{8.5cm}}
 \toprule
 \textbf{场景} & \textbf{说明} \\
 \midrule
@@ -2051,7 +2055,7 @@ sorter.Sort(nums);
 支付方式 & 电商系统中切换支付宝/微信/信用卡等不同支付策略 \\
 路由选择 & 导航系统中切换最短路径/最快路径/避开高速等路线策略 \\
 输入校验 & 表单中切换不同校验规则（邮箱格式/手机号/自定义正则） \\
-序列化格式 & 根据 Content-Type 切换 JSON/XML/MessagePack 序列化器 \\
+序列化格式 & 根据 Content-Type 切换 JSON/\allowbreak{}\allowbreak{}XML/\allowbreak{}\allowbreak{}Message\allowbreak{}Pack 序列化器 \\
 负载均衡 & 在轮询/加权/最少连接/一致性哈希等策略间切换 \\
 \end{longtable}
 
@@ -2208,7 +2212,7 @@ public class CommandHistory
 
 \textbf{所有权}：C++ 的 \texttt{unique\_ptr} 明确表达命令的所有权转移；C\# 由 GC 管理。
 
-\textbf{轻量替代}：两种语言都可以用 \texttt{Action}/\texttt{std::function} 对（execute + undo）实现简化版命令模式，适用于不需要序列化的场景。
+\textbf{轻量替代}：两种语言都可以用 \texttt{Action}/\allowbreak{}\texttt{std::function} 对（execute + undo）实现简化版命令模式，适用于不需要序列化的场景。
 \end{compare}
 
 \section{常用使用场景}
@@ -2475,7 +2479,7 @@ ETL 管道 & 提取（Extract） → 转换（Transform） → 加载（Load）�
 
 \section{C++ 实现}
 
-C++ 标准库的迭代器体系是迭代器模式最完善的实现。自定义容器只需提供 \texttt{\seqsplit{begin()}}/\texttt{\seqsplit{end()}} 方法即可与所有标准算法兼容：
+C++ 标准库的迭代器体系是迭代器模式最完善的实现。自定义容器只需提供 \texttt{\seqsplit{begin()}}/\allowbreak{}\texttt{\seqsplit{end()}} 方法即可与所有标准算法兼容：
 
 \begin{lstlisting}[style=cppstyle, caption={自定义迭代器 --- 环形缓冲区}]
 template<typename T, size_t N>
@@ -2548,7 +2552,7 @@ for (const auto& val : buf)   // 输出 3,4,5,6,7
 \begin{guideline}
 \guideref{SL.1}：使用标准库。自定义迭代器应遵循标准库迭代器的概念要求，这样可以与所有标准算法无缝配合。
 
-\guideref{P.5}：编译时能检查的东西不要留到运行时。迭代器的类型标签（\texttt{forward\_iterator\_tag} 等）使编译器能够选择最优算法。
+\guideref{P.5}：编译时能检查的东西不要留到运行时。迭代器的类型标签（\texttt{forward\_\allowbreak{}iterator\_\allowbreak{}tag} 等）使编译器能够选择最优算法。
 \end{guideline}
 
 \section{C\# 对比}
@@ -2620,7 +2624,7 @@ foreach (var val in buf)  // 输出 3,4,5,6,7
 无限序列 & 延迟生成斐波那契数列、随机数序列等无限流（C++ Ranges 的 \texttt{views::iota}） \\
 图/树遍历 & 深度优先（DFS）、广度优先（BFS）等图遍历算法封装为迭代器 \\
 分页查询 & 将 API 分页结果封装为迭代器，对外表现为连续的完整数据集 \\
-组合视图 & C++20 Ranges 的 \texttt{filter}/\texttt{transform}/\texttt{take} 可组合为惰性视图链 \\
+组合视图 & C++20 Ranges 的 \texttt{filter}/\allowbreak{}\texttt{transform}/\allowbreak{}\texttt{take} 可组合为惰性视图链 \\
 \end{longtable}
 
 % ============================================================
@@ -2635,7 +2639,7 @@ foreach (var val in buf)  // 输出 3,4,5,6,7
 
 本附录汇总全书涉及的设计模式及其关键信息，方便快速查阅。
 
-\begin{longtable}{p{2.2cm} p{2cm} p{3.5cm} p{3cm} p{3cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}p{2cm} >{\raggedright\arraybackslash}p{3.5cm} >{\raggedright\arraybackslash}p{3cm} >{\raggedright\arraybackslash}p{3cm}}
 \toprule
 \textbf{模式} & \textbf{类型} & \textbf{C++ 实现要点} & \textbf{Core Guidelines} & \textbf{典型场景} \\
 \midrule
@@ -2656,12 +2660,12 @@ Builder & 创建型 & \texttt{build() \&\&}；\textbf{CRTP + Concepts} & C.41, F
 Adapter & 结构型 & 接口继承 + 组合 & C.120 & 遗留系统、SDK \\
 Decorator & 结构型 & \texttt{unique\_ptr} 链式包装 & R.20, C.120 & I/O 流、中间件 \\
 Proxy & 结构型 & \texttt{unique\_ptr} 延迟初始化 & R.20, P.9 & ORM、RPC、AOP \\
-Composite & 结构型 & \texttt{\seqsplit{vector<unique\_ptr>}} & C.35, R.20 & 文件系统、AST \\
+Composite & 结构型 & \texttt{\seqsplit{vector<unique\_\allowbreak{}ptr>}} & C.35, R.20 & 文件系统、AST \\
 Observer & 行为型 & 模板事件；\textbf{Concept 约束} & F.16, P.5 & GUI、Pub/Sub \\
-Strategy & 行为型 & \texttt{std::function}；\textbf{编译时 + Concepts} & C.120, P.5 & 压缩、支付、路由 \\
+Strategy & 行为型 & \texttt{std::\allowbreak{}function}；\textbf{编译时 + Concepts} & C.120, P.5 & 压缩、支付、路由 \\
 Command & 行为型 & \texttt{unique\_ptr} 命令栈 & R.20, C.35 & Undo/Redo、宏 \\
 Template Method & 行为型 & 虚函数；\textbf{CRTP 编译时} & C.120, C.129 & 解析器、ETL、AI \\
-Iterator & 行为型 & \texttt{begin()}/\texttt{end()}；Ranges & SL.1, P.5 & 游标、分页、遍历 \\
+Iterator & 行为型 & \texttt{begin()}/\allowbreak{}\texttt{end()}；Ranges & SL.1, P.5 & 游标、分页、遍历 \\
 \end{longtable}
 
 % ------------------------------------------------------------

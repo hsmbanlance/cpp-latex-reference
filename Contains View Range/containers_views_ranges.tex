@@ -235,6 +235,10 @@
 }
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 % ============================================================
@@ -475,7 +479,7 @@ pool.Return(rented);
 \begin{table}[htbp]
 \centering
 \caption{\Tp{vector} 主要成员函数与复杂度}
-\begin{tabularx}{\textwidth}{l l X}
+\begin{tabularx}{\textwidth}{l l >{\raggedright\arraybackslash}X}
 \toprule
 \textbf{操作} & \textbf{复杂度} & \textbf{说明} \\
 \midrule
@@ -611,7 +615,7 @@ list.RemoveAll(x => x % 2 == 0); // 对应 erase_if
 
 \begin{warning}
 \texttt{vector<bool>} 的 \Fn{operator[]} 返回的不是 \texttt{bool\&}，而是代理对象
-\texttt{vector<bool>::reference}。这导致：
+\texttt{vector<bool>::\allowbreak{}reference}。这导致：
 \begin{itemize}
 \item 无法将 \texttt{\&v[0]} 传给期望 \texttt{bool*} 的函数
 \item 与泛型代码不兼容（违反容器概念要求）
@@ -1282,7 +1286,7 @@ var set = new SortedSet<int> { 5, 3, 1, 4, 2 };
 set.Add(6);
 set.Remove(3);
 \end{lstlisting}
-C\# 没有 \texttt{extract}/\texttt{merge} 等零开销节点操作，也没有透明比较器。
+C\# 没有 \texttt{extract}/\allowbreak{}\texttt{merge} 等零开销节点操作，也没有透明比较器。
 \end{compare}
 
 % ────────────────────────────────────────────────────────────
@@ -1633,7 +1637,7 @@ C++ 的 \Tp{\seqsplit{std::basic\_string}} 是一个完整的容器，支持迭�
 \begin{table}[htbp]
 \centering
 \caption{字符串类型别名}
-\begin{tabularx}{\textwidth}{l l l X}
+\begin{tabularx}{\textwidth}{l l l >{\raggedright\arraybackslash}X}
 \toprule
 \textbf{类型} & \textbf{字符类型} & \textbf{字节/字符} & \textbf{编码} \\
 \midrule
@@ -2213,7 +2217,7 @@ C++20 的范围库（Ranges Library）是标准库最重大的扩展之一。它
 \begin{table}[htbp]
 \centering
 \caption{范围库组件概览}
-\begin{tabularx}{\textwidth}{l l X}
+\begin{tabularx}{\textwidth}{l l >{\raggedright\arraybackslash}X}
 \toprule
 \textbf{类别} & \textbf{头文件} & \textbf{说明} \\
 \midrule
@@ -2297,7 +2301,7 @@ int main() {
 \texttt{iota\_view}---它们不持有数据，迭代器指向外部数据。
 
 非借用范围（如 \texttt{vector} 的临时对象）的迭代器在临时对象销毁后失效。
-\texttt{ranges::find} 等算法对非借用范围返回 \texttt{dangling} 而非迭代器，
+\texttt{ranges::\allowbreak{}find} 等算法对非借用范围返回 \texttt{dangling} 而非迭代器，
 防止悬空引用。
 \end{note}
 

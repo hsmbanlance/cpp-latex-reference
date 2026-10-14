@@ -371,6 +371,10 @@
 \usepackage{seqsplit}
 
 % ===================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -390,9 +394,9 @@
 
 \kw{volatile} 在 C 与 \cpp{} 标准里的语义只有一句话：告诉编译器不要优化对该对象的访问。许多教程因此把它归为"几乎没用、还容易误用"的关键字，并推荐用 \texttt{std::atomic} 取代它做线程同步。这个评价对纯 \cpp{} 代码大体成立——在语言内部，\kw{volatile} 既不保证原子性，也不提供内存屏障，确实只剩"防止编译器把变量缓存到寄存器"这一项作用。
 
-但 \kw{volatile} 真正的、不可替代的舞台不在纯 C/\cpp{} 代码里，而在 \textbf{C/C++ 与其他语言的边界}上——尤其是与汇编的边界。当一段代码必须与外部观察者（CPU 指令、硬件寄存器、信号处理函数、\texttt{longjmp} 之后的栈帧、运行时插入的钩子）共享某个存储位置时，编译器的所有"看起来等价"的优化都会破坏正确性。GCC/Clang 的 \texttt{asm volatile}、MSVC 的 \texttt{\_\_asm} 与 \texttt{<intrin.h>}、嵌入式开发里的 MMIO 寄存器、信号处理里的 \texttt{sig\_atomic\_t}——这些场景共同构成 \kw{volatile} 修饰符的"实际有用集合"。
+但 \kw{volatile} 真正的、不可替代的舞台不在纯 C/\allowbreak{}\cpp{} 代码里，而在 \textbf{C/C++ 与其他语言的边界}上——尤其是与汇编的边界。当一段代码必须与外部观察者（CPU 指令、硬件寄存器、信号处理函数、\texttt{longjmp} 之后的栈帧、运行时插入的钩子）共享某个存储位置时，编译器的所有"看起来等价"的优化都会破坏正确性。GCC/Clang 的 \texttt{asm volatile}、MSVC 的 \texttt{\_\_asm} 与 \texttt{<intrin.h>}、嵌入式开发里的 MMIO 寄存器、信号处理里的 \texttt{sig\_atomic\_t}——这些场景共同构成 \kw{volatile} 修饰符的"实际有用集合"。
 
-本文从这条线索展开。第~1~章给出 \kw{volatile} 在标准里的精确定义与三类真正有用的场景；第~2~章铺陈内联汇编的基础与 ABI 约束；第~3~章详解 GCC/Clang 的 \texttt{asm volatile}，包括它的三大保证、操作数与约束、\texttt{asm goto} 与实战指令；第~4~章对比 MSVC 的 \texttt{\_\_asm} 块与 intrinsics，解释为何 x64 抛弃了内联汇编以及 intrinsics 如何隐式获得 volatile 语义；第~5~章讨论 C 变量与汇编的共享、全局寄存器变量、\texttt{setjmp}/\texttt{longjmp} 与 \texttt{sig\_atomic\_t} 中 \kw{volatile} 的强制要求；第~6~章把视野推广到嵌入其他高级语言（C\#、Java、Python、Lua、Rust），说明为何 FFI 边界让 \kw{volatile} 失去意义；第~7~章横向对比 C/C++、C\#、Java、Rust 四种语言里同名关键字的真实语义差异；第~8~章给出反模式与最佳实践清单。
+本文从这条线索展开。第~1~章给出 \kw{volatile} 在标准里的精确定义与三类真正有用的场景；第~2~章铺陈内联汇编的基础与 ABI 约束；第~3~章详解 GCC/Clang 的 \texttt{asm volatile}，包括它的三大保证、操作数与约束、\texttt{asm goto} 与实战指令；第~4~章对比 MSVC 的 \texttt{\_\_asm} 块与 intrinsics，解释为何 x64 抛弃了内联汇编以及 intrinsics 如何隐式获得 volatile 语义；第~5~章讨论 C 变量与汇编的共享、全局寄存器变量、\texttt{setjmp}/\allowbreak{}\texttt{longjmp} 与 \texttt{sig\_atomic\_t} 中 \kw{volatile} 的强制要求；第~6~章把视野推广到嵌入其他高级语言（C\#、Java、Python、Lua、Rust），说明为何 FFI 边界让 \kw{volatile} 失去意义；第~7~章横向对比 C/C++、C\#、Java、Rust 四种语言里同名关键字的真实语义差异；第~8~章给出反模式与最佳实践清单。
 
 \section*{文档约定}
 
@@ -468,18 +472,18 @@ GCC \texttt{-O2} 下，\texttt{spin\_plain} 会被优化成：先把 \texttt{pla
 
 \begin{itemize}[nosep]
   \item \textbf{线程间共享变量}：\kw{volatile} 不提供原子性，不提供 acquire/release 内存序，不防止 CPU 乱序。应该用 \texttt{std::atomic<T>} 配合 \texttt{memory\_order}。
-  \item \textbf{防止编译器把对象优化掉}：现代 \cpp{} 的 RAII、\seqsplit{\texttt{[[maybe\_unused]]}}、\seqsplit{\texttt{std::atomic\_flag}}、\seqsplit{\texttt{benchmark::DoNotOptimize}} 等机制更精确，不必把整个类型染上 \kw{volatile}。
+  \item \textbf{防止编译器把对象优化掉}：现代 \cpp{} 的 RAII、\seqsplit{\texttt{[[maybe\_\allowbreak{}unused]]}}、\seqsplit{\texttt{std::atomic\_\allowbreak{}flag}}、\seqsplit{\texttt{benchmark::Do\allowbreak{}Not\allowbreak{}Optimize}} 等机制更精确，不必把整个类型染上 \kw{volatile}。
 \end{itemize}
 
 \begin{tcolorbox}[warning={volatile $\neq$ atomic}]
 经典反例：\texttt{volatile int counter;} 多线程执行 \texttt{counter++}。该操作展开为 load--modify--store 三条指令，编译器不会合并它们，但两个线程仍可能同时 load 到旧值，导致丢失更新。\kw{volatile} 没有解决任何并发问题，反而让读者误以为已经"线程安全"。这是 \cpp{} Core Guidelines CP.3 与 C.169 明确反对的写法。
 \end{tcolorbox}
 
-所以"纯 C/\cpp{} 中 \kw{volatile} 仅为避免编译器优化变量"这个说法是准确的：它的\textbf{唯一}作用就是把变量从优化器的"可缓存集合"中剔除。在语言内部，这个能力很少是必需的。
+所以"纯 C/\allowbreak{}\cpp{} 中 \kw{volatile} 仅为避免编译器优化变量"这个说法是准确的：它的\textbf{唯一}作用就是把变量从优化器的"可缓存集合"中剔除。在语言内部，这个能力很少是必需的。
 
 \section{三大真实用途}\label{sec:volatile-real-uses}
 
-\kw{volatile} 真正不可替代的场景，都涉及一个共同特征：\textbf{C/\cpp{} 编译器看不见的外部观察者}会读写同一块存储。编译器无法推理这些观察者的行为，只能被告知"这里每次访问都要老实翻译"。三类场景如下。
+\kw{volatile} 真正不可替代的场景，都涉及一个共同特征：\textbf{C/\allowbreak{}\cpp{} 编译器看不见的外部观察者}会读写同一块存储。编译器无法推理这些观察者的行为，只能被告知"这里每次访问都要老实翻译"。三类场景如下。
 
 \subsection{内存映射 I/O}\label{sec:volatile-mmio}
 
@@ -500,7 +504,7 @@ void uart_putc(char c) {
 
 \subsection{信号处理}\label{sec:volatile-signal}
 
-C 标准 §7.14.1.1 规定：信号处理函数与主流程之间共享的对象，如果类型不是 \texttt{volatile sig\_atomic\_t}（或 C11 起的 \texttt{atomic\_flag}/\texttt{atomic<T>}），行为未定义。原因同样是"外部观察者"：信号可以在任意两条指令之间打断主流程，跳到处理函数里写一个标志，再返回。主流程里的循环若把该标志缓存到寄存器，就永远看不到信号已经发生。
+C 标准 §7.14.1.1 规定：信号处理函数与主流程之间共享的对象，如果类型不是 \texttt{volatile sig\_atomic\_t}（或 C11 起的 \texttt{atomic\_flag}/\allowbreak{}\texttt{atomic<T>}），行为未定义。原因同样是"外部观察者"：信号可以在任意两条指令之间打断主流程，跳到处理函数里写一个标志，再返回。主流程里的循环若把该标志缓存到寄存器，就永远看不到信号已经发生。
 
 \clabel
 \begin{lstlisting}[style=cstyle]
@@ -526,7 +530,7 @@ int main(void) {
 
 \subsection{嵌入汇编与运行时钩子}\label{sec:volatile-asm}
 
-第三类是本文的主线：当 C/\cpp{} 代码里出现一段汇编（GCC 的 \texttt{asm}、MSVC 的 \texttt{\_\_asm}），或者通过函数指针调用一段运行时插入的代码（JIT、热补丁、调试器钩子），这段外部代码可能读写任何全局/静态变量。编译器对内联汇编的"语义"几乎一无所知，必须被告知：
+第三类是本文的主线：当 C/\allowbreak{}\cpp{} 代码里出现一段汇编（GCC 的 \texttt{asm}、MSVC 的 \texttt{\_\_asm}），或者通过函数指针调用一段运行时插入的代码（JIT、热补丁、调试器钩子），这段外部代码可能读写任何全局/静态变量。编译器对内联汇编的"语义"几乎一无所知，必须被告知：
 
 \begin{itemize}[nosep]
   \item 这段汇编有副作用，不能删除（即使输出未被使用）。
@@ -543,7 +547,7 @@ int main(void) {
 
 \section{本章小结}\label{sec:ch1-summary}
 
-\kw{volatile} 在 C/\cpp{} 中的语义只有一个：禁止编译器优化对存储位置的访问。在纯语言内部，这个能力被 \texttt{std::atomic}、RAII 与 ABI 约定大幅替代；但当代码与"编译器看不见的外部观察者"共享存储时——硬件寄存器、信号处理、内联汇编、运行时钩子——它就是不可替代的、且常常是 C 标准强制要求的工具。后面几章将聚焦其中最常见也最容易被误用的一类：与汇编的边界。
+\kw{volatile} 在 C/\allowbreak{}\cpp{} 中的语义只有一个：禁止编译器优化对存储位置的访问。在纯语言内部，这个能力被 \texttt{std::atomic}、RAII 与 ABI 约定大幅替代；但当代码与"编译器看不见的外部观察者"共享存储时——硬件寄存器、信号处理、内联汇编、运行时钩子——它就是不可替代的、且常常是 C 标准强制要求的工具。后面几章将聚焦其中最常见也最容易被误用的一类：与汇编的边界。
 
 % ===================================================================
 \chapter{内联汇编基础}\label{ch:asm-basics}
@@ -554,7 +558,7 @@ int main(void) {
 现代编译器的代码生成能力已经非常强，绝大多数情况下手写汇编既不会更快，也不会更短。但仍有四类场景必须使用内联汇编：
 
 \begin{enumerate}[nosep]
-  \item \textbf{CPU 专有指令}：\texttt{rdtsc}、\texttt{cpuid}、\texttt{pause}、\texttt{mfence}、\texttt{crc32}、\texttt{aesni}、\texttt{rdseed} 等。编译器在 C/\cpp{} 里没有对应语法，必须通过 \texttt{asm} 或 intrinsics 触发。
+  \item \textbf{CPU 专有指令}：\texttt{rdtsc}、\texttt{cpuid}、\texttt{pause}、\texttt{mfence}、\texttt{crc32}、\texttt{aesni}、\texttt{rdseed} 等。编译器在 C/\allowbreak{}\cpp{} 里没有对应语法，必须通过 \texttt{asm} 或 intrinsics 触发。
   \item \textbf{原子/同步原语的底层实现}：标准库里的 \texttt{std::atomic}、\texttt{pthread\_mutex\_lock} 内部都依赖 \texttt{lock cmpxchg} 之类的指令。实现这些库的人需要直接写汇编。
   \item \textbf{操作系统/启动代码}：内核入口、中断向量、上下文切换、特权指令（\texttt{cli}、\texttt{sti}、\texttt{hlt}、\texttt{wrmsr}）无法用 C 表达。
   \item \textbf{极致性能调优}：SIMD 自动向量化失败的热点循环、密码学中的常数时间实现（防侧信道）、特定的位旋转模式。
@@ -564,9 +568,9 @@ int main(void) {
 
 \section{两大风格：GCC vs MSVC}\label{sec:two-styles}
 
-x86/x64 平台上，C/\cpp{} 嵌入汇编主要有两套语法，互不兼容：
+x86/x64 平台上，C/\allowbreak{}\cpp{} 嵌入汇编主要有两套语法，互不兼容：
 
-\begin{longtable}{p{2.2cm}p{5.6cm}p{5.6cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.2cm}>{\raggedright\arraybackslash}p{5.6cm}>{\raggedright\arraybackslash}p{5.6cm}}
 \toprule
 \textbf{特性} & \textbf{GCC/Clang} & \textbf{MSVC} \\
 \midrule
@@ -595,7 +599,7 @@ x64 调用约定（Microsoft x64 ABI）要求函数前 4 个整型参数走 \tex
 
 写内联汇编必须了解目标平台的 ABI。下表列出最常见两套：
 
-\begin{longtable}{p{2.4cm}p{5.4cm}p{5.4cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.4cm}>{\raggedright\arraybackslash}p{5.4cm}>{\raggedright\arraybackslash}p{5.4cm}}
 \toprule
 \textbf{项目} & \textbf{System V AMD64} & \textbf{Microsoft x64} \\
 \midrule
@@ -653,10 +657,10 @@ asm volatile("cli");
 \midrule
 \texttt{"=r"} & 任意通用寄存器（输出，\texttt{=} 表示只写） \\
 \texttt{"=\&r"} & 任意通用寄存器，且与其他输出不重叠（early-clobber） \\
-\texttt{"=a"} & \texttt{rax}/\texttt{eax}/\texttt{ax}/\texttt{al} \\
-\texttt{"=b"} & \texttt{rbx}/\ldots \\
-\texttt{"=c"} & \texttt{rcx}/\ldots \\
-\texttt{"=d"} & \texttt{rdx}/\ldots \\
+\texttt{"=a"} & \texttt{rax}/\allowbreak{}\texttt{eax}/\allowbreak{}\texttt{ax}/\allowbreak{}\texttt{al} \\
+\texttt{"=b"} & \texttt{rbx}/\allowbreak{}\ldots \\
+\texttt{"=c"} & \texttt{rcx}/\allowbreak{}\ldots \\
+\texttt{"=d"} & \texttt{rdx}/\allowbreak{}\ldots \\
 \texttt{"=S"} & \texttt{rsi} \\
 \texttt{"=D"} & \texttt{rdi} \\
 \texttt{"=m"} & 内存操作数 \\
@@ -719,7 +723,7 @@ static inline CpuidResult cpuid(uint32_t leaf, uint32_t subleaf) {
 }
 \end{lstlisting}
 
-\texttt{cpuid} 会写 \texttt{ebx}，而 \texttt{ebx} 在 System V ABI 里是被调用者保留的。GCC 看到 \texttt{"=b"} 约束后会自动插入 \texttt{push rbx}/\texttt{pop rbx}。这是约束字符串优于"裸写汇编"的关键好处之一：编译器仍然知道寄存器活跃情况。
+\texttt{cpuid} 会写 \texttt{ebx}，而 \texttt{ebx} 在 System V ABI 里是被调用者保留的。GCC 看到 \texttt{"=b"} 约束后会自动插入 \texttt{push rbx}/\allowbreak{}\texttt{pop rbx}。这是约束字符串优于"裸写汇编"的关键好处之一：编译器仍然知道寄存器活跃情况。
 
 \section{asm volatile 的三大保证}\label{sec:asm-volatile}
 
@@ -801,7 +805,7 @@ equal:
 
 下表列出最常用的几条 x86 指令及其正确的 \texttt{asm volatile} 写法：
 
-\begin{longtable}{p{2.0cm}p{4.5cm}p{6.7cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}p{4.5cm}>{\raggedright\arraybackslash}p{6.7cm}}
 \toprule
 \textbf{指令} & \textbf{用途} & \textbf{asm 模板} \\
 \midrule
@@ -951,7 +955,7 @@ link my_obj.obj my_kernel.obj /OUT:app.exe
 \chapter{C 变量与汇编的交互}\label{ch:c-asm-interact}
 % ===================================================================
 
-第~3、4 章展示了如何把汇编嵌入 C/\cpp{}。本章反向讨论：当汇编与 C 共享变量时，C 端必须做哪些事才能保证正确性。
+第~3、4 章展示了如何把汇编嵌入 C/\allowbreak{}\cpp{}。本章反向讨论：当汇编与 C 共享变量时，C 端必须做哪些事才能保证正确性。
 
 \section{共享变量必须 volatile}\label{sec:shared-must-volatile}
 
@@ -1031,7 +1035,7 @@ int main(void) {
 
 原因：\texttt{setjmp} 保存的是寄存器与栈快照，但编译器可能把 \texttt{plain} 优化到某个被复用/未保存的寄存器里。\kw{volatile} 强制它留在栈上的固定位置，\texttt{longjmp} 恢复栈帧后还能读到正确值。
 
-这条规则在内核（异常处理）、解释器（错误恢复）、协程库（上下文切换）里反复出现。Linux 内核的 \texttt{BUG\_ON}、Lua 的 \texttt{lua\_error}、PostgreSQL 的 \texttt{PG\_TRY}/\texttt{PG\_CATCH} 都依赖 \texttt{setjmp}/\texttt{longjmp}，相关局部变量必须 \kw{volatile}。
+这条规则在内核（异常处理）、解释器（错误恢复）、协程库（上下文切换）里反复出现。Linux 内核的 \texttt{BUG\_ON}、Lua 的 \texttt{lua\_error}、PostgreSQL 的 \texttt{PG\_TRY}/\allowbreak{}\texttt{PG\_CATCH} 都依赖 \texttt{setjmp}/\allowbreak{}\texttt{longjmp}，相关局部变量必须 \kw{volatile}。
 
 \section{sig\_atomic\_t 与异步信号}\label{sec:sig-atomic}
 
@@ -1046,7 +1050,7 @@ int main(void) {
 \chapter{嵌入其他高级语言}\label{ch:ffi}
 % ===================================================================
 
-第~3--5 章聚焦汇编。本章把视野推广到所有"在 C/\cpp{} 中嵌入其他语言"的场景，并回答一个核心问题：\textbf{为什么这些场景几乎不需要 \kw{volatile}？}
+第~3--5 章聚焦汇编。本章把视野推广到所有"在 C/\allowbreak{}\cpp{} 中嵌入其他语言"的场景，并回答一个核心问题：\textbf{为什么这些场景几乎不需要 \kw{volatile}？}
 
 \section{FFI 边界天然防优化}\label{sec:ffi-natural}
 
@@ -1089,11 +1093,11 @@ class Program {
 
 C\# 端没有 \kw{volatile} 修饰符出现在 P/Invoke 声明里——CLR 在调用前后会自动插入完整的内存屏障（P/Invoke 转换涉及托管/非托管栈切换，本身就是序列化点）。原生侧的 \kw{volatile} 仍然适用于硬件寄存器与信号处理，但与 C\# 调用方无关。
 
-C\# 的 \kw{volatile} 关键字用在\textbf{纯托管}代码里，语义与 C/\cpp{} 完全不同——见第~7 章。
+C\# 的 \kw{volatile} 关键字用在\textbf{纯托管}代码里，语义与 C/\allowbreak{}\cpp{} 完全不同——见第~7 章。
 
 \section{Java 嵌入 C/C++：JNI}\label{sec:java-jni}
 
-Java 通过 \texttt{native} 方法 + JNI 调用 C/\cpp{}：
+Java 通过 \texttt{native} 方法 + JNI 调用 C/\allowbreak{}\cpp{}：
 
 \javalabel
 \begin{lstlisting}[style=javastyle]
@@ -1115,19 +1119,19 @@ JNIEXPORT jint JNICALL Java_Native_add
 }
 \end{lstlisting}
 
-JNI 调用经过 JVM 的 native method stub，stub 会处理 GC 安全点、局部引用表、异常状态等。所有 JVM 内部状态对 C 代码都是"不透明"的——C 编译器只能假设 JNI 函数有任意副作用，因此自动遵守 §6.1 的规则。Java 端的 \kw{volatile} 关键字（JSR-133 之后）提供完整的 happens-before 关系，与 C/\cpp{} 的 \kw{volatile} 不是同一回事。
+JNI 调用经过 JVM 的 native method stub，stub 会处理 GC 安全点、局部引用表、异常状态等。所有 JVM 内部状态对 C 代码都是"不透明"的——C 编译器只能假设 JNI 函数有任意副作用，因此自动遵守 §6.1 的规则。Java 端的 \kw{volatile} 关键字（JSR-133 之后）提供完整的 happens-before 关系，与 C/\allowbreak{}\cpp{} 的 \kw{volatile} 不是同一回事。
 
 \section{Python 嵌入 C/C++}\label{sec:python-ffi}
 
 Python 调用 C 扩展有三条主流路径：
 
 \begin{itemize}[nosep]
-  \item \textbf{CPython C API}：手写 \texttt{PyMethodDef}、\texttt{PyModuleDef}，编译为 \texttt{.so}/\texttt{.pyd}。
-  \item \textbf{ctypes/cffi}：运行时通过 \texttt{dlopen}/\texttt{LoadLibrary} 加载共享库，按 C ABI 调用。
+  \item \textbf{CPython C API}：手写 \texttt{PyMethodDef}、\texttt{PyModuleDef}，编译为 \texttt{.so}/\allowbreak{}\texttt{.pyd}。
+  \item \textbf{ctypes/cffi}：运行时通过 \texttt{dlopen}/\allowbreak{}\texttt{LoadLibrary} 加载共享库，按 C ABI 调用。
   \item \textbf{pybind11}：\cpp{} 模板库，自动生成 CPython C API 胶水代码。
 \end{itemize}
 
-三条路径都通过 C ABI 进入 C/\cpp{}，因此 §6.1 的规则适用。Python 解释器自身用 GIL 序列化字节码执行，Python 层没有 \kw{volatile} 关键字。
+三条路径都通过 C ABI 进入 C/\allowbreak{}\cpp{}，因此 §6.1 的规则适用。Python 解释器自身用 GIL 序列化字节码执行，Python 层没有 \kw{volatile} 关键字。
 
 \section{Lua 嵌入 C/C++}\label{sec:lua-ffi}
 
@@ -1148,17 +1152,17 @@ fn main() {
 }
 \end{lstlisting}
 
-Rust 没有 \kw{volatile} 关键字，但 \texttt{core::ptr::volatile\_read}/\texttt{volatile\_write} 与 \texttt{core::ptr::read\_volatile}/\texttt{write\_volatile} 提供等价语义，主要用于 MMIO 与 FFI 中的特殊场景。日常 Rust 代码用 \texttt{AtomicU32}、\texttt{Ordering} 与 \texttt{UnsafeCell} 表达并发与可变性，几乎不需要 volatile 操作。
+Rust 没有 \kw{volatile} 关键字，但 \texttt{core::ptr::volatile\_read}/\allowbreak{}\texttt{volatile\_write} 与 \texttt{core::ptr::read\_volatile}/\allowbreak{}\texttt{write\_volatile} 提供等价语义，主要用于 MMIO 与 FFI 中的特殊场景。日常 Rust 代码用 \texttt{AtomicU32}、\texttt{Ordering} 与 \texttt{UnsafeCell} 表达并发与可变性，几乎不需要 volatile 操作。
 
 \section{本章小结}\label{sec:ffi-summary}
 
-嵌入其他\textbf{高级}语言时，C/\cpp{} 通过函数调用进入对方运行时，ABI 强制编译器在调用边界刷新内存。这条规则让 \kw{volatile} 在 FFI 场景里几乎没用武之地。真正需要 \kw{volatile} 的是嵌入\textbf{汇编}——因为汇编不是函数调用，它在同一翻译单元内，编译器默认认为自己看得到全部副作用。
+嵌入其他\textbf{高级}语言时，C/\allowbreak{}\cpp{} 通过函数调用进入对方运行时，ABI 强制编译器在调用边界刷新内存。这条规则让 \kw{volatile} 在 FFI 场景里几乎没用武之地。真正需要 \kw{volatile} 的是嵌入\textbf{汇编}——因为汇编不是函数调用，它在同一翻译单元内，编译器默认认为自己看得到全部副作用。
 
 % ===================================================================
 \chapter{跨语言 volatile 关键字对比}\label{ch:cross-lang}
 % ===================================================================
 
-C/\cpp{}、C\#、Java、Rust 四种语言里都出现了 \kw{volatile}（或等价机制），但语义差异巨大。本章把它们并排比较，避免跨语言迁移时的误用。
+C/\allowbreak{}\cpp{}、C\#、Java、Rust 四种语言里都出现了 \kw{volatile}（或等价机制），但语义差异巨大。本章把它们并排比较，避免跨语言迁移时的误用。
 
 \section{C/C++ volatile：仅防优化}\label{sec:cpp-volatile}
 
@@ -1196,9 +1200,9 @@ class Holder {
 \begin{tcolorbox}[compare={C\# volatile vs C++ volatile}]
 \begin{itemize}[nosep]
   \item C\# \kw{volatile} 同时阻止\textbf{编译器}（JIT）与\textbf{CLR 内存模型}层面的重排，提供单向屏障（acquire on read, release on write）。
-  \item C/\cpp{} \kw{volatile} 只阻止编译器优化，对 CPU 重排无能为力。
+  \item C/\allowbreak{}\cpp{} \kw{volatile} 只阻止编译器优化，对 CPU 重排无能为力。
   \item 在 C\# 中，等价于 \cpp{} 里 \seqsplit{\texttt{std::atomic<T>::load}}（acquire 序）的语义恰恰需要 \kw{volatile} 字段；而在 \cpp{} 中必须用 \texttt{std::atomic}，\kw{volatile} 帮不上忙。
-  \item C\# \kw{volatile} 不保证 64 位字段的原子性（在 32 位平台上），需要 \texttt{Interlocked.Read}。C/\cpp{} 中 \texttt{std::atomic<uint64\_t>} 在所有主流平台都是 lock-free。
+  \item C\# \kw{volatile} 不保证 64 位字段的原子性（在 32 位平台上），需要 \texttt{Interlocked.Read}。C/\allowbreak{}\cpp{} 中 \texttt{std::atomic<uint64\_t>} 在所有主流平台都是 lock-free。
 \end{itemize}
 \end{tcolorbox}
 
@@ -1207,9 +1211,9 @@ class Holder {
 Java 5（JSR-133）之后，\kw{volatile} 提供：
 
 \begin{itemize}[nosep]
-  \item 对所有字宽（包括 \texttt{long}/\texttt{double}）的原子读写。
+  \item 对所有字宽（包括 \texttt{long}/\allowbreak{}\texttt{double}）的原子读写。
   \item happens-before 关系：对 \kw{volatile} 字段的写，happens-before 任何后续对该字段的读。
-  \item 等价于 \texttt{AtomicInteger} 的 \texttt{get}/\texttt{set}，但不支持 CAS（需要 \texttt{AtomicXxx} 或 VarHandle）。
+  \item 等价于 \texttt{AtomicInteger} 的 \texttt{get}/\allowbreak{}\texttt{set}，但不支持 CAS（需要 \texttt{AtomicXxx} 或 VarHandle）。
 \end{itemize}
 
 \javalabel
@@ -1223,7 +1227,7 @@ class Holder {
 }
 \end{lstlisting}
 
-Java \kw{volatile} 的语义比 C\# 更强（C\# 不保证 64 位原子，Java 保证），但比 C/\cpp{} 的 \texttt{std::atomic<T>} 弱（没有 \texttt{compare\_exchange}、没有显式 \texttt{memory\_order} 选择）。
+Java \kw{volatile} 的语义比 C\# 更强（C\# 不保证 64 位原子，Java 保证），但比 C/\allowbreak{}\cpp{} 的 \texttt{std::atomic<T>} 弱（没有 \texttt{compare\_exchange}、没有显式 \texttt{memory\_order} 选择）。
 
 \section{Rust：无关键字，显式函数}\label{sec:rust-volatile}
 
@@ -1252,14 +1256,14 @@ unsafe fn mmio_write(addr: *mut u32, v: u32) {
 设计哲学：
 
 \begin{itemize}[nosep]
-  \item \texttt{read\_volatile}/\texttt{write\_volatile} 对应 C/\cpp{} \kw{volatile}，用于 MMIO 与 FFI，不保证原子性也不保证内存序。
-  \item \texttt{AtomicXxx} 与 \texttt{Ordering} 对应 C/\cpp{} \texttt{std::atomic}，是并发同步的唯一推荐工具。
+  \item \texttt{read\_volatile}/\allowbreak{}\texttt{write\_volatile} 对应 C/\allowbreak{}\cpp{} \kw{volatile}，用于 MMIO 与 FFI，不保证原子性也不保证内存序。
+  \item \texttt{AtomicXxx} 与 \texttt{Ordering} 对应 C/\allowbreak{}\cpp{} \texttt{std::atomic}，是并发同步的唯一推荐工具。
   \item 两者都标记为 \texttt{unsafe}（volatile 操作）或需要显式 \texttt{Ordering} 参数（atomic 操作），让程序员在调用点就意识到语义责任。
 \end{itemize}
 
 \section{四语言对比表}\label{sec:cross-table}
 
-\begin{longtable}{p{2.4cm}p{2.85cm}p{2.85cm}p{2.85cm}p{2.85cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.4cm}>{\raggedright\arraybackslash}p{2.85cm}>{\raggedright\arraybackslash}p{2.85cm}>{\raggedright\arraybackslash}p{2.85cm}>{\raggedright\arraybackslash}p{2.85cm}}
 \toprule
 \textbf{特性} & \textbf{C/C++} & \textbf{C\#} & \textbf{Java} & \textbf{Rust} \\
 \midrule
@@ -1270,7 +1274,7 @@ unsafe fn mmio_write(addr: *mut u32, v: u32) {
 \endhead
 关键字                & \kw{volatile}              & \kw{volatile}              & \kw{volatile}              & 无（用函数） \\
 阻止编译器优化        & 是                         & 是                         & 是                         & 是 \\
-阻止 CPU 重排         & 否                         & 单向 acq/rel               & 双向 happens-before        & 否/是（atomic） \\
+阻止 CPU 重排         & 否                         & 单向 acq/rel               & 双向 happens-\allowbreak{}before        & 否/是（atomic） \\
 保证原子性            & 否                         & 32 位是，64 位看平台       & 是（含 long/double）       & 否/是（atomic） \\
 线程同步推荐          & \seqsplit{\texttt{std::atomic}} & \kw{volatile} 或 Interlocked & \kw{volatile} 或 AtomicXxx & AtomicXxx \\
 MMIO 推荐             & \kw{volatile} 指针         & 不适用                     & 不适用                     & \seqsplit{\texttt{read\_volatile}} \\
@@ -1290,7 +1294,7 @@ MMIO 推荐             & \kw{volatile} 指针         & 不适用              
   \item \textbf{\texttt{asm} 漏写 \kw{volatile}}：有副作用的指令（\texttt{pause}、\texttt{mfence}、写 MSR、\texttt{wfi}）必须 \kw{volatile}。
   \item \textbf{\texttt{asm volatile} 漏写 \texttt{"memory"} clobber}：当汇编读写未声明的内存时（如直接寻址全局变量），必须加 \texttt{"memory"}，否则编译器不知道要刷新。
   \item \textbf{共享变量漏写 \kw{volatile}}：见 §5.1。
-  \item \textbf{\texttt{setjmp}/\texttt{longjmp} 之间的局部变量漏写 \kw{volatile}}：见 §5.3，行为未定义。
+  \item \textbf{\texttt{setjmp}/\allowbreak{}\texttt{longjmp} 之间的局部变量漏写 \kw{volatile}}：见 §5.3，行为未定义。
   \item \textbf{信号处理函数访问非 \texttt{sig\_atomic\_t} 全局}：见 §5.4，行为未定义。
   \item \textbf{在 \kw{volatile} 对象上使用 \texttt{const\_cast} 去掉 \kw{volatile}}：通过非 \kw{volatile} 左值修改 \kw{volatile} 对象是未定义行为（C++ [dcl.type.cv]/6）。
   \item \textbf{把 MSVC \texttt{\_ReadWriteBarrier} 当 CPU 屏障}：它只阻止编译器重排，不阻止 CPU 重排。跨核同步必须用 \texttt{MemoryBarrier} 或 \texttt{std::atomic\_thread\_fence}。
@@ -1312,7 +1316,7 @@ MMIO 推荐             & \kw{volatile} 指针         & 不适用              
 
 \section{结语}\label{sec:conclusion}
 
-\kw{volatile} 在 C/\cpp{} 里是一个被严重误用的关键字，但它的"被误用"恰恰来自一个事实：它在语言内部确实没什么用。它真正的舞台在边界上——硬件、信号、汇编、运行时钩子。在这些场景里，它是 C 标准强制要求的、不可替代的、且常常是唯一正确的工具。
+\kw{volatile} 在 C/\allowbreak{}\cpp{} 里是一个被严重误用的关键字，但它的"被误用"恰恰来自一个事实：它在语言内部确实没什么用。它真正的舞台在边界上——硬件、信号、汇编、运行时钩子。在这些场景里，它是 C 标准强制要求的、不可替代的、且常常是唯一正确的工具。
 
 理解 \kw{volatile} 的最好方式，是理解"编译器看不见的外部观察者"这个概念。一旦你开始用这个视角看代码，\texttt{asm volatile}、\texttt{"memory"} clobber、\texttt{sig\_atomic\_t}、\texttt{setjmp} 后的 \kw{volatile} 局部变量——所有这些看似零散的规则就会统一成一条：\textbf{当存在编译器无法推理的写入者时，必须告诉编译器"老实访问，不要聪明"}。
 

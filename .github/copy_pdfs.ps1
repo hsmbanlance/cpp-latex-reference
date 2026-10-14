@@ -44,6 +44,11 @@ $projects = @(
     @{ dir = 'Parallel Algorithms';             job = 'parallel_algorithms' }
     @{ dir = 'Math Geo DSP';                    job = 'math_geo_dsp' }
     @{ dir = 'LSP and Clang Tools';             job = 'lsp_clang_tools' }
+    @{ dir = 'Simulation and Games';            job = 'simulation_and_games' },
+    @{ dir = 'Audio Video Development';         job = 'audio_video_development' },
+    @{ dir = 'Rendering and Shaders';           job = 'rendering_shaders' },
+    @{ dir = 'Embedded and Realtime';           job = 'embedded_realtime' },
+    @{ dir = 'Code Style';                      job = 'code_style' }
 )
 
 $copied = 0

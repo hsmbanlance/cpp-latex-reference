@@ -254,6 +254,10 @@
 \newcommand{\NPU}{\Dom{NPU}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -1563,9 +1567,9 @@ task\_group 与 flow 图，成熟 &
 \section{并行 STL 算法与什么时候别用库}
 
 \Fn{std::sort}、\Fn{for\_each}、\Fn{copy}、\Fn{transform}、\Fn{set\_union}
-这一族在 \cpp{17} 里都能接策略标签；oneTBB 另有 \Fn{tbb::parallel\_sort}、
-\Fn{tbb::parallel\_transform\_reduce}、\Fn{tbb::parallel\_invoke}
-与三维的 \Tp{tbb::blocked\_range3d}。两个现实约束要注意。
+这一族在 \cpp{17} 里都能接策略标签；oneTBB 另有 \Fn{tbb::parallel\_{\Bk}sort}、
+\Fn{tbb::parallel\_{\Bk}transform\_{\Bk}reduce}、\Fn{tbb::parallel\_{\Bk}invoke}
+与三维的 \Tp{tbb::blocked\_{\Bk}range3d}。两个现实约束要注意。
 第一，并行算法\emph{会}额外分配内存：并行 \Fn{sort} 与集合运算通常要临时缓冲，
 走的是全局 \Tp{operator new} 而不是你的容器分配器，标准也没给算法传分配器的
 口子（\Tp{pmr} 的池化分配在这个层面上帮不上忙），所以在实时、内存受限
@@ -1638,8 +1642,8 @@ acquire 也唤不醒任何东西。\Fn{compare\_exchange} 还多给一个失败�
 表达同样的事。结论是：acquire 与 release 在主流架构上都便宜，seq\_cst 只在一部分架构
 上接近免费，把它当默认值要付钱。
 
-还有两件容易被忽略的事。\Fn{is\_always\_lock\_free} 要查：宽于机器字的原子量（例如 16
-字节的双字 CAS）在很多目标上退化成库里的分段自旋锁。\cpp{20} 的 \Tp{std::atomic\_ref}
+还有两件容易被忽略的事。\Fn{is\_{\Bk}always\_{\Bk}lock\_{\Bk}free} 要查：宽于机器字的原子量（例如 16
+字节的双字 CAS）在很多目标上退化成库里的分段自旋锁。\cpp{20} 的 \Tp{std::atomic\_{\Bk}ref}
 让你给已有对象套原子视图而不改变布局，代价是所有访问都得走这个视图；同一年代加的
 \Fn{wait} 与 \Fn{notify\_one} 是 futex 语义，这些原语怎么管线程是并发分册的话题。
 
@@ -2340,7 +2344,7 @@ shared memory分为32个4字节bank。同一个warp内的同bank不同地址访�
 矩阵片段转置一般选swizzle，简单直方图选padding。
 
 \begin{warning}[title={本章最常在四个地方翻车}]
-其一，归约里漏屏障：第一层写\Tp{warpPart}之后、第二层读之前必须有\Tp{\_\_syncthreads()}，
+其一，归约里漏屏障：第一层写\Tp{warpPart}之后、第二层读之前必须有\Tp{\_{\Bk}\_{\Bk}syncthreads()}，
 少了它读到的是旧值，结果时而对时而错，还只在特定块大小下复现。
 其二，掩码与真实参与lane不符：上游分支裁掉一半lane后仍传\Tp{0xffffffffu}给shuffle，属于未定义行为。
 其三，把bank conflict当成必然慢：冲突只发生在同一warp之内，改用向量读写后冲突形态会变，要重新算而不是照搬结论。
@@ -2364,10 +2368,10 @@ persistent kernel把网格固定成``SM数乘每SM可驻留块数''：块不再�
 收益是块调度与启动开销被摊薄，中间结果能留在shared里复用，还能做软件流水；
 风险是队列粒度选小了原子争用回来、选大了负载不均，而驻留块数一旦超过实际可共驻数量就会死锁。
 
-cooperative groups把这些层级写进了类型：\Tp{this\_thread\_block()}表示块、\Tp{tiled\_partition<32>}表示warp，
-\Tp{cg::reduce}与\Tp{cg::sum}提供对应层级的归约，\Tp{this\_grid().sync()}提供网格级同步。
+cooperative groups把这些层级写进了类型：\Tp{this\_{\Bk}thread\_{\Bk}block()}表示块、\Tp{tiled\_{\Bk}partition<32>}表示warp，
+\Tp{cg::reduce}与\Tp{cg::sum}提供对应层级的归约，\Tp{this\_{\Bk}grid().sync()}提供网格级同步。
 网格同步要求协作式启动，且网格规模不得超过实际可共驻上限
-（用\Tp{cudaOccupancyMaxActiveBlocksPerMultiprocessor}事先算），否则启动直接失败。
+（用\Tp{cuda{\Bk}Occupancy{\Bk}Max{\Bk}Active{\Bk}Blocks{\Bk}Per{\Bk}Multiprocessor}事先算），否则启动直接失败。
 它的价值是把两趟合成一趟加一次同步，少一次全局往返；代价是占用率被钉死，长序列上未必划算。
 
 \section{什么时候直接调用CUB与Thrust}
@@ -2979,8 +2983,8 @@ D2D、同卡 & 片上带宽，但仍占用一次提交的常数项 & 让算子�
 
 一个流是一个先进先出的命令队列：同一个流里的操作按提交顺序执行，不同流之间可以并发。因此\Tp{cudaMemcpyAsync}的语义是``在本流中，排在它前面的命令做完之后开始''，而不是``此刻开始''。只有源内存pinned时，命令返回后主机才可以立刻改写这块缓冲之外的一切——更准确地说，返回意味着已入队，不意味着数据已经离开主机；在传输完成之前修改源缓冲区是数据竞争，这也是最常见的隐蔽错误。
 
-事件是给流水图加边的工具。\Tp{cudaEventRecord}把一个标记插进某个流，
-而\Tp{cudaStreamWaitEvent}让另一个流等待它，这条等待是异步的，只建立依赖而不阻塞主机。于是跨流的先后关系可以精确表达：拷贝流负责搬运，计算流负责消费，两边用事件握手；纯依赖用途的事件要用\Tp{cudaEventCreateWithFlags}配\Tp{cudaEventDisableTiming}创建，带计时的实现代价随版本不同，但关掉计时总是更便宜的那个选择。
+事件是给流水图加边的工具。\Tp{cuda{\Bk}Event{\Bk}Record}把一个标记插进某个流，
+而\Tp{cuda{\Bk}Stream{\Bk}Wait{\Bk}Event}让另一个流等待它，这条等待是异步的，只建立依赖而不阻塞主机。于是跨流的先后关系可以精确表达：拷贝流负责搬运，计算流负责消费，两边用事件握手；纯依赖用途的事件要用\Tp{cuda{\Bk}Event{\Bk}Create{\Bk}With{\Bk}Flags}配\Tp{cuda{\Bk}Event{\Bk}Disable{\Bk}Timing}创建，带计时的实现代价随版本不同，但关掉计时总是更便宜的那个选择。
 
 \begin{lstlisting}[style=cudastyle,caption={pinned源加双流分块：拷贝与计算重叠}]
 // Placeholder: the real kernel and the data source are elsewhere.
@@ -3296,11 +3300,11 @@ PYBIND11_MODULE(_C, m) {
 而是``明明并行了，吞吐却是 1''：Python 的多线程、asyncio worker、
 GUI 主线程全被串行化，多核 \CPU{}的 \Tp{std::execution} 并行段也救不了
 场——瓶颈在解释器，不在你的循环。
-\item \textbf{放了锁又回调 Python}：在 \Tp{gil\_scoped\_release} 作用域
+\item \textbf{放了锁又回调 Python}：在 \Tp{gil\_{\Bk}scoped\_{\Bk}release} 作用域
 内调 \Tp{py::function} 回调、构造异常或打印，轻则段错误、重则死锁。
-凡回调必重新 \Tp{gil\_scoped\_acquire}。
+凡回调必重新 \Tp{gil\_{\Bk}scoped\_{\Bk}acquire}。
 \item \textbf{后台线程裸奔}：C++ 线程池或定时器线程直接调 Python 对象
-却没有 \Tp{gil\_scoped\_acquire}；或者反过来，在解释器关闭之后还有
+却没有 \Tp{gil\_{\Bk}scoped\_{\Bk}acquire}；或者反过来，在解释器关闭之后还有
 线程拿着 \Tp{py::object} 活着。两条都归到``谁发起调用，谁负责锁''。
 \end{enumerate}
 \end{warning}
@@ -3539,11 +3543,11 @@ install.components = ["pa_python"]
 
 \section{CUDA 与 NPU 混合构建}
 
-CMake 3.18 起原生 \Fn{enable\_language}(CUDA)，现代写法只设一个变量：
-\Tp{CMAKE\_CUDA\_ARCHITECTURES}。它的默认值随 CMake 与 CUDA 版本
+CMake 3.18 起原生 \Fn{enable\_{\Bk}language}(CUDA)，现代写法只设一个变量：
+\Tp{CMAKE\_{\Bk}CUDA\_{\Bk}ARCHITECTURES}。它的默认值随 CMake 与 CUDA 版本
 变化（近年版本一度倾向 \Tp{native} 或最低架构），所以发布构建
 \textbf{永远显式写死目标架构}，如 \Tp{80;86;90}；它会被翻译成
-nvcc 的 \Tp{-gencode arch=compute\_XX,code=...} 组合，具体展开式
+nvcc 的 \Tp{-gencode arch=compute\_{\Bk}XX,code=...} 组合，具体展开式
 无需手抄。给核函数单独立静态库、绑定层只链接它，好处与清单
 \ref{lst:cmake-cuda} 的写法一致：核函数可以脱离 Python 单独测试，
 换后端不动绑定层。

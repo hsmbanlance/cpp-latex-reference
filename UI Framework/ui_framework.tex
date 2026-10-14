@@ -275,6 +275,10 @@
 \newcommand{\Tp}[1]{\texttt{#1}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -364,7 +368,7 @@ FTXUI & Win / macOS / Linux & C++ (原生) &
   \item \textbf{WinUI 3}：DirectComposition + XAML 渲染引擎 (Composition API)。
   \item \textbf{wxWidgets}：直接调用各平台原生控件 API (Win32/Cocoa/GTK)。
   \item \textbf{Qt Widgets}：自绘引擎 QPainter，可混合原生控件 (QStyle)。
-  \item \textbf{Qt Quick/QML}：GPU 加速场景图 (Scene Graph)，基于 OpenGL/Vulkan/Metal。
+  \item \textbf{Qt Quick/QML}：GPU 加速场景图 (Scene Graph)，基于 OpenGL/\allowbreak{}\allowbreak{}Vulkan/\allowbreak{}\allowbreak{}Metal。
   \item \textbf{UE Slate}：自绘即时模式 GUI，通过 RHI 直接提交 GPU 批次。
   \item \textbf{FTXUI}：终端字符网格渲染，通过 ANSI 转义序列输出到 stdout，无 GPU 依赖。
 \end{itemize}

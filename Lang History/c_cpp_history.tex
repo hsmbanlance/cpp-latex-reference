@@ -257,6 +257,10 @@
 \newcommand{\yrlbl}[1]{\yearlabel{#1}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -1043,7 +1047,7 @@ int main() {
 \begin{itemize}
   \item \textbf{结构化绑定}：\kw{auto [x, y, z] = tuple;}，解构 tuple、pair、struct、array。
   \item \textbf{\kw{if constexpr}}：编译期分支，让模板代码更清晰。
-  \item \textbf{\kw{if}/\kw{switch} 初始化语句}：\kw{if (auto it = m.find(k); it != m.end()) \{...\}}。
+  \item \textbf{\kw{if}/\allowbreak{}\kw{switch} 初始化语句}：\kw{if (auto it = m.find(k); it != m.end()) \{...\}}。
   \item \textbf{折叠表达式}：\kw{(args + ...)}，简化变参模板。
   \item \textbf{类模板参数推导}（CTAD）：\kw{std::pair p(1, 2.0);} 不需要写 \kw{<int, double>}。
   \item \textbf{内联变量}：\kw{inline int x = 0;} 可以在头文件中定义而不引起多重定义错误。
@@ -1958,7 +1962,7 @@ C++ 标准文档已达 \textbf{1700+ 页}，远超 C（约 500 页）。这反�
 
 \begin{center}
 \scriptsize
-\begin{tabularx}{\textwidth}{@{}p{2.2cm} p{2.6cm} p{2.6cm} p{2.6cm} p{2.6cm}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{2.6cm}@{}}
 \toprule
 \textbf{维度} & \textbf{中心化（Java/Oracle）} & \textbf{准中心化（C\#/.NET Foundation）} & \textbf{去中心化（C++/ISO/IEC）} & \textbf{单一个人主导} \\
 \midrule
@@ -1982,7 +1986,7 @@ C++ 标准文档已达 \textbf{1700+ 页}，远超 C（约 500 页）。这反�
 \addlinespace
 设计一致性 & 高（公司战略一致） & 中（公司主导） & 中（委员会妥协） & 高（个人风格统一） \\
 \bottomrule
-\end{tabularx}
+\end{tabular}
 \end{center}
 
 \section{各模式的代表性争议}

@@ -266,6 +266,10 @@
 \newcommand{\EMW}{\Lang{EM}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -552,7 +556,7 @@ end module
 
 \section{三种接口形态与它们的可达范围}
 
-\textbf{句柄式平面函数}（opaque handle）。\Tp{SNDFILE*}、\Tp{fftw\_plan}、\Tp{PJ*}、\Tp{CVODE\_Mem}、\Tp{btDynamicsWorld} 的 C 封装都属于此类：类型在头文件里只有前向声明，生命周期由成对的 create/destroy 管，错误用返回码。这是跨语言绑定的最短路径，因为它只需要类型宽度（全是指针）与调用约定。
+\textbf{句柄式平面函数}（opaque handle）。\Tp{SNDFILE*}、\Tp{fftw\_plan}、\Tp{PJ*}、\Tp{CVODE\_Mem}、\Tp{bt{\Bk}Dynamics{\Bk}World} 的 C 封装都属于此类：类型在头文件里只有前向声明，生命周期由成对的 create/destroy 管，错误用返回码。这是跨语言绑定的最短路径，因为它只需要类型宽度（全是指针）与调用约定。
 
 \textbf{平面数值函数}（flat function）。\Lib{C ABI 的 BLAS}、\Lib{CMSIS-DSP}、\Lib{sundials} 的向量与矩阵操作以裸数组加长度暴露，没有对象也没有状态；可分离编译、可被任何语言逐点调用，代价是没有类型系统保护（尺寸、步长、主序全靠人）。
 
@@ -587,7 +591,7 @@ end module
 
 把上面的接口交给 \PY{}，有四条主流路线加一条例外。它们的差别不在``能不能''，而在需不需要 C 编译器、能不能处理所有权、以及出错时报在哪一层。
 
-\textbf{\Tp{ctypes}}：纯标准库、运行时按 ABI 直接调 \Tp{.so}/\Tp{.dll}，不需要编译器，也不读头文件。类型表只覆盖基本类型与指针，结构体要手抄一遍布局，回调要自己保证生命周期。优点是零构建、跨发行版；缺点是任何签名错误都表现为``要么崩溃要么结果错''。
+\textbf{\Tp{ctypes}}：纯标准库、运行时按 ABI 直接调 \Tp{.so}/{\Bk}\Tp{.dll}，不需要编译器，也不读头文件。类型表只覆盖基本类型与指针，结构体要手抄一遍布局，回调要自己保证生命周期。优点是零构建、跨发行版；缺点是任何签名错误都表现为``要么崩溃要么结果错''。
 
 \textbf{\Tp{cffi}}：两种模式。ABI 模式与 \Tp{ctypes} 同构；API 模式把声明交给 C 编译器生成胶水，于是能校验结构体布局、能处理宏与内联函数，产物是需要编译的扩展模块。它是 \Lib{libsndfile} 的 Python 门面 \Lib{soundfile} 曾经走过的路线之一（另一条是 \Tp{ctypes}）。
 
@@ -708,7 +712,7 @@ void spectrum_destroy(SpectrumCtx* h) {
 \begin{itemize}
 \item 对外只暴露 \CL{} 可达的东西：指针大小的句柄、定宽整型、裸浮点数组加长度、返回码。
 \item 类型名写定宽（\Tp{int32\_t}、\Tp{float}），不要在 ABI 上用 \Tp{int}、\Tp{long} 与 \Tp{size\_t} 之外的宽度含糊类型。
-\item 生命周期成对命名（\Tp{create}/\Tp{destroy}、\Tp{plan}/\Tp{free}），并在文档里把这一对写死。
+\item 生命周期成对命名（\Tp{create}/{\Bk}\Tp{destroy}、\Tp{plan}/{\Bk}\Tp{free}），并在文档里把这一对写死。
 \item 异常、\Tp{std::string}、\Tp{std::vector} 与模板实例不进 ABI；需要时只出现在 \CPP{} 门面里。
 \item 给符号加库前缀，并把``符号名到底是什么''用 \Tp{nm} 与 \Tp{dumpbin} 的实测结果写进测试。
 \end{itemize}
@@ -731,7 +735,7 @@ void spectrum_destroy(SpectrumCtx* h) {
 
 \section{主序、步长与视图}
 
-\textbf{主序}决定同一份线性内存被解释成哪种矩阵。\CL{} 的多维数组与 numpy 默认是行主序（row-major），\FTN{} 与 \Lib{BLAS}/\Lib{LAPACK} 默认是列主序（column-major）。\textbf{步长}（\Tp{ld}、\Tp{incx}、\Tp{stride}）则回答一个更基本的问题：相邻两个逻辑元素在内存里隔多少\emph{元素}。列主序下 \Tp{ld} 是列与列之间的距离，行主序接口（\Tp{cblas\_} 系列）里它是行与行之间的距离。
+\textbf{主序}决定同一份线性内存被解释成哪种矩阵。\CL{} 的多维数组与 numpy 默认是行主序（row-major），\FTN{} 与 \Lib{BLAS}/{\Bk}\Lib{LAPACK} 默认是列主序（column-major）。\textbf{步长}（\Tp{ld}、\Tp{incx}、\Tp{stride}）则回答一个更基本的问题：相邻两个逻辑元素在内存里隔多少\emph{元素}。列主序下 \Tp{ld} 是列与列之间的距离，行主序接口（\Tp{cblas\_} 系列）里它是行与行之间的距离。
 
 关键推论有三条。第一，转置不需要搬数据，只需要交换步长——``视图''的全部本钱就在这里，这也是 numpy 的 \Tp{a.T} 是常数时间、而 \Tp{a.copy()} 不是的原因。第二，任何数组切片都是带步长的视图，非连续视图交给要求连续的库时会触发隐式拷贝（或被拒绝）。第三，交织音频帧本质就是一个二维数组：帧数为外维、通道数为内维，通道交织的 stride 为 $1$，平面（planar）布局则是另一侧为 $1$。
 
@@ -1547,7 +1551,7 @@ using quiet = pol::policy<
 double bad = bm::cyl_bessel_j(0.5, -1.0, quiet());
 \end{lstlisting}
 
-关键机制是 \Tp{policies::policy<...>} 与查询它的元函数（\Tp{precision\Bk\_policy}、\Tp{promotion\Bk\_policy}、\Tp{error\Bk\_policy}、\Tp{evaluation\Bk\_policy}）：精度目标、内部用什么类型累加、越界时抛异常还是安静返回一个可预测值，三件事各自是一个类型参数，于是调用点开销为零（代码路径在编译期就定死），代价是每个（类型，policy）组合各自实例化一份，编译时间与目标码体积同时上升，而且\textbf{没有可共享的 ABI}——你无法把 Boost.Math 编译进一个 \Tp{.so} 再宣称它对其他 Boost 版本二进制兼容。
+关键机制是 \Tp{policies::{\Bk}policy<...>} 与查询它的元函数（\Tp{precision\Bk\_{\Bk}policy}、\Tp{promotion\Bk\_{\Bk}policy}、\Tp{error\Bk\_{\Bk}policy}、\Tp{evaluation\Bk\_{\Bk}policy}）：精度目标、内部用什么类型累加、越界时抛异常还是安静返回一个可预测值，三件事各自是一个类型参数，于是调用点开销为零（代码路径在编译期就定死），代价是每个（类型，policy）组合各自实例化一份，编译时间与目标码体积同时上升，而且\textbf{没有可共享的 ABI}——你无法把 Boost.Math 编译进一个 \Tp{.so} 再宣称它对其他 Boost 版本二进制兼容。
 
 两处细节解释了这条路线的价值。其一是 \Tp{promote\_float}：\Tp{float} 的 \Tp{erf} 若直接用 24 位有效数字做极小极大逼近，末位误差会明显大于正确舍入；\Lib{Boost.Math} 的做法是内部在 \Tp{double} 或 \Tp{long double} 里算完再舍回，用一次类型往返买回几位余量，而 GSL 侧根本没有这个旋钮（接口只有 \Tp{double}，加宽由调用方做）。取向差别不是谁更准，而是\emph{精度预算写在哪一层}：模板参数，还是调用方代码。
 
@@ -1614,7 +1618,7 @@ Cephes 谱系 & \CL{} &
 \bottomrule
 \end{longtable}
 
-顺带一条常被误用的观察：\CPP{}17 的标准特殊函数（\Tp{std::cyl\_bessel} 与 \Tp{std::legendre} 一族）在各家标准库里并非同一份代码，实现来源与达到的精度都随标准库与版本不同，有的直接从 \Lib{Boost.Math} 的算法谱系改写而来；而\emph{标准只规定接口、不规定精度}，所以同一调用在不同实现上的末几位可以不同，也没有误差返回。把它们当``少一个依赖''的便利是合理的，当``可逐位复现的基准''是不合理的。
+顺带一条常被误用的观察：\CPP{}17 的标准特殊函数（\Tp{std::{\Bk}cyl\_{\Bk}bessel} 与 \Tp{std::{\Bk}legendre} 一族）在各家标准库里并非同一份代码，实现来源与达到的精度都随标准库与版本不同，有的直接从 \Lib{Boost.Math} 的算法谱系改写而来；而\emph{标准只规定接口、不规定精度}，所以同一调用在不同实现上的末几位可以不同，也没有误差返回。把它们当``少一个依赖''的便利是合理的，当``可逐位复现的基准''是不合理的。
 
 \section{数值积分与求根：自适应求积的接口形状}
 
@@ -1631,9 +1635,9 @@ Cephes 谱系 & \CL{} &
 \item 停止判据是 $|E|\le\max(\texttt{epsabs},\ \texttt{epsrel}\,|I|)$。把 \Tp{epsabs} 设为 $0$ 而被积函数真值接近零时判据永远不满足，最后以 \Tp{GSL\_MAXITER} 收场。正确做法是给一个绝对容差当保底，哪怕它远小于你需要的精度。
 \end{itemize}
 
-端点奇异是自适应求积最常见的失败原因：$1/\sqrt{x}$ 在 $0$ 处会让算法不停在同一端附近二分。GSL 的对策是把``哪一端奇异''写进接口——带区间类型的变体（\Fn{gsl\_integration\Bk\_qag\Bk\_int}）接受 \Tp{regular}、\Tp{singular\_lower}、\Tp{singular\_upper}、\Tp{singular\_both} 四选一，二分时强制包含奇异端点；代数与对数奇异有专门的 \Fn{gsl\_integration\Bk\_qaws}（权重 $(x-a)^{\alpha}(b-x)^{\beta}\ln^{\mu}(x)$）；无穷区间有 \Fn{qagi}、\Fn{qagiu}、\Fn{qagid}；带 $\sin$ 或 $\cos$ 因子的振荡积分有 \Fn{qawsin}、\Fn{qawcos}，它们走 Clenshaw-Curtis 型路线而不是继续二分。\AUD{} 与 \EMW{} 侧的谱积分以后会回到这一条。
+端点奇异是自适应求积最常见的失败原因：$1/\sqrt{x}$ 在 $0$ 处会让算法不停在同一端附近二分。GSL 的对策是把``哪一端奇异''写进接口——带区间类型的变体（\Fn{gsl\_{\Bk}integration\Bk\_{\Bk}qag\Bk\_{\Bk}int}）接受 \Tp{regular}、\Tp{singular\_{\Bk}lower}、\Tp{singular\_{\Bk}upper}、\Tp{singular\_{\Bk}both} 四选一，二分时强制包含奇异端点；代数与对数奇异有专门的 \Fn{gsl\_{\Bk}integration\Bk\_{\Bk}qaws}（权重 $(x-a)^{\alpha}(b-x)^{\beta}\ln^{\mu}(x)$）；无穷区间有 \Fn{qagi}、\Fn{qagiu}、\Fn{qagid}；带 $\sin$ 或 $\cos$ 因子的振荡积分有 \Fn{qawsin}、\Fn{qawcos}，它们走 Clenshaw-Curtis 型路线而不是继续二分。\AUD{} 与 \EMW{} 侧的谱积分以后会回到这一条。
 
-\CPP{} 侧 \Lib{Boost.Math} 把同一族方法做成模板：\Tp{boost::math::quadrature\Bk::quadgk<T, Policy>} 是自适应 Gauss-Kronrod，\Tp{tanh\_sinh<T>} 与 \Tp{exp\_sinh<T>}、\Tp{sinh\_sinh<T>} 是双指数变换（端点奇异与无穷区间上常常收敛最快的一档），\Tp{fejer\_2} 处理振荡积分，\Tp{gauss\_kronrod<T, N>} 与 \Tp{gauss\Bk\_legendre<T, N>} 是固定阶的快速内核。因为类型与 policy 都在模板参数上，同一个 \Tp{quadgk} 能在 \Tp{double}、\Tp{long double} 或 Boost.Multiprecision 后端上工作，这是头文件路线相对 GSL 的真实优势。
+\CPP{} 侧 \Lib{Boost.Math} 把同一族方法做成模板：\Tp{boost::{\Bk}math::{\Bk}quadrature\Bk::{\Bk}quadgk<T, Policy>} 是自适应 Gauss-Kronrod，\Tp{tanh\_{\Bk}sinh<T>} 与 \Tp{exp\_{\Bk}sinh<T>}、\Tp{sinh\_{\Bk}sinh<T>} 是双指数变换（端点奇异与无穷区间上常常收敛最快的一档），\Tp{fejer\_2} 处理振荡积分，\Tp{gauss\_{\Bk}kronrod<T, N>} 与 \Tp{gauss\Bk\_{\Bk}legendre<T, N>} 是固定阶的快速内核。因为类型与 policy 都在模板参数上，同一个 \Tp{quadgk} 能在 \Tp{double}、\Tp{long double} 或 Boost.{\Bk}Multiprecision 后端上工作，这是头文件路线相对 GSL 的真实优势。
 
 求根这一侧，接口差异体现在``要不要区间''。有括区的方法（二分、试位、Illinois、TOMS 748）只要函数值、保证收敛；无括区的方法（Newton、Halley、Schroeder）更快但会跳出定义域，还得给导数。\Lib{Boost.Math} 的默认选择是 \Fn{toms748\_solve}（命名空间在 \Tp{boost::math::tools} 下）：有括区、只用函数值、阶约 $2.7$，机制与代价都落在中间最有利的位置；\Fn{bracket\Bk\_and\Bk\_solve\Bk\_root} 负责自动扩区间；重根与``极小平顶''这类病态情形有专门的 \Tp{rho\_solver}（ILLOIS 一族）。GSL 侧的对应物是 \Tp{gsl\_root\Bk\_fsolver} 族（\Tp{bisection}、\Tp{falsepos}、\Tp{ridger}）与带导数信息的变体，多元方程组走 \Tp{gsl\_multiroot\Bk\_fsolver}（Powell 混合、\Tp{dlevmar} 即 Levenberg-Marquardt），类型名以官方头文件为准。
 
@@ -1659,7 +1663,7 @@ Cephes 谱系 & \CL{} &
 \end{itemize}
 环境变量 \Tp{GSL\_RNG\_TYPE} 允许运行时换引擎，方便但不自证：日志里要同时记录引擎名与种子，否则一次``悄悄改了环境变量''就足以让两批数字对不上。
 
-\textbf{\CPP{}11 \Tp{<random>} 的分工。} 引擎一侧有 \Tp{mt19937}、\Tp{mt19937\_64}、\Tp{minstd\_rand}、\Tp{ranlux24}、\Tp{ranlux48} 与打乱用的 \Tp{knuth\_b}；分布一侧有 \Tp{uniform\_real\Bk\_distribution} 与 \Tp{normal\_distribution}、\Tp{poisson\_distribution}。两族彻底解耦：一个引擎可以喂任意分布，引擎与分布各自可拷贝、可独立播种。可复现性上有一条关键的非对称：\textbf{标准精确规定了引擎的算法与常数}，所以 \Tp{mt19937\_64} 在任何合规实现上产出同样的序列；而\emph{分布的抽样算法是实现自定义的}。同一个引擎配同一个种子，在 libstdc++、libc++ 与 MSVC STL 上 \Tp{normal\_distribution} 的取值可以不同。要逐位对拍就得把分布也固定下来：自己实现抽样，或选一个把分布也规定清楚的库。
+\textbf{\CPP{}11 \Tp{<random>} 的分工。} 引擎一侧有 \Tp{mt19937}、\Tp{mt19937\_64}、\Tp{minstd\_{\Bk}rand}、\Tp{ranlux24}、\Tp{ranlux48} 与打乱用的 \Tp{knuth\_b}；分布一侧有 \Tp{uniform\_{\Bk}real\Bk\_{\Bk}distribution} 与 \Tp{normal\_{\Bk}distribution}、\Tp{poisson\_{\Bk}distribution}。两族彻底解耦：一个引擎可以喂任意分布，引擎与分布各自可拷贝、可独立播种。可复现性上有一条关键的非对称：\textbf{标准精确规定了引擎的算法与常数}，所以 \Tp{mt19937\_64} 在任何合规实现上产出同样的序列；而\emph{分布的抽样算法是实现自定义的}。同一个引擎配同一个种子，在 libstdc++、libc++ 与 MSVC STL 上 \Tp{normal\_{\Bk}distribution} 的取值可以不同。要逐位对拍就得把分布也固定下来：自己实现抽样，或选一个把分布也规定清楚的库。
 
 两条与代价直接相关的性质：\Tp{mt19937} 的状态是 624 个 32 位字（约 2.5 KB），\Tp{mt19937\_64} 是 312 个 64 位字，所以``每线程一个引擎''在内存上没问题，但检查点与状态落盘要按这个尺寸预算；\Tp{minstd\_rand} 只有一个字的状态，落盘最便宜、派生最干净，代价是线性同余的格点结构与短周期。还要注意 \Tp{std::random\_device}：它的语义是``非确定性随机数''，用于播种而不是用于结果复现，某些实现会在熵源不足时阻塞，把它塞进热循环是典型的性能事故。
 
@@ -2076,7 +2080,7 @@ int solve_spd(cholmod_sparse* a, cholmod_dense* b,
 
 \begin{itemize}
 \item \textbf{可进环：}odeint 的定步长显式路径（\Tp{std::array} 一类零分配容器加 \Tp{do\_step}，成本就是固定次数的运算，清单~\ref{lst:ch07-odeint} 的最后一段就是它的形状）；预计算增益后的一次矩阵乘（线性 MPC 的显式解）；固定迭代步数的 Krylov 法。
-\item \textbf{软实时边缘：}\Fn{cholmod\_factorize} 加回代——符号相预计算、内存钩子绑固定池之后，单轮时延可界定，但仍是数据相关；\Tp{CV\_NORMAL} 模式下一次 \Fn{CVode} 调用内部步数不定，只能在\emph{界内退化}（限 \Fn{CVodeSetMaxNumSteps} 为 1 逐帧推进）时用作观察，不是用作实时求解。\item \textbf{不进环：}一切自适应步长解算器（CVODE、ARKODE、IDA 与 odeint 的 \Tp{integrate\_adaptive}）；NLopt（迭代次数依数据）；Ceres（秒到分级，内部线程池加动态分配）；UMFPACK 与 SPQR 的数值相（填元随数据）。
+\item \textbf{软实时边缘：}\Fn{cholmod\_{\Bk}factorize} 加回代——符号相预计算、内存钩子绑固定池之后，单轮时延可界定，但仍是数据相关；\Tp{CV\_NORMAL} 模式下一次 \Fn{CVode} 调用内部步数不定，只能在\emph{界内退化}（限 \Fn{CVode{\Bk}Set{\Bk}Max{\Bk}Num{\Bk}Steps} 为 1 逐帧推进）时用作观察，不是用作实时求解。\item \textbf{不进环：}一切自适应步长解算器（CVODE、ARKODE、IDA 与 odeint 的 \Tp{integrate\_{\Bk}adaptive}）；NLopt（迭代次数依数据）；Ceres（秒到分级，内部线程池加动态分配）；UMFPACK 与 SPQR 的数值相（填元随数据）。
 \end{itemize}
 
 \begin{bestpractice}[title={进环前的四项体检}]
@@ -2109,7 +2113,7 @@ int solve_spd(cholmod_sparse* a, cholmod_dense* b,
 
 \chapter{几何谓词、鲁棒计算与坐标投影}
 
-数值计算一章关心的是``算得准''：残差、条件数、收敛阶，误差再大也只是让结果差几位。几何这一域的第一性问题却形如一个布尔判定：点在定向直线的哪一侧？点在三角形的外接圆内还是圆外？这两比特的判定一旦出错，上层算法不是精度下降，而是直接产出拓扑上非法的对象——自交的三角剖分、内外翻转的多边形、永远走不出的翻转循环。本章先把问题定位到谓词上，再给出三条鲁棒化路线（自适应精确谓词、区间算术、任意精度），然后依次进入这一域的三类代表：把谓词实现做成模板参数的 \Lib{CGAL}、把 \CL{} ABI 用到极致的 \Lib{GEOS} 与 \Lib{PROJ}，并在末尾回答为什么这一域几乎只能由 \CL/\CPP{} 承担、\PY{} 只配当门面。
+数值计算一章关心的是``算得准''：残差、条件数、收敛阶，误差再大也只是让结果差几位。几何这一域的第一性问题却形如一个布尔判定：点在定向直线的哪一侧？点在三角形的外接圆内还是圆外？这两比特的判定一旦出错，上层算法不是精度下降，而是直接产出拓扑上非法的对象——自交的三角剖分、内外翻转的多边形、永远走不出的翻转循环。本章先把问题定位到谓词上，再给出三条鲁棒化路线（自适应精确谓词、区间算术、任意精度），然后依次进入这一域的三类代表：把谓词实现做成模板参数的 \Lib{CGAL}、把 \CL{} ABI 用到极致的 \Lib{GEOS} 与 \Lib{PROJ}，并在末尾回答为什么这一域几乎只能由 \CL/{\Bk}\CPP{} 承担、\PY{} 只配当门面。
 
 \section{公共难题是谓词，不是算法}
 
@@ -2194,11 +2198,11 @@ Kernel 全部以模板交付、头文件为主，这带来两件事：谓词在�
 
 \section{\Lib{GEOS}：叠加运算的鲁棒性史与可重入 \CL{} 上下文}
 
-\Lib{GEOS} 是\emph{纯 \CL{} 库}：算法血统来自 \Lib{JTS}（Java Topology Suite，一门 \Lib{Java} 面向对象库）的逐类移植，对外符号却是 \CL{} ABI——\Tp{GEOSBuffer\_r}、\Tp{GEOSUnion\_r}、\Tp{GEOSSimplify\_r}（后者是 Douglas-Peucker 抽稀），几何对象以不透明指针 \Tp{GEOSGeometry} 传递。序列化走 OGC 那一套：\Tp{GEOSWKTReader}/\Tp{WKTWriter} 读写人类可读的文本 Well-Known Text，\Tp{GEOSWKBReader}/\Tp{WKBWriter} 读写带字节序标记的二进制 WKB——数据库列里存的就是它。谓词族覆盖 OGC 简单要素模型的拓扑关系：\Tp{GEOSIntersects\_r}、\Tp{GEOSContains\_r}、\Tp{GEOSWithin\_r}，以及输出九维交点矩阵的一般式 \Tp{GEOSRelate\_r}。对一棵大空间对象做海量小查询，用 prepared geometry：\Tp{GEOSPrepare} 先把多边形装进内部树索引，之后 \Tp{GEOSPrepared\allowbreak\_contains\_r}、\Tp{GEOSPrepared\allowbreak\_intersects\_r} 每次查询都省掉重新建树，这是官方文档反复强调的复用点；反过来做``一大对多''的批量筛选则用 \Tp{GEOSSTRtree\_r} 系列建 Sort-Tile-Recursive 树，插入、查询、回调回收三步走。
+\Lib{GEOS} 是\emph{纯 \CL{} 库}：算法血统来自 \Lib{JTS}（Java Topology Suite，一门 \Lib{Java} 面向对象库）的逐类移植，对外符号却是 \CL{} ABI——\Tp{GEOSBuffer\_r}、\Tp{GEOSUnion\_r}、\Tp{GEOSSimplify\_r}（后者是 Douglas-Peucker 抽稀），几何对象以不透明指针 \Tp{GEOSGeometry} 传递。序列化走 OGC 那一套：\Tp{GEOSWKTReader}/{\Bk}\Tp{WKTWriter} 读写人类可读的文本 Well-Known Text，\Tp{GEOSWKBReader}/{\Bk}\Tp{WKBWriter} 读写带字节序标记的二进制 WKB——数据库列里存的就是它。谓词族覆盖 OGC 简单要素模型的拓扑关系：\Tp{GEOSIntersects\_r}、\Tp{GEOSContains\_r}、\Tp{GEOSWithin\_r}，以及输出九维交点矩阵的一般式 \Tp{GEOSRelate\_r}。对一棵大空间对象做海量小查询，用 prepared geometry：\Tp{GEOSPrepare} 先把多边形装进内部树索引，之后 \Tp{GEOSPrepared\allowbreak\_contains\_r}、\Tp{GEOSPrepared\allowbreak\_intersects\_r} 每次查询都省掉重新建树，这是官方文档反复强调的复用点；反过来做``一大对多''的批量筛选则用 \Tp{GEOSSTRtree\_r} 系列建 Sort-Tile-Recursive 树，插入、查询、回调回收三步走。
 
 叠加运算（union、intersection）是这一域鲁棒性问题的集中爆发地：两条折线近乎重合地相交，浮点求交给出两个坐标差 $10^{-13}$ 量级的``不同''交点，noding 结果里同一条边出现重复顶点，后续拓扑遍历读到零长度线段，JTS 与早期 \Lib{GEOS} 的经典报错 ``no next edge'' 型异常就是这么来的。修复思路不是把交点算得更准，而是\textbf{先统一精度模型、再重连拓扑}：snap-and-relax 路线把输入顶点吸附到粗栅格（grid snap），把吸附产生的微缝当作可松弛的容差重新连接边；JTS 1.14 与 \Lib{GEOS} 3.5 一带的版本逐步换成这套做法，近年又引入自 JTS 移植的新一代 overlay 内核（默认开关与行为随版本变化，上生产前查对应 release notes）。配套的显式工具是 \Tp{GEOSGeom\_setPrecision\_r}：按给定 grid size 做 snap-rounding 型化简，把``差一点的重复顶点''在进叠加之前先合并掉。
 
-\Lib{GEOS} 的另一半工程价值在 API 形态：旧接口是一组操作全局状态的无后缀函数；线程安全的新接口全部带 \Tp{\_r} 后缀、首参是 \Tp{GEOSContextHandle\_t}（由 \Fn{GEOS\_init\_r} 创建；更早的发行里对应 \Fn{initGEOS\_r} 一代写法），错误消息经 \Tp{GEOSContext\allowbreak\_setErrorMessageHandler\_r} 挂回调。清单~\ref{lst:ch08-geos} 给出完整的最短闭环。
+\Lib{GEOS} 的另一半工程价值在 API 形态：旧接口是一组操作全局状态的无后缀函数；线程安全的新接口全部带 \Tp{\_r} 后缀、首参是 \Tp{GEOSContext{\Bk}Handle\_{\Bk}t}（由 \Fn{GEOS\_{\Bk}init\_{\Bk}r} 创建；更早的发行里对应 \Fn{initGEOS\_r} 一代写法），错误消息经 \Tp{GEOSContext\allowbreak\_{\Bk}set{\Bk}Error{\Bk}Message{\Bk}Handler\_{\Bk}r} 挂回调。清单~\ref{lst:ch08-geos} 给出完整的最短闭环。
 
 \begin{lstlisting}[style=cstyle,caption={\Lib{GEOS}：可重入上下文、WKT 读入、缓冲区与面积},label={lst:ch08-geos}]
 #include <geos_c.h>
@@ -2344,7 +2348,7 @@ int main(void) {
 \end{table}
 
 \begin{bestpractice}[title={鲁棒性的三档投入}]
-（1）谓词档：产品路径上的任何剖分、叠加、包含判定，起步就是精确谓词（EPICK、\Lib{GEOS} 3.5 以后的内核），不接受裸浮点行列式。（2）构造档：只有当输出坐标还要\emph{参与后续几何判定}（例如叠加里的交点再喂给 noding）才升级 EPECK 或 snap-rounding，否则 EPICK 加最后快照更快。（3）集成档：把几何当进程间数据就用序列化（WKB、GeoJSON），把几何当函数参数就用句柄 API（\Tp{\_r} 后缀、\Tp{PJ\_CONTEXT}），并且一线程一句柄；跨语言门面只包最外一层，谓词循环永远留在 \CL/\CPP{} 侧。
+（1）谓词档：产品路径上的任何剖分、叠加、包含判定，起步就是精确谓词（EPICK、\Lib{GEOS} 3.5 以后的内核），不接受裸浮点行列式。（2）构造档：只有当输出坐标还要\emph{参与后续几何判定}（例如叠加里的交点再喂给 noding）才升级 EPECK 或 snap-rounding，否则 EPICK 加最后快照更快。（3）集成档：把几何当进程间数据就用序列化（WKB、GeoJSON），把几何当函数参数就用句柄 API（\Tp{\_r} 后缀、\Tp{PJ\_CONTEXT}），并且一线程一句柄；跨语言门面只包最外一层，谓词循环永远留在 \CL/{\Bk}\CPP{} 侧。
 \end{bestpractice}
 
 下一章进入几何对象的本体——网格与点云怎么摆进内存、射线怎么打上去，那把本章的谓词问题换成了布局问题。
@@ -2457,13 +2461,13 @@ int main() {
 
 \section{\Lib{Open3D}：同一份 \CPP{} 内核，两套门面}
 
-\Lib{Open3D} 是另一个极端：完整的三维数据处理管线——输入输出、空间索引、配准、重建、渲染、传感器仿真——编译成一份 \CPP{} 共享库，再经 pybind11 把同名对象树递到 \PY{} 手里，官方直接发 pip 轮子。两扇门后是同一内核：\PY{} 里 \Tp{o3d.geometry.TriangleMesh} 的方法调用穿 pybind11 落到 \CPP{} 侧 \Tp{open3d::geometry::TriangleMesh} 的成员函数，数据在边界上按引用或零拷贝语义交接，转换税只付在调用点、不付在循环里。``同一份实现、两张脸''是全书讲门面模式的样本案例——连第三方引擎都是它的原料：\Tp{RaycastingScene} 内部就嵌着 \Lib{Embree}（Apache 系），MIT 系的 \Lib{Open3D} 把它们组装成自家类，许可证在组装链上的传递关系要在发布物料里逐层写清。
+\Lib{Open3D} 是另一个极端：完整的三维数据处理管线——输入输出、空间索引、配准、重建、渲染、传感器仿真——编译成一份 \CPP{} 共享库，再经 pybind11 把同名对象树递到 \PY{} 手里，官方直接发 pip 轮子。两扇门后是同一内核：\PY{} 里 \Tp{o3d.{\Bk}geometry.{\Bk}Triangle{\Bk}Mesh} 的方法调用穿 pybind11 落到 \CPP{} 侧 \Tp{open3d::{\Bk}geometry::{\Bk}Triangle{\Bk}Mesh} 的成员函数，数据在边界上按引用或零拷贝语义交接，转换税只付在调用点、不付在循环里。``同一份实现、两张脸''是全书讲门面模式的样本案例——连第三方引擎都是它的原料：\Tp{Raycasting{\Bk}Scene} 内部就嵌着 \Lib{Embree}（Apache 系），MIT 系的 \Lib{Open3D} 把它们组装成自家类，许可证在组装链上的传递关系要在发布物料里逐层写清。
 
 分发形态也是两套门面的一部分：\CPP{} 侧走 CMake（\Tp{find\_package(Open3D)} 或包管理器的端口），\PY{} 侧是预编译 wheel——同一份内核的两种交付物出现版本错位时，报错方式完全不同（前者是符号找不到，后者是运行时异常），排障第一步是确认你握的是哪一层的对象。连可视化与离屏渲染也按同一双门面发：\PY{} 几行画出点云与网格、\CPP{} 侧同套场景对象接进自家应用，渲染后端换实现不换接口——这进一步坐实了``两扇门后是同一内核''的说法。
 
 API 有新旧两代并存。传统 geometry 模块（\Tp{PointCloud}、\Tp{TriangleMesh}、\Tp{KDTreeFlann}）驻留 CPU 内存，存量扫描数据管线大多长在上面；新一代带 T 前缀的 API 把一切装进 \Tp{core::Tensor}，用设备字符串 \Tp{CPU:0}、\Tp{CUDA:0} 决定数据与计算的家，GPU 加速对上层只是换设备前缀。两代覆盖面此消彼长、共存是近年文档的常态，选型时按\emph{功能}而不是按\emph{命名风格}核对可用性。
 
-点云配准是它的看家管线：迭代最近点（ICP）。循环体三段——用 \Tp{KDTreeFlann::\allowbreak SearchKNN} 找源点到目标点云的最近邻作对应，按 \Tp{Transformation\allowbreak Estimation\allowbreak PointToPlane}（点对面，收敛快且压平切向漂移）或点对点建最小二乘目标，解一个 4$\times$4 刚体位姿。对应质量决定一切，所以粗配准先用特征：FPFH 描述子配 \Tp{Global\allowbreak Registration\allowbreak ICP} 或 RANSAC，把姿态先送进 ICP 的收敛半径。多站扫描的闭合误差则进位姿图（\Tp{PoseGraph}）做全局优化——这些都是 \CPP{} 内核方法，\PY{} 侧同名调用。
+点云配准是它的看家管线：迭代最近点（ICP）。循环体三段——用 \Tp{KDTree{\Bk}Flann::\allowbreak SearchKNN} 找源点到目标点云的最近邻作对应，按 \Tp{Transformation\allowbreak Estimation\allowbreak Point{\Bk}To{\Bk}Plane}（点对面，收敛快且压平切向漂移）或点对点建最小二乘目标，解一个 4$\times$4 刚体位姿。对应质量决定一切，所以粗配准先用特征：FPFH 描述子配 \Tp{Global\allowbreak Registration\allowbreak ICP} 或 RANSAC，把姿态先送进 ICP 的收敛半径。多站扫描的闭合误差则进位姿图（\Tp{PoseGraph}）做全局优化——这些都是 \CPP{} 内核方法，\PY{} 侧同名调用。
 
 体素表示的活样本是 RGBD 融合：\Tp{RGBDImage} 配 \Tp{PinholeCamera} 从深度图反投三维点，\Tp{ScalableTSDFVolume} 把每帧沿视线方向在截断带宽内写截断符号距离场——体素存``离表面多远''，多帧观测做加权平均，表面就在零等值面处；最后 \Fn{ExtractTriangleMesh} 出封闭网格，把散点变水密模型的正是这一族（\Lib{PCL} 与 \Lib{OpenVDB} 里是同路的不同实现）。光线查询在这里预演：\Tp{RaycastingScene} 直接内置 \Lib{Embree}，\Tp{rays\_o}、\Tp{rays\_d} 两批矩阵进去、首个命中出来——它把本章下半部的引擎做成了自家类库的一个成员。许可证 MIT 系，两套餐具都不贵。
 
@@ -2805,7 +2809,7 @@ int main(void) {
 
 \textbf{其一，固定步长与指令周期预算。} 物理世界的时间轴由 \Tp{timestep} 决定，与墙钟无关：仿真要的是每 tick 做同样的事。在一帧 $16.7$ ms、主频 $3$ GHz 量级的核上，预算大约是 $5\times 10^{7}$ 个周期，要装下一次宽相增量更新、几千对窄相查询和几十轮约束迭代。这个数量级的预算只有在能直接控制内存布局、SIMD 与循环展开的语言里才可估算，也才可\emph{守住}：\CPP{} 允许把包围盒写成连续数组、按缓存行对齐、用无分支的区间测试，并把\emph{最坏}路径（退化接触、迭代耗尽）算进预算而不是期望值。
 
-\textbf{其二，回调域内禁止分配与阻塞。} 引擎在主循环或独立的高优先级线程里调步进函数，那个域里有三个共同禁忌：堆分配（\Tp{malloc}/\Tp{operator new} 拿全局堆锁，可能触发页错误与内存清零）、日志（格式化、加锁、写设备）、锁（优先级反转与无界等待）。这三条在下一节的警告框里合成一个事故清单。
+\textbf{其二，回调域内禁止分配与阻塞。} 引擎在主循环或独立的高优先级线程里调步进函数，那个域里有三个共同禁忌：堆分配（\Tp{malloc}/{\Bk}\Tp{operator new} 拿全局堆锁，可能触发页错误与内存清零）、日志（格式化、加锁、写设备）、锁（优先级反转与无界等待）。这三条在下一节的警告框里合成一个事故清单。
 
 \textbf{其三，要能被别的栈以稳定 ABI 嵌入。} \Lib{ODE} 与 \Lib{MuJoCo} 选纯 \CL{} 接口，正是为了这个游戏引擎、机器人中间件与科学计算栈通吃的汇合点：C ABI 只暴露句柄或 POD 结构体，跨编译器、跨语言、跨动态库都稳。\CPP{} 接口要嵌入就得自己克制（描述符两段式、不透明指针、虚表不跨边界），\Lib{PhysX} 就是这个路数的示范。反过来，脚本侧的需求全部被推到绑定层：\PY{} 门面之所以能做，是因为底下的步进函数是\emph{无隐藏状态}的一次调用。
 
@@ -2959,7 +2963,7 @@ int main(void) {
 
 \textbf{延迟模式与块选择。} 打开流时给出 \Tp{framesPerBuffer}（$0$ 表示``由驱动决定，每块大小可变''）与期望延迟；\Fn{Pa\_\Bk Get\_\Bk Stream\_\Bk Latency} 报告实际达成值。同一份代码在不同操作系统上会落到不同的后端（Windows 上的 DirectSound 与 WASAPI、macOS 的 CoreAudio、Linux 的 ALSA 与 JACK），块大小与延迟能力差异很大，因此``能跑 128 帧''是不可移植的假设。
 
-\textbf{XRUN 的成因与后果。} 状态标志里的 \Tp{paInputUnderflow}、\Tp{paInputOverflow}、\Tp{paOutputUnderflow}、\Tp{paOutputOverflow} 就是俗称的 XRUN：库需要在这一拍取（或放）数据时，缓冲里的内容却不可用。成因只有三类——回调超支（你的函数比块周期长）、系统抢占（别的实时线程或电源管理插手）、上层消费者把数据搬走后没补上。后果是\emph{一段被替换掉的样本}，听起来是爆音；更要紧的是它让``样本索引''这个时间轴出现无声明的洞，任何依赖帧计数做同步的算法（时间码、锁相、延迟补偿）都会静默错位。所以正确做法是：在回调里把 XRUN 记成计数，块结束后再统计与告警，绝不在回调里重播、补零或试图``修好''。
+\textbf{XRUN 的成因与后果。} 状态标志里的 \Tp{pa{\Bk}Input{\Bk}Underflow}、\Tp{pa{\Bk}Input{\Bk}Overflow}、\Tp{pa{\Bk}Output{\Bk}Underflow}、\Tp{pa{\Bk}Output{\Bk}Overflow} 就是俗称的 XRUN：库需要在这一拍取（或放）数据时，缓冲里的内容却不可用。成因只有三类——回调超支（你的函数比块周期长）、系统抢占（别的实时线程或电源管理插手）、上层消费者把数据搬走后没补上。后果是\emph{一段被替换掉的样本}，听起来是爆音；更要紧的是它让``样本索引''这个时间轴出现无声明的洞，任何依赖帧计数做同步的算法（时间码、锁相、延迟补偿）都会静默错位。所以正确做法是：在回调里把 XRUN 记成计数，块结束后再统计与告警，绝不在回调里重播、补零或试图``修好''。
 
 \textbf{设备枚举与热插拔。} 设备列表是可变的：\Fn{Pa\_\Bk Get\_\Bk Device\_\Bk Count} 与 \Fn{Pa\_\Bk Get\_\Bk Device\_\Bk Info} 给出每个设备支持的采样率、通道数与默认延迟，而 USB 接口与蓝牙耳机的插入拔出会改变它。稳健的写法是缓存 \Tp{PaDeviceID} 与设备名，靠变化通知（或轮询比较）发现设备消失，然后\emph{重开}流而不是在原流上调整——绝大多数实现做不到``无损换设备''。多后端时代，JACK 与 CoreAudio 把重路由做在系统层，于是应用层看到的行为又不同。
 
@@ -3239,7 +3243,7 @@ int main(void) {
 
 \textbf{精度与误差增长。} \Lib{FFTW} 一族按标量精度发三份接口（\Tp{fftw\_} 双精度、\Tp{fftwf\_} 单精度、\Tp{fftwl\_} 长双精度），wisdom 也按池隔离；\Lib{cuFFT} 同样以双单精度分入口，更低的位宽只在回调或部分路径上出现（细节以文档为准）。变换的相对误差随长度近似对数增长：悲观界按 $\epsilon \log N$ 的量级走，实测更接近 $\epsilon \sqrt{\log N}$（数值分析的经典结论，不是 FFT 特有的）——也就是说 $65536$ 点相对 $256$ 点的误差只涨几倍，float 的七位有效数字对谱显示、对多数特征提取绰绰有余。真正需要双精度的从来不是``谱的精度''而是``差的精度''：谱减、维纳增益、级联除法与长窗归一化这些``两个相近数相减''的路径，才是精度预算该花的地方。
 
-\textbf{为什么 FFT 必须是 \CL{}/\CPP{}。} 把上面整张候选集写成 \PY{}，会得到数学相同、慢一到两个数量级的东西。四条机制，每条都能落到一个具体调用上：
+\textbf{为什么 FFT 必须是 \CL{}/{\Bk}\CPP{}。} 把上面整张候选集写成 \PY{}，会得到数学相同、慢一到两个数量级的东西。四条机制，每条都能落到一个具体调用上：
 
 \begin{itemize}
 \item \textbf{逐点算术密度。} 一个蝶形的有效信息约十个浮点操作，任何``每元素装箱或解释''的实现都被元操作吃掉。只有 C 的内核函数或内联模板能把成本压到访存下界——这也是 \Tp{numpy.fft} 宁可维护一份 C++ 的 \Lib{PocketFFT} 也不在数组对象上写循环的原因（第 12.5 节）。
@@ -3537,7 +3541,7 @@ void fir_run(FirF32* f, const float* src, float* dst) {
 
 \section{\PY{} 设计、\CL{} 执行的协作范式}
 
-把第 13.1 节的执行结构与第 13.2 节的设计方法合起来，就得到这一域的标准分工：\PY{} 拥有设计，\CL{}/\CPP{} 拥有执行，中间隔着一次序列化。完整回路是四步。第一步，桌面设计：\Tp{scipy.signal.butter} 一类的入口给出 \Tp{output} 取 ``sos'' 的二阶节数组（不要 \Tp{ba}：高于四阶的传递函数系数在 float32 下已经保不住根的相对位置，这是第 13.1 节灵敏度分析的结论）。第二步，桌面验证：\Tp{sosfreqz} 画幅频、\Tp{sosstep} 看暂态，\Tp{sosfilt} 跑参考输出——桌面侧的 ``filtfilt''（零相位）只属于离线，不能移植进实时链。第三步，序列化：把 SOS 写成 C 数组（生成头文件，或裸二进制配 $f_s$、$f_c$、阶数、节数、格式与字节序的头部）——元数据不是礼貌，是第 13.2 节那个 note 讲的三漂移的解药。第四步，板端执行与对拍：系数进常量区（\Tp{const}、ROM 段，链接脚本让它落在不映射数据的 flash 区），状态结构体静态分配，运行期只有状态更新；然后用同一激励在两侧逐点比对。
+把第 13.1 节的执行结构与第 13.2 节的设计方法合起来，就得到这一域的标准分工：\PY{} 拥有设计，\CL{}/{\Bk}\CPP{} 拥有执行，中间隔着一次序列化。完整回路是四步。第一步，桌面设计：\Tp{scipy.signal.butter} 一类的入口给出 \Tp{output} 取 ``sos'' 的二阶节数组（不要 \Tp{ba}：高于四阶的传递函数系数在 float32 下已经保不住根的相对位置，这是第 13.1 节灵敏度分析的结论）。第二步，桌面验证：\Tp{sosfreqz} 画幅频、\Tp{sosstep} 看暂态，\Tp{sosfilt} 跑参考输出——桌面侧的 ``filtfilt''（零相位）只属于离线，不能移植进实时链。第三步，序列化：把 SOS 写成 C 数组（生成头文件，或裸二进制配 $f_s$、$f_c$、阶数、节数、格式与字节序的头部）——元数据不是礼貌，是第 13.2 节那个 note 讲的三漂移的解药。第四步，板端执行与对拍：系数进常量区（\Tp{const}、ROM 段，链接脚本让它落在不映射数据的 flash 区），状态结构体静态分配，运行期只有状态更新；然后用同一激励在两侧逐点比对。
 
 \textbf{版本纪律。} 系数生成脚本要与固件同仓同标签入库，构建时把系数数组的哈希印进版本字符串——``这版声音不对''的报障，第一步是对哈希而不是重听。回归则做成机器规则：桌面用固定激励数组生成期望输出，板端（或 C++ 测试程序）跑同一数组回传比对，让差值序列进版本库，任何系数改动都会立刻在测试里显形。
 
@@ -3628,7 +3632,7 @@ void reset_filter() {              // 换采样率/换链路：状态清零
 \end{itemize}
 \end{bestpractice}
 
-这一域为什么必须落在 \CL{}/\CPP{}，本章给出的理由是三条别的领域少见的组合：环境上，大量目标是裸机或 RTOS，没有堆纪律、没有异常表、链接脚本管段布局，``运行时''是你自己写的启动代码；成本上，预算以周期计、内存以千字节计，任何一次隐式分配与隐式转换都是负债；工具链上，嵌入式编译器唯一承诺稳定的接口就是 \CL{} ABI——C++ 的名称修饰、异常与标准库支持度随厂商浮动，所以库的对外形态退回 C 函数加实例结构体。于是分工自然浮现：\PY{} 做迭代式的设计（它拥有画图、优化器与交互），\CL{}/\CPP{} 做每拍必跑的执行（它拥有 ABI、布局与周期账），两边靠一次带元数据的序列化对接，靠同一激励的逐点对拍封口。这正是全书主线``C 作 ABI 汇合点、上层语言做门面''在滤波器这一域的最干净样本。
+这一域为什么必须落在 \CL{}/{\Bk}\CPP{}，本章给出的理由是三条别的领域少见的组合：环境上，大量目标是裸机或 RTOS，没有堆纪律、没有异常表、链接脚本管段布局，``运行时''是你自己写的启动代码；成本上，预算以周期计、内存以千字节计，任何一次隐式分配与隐式转换都是负债；工具链上，嵌入式编译器唯一承诺稳定的接口就是 \CL{} ABI——C++ 的名称修饰、异常与标准库支持度随厂商浮动，所以库的对外形态退回 C 函数加实例结构体。于是分工自然浮现：\PY{} 做迭代式的设计（它拥有画图、优化器与交互），\CL{}/{\Bk}\CPP{} 做每拍必跑的执行（它拥有 ABI、布局与周期账），两边靠一次带元数据的序列化对接，靠同一激励的逐点对拍封口。这正是全书主线``C 作 ABI 汇合点、上层语言做门面''在滤波器这一域的最干净样本。
 % ====================================================================
 
 % ====================================================================
@@ -3713,7 +3717,7 @@ RCWA & 谐波与层 &
 
 \Lib{gprMax} 是``\PY{} 门面但内核编译化''的标准案例：\PY{} 程序生成 \Tp{.in} 文本（\Tp{\#PrmLst} 一行给网格密度与 PML 单元数，随后是 \Tp{Box}、\Tp{RxAnt}、\Tp{Tx} 一类对象行），真正的 FDTD 推进内核用 Cython 写并编译成扩展模块，CPU 侧用 OpenMP 分线程、GPU 侧走 OpenCL 内核；色散介质用 Z 变换离散化而不是 ADE——同一格式下两种离散化路线给出的辅助变量布局不同，内存占用也不同。输出是 HDF5 场文件，交给 numpy、h5py 或自带的查看脚本。它的典型用途是探地雷达与生物电磁（比吸收率），恰好说明 FDTD 的可移植性来自网格形状而不是来自物理。
 
-\Lib{S4} 与其重写版 \Lib{S4v2} 是 \CL/\CPP{} 的 RCWA 内核，门面给 Lua 与 MATLAB：几何按分层网格描述，每层的介电常数做二维 Fourier 分解（附自适应分解规则），层内解本征问题、层间用散射矩阵递推，输出反射率、透射率与内部场。它没有时域内核，因此也不受 Courant 约束——代价是频域逐频点求解以及谐波数带来的稠密矩阵。NEC 系（\Lib{NEC2} 及其 \CL{} 翻译血统，加上 \Lib{4nec2} 一类图形前端）代表另一条极窄但极有用的路：细线 MoM，未知量从上千到几万，一次运行几秒到几分钟，专门解决线天线的输入阻抗、方向图与近场耦合。它的内核是稠密复矩阵加复数高斯消元，规模天花板由 $O(N^{2})$ 存储决定，而不是由算法精度决定。
+\Lib{S4} 与其重写版 \Lib{S4v2} 是 \CL/{\Bk}\CPP{} 的 RCWA 内核，门面给 Lua 与 MATLAB：几何按分层网格描述，每层的介电常数做二维 Fourier 分解（附自适应分解规则），层内解本征问题、层间用散射矩阵递推，输出反射率、透射率与内部场。它没有时域内核，因此也不受 Courant 约束——代价是频域逐频点求解以及谐波数带来的稠密矩阵。NEC 系（\Lib{NEC2} 及其 \CL{} 翻译血统，加上 \Lib{4nec2} 一类图形前端）代表另一条极窄但极有用的路：细线 MoM，未知量从上千到几万，一次运行几秒到几分钟，专门解决线天线的输入阻抗、方向图与近场耦合。它的内核是稠密复矩阵加复数高斯消元，规模天花板由 $O(N^{2})$ 存储决定，而不是由算法精度决定。
 
 商用全波求解器（本章不比实现，只比方法口径）大致对应上面几条路：频域 FEM、时域积分格式（与 FDTD 同族的有限积分法 FIT）、MoM 加 FMM 与 SBR 的混合，以及通用多物理 FEM 平台。共同形态是专有图形前端加参数化建模，内核实现语言不公开，但从接口形状（脚本化 API、参数扫描、分布式计算）与性能特征看，基本可以判断为 \CPP{} 与 \FTN{} 数值核，许可证均为商业闭源。选型时的真实差别往往不在``精度''而在工作流：能否脚本化、能否把一次扫频拆到集群、能否把网格与材料交给版本控制——这三条恰好是文本门面的主场。
 
@@ -3936,7 +3940,7 @@ print("峰值 |Ez|:", np.max(np.abs(line)))
 \begin{itemize}
 \item 先算 $kL$ 与每波长格数，再选方法：电小且宽带用 FDTD；封闭谐振与本征模用 FEM；开放辐射的电大金属结构用 MoM 加多极子；严格周期结构用 RCWA；$kL$ 上千且只要方向图与 RCS 用射线类。
 \item 再看要什么信息：要端口上的宽带 $S$ 参数就必须把端口类型、参考阻抗与模式归一化写进设置；要 $Q$ 就必须把时域窗口或频域扫描范围拉到线宽的三倍以上；要近场分布则优先时域，因为它给的是同一个时刻的全部场。
-\item 语言层的判断只有一条：几何与材料交给门面（改动频繁、表达复杂），场推进与线性代数留在 \CPP{}/\CL{} 内核（性能与内存布局敏感），后处理的谱与统计交给 \PY{}。哪个库违反了这条，就能预判它在哪个环节上出问题。
+\item 语言层的判断只有一条：几何与材料交给门面（改动频繁、表达复杂），场推进与线性代数留在 \CPP{}/{\Bk}\CL{} 内核（性能与内存布局敏感），后处理的谱与统计交给 \PY{}。哪个库违反了这条，就能预判它在哪个环节上出问题。
 \end{itemize}
 \end{guideline}
 % ====================================================================
@@ -4206,7 +4210,7 @@ class fir_decim_cc : public gr::block {
 \end{itemize}
 \end{note}
 
-\textbf{为什么这一域仍是 \CL/\CPP{} 的主场。} 第一，每样点的预算算得出来：$61.44$ Msps 给每个复样点约 $16\ \text{ns}$，按 SIMD 一次处理八个样点也只有约 $130\ \text{ns}$，而一次解释器级的每样点操作就是几十纳秒量级、一次装箱分配更不用谈——所以``每样点都要跑的代码''只能在编译层。第二，驱动只给 \CL{} ABI：\Lib{libusb}、\Lib{libiio}、内核态的 \Tp{uio} 与 \Tp{vfio} 用户态映射、高速网卡的 verbs 与 DPDK 路径，形状全是 C；跨厂商抽象层要么把这些缝进一个 C 接口（这正是 \Lib{SoapySDR} 的插件 ABI 是 C 的原因），要么直接绑一家（\Lib{UHD}）。第三，硬件侧的工具链本身以 C 为汇合点：FPGA 与 SoC 的 HLS 路线把内核编译成 C 可调用组件、嵌入式 Linux 侧的 PetaLinux 一类的发行版给的是 C 库（这条线的细节不在本册范围，此处只需要认清：从板卡到主机之间\emph{没有}任何一层是脚本语言的接口）。第四，\Lib{GNU Radio} 这类框架的性能边界已经被社区反复测出：高采样率的 signal path 属于 \CPP{} block，\PY{} 属于控制流、低速率与图形装配——这不是风格偏好，而是上面三道预算共同压出来的结论。
+\textbf{为什么这一域仍是 \CL/{\Bk}\CPP{} 的主场。} 第一，每样点的预算算得出来：$61.44$ Msps 给每个复样点约 $16\ \text{ns}$，按 SIMD 一次处理八个样点也只有约 $130\ \text{ns}$，而一次解释器级的每样点操作就是几十纳秒量级、一次装箱分配更不用谈——所以``每样点都要跑的代码''只能在编译层。第二，驱动只给 \CL{} ABI：\Lib{libusb}、\Lib{libiio}、内核态的 \Tp{uio} 与 \Tp{vfio} 用户态映射、高速网卡的 verbs 与 DPDK 路径，形状全是 C；跨厂商抽象层要么把这些缝进一个 C 接口（这正是 \Lib{SoapySDR} 的插件 ABI 是 C 的原因），要么直接绑一家（\Lib{UHD}）。第三，硬件侧的工具链本身以 C 为汇合点：FPGA 与 SoC 的 HLS 路线把内核编译成 C 可调用组件、嵌入式 Linux 侧的 PetaLinux 一类的发行版给的是 C 库（这条线的细节不在本册范围，此处只需要认清：从板卡到主机之间\emph{没有}任何一层是脚本语言的接口）。第四，\Lib{GNU Radio} 这类框架的性能边界已经被社区反复测出：高采样率的 signal path 属于 \CPP{} block，\PY{} 属于控制流、低速率与图形装配——这不是风格偏好，而是上面三道预算共同压出来的结论。
 
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}
   >{\raggedright\arraybackslash}p{0.15\textwidth}
@@ -4260,7 +4264,7 @@ class fir_decim_cc : public gr::block {
 
 \chapter{Python 科学栈其实是 C/C++ 的门面}
 
-前文各章回答的是``内核怎么写''，从本章起回答``内核怎么被用''。本章的论断很硬：\PY{} 科学计算栈不是一个用 \PY{} 写成的科学计算系统，而是\emph{一批 \CL/\CPP{} 内核之上的一层门面}——用户看到的是 \Tp{ndarray}、关键字参数与异常，跑掉真正时间的是 \Tp{gemm}、\Tp{fftw} 与 \Tp{.pyx} 编译出来的本地码。这不是修辞，是可以逐包核对的事实，而且核对成本极低：列出每个包的顶层模块里\emph{没有} \Tp{for} 循环的那些调用，再问一句``它落到哪个符号''。
+前文各章回答的是``内核怎么写''，从本章起回答``内核怎么被用''。本章的论断很硬：\PY{} 科学计算栈不是一个用 \PY{} 写成的科学计算系统，而是\emph{一批 \CL/{\Bk}\CPP{} 内核之上的一层门面}——用户看到的是 \Tp{ndarray}、关键字参数与异常，跑掉真正时间的是 \Tp{gemm}、\Tp{fftw} 与 \Tp{.pyx} 编译出来的本地码。这不是修辞，是可以逐包核对的事实，而且核对成本极低：列出每个包的顶层模块里\emph{没有} \Tp{for} 循环的那些调用，再问一句``它落到哪个符号''。
 
 把这层关系说清楚，是为了后面两件事：一是判断一个现成门面能不能用于长时间运行的流程（判据是它能不能说出自己底下的库名与符号名），二是决定自己发布时要不要写门面（本章末尾给出反向判据）。本章只谈选型与生态映射；\Tp{pybind11} 的语法细节、GIL 的作用域规则、\Tp{py::array\_t} 的 flag、类型桩文件与 \Tp{cibuildwheel} 矩阵都在并行算法分册里讲过，此处一律引用而不重复。
 
@@ -4496,7 +4500,7 @@ if rc != 0:                               # 返回码翻译成异常
 
 \begin{guideline}[title={全书主线，收束成一则判据}]
 \begin{itemize}
-\item 内核用 \CL/\CPP{} 不是因为``它们快''，而是因为它们是唯一能把\emph{数据布局、所有权与线程语义写死、并且跨语言核对}的层。快只是副产品，可核对才是制度性优势。
+\item 内核用 \CL/{\Bk}\CPP{} 不是因为``它们快''，而是因为它们是唯一能把\emph{数据布局、所有权与线程语义写死、并且跨语言核对}的层。快只是副产品，可核对才是制度性优势。
 \item 门面的四个职责（校验与形状、类型与单位、生命周期与错误翻译、绘图与路径）成本与规模无关；第五件事（逐元素计算）成本与规模成正比，永远不属于门面。
 \item 数据交接只有三种形状：\Tp{\_\_array\_interface\Bk\_\_}、缓冲协议、三件套摊平。跨语言发布选第三种，Python 专用扩展选第二种，零链接调试选第一种。
 \item 分发要实测不要回忆：谁带了哪份 BLAS、带了几份、线程池开了几个，\Fn{threadpoolctl} 与 \Fn{ldd} 一次就能看清。
@@ -4830,8 +4834,8 @@ python -c "import numpy; numpy.show_config()" > env.blas.txt
 \begin{itemize}
 \item 分层的意义不是``代码整洁''，而是让每层可以被单独构建、单独测试、单独替换：禁令比职责更能说明这一点。
 \item 同一功能在两侧各写一遍是\emph{代价}，只有当它变成一条可执行的对拍测试时才是\emph{收益}；判据分四层，逐位一致只在自己二进制内要求。
-\item 设计、校验、换算、翻译、编排归门面；逐元素计算、状态、缓冲与截止期归 \CL/\CPP{} 内核。这条线画错了，代码会同时变慢和变难测。
-\item 全书主线在这个工程里落成一句话：内核用 \CL/\CPP{} 不是因为快，而是因为它们是唯一能把\emph{布局、所有权与线程语义写死}，并让另一门语言逐条核对的层。
+\item 设计、校验、换算、翻译、编排归门面；逐元素计算、状态、缓冲与截止期归 \CL/{\Bk}\CPP{} 内核。这条线画错了，代码会同时变慢和变难测。
+\item 全书主线在这个工程里落成一句话：内核用 \CL/{\Bk}\CPP{} 不是因为快，而是因为它们是唯一能把\emph{布局、所有权与线程语义写死}，并让另一门语言逐条核对的层。
 \end{itemize}
 \end{guideline}
 % ====================================================================
@@ -4871,7 +4875,7 @@ python -c "import numpy; numpy.show_config()" > env.blas.txt
 \Lib{Eigen} & \CPP{} 模板 & 头文件模板 &
   无 ABI；绑定要实例化，性能靠内联 \\
 \Lib{GSL} & \CL{} & \CL{} 句柄加返回码 &
-  \Tp{ctypes}/\Tp{cffi} 直取；错误处理器需关闭 \\
+  \Tp{ctypes}/{\Bk}\Tp{cffi} 直取；错误处理器需关闭 \\
 \Lib{Boost.Math} & \CPP{} 模板 & 头文件模板 &
   policy 控制精度与错误行为 \\
 \Lib{Sundials} & \CL{} & \CL{} 长生命周期对象加回调 &
@@ -4903,7 +4907,7 @@ python -c "import numpy; numpy.show_config()" > env.blas.txt
   Kernel 参数化精确性；依赖任意精度库 \\
 \Lib{GEOS} & \CL{} 加 \CPP{} 内部 & \CL{} 上下文加返回码 &
   带 \Tp{\_r} 的可重入入口是线程安全做法 \\
-\Lib{PROJ} & \CL/\CPP{} & \CL{} 句柄加错误码 &
+\Lib{PROJ} & \CL/{\Bk}\CPP{} & \CL{} 句柄加错误码 &
   上下文式 API；数据库与单位约定在库内 \\
 \Lib{libigl} & \CPP{} 模板 & 头文件加 \Lib{Eigen} 类型 &
   数据层即 \Lib{Eigen}，绑定用 pybind11 \\

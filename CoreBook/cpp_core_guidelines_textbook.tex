@@ -189,6 +189,10 @@
 }
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 % ------------------------------------------------------------
@@ -295,7 +299,7 @@ C\texttt{++} 是一门历史悠久且持续演进的编程语言。自 2011 年 
 
 本附录收录了本书及 C\texttt{++} Core Guidelines 中的关键术语，供读者查阅。
 
-\begin{longtable}{>{\bfseries}p{4cm} p{10cm}}
+\begin{longtable}{>{\bfseries}>{\raggedright\arraybackslash}p{4cm} >{\raggedright\arraybackslash}p{10cm}}
 \toprule
 \textbf{术语} & \textbf{释义} \\
 \midrule
@@ -390,7 +394,7 @@ P 系列规则 & Philosophical rules，涉及编程哲学的高层原则。\\[6p
 
 \section*{P 系列：哲学规则}
 
-\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\begin{longtable}{>{\ttfamily}>{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{7cm} >{\raggedright\arraybackslash}p{4cm}}
 \toprule
 \textbf{规则} & \textbf{概要} & \textbf{章节} \\
 \midrule
@@ -419,7 +423,7 @@ P.11 & 不在程序中隐藏指针 & 第 2 章 \\
 
 \section*{ES 系列：表达式与语句}
 
-\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\begin{longtable}{>{\ttfamily}>{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{7cm} >{\raggedright\arraybackslash}p{4cm}}
 \toprule
 \textbf{规则} & \textbf{概要} & \textbf{章节} \\
 \midrule
@@ -454,7 +458,7 @@ ES.31 & 不要用宏做常量或"函数" & 第 3 章 \\
 
 \section*{F 系列：函数}
 
-\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\begin{longtable}{>{\ttfamily}>{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{7cm} >{\raggedright\arraybackslash}p{4cm}}
 \toprule
 \textbf{规则} & \textbf{概要} & \textbf{章节} \\
 \midrule
@@ -491,7 +495,7 @@ F.41 & 返回元组以返回多个不相关的值 & 第 4 章 \\
 
 \section*{C 系列：类与类层次}
 
-\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\begin{longtable}{>{\ttfamily}>{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{7cm} >{\raggedright\arraybackslash}p{4cm}}
 \toprule
 \textbf{规则} & \textbf{概要} & \textbf{章节} \\
 \midrule
@@ -569,7 +573,7 @@ C.152 & 禁止赋值给基类子对象 & 第 6 章 \\
 
 \section*{Con 系列：并发}
 
-\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\begin{longtable}{>{\ttfamily}>{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{7cm} >{\raggedright\arraybackslash}p{4cm}}
 \toprule
 \textbf{规则} & \textbf{概要} & \textbf{章节} \\
 \midrule
@@ -610,7 +614,7 @@ Con.46 & 不要使用信号量做线程间通信 & 第 7 章 \\
 
 \section*{R 系列：资源管理}
 
-\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\begin{longtable}{>{\ttfamily}>{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{7cm} >{\raggedright\arraybackslash}p{4cm}}
 \toprule
 \textbf{规则} & \textbf{概要} & \textbf{章节} \\
 \midrule
@@ -655,7 +659,7 @@ R.37 & 不要将 \texttt{shared\_ptr} 传递给非拥有者 & 第 9 章 \\
 
 \section*{E 系列：错误处理}
 
-\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\begin{longtable}{>{\ttfamily}>{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{7cm} >{\raggedright\arraybackslash}p{4cm}}
 \toprule
 \textbf{规则} & \textbf{概要} & \textbf{章节} \\
 \midrule
@@ -694,7 +698,7 @@ E.31 & 正确区分异常和错误码 & 第 10 章 \\
 
 \section*{SL 系列：标准库}
 
-\begin{longtable}{>{\ttfamily}p{2.5cm} p{7cm} p{4cm}}
+\begin{longtable}{>{\ttfamily}>{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{7cm} >{\raggedright\arraybackslash}p{4cm}}
 \toprule
 \textbf{规则} & \textbf{概要} & \textbf{章节} \\
 \midrule

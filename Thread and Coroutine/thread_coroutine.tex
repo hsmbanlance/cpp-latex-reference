@@ -252,6 +252,10 @@
 \newcommand{\stdexec}{\texttt{std::execution}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 % ═══════════════════════════════════════════
@@ -443,7 +447,7 @@ void transfer(int& from, int& to, int amount) {
 \end{lstlisting}
 
 \begin{guideline}
-\guideref{CP.21} 使用\texttt{std::scoped\_lock}或\texttt{std::lock\_guard}管理互斥量，不要手动\texttt{lock()}/\texttt{unlock()}。
+\guideref{CP.21} 使用\texttt{std::scoped\_lock}或\texttt{std::lock\_guard}管理互斥量，不要手动\texttt{lock()}/\allowbreak{}\texttt{unlock()}。
 \guideref{CP.43} 最小化临界区——只在必须保护共享数据的代码段持有锁。
 \end{guideline}
 
@@ -542,7 +546,7 @@ int main() {
 \end{longtable}
 
 \begin{bestpractice}
-除非你有明确的性能需求并理解内存序的影响，否则始终使用默认的\texttt{memory\_order\_seq\_cst}。过早优化内存序是并发编程中最常见的错误之一。
+除非你有明确的性能需求并理解内存序的影响，否则始终使用默认的\texttt{memory\_\allowbreak{}order\_\allowbreak{}seq\_\allowbreak{}cst}。过早优化内存序是并发编程中最常见的错误之一。
 \end{bestpractice}
 
 \begin{compare}
@@ -639,7 +643,7 @@ int main() {
 \end{lstlisting}
 
 \begin{compare}
-\csharp{}的\texttt{Task<T>}是\cpp{}中\texttt{future}+\texttt{promise}+\texttt{packaged\_task}的统一体。\texttt{TaskCompletionSource<T>}等价于\texttt{promise}。\csharp{}的\texttt{async/await}使得异步代码看起来像同步代码，而\cpp{}20之前的\texttt{future::get()}只能阻塞等待。
+\csharp{}的\texttt{Task<T>}是\cpp{}中\texttt{future}+\texttt{promise}+\texttt{packaged\_\allowbreak{}task}的统一体。\texttt{Task\allowbreak{}Completion\allowbreak{}Source<T>}等价于\texttt{promise}。\csharp{}的\texttt{async/await}使得异步代码看起来像同步代码，而\cpp{}20之前的\texttt{future::get()}只能阻塞等待。
 
 \begin{lstlisting}[style=csharpstyle]
 // C# Task 等价于 C++ future + promise
@@ -1078,7 +1082,7 @@ void control_coroutine(std::coroutine_handle<MyPromise> h) {
 \end{lstlisting}
 
 \begin{warning}
-\texttt{coroutine\_handle}类似于裸指针——不调用\texttt{destroy()}就会内存泄漏。在\texttt{final\_suspend()}返回\texttt{suspend\_always}时，协程结束后必须显式销毁。忘记销毁是最常见的协程内存泄漏原因。
+\texttt{coroutine\_\allowbreak{}handle}类似于裸指针——不调用\texttt{destroy()}就会内存泄漏。在\texttt{final\_\allowbreak{}suspend()}返回\texttt{suspend\_\allowbreak{}always}时，协程结束后必须显式销毁。忘记销毁是最常见的协程内存泄漏原因。
 \end{warning}
 
 \section{对称转移（Symmetric Transfer）}
@@ -1358,7 +1362,7 @@ int main() {
 \end{lstlisting}
 
 \begin{compare}
-\csharp{}的\texttt{async Task<T>}无需手动实现状态机——编译器自动生成\texttt{IAsyncStateMachine}，运行时由\texttt{SynchronizationContext}和\texttt{TaskScheduler}管理调度。\cpp{}的\texttt{Task}模式需要完全手动实现\texttt{promise\_type}和调度逻辑，灵活但复杂得多。
+\csharp{}的\texttt{async Task<T>}无需手动实现状态机——编译器自动生成\texttt{IAsync\allowbreak{}State\allowbreak{}Machine}，运行时由\texttt{Synchronization\allowbreak{}Context}和\texttt{Task\allowbreak{}Scheduler}管理调度。\cpp{}的\texttt{Task}模式需要完全手动实现\texttt{promise\_\allowbreak{}type}和调度逻辑，灵活但复杂得多。
 
 \begin{lstlisting}[style=csharpstyle]
 // C# Task - 编译器自动处理一切
@@ -1449,7 +1453,7 @@ int main() {
 \begin{compare}
 \csharp{}的\texttt{Task}是\emph{hot}（创建即执行），而\cpp{}的sender是\emph{cold}（创建不执行，connect+start才执行）。这更接近\csharp{}中的\texttt{IObservable<T>}（Reactive Extensions）或\texttt{IAsyncEnumerable<T>}的延迟求值语义。
 
-\csharp{}生态中最接近sender/receiver的是TPL Dataflow的\texttt{ISourceBlock}/\texttt{ITargetBlock}，以及.NET 6+的\texttt{System.Threading.Channels}，但它们的粒度和编译时优化能力远不及\texttt{std::execution}。
+\csharp{}生态中最接近sender/receiver的是TPL Dataflow的\texttt{ISource\allowbreak{}Block}/\allowbreak{}\texttt{ITarget\allowbreak{}Block}，以及.NET 6+的\texttt{System.Threading.Channels}，但它们的粒度和编译时优化能力远不及\texttt{std::execution}。
 \end{compare}
 
 % ───────────────────────────────────────────
@@ -2019,7 +2023,7 @@ auto [result] = std::this_thread::sync_wait(std::move(pipeline)).value();
 
 \section{\cpp{}与\csharp{}异步编程全面对比}
 
-\begin{longtable}{p{3.5cm}p{4.5cm}p{4.5cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{3.5cm}>{\raggedright\arraybackslash}p{4.5cm}>{\raggedright\arraybackslash}p{4.5cm}}
 \toprule
 \textbf{维度} & \textbf{\cpp{}} & \textbf{\csharp{}} \\
 \midrule
@@ -2032,9 +2036,9 @@ auto [result] = std::this_thread::sync_wait(std::move(pipeline)).value();
 异步组合 & sender管道 (\texttt{| then}) & \texttt{async/await} \\
 并行等待 & \texttt{when\_all} & \texttt{Task.WhenAll} \\
 异步迭代 & 协程 + \texttt{generator} & \texttt{IAsyncEnumerable} \\
-取消传播 & environment + stop\_token & CancellationToken自动传递 \\
-执行调度 & scheduler + \texttt{continues\_on} & \texttt{TaskScheduler} \\
-错误处理 & error通道 + \texttt{upon\_error} & \texttt{try/catch + AggregateException} \\
+取消传播 & environment + stop\_token & Cancellation\allowbreak{}Token自动传递 \\
+执行调度 & scheduler + \texttt{continues\_\allowbreak{}on} & \texttt{Task\allowbreak{}Scheduler} \\
+错误处理 & error通道 + \texttt{upon\_error} & \texttt{try/\allowbreak{}\allowbreak{}catch + Aggregate\allowbreak{}Exception} \\
 \bottomrule
 \end{longtable}
 

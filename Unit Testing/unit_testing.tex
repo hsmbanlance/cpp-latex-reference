@@ -384,6 +384,10 @@
 \setlist[enumerate]{leftmargin=2em,itemsep=2pt}
 
 % ===================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -622,7 +626,7 @@ TEST_F(StackTest, PopReturnsTop)
 
 断言宏分成两族：\texttt{EXPECT\_*} 记录失败后继续执行，适合一个用例内
 的多点验证；\texttt{ASSERT\_*} 失败即从当前函数返回，适合“不满足则后续
-无意义”的前置条件。常用宏包括 \texttt{EXPECT\_EQ}/\texttt{NE}/\texttt{LT}、
+无意义”的前置条件。常用宏包括 \texttt{EXPECT\_EQ}/\allowbreak{}\texttt{NE}/\allowbreak{}\texttt{LT}、
 \texttt{EXPECT\_TRUE}、\texttt{EXPECT\_STREQ}（C 字符串）、
 \texttt{EXPECT\_DOUBLE\_EQ}（浮点精确比较）、
 \texttt{EXPECT\_NEAR}(a, b, tol)。
@@ -856,7 +860,7 @@ QObject，脱离 Qt 环境意义不大。
 {
 \scriptsize
 \setlength{\tabcolsep}{2pt}
-\begin{longtable}{p{2.0cm}p{2.3cm}p{1.5cm}p{2.9cm}p{2.5cm}p{2.8cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}p{2.3cm}>{\raggedright\arraybackslash}p{1.5cm}>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{2.5cm}>{\raggedright\arraybackslash}p{2.8cm}}
 \toprule
 框架 & 形态 & 标准 & 断言风格 & 参数化 & 典型场景 \\
 \midrule
@@ -1216,7 +1220,7 @@ UE 没有官方 mock 库。实践中通过接口 + 依赖注入手工构造 Fake
 U++ 没有内置类似 GTest 的断言框架，官方仓库的 \texttt{autotest} 目录
 给出了其测试约定：\textbf{每个测试是一个独立的控制台包}，用
 \texttt{CONSOLE\_APP\_MAIN} 作入口，依靠 Core 库的 \texttt{ASSERT} 断言
-与 \texttt{LOG}/\texttt{DUMP} 输出诊断信息：
+与 \texttt{LOG}/\allowbreak{}\texttt{DUMP} 输出诊断信息：
 
 \cpplabel
 \begin{lstlisting}
@@ -1447,7 +1451,7 @@ public class OrderServiceTests {
 {
 \scriptsize
 \setlength{\tabcolsep}{3pt}
-\begin{longtable}{p{2.8cm}p{3.9cm}p{3.9cm}p{3.2cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.8cm}>{\raggedright\arraybackslash}p{3.9cm}>{\raggedright\arraybackslash}p{3.9cm}>{\raggedright\arraybackslash}p{3.2cm}}
 \toprule
 特性 & C++ (GTest / Catch2) & C\# (xUnit / NUnit / MSTest) & Java (JUnit 5 / TestNG) \\
 \midrule
@@ -1460,7 +1464,7 @@ public class OrderServiceTests {
 用例发现 & 宏静态注册 & 反射扫描程序集 & 反射扫描类路径 \\
 夹具 & SetUp/TearDown 重写 & 构造/Dispose、[SetUp] & @BeforeEach 等 \\
 数据驱动 & TEST\_P、GENERATE & [Theory]、[TestCase] & @CsvSource、DataProvider \\
-断言失败继续 & EXPECT / CHECK & Assert.Multiple (NUnit) & assertAll \\
+断言失败继续 & EXPECT / CHECK & Assert.\allowbreak{}Multiple (NUnit) & assertAll \\
 并行执行 & 分片环境变量 & 框架/运行器配置 & TestNG XML、Jupiter 配置 \\
 构建集成 & CTest、CMake & dotnet test (VSTest) & Maven Surefire / Gradle \\
 报告 & XML / JSON & TRX / JUnit XML & Surefire XML \\
@@ -2428,7 +2432,7 @@ C++23 的显式 \texttt{this}（deducing this，形如
 约定俗成地把对象当作第一个实参的普通函数。
 
 所以 C++ 缺少托管语言那层可变的运行时方法表，任何按名劫持都无从
-挂靠。AnyObject 的 \seqsplit{\texttt{invoke}}/\seqsplit{\texttt{fake}}
+挂靠。AnyObject 的 \seqsplit{\texttt{invoke}}/\allowbreak{}\seqsplit{\texttt{fake}}
 正是人为补上这张表——把成员调用退回到带字符串名字的运行时派发，
 顺带塞进可替换的 fake 表，才换来接近托管语言的手感。
 \end{note}
@@ -2492,7 +2496,7 @@ C++ 二进制，但测试逻辑住在宿主语言里，哪些 C++ 分支被脚�
 {
 \scriptsize
 \setlength{\tabcolsep}{3pt}
-\begin{longtable}{p{2.8cm}p{1.9cm}p{2.0cm}p{1.8cm}p{4.3cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.8cm}>{\raggedright\arraybackslash}p{1.9cm}>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}p{1.8cm}>{\raggedright\arraybackslash}p{4.3cm}}
 \toprule
 方案 & 介入时机 & 类型安全 & 运行时开销 & 典型适用场景 \\
 \midrule
@@ -2607,7 +2611,7 @@ OpenCppCoverage.exe --sources E:\proj\src --modules E:\proj\build\* ^
   -- test.exe
 \end{lstlisting}
 
-\texttt{--sources}/\texttt{--modules} 用于过滤统计范围；还支持
+\texttt{--sources}/\allowbreak{}\texttt{--modules} 用于过滤统计范围；还支持
 \texttt{--input\_coverage} 合并多次运行。Visual Studio Enterprise 则内建
 代码覆盖率（“测试 → 分析代码覆盖率”），输出 \texttt{.coverage} 文件，
 但仅限 Enterprise 版本。

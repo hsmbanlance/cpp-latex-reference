@@ -252,6 +252,10 @@
 \newcommand{\CppJava}{C/C++}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -294,9 +298,9 @@
         mbedTLS、Windows CNG、macOS CommonCrypto 各自发明的一套 API，
         它们的对象模型、错误约定、内存所有权互不兼容。
   \item 结论：\CppJava{} 换库等于换 API，甚至等于换一种写法风格；
-        Java/\CSharp{} 换 Provider（或换实现类）通常只改一到两行。
+        Java/\allowbreak{}\CSharp{} 换 Provider（或换实现类）通常只改一到两行。
   \item 但 \CppJava{} 的一侧收益也很明确：层数少的那条路
-        （libsodium 单函数）比 Java/\CSharp{} 更短，且没有名字解析与
+        （libsodium 单函数）比 Java/\allowbreak{}\CSharp{} 更短，且没有名字解析与
         Provider 查找的运行时开销。
 \end{itemize}
 \end{guideline}
@@ -403,7 +407,7 @@ crypto_aead_xchacha20poly1305_ietf_encrypt(
 
 这条路比 \CSharp{} 还短，而且没有堆分配、没有异常、没有名字解析。
 代价是：可选项被库作者替你定完了，你想换成 AES-GCM 就要学另一组函数名
-（\texttt{crypto\_aead\_aes256gcm\_siv\_encrypt} 之类），
+（\texttt{crypto\_\allowbreak{}aead\_\allowbreak{}aes256gcm\_\allowbreak{}siv\_\allowbreak{}encrypt} 之类），
 而想换成 ``国密 SM4-GCM'' 则根本没有这条路。
 
 \subsection{路三：Windows CNG 的双调长度查询}
@@ -428,10 +432,10 @@ BCryptEncrypt(hKey, plain, plainlen, &info,
 
 \begin{note}[title=这段代码省略了什么]
 \Tp{hKey} 不是裸字节能直接变成的：需要先
-\Fn{BCryptOpenAlgorithmProvider} 拿到 ``带 GCM 标志的 AES 算法句柄''，
-再 \Fn{BCryptGenerateSymmetricKey} 把 32 字节密钥包成
-\Tp{BCRYPT\_KEY\_HANDLE}，用完 \Fn{BCryptDestroyKey} 与
-\Fn{BCryptCloseAlgorithmProvider} 关闭。加上这两步，本任务的
+\Fn{BCrypt\allowbreak{}Open\allowbreak{}Algorithm\allowbreak{}Provider} 拿到 ``带 GCM 标志的 AES 算法句柄''，
+再 \Fn{BCrypt\allowbreak{}Generate\allowbreak{}Symmetric\allowbreak{}Key} 把 32 字节密钥包成
+\Tp{BCRYPT\_\allowbreak{}KEY\_\allowbreak{}HANDLE}，用完 \Fn{BCrypt\allowbreak{}Destroy\allowbreak{}Key} 与
+\Fn{BCrypt\allowbreak{}Close\allowbreak{}Algorithm\allowbreak{}Provider} 关闭。加上这两步，本任务的
 \CppJava{} 层数是六层，与 \CSharp{} 差四倍。完整可运行代码见第 6 章。
 \end{note}
 
@@ -451,7 +455,7 @@ BCryptEncrypt(hKey, plain, plainlen, &info,
 算法名解析 &
 每个库自定义：EVP 用 C 函数指针、libsodium 用函数名、
 CNG 用宽字符常量串 &
-变换字符串 \texttt{AES/GCM/\allowbreak NoPadding}，
+变换字符串 \texttt{AES/GCM/\allowbreak{}\allowbreak NoPadding}，
 由 Provider 逐个应答 &
 类型名即算法：\Tp{AesGcm}、\Tp{RSA}；无运行时解析 \\
 \addlinespace
@@ -529,7 +533,7 @@ libsodium 藏在实现文件里。这条路可行，但它是\emph{每个项目�
   \item \CppJava{} 的 ``步数少'' 与 ``步数多'' 出现在同一门语言里，
         差异由库决定而非语言决定，这正是缺乏统一 SPI 的后果。
   \item 层数的价值不在优雅，在于\emph{约定能否被工具检查}：
-        Java/\CSharp{} 的静态分析器知道 \Tp{Cipher} 与 \Tp{AesGcm} 的语义，
+        Java/\allowbreak{}\CSharp{} 的静态分析器知道 \Tp{Cipher} 与 \Tp{AesGcm} 的语义，
         对 \CppJava{} 只能知道 ``这里调了一个返回 int 的函数''。
 \end{enumerate}
 
@@ -559,10 +563,10 @@ OpenSSL 3.x 的接口分层可以概括为一句话：\textbf{只有 EVP 及以�
         低层函数则要把整套函数名换一遍，等于重写。
 \end{itemize}
 
-同理，\cpp{11} 时代 ``把 \Tp{EVP\_CIPHER\_CTX} 放在栈上、
-再调用不带 \texttt{\_ex} 后缀的 \Tp{EVP\_encrypt\_init}'' 这一写法也应放弃：
-3.x 只保留 \texttt{EVP\_CIPHER\_CTX\allowbreak\_new} 与
-\texttt{EVP\_CIPHER\_CTX\allowbreak\_free} 这一对，
+同理，\cpp{11} 时代 ``把 \Tp{EVP\_\allowbreak{}CIPHER\_\allowbreak{}CTX} 放在栈上、
+再调用不带 \texttt{\_ex} 后缀的 \Tp{EVP\_\allowbreak{}encrypt\_\allowbreak{}init}'' 这一写法也应放弃：
+3.x 只保留 \texttt{EVP\_\allowbreak{}CIPHER\_\allowbreak{}CTX\allowbreak\_\allowbreak{}new} 与
+\texttt{EVP\_\allowbreak{}CIPHER\_\allowbreak{}CTX\allowbreak\_\allowbreak{}free} 这一对，
 上下文成了不透明的堆对象，无法再作为值类型嵌入。
 
 \begin{warning}[title=版本断层：1.1.x 的写法在 3.x 上不只是 ``能用'' 而已]
@@ -620,7 +624,7 @@ provider 可以由 \Tp{openssl.cnf} 的 \texttt{providers} 段声明、
 \section{EVP 家族地图}
 
 ``EVP'' 不是一个类，是一族以不透明上下文为核心的抽象。选型时的关键
-是知道每件事属于哪一族，因为 \cpp{14}/\cpp{17} 的项目经常只学了摘要那一路。
+是知道每件事属于哪一族，因为 \cpp{14}/\allowbreak{}\cpp{17} 的项目经常只学了摘要那一路。
 
 \begin{footnotesize}
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}
@@ -659,7 +663,7 @@ provider 可以由 \Tp{openssl.cnf} 的 \texttt{providers} 段声明、
 
 \section{OSSL\_PARAM：把 ``参数族函数'' 收敛成一个数组}
 
-1.1.x 时代每个算法都有几十个 \texttt{\_ex}/\texttt{\_ctrl} 变体，
+1.1.x 时代每个算法都有几十个 \texttt{\_ex}/\allowbreak{}\texttt{\_ctrl} 变体，
 3.x 的方向是：能用一个类型化的参数数组表达，就不要新增函数。
 
 \begin{lstlisting}[caption={HKDF 派生：参数数组风格}]
@@ -800,9 +804,9 @@ std::vector<std::byte> aead_encrypt(std::span<const std::byte> key,
 \begin{compare}[title=三语言 ``换一个实现'' 的改动面]
 \begin{itemize}
   \item \textbf{Java}：\Tp{Provider} 是一等概念。
-        \Fn{Security.addProvider}（或 \Fn{insertProviderAt}）注册后，
-        同一句 \Tp{Cipher.getInstance} 就换到了新实现；
-        也可以在 \Tp{META-INF/services} 与 \Tp{java.security}
+        \Fn{Security.add\allowbreak{}Provider}（或 \Fn{insert\allowbreak{}Provider\allowbreak{}At}）注册后，
+        同一句 \Tp{Cipher.get\allowbreak{}Instance} 就换到了新实现；
+        也可以在 \Tp{META-\allowbreak{}INF/\allowbreak{}\allowbreak{}services} 与 \Tp{java.security}
         配置文件里做全局声明。选择是 ``按名字与优先级'' 完成的。
   \item \textbf{\CSharp{}}：默认实现按平台自动挑选（Windows 走 CNG、
         Linux 走 OpenSSL、其余走托管代码），
@@ -904,8 +908,8 @@ mbedTLS 3.x 面向资源受限与嵌入式：全部可裁剪、纯 C、无强制
         \Tp{mbedtls\_ssl\_\allowbreak context}，
         风格接近 OpenSSL 1.x；
   \item \textbf{PSA Crypto} 层：Arm 主导的独立抽象，用
-        \Tp{psa\_key\_id\_t} \emph{密钥句柄}加
-        \Tp{psa\_operation\_status\_t} 状态码，
+        \Tp{psa\_\allowbreak{}key\_\allowbreak{}id\_\allowbreak{}t} \emph{密钥句柄}加
+        \Tp{psa\_\allowbreak{}operation\_\allowbreak{}status\_\allowbreak{}t} 状态码，
         目标是 ``一个 API，后端可以是软件、TrustZone-M 或安全 enclave''。
 \end{itemize}
 
@@ -931,10 +935,10 @@ CryptQuery/CryptAcquireContext 时代的 CryptoAPI 只应在维护旧代码时�
 \subsection{Apple：CommonCrypto 与 Security.framework}
 
 macOS 与 iOS 上，CommonCrypto 提供 C 接口族
-（\Tp{CCCrypt}、\Tp{CCHmac}、\Tp{CCKeyDerivationPBKDF}、
-\Fn{CCCryptorCreateWithMode}），风格是 ``返回 OSStatus、
+（\Tp{CCCrypt}、\Tp{CCHmac}、\Tp{CCKey\allowbreak{}DerivationPBKDF}、
+\Fn{CCCryptor\allowbreak{}Create\allowbreak{}With\allowbreak{}Mode}），风格是 ``返回 OSStatus、
 调用者提供缓冲''。Security.framework 负责证书、密钥链与
-\Tp{SecKey} 句柄；\Fn{SecItemCopyMatching} 取出的密钥是
+\Tp{SecKey} 句柄；\Fn{Sec\allowbreak{}Item\allowbreak{}Copy\allowbreak{}Matching} 取出的密钥是
 CoreFoundation 对象，在纯 C/C++ 里需要自己管引用计数。
 \textbf{CryptoKit 是 Swift 专属}，\CppJava{} 无法直接调用，
 不要把它写进跨平台方案的可行性清单。
@@ -978,15 +982,15 @@ JDK 自带的 provider 名字是固定的：\Tp{SUN}（摘要与部分非对称�
 
 .NET 8 的密码学集中在
 \Tp{System.\allowbreak Security.\allowbreak Cryptography}
-命名空间里。摘要用 \Tp{SHA256.\allowbreak HashData}（静态、一次性）或
+命名空间里。摘要用 \Tp{SHA256.\allowbreak Hash\allowbreak{}Data}（静态、一次性）或
 \Tp{Incremental\allowbreak Hash}（流式），对称用 \Tp{AesGcm}、
-\Tp{AesCcm}、\Tp{ChaCha20\allowbreak Poly1305}，口令派生用
-\Tp{Rfc2898\allowbreak DeriveBytes\allowbreak.Pbkdf2}（静态方法）与
+\Tp{AesCcm}、\Tp{Cha\allowbreak{}Cha20\allowbreak Poly1305}，口令派生用
+\Tp{Rfc2898\allowbreak Derive\allowbreak{}Bytes\allowbreak.\allowbreak{}Pbkdf2}（静态方法）与
 \Tp{Argon2}（较新版本才有的类型，需确认目标框架版本），
 非对称用 \Tp{RSA}、\Tp{ECDsa}、\Tp{ECDiffie\allowbreak Hellman}，
 签名与 KDF 辅助在 \Tp{Cryptographic\allowbreak Operations}。
 CMS/PKCS\#7 在\emph{单独}的
-\Tp{System.Security.\allowbreak Cryptography.Pkcs} 程序集里，
+\Tp{System.\allowbreak{}Security.\allowbreak Cryptography.\allowbreak{}Pkcs} 程序集里，
 XML 签名、JSON Web Token 亦各属独立包，这是 ``一个命名空间''
 印象下的真实碎片。BouncyCastle 也有 .NET 移植版，
 但它在 .NET 生态里的位置远不如在 Java 里重要。
@@ -1356,7 +1360,7 @@ Java 需要 \cpp{jdk} 较新版本的算法支持或 Bouncy Castle、
         适合启动期一次性用，不适合热路径。注意对
         \Tp{SecureRandom} 调用 \Fn{setSeed} 会
         \emph{改变}（在某些实现下是替换）其种子来源。
-  \item \textbf{\CSharp{}}：\Tp{RandomNumber\allowbreak Generator.Fill}
+  \item \textbf{\CSharp{}}：\Tp{Random\allowbreak{}Number\allowbreak Generator.\allowbreak{}Fill}
         直接填 \Tp{Span} 字节、\Fn{Get\allowbreak Bytes} 返回数组、
         \Fn{GetInteger} 给出无偏的区间整数。
         旧的 \Fn{AddEntropy} 已被视为无效果并弃用。
@@ -1617,7 +1621,7 @@ PublicKey pub = c.getPublicKey();       // 或直接 SPKI 字节
 \end{lstlisting}
 
 PEM 到 DER 的 ``剥壳''（去头尾、Base64 解码）要么自己写
-（\Tp{Base64.\allowbreak getMimeDecoder()} 十行内搞定），
+（\Tp{Base64.\allowbreak get\allowbreak{}Mime\allowbreak{}Decoder()} 十行内搞定），
 要么交给 Bouncy Castle 的 \Tp{PEMParser}。这个 ``标准里没有 PEM''
 的事实，与 \CSharp{} 的对比很能说明抽象层级的差别。
 
@@ -1702,7 +1706,7 @@ public:
 
 \begin{itemize}
   \item 口令\emph{不该}是 \Tp{String}。字符串不可变，
-        会进常量池与内部 \Tp{char}/\Tp{byte} 数组，
+        会进常量池与内部 \Tp{char}/\allowbreak{}\Tp{byte} 数组，
         在被 GC 回收前无法清零（\Tp{System.gc()}
         不保证时机，也不保证移动后旧副本消失）。
         正确做法：\Tp{char[]} 读入、用完 \Fn{Arrays.fill} 清零。
@@ -1782,19 +1786,19 @@ public:
   \item \textbf{混合模式误用}：先加密再对明文算 MAC、
         或把两个不同密钥的密文首尾相接当作一条消息。
   \item \textbf{未验证的证书链}：\CppJava{} 的
-        \Fn{SSL\_CTX\_set\_verify} 传
-        \Tp{SSL\_VERIFY\_NONE} 来 ``绕过测试环境问题''；
+        \Fn{SSL\_\allowbreak{}CTX\_\allowbreak{}set\_\allowbreak{}verify} 传
+        \Tp{SSL\_\allowbreak{}VERIFY\_\allowbreak{}NONE} 来 ``绕过测试环境问题''；
         Java 侧对应自定义一个什么都不拒绝的
-        \Tp{X509TrustManager}；\CSharp{} 侧对应
-        \Tp{ServerCertificateCustomValidationCallback}
+        \Tp{X509\allowbreak{}Trust\allowbreak{}Manager}；\CSharp{} 侧对应
+        \Tp{Server\allowbreak{}Certificate\allowbreak{}Custom\allowbreak{}Validation\allowbreak{}Callback}
         直接返回真值。三语言同一种事故。
   \item \textbf{忘了主机名验证}：链验过不等于对端正确，
         三语言都要显式做主机名或 SAN 检查。
   \item \textbf{用非固定时间比较}：摘要、MAC、口令哈希的比较必须用
-        \Tp{MessageDigest.\allowbreak isEqual}（Java）、
-        \Tp{Cryptographic\allowbreak Operations.FixedTimeEquals}
-        （\CSharp{}）、\Fn{sodium\_memcmp} 或
-        \Fn{CRYPTO\_memcmp}（\CppJava{}）。
+        \Tp{Message\allowbreak{}Digest.\allowbreak is\allowbreak{}Equal}（Java）、
+        \Tp{Cryptographic\allowbreak Operations.Fixed\allowbreak{}Time\allowbreak{}Equals}
+        （\CSharp{}）、\Fn{sodium\_\allowbreak{}memcmp} 或
+        \Fn{CRYPTO\_\allowbreak{}memcmp}（\CppJava{}）。
   \item \textbf{把口令塞进环境变量或命令行}：
         进程列表、审计日志与 shell 历史都会留下它。
 \end{itemize}
@@ -2000,9 +2004,9 @@ byte[] sig = s.sign();
 \end{lstlisting}
 
 行数少下来的原因是 ``决定被提前做完了''：
-变换名决定了模式与填充，\Tp{GCMParameterSpec}
+变换名决定了模式与填充，\Tp{GCMParameter\allowbreak{}Spec}
 决定了标签长度，\Tp{doFinal} 决定了标签放在
-尾部，\Tp{MessageDigest} 的 \Fn{isEqual} 决定了怎么
+尾部，\Tp{Message\allowbreak{}Digest} 的 \Fn{isEqual} 决定了怎么
 比。Java 的代价在别处：受检异常逼你在签名上写
 \texttt{throws}，装箱与对象分配多，
 以及 \Tp{char[]} 口令与 \Tp{SecretKey} 的销毁语义要靠自觉。
@@ -2116,11 +2120,11 @@ GC 管理对象，密钥需显式销毁 &
         hiredis 的 \Tp{redisReply}，各说各的协议。
 \end{itemize}
 
-它们的错误模型（返回码加 \Fn{sqlite3\_errmsg}、
-\Fn{PQresultErrorField}、\Tp{SQLSTATE}）、
-参数绑定方式（\Fn{sqlite3\_bind\_int64}、
-\Fn{PQexecParams} 的字符串数组、\Fn{SQLBindParameter}）、
-结果遍历方式（\Fn{sqlite3\_step} 状态机、
+它们的错误模型（返回码加 \Fn{sqlite3\_\allowbreak{}errmsg}、
+\Fn{PQresult\allowbreak{}Error\allowbreak{}Field}、\Tp{SQLSTATE}）、
+参数绑定方式（\Fn{sqlite3\_\allowbreak{}bind\_\allowbreak{}int64}、
+\Fn{PQexec\allowbreak{}Params} 的字符串数组、\Fn{SQLBind\allowbreak{}Parameter}）、
+结果遍历方式（\Fn{sqlite3\_\allowbreak{}step} 状态机、
 \Fn{PQntuples} 随机访问、\Fn{SQLFetch} 游标）都不同。
 所谓 ``\CppJava{} 的数据库层'' 实际是
 \textbf{项目自己写的那 300 行包装}。
@@ -2128,11 +2132,11 @@ GC 管理对象，密钥需显式销毁 &
 \section{Java：接口在 \Tp{java.sql}，驱动是插件}
 
 JDBC 的分界非常清楚：\Tp{java.sql} 与 \Tp{javax.sql} 里全是接口
-（\Tp{Connection}、\Tp{PreparedStatement}、\Tp{ResultSet}、
-\Tp{ResultSetMetaData}、\Tp{DataSource}），
+（\Tp{Connection}、\Tp{Prepared\allowbreak{}Statement}、\Tp{ResultSet}、
+\Tp{Result\allowbreak{}Set\allowbreak{}Meta\allowbreak{}Data}、\Tp{DataSource}），
 实现由 \Tp{java.sql.Driver} 提供，通过
-\Tp{ServiceLoader}（\Tp{META-INF/services}）被
-\Tp{DriverManager.\allowbreak getConnection} 调用 发现。
+\Tp{Service\allowbreak{}Loader}（\Tp{META-\allowbreak{}INF/\allowbreak{}\allowbreak{}services}）被
+\Tp{Driver\allowbreak{}Manager.\allowbreak get\allowbreak{}Connection} 调用 发现。
 今天的驱动几乎都是 ``Type 4''（纯 Java 直接说服务器协议），
 ``JDBC-ODBC 桥'' 早已移除。
 
@@ -2143,10 +2147,10 @@ JDBC 的分界非常清楚：\Tp{java.sql} 与 \Tp{javax.sql} 里全是接口
 
 \section{\CSharp{}：ADO.NET 的工厂抽象加内建池}
 
-ADO.NET 用 \Tp{DbProviderFactory} 把 ``造对象'' 这件事也抽象了：
-\Tp{SqlConnection}、\Tp{NpgsqlConnection}、\Tp{MySqlConnector}
-各自提供工厂，代码可只依赖 \Tp{DbConnection}、\Tp{DbCommand}、
-\Tp{DbDataReader}、\Tp{DbParameter}。
+ADO.NET 用 \Tp{Db\allowbreak{}Provider\allowbreak{}Factory} 把 ``造对象'' 这件事也抽象了：
+\Tp{Sql\allowbreak{}Connection}、\Tp{Npgsql\allowbreak{}Connection}、\Tp{My\allowbreak{}Sql\allowbreak{}Connector}
+各自提供工厂，代码可只依赖 \Tp{Db\allowbreak{}Connection}、\Tp{DbCommand}、
+\Tp{Db\allowbreak{}Data\allowbreak{}Reader}、\Tp{DbParameter}。
 连接池是\emph{内建}的（连接串 \Tp{Pooling=true} 默认开启），
 \Tp{Dispose} 归还而不是真关闭。
 更重要的是：EF Core 是生态里的一等 ORM，
@@ -2353,13 +2357,13 @@ sqlite3_finalize(st);   /* 漏掉这一步等于泄漏语句 */
 \section{PostgreSQL：libpq 与其上的 C++ 层}
 
 libpq 的骨架是 ``连接对象 加 结果对象''：
-\Fn{PQconnectdb}、\Fn{PQexecParams}、\Fn{PQresultStatus}、
+\Fn{PQconnectdb}、\Fn{PQexec\allowbreak{}Params}、\Fn{PQresult\allowbreak{}Status}、
 \Fn{PQclear}、\Fn{PQfinish}。它把整张结果表\emph{一次性拉到客户端}，
 所以大结果集要么用服务端游标（\texttt{DECLARE CURSOR} 加
-\Fn{PQsetSingleRowMode}），要么自己分批。
-预编译语句走 \Fn{PQprepare} 加 \Fn{PQexecPrepared}，
+\Fn{PQset\allowbreak{}Single\allowbreak{}Row\allowbreak{}Mode}），要么自己分批。
+预编译语句走 \Fn{PQprepare} 加 \Fn{PQexec\allowbreak{}Prepared}，
 参数默认是文本形式，要二进制需在
-\Fn{PQexecParams} 的格式数组里逐列声明。
+\Fn{PQexec\allowbreak{}Params} 的格式数组里逐列声明。
 
 \begin{lstlisting}[caption={libpqxx 8：事务与结果访问}]
 pqxx::connection cn("host=localhost dbname=app");
@@ -2603,11 +2607,11 @@ PostgreSQL 有真正的 \texttt{boolean}；SQLite 没有，
 \subsection{二进制大对象}
 
 \CppJava{} 有两条路：整块读进缓冲（小字段），
-或 SQLite 的增量 \Fn{sqlite3\_blob\allowbreak \_open}、
+或 SQLite 的增量 \Fn{sqlite3\_\allowbreak{}blob\allowbreak \_\allowbreak{}open}、
 PostgreSQL 的大对象接口（\Fn{lo\_open} 一族）。
-JDBC 用 \Fn{setBinaryStream} 与 \Fn{getBinaryStream} 避免
+JDBC 用 \Fn{set\allowbreak{}Binary\allowbreak{}Stream} 与 \Fn{get\allowbreak{}Binary\allowbreak{}Stream} 避免
 一次性搬进 \Tp{byte[]}；ADO.NET 提供 \Fn{GetStream} 与
-\Fn{GetFieldValue} 到流类型。共同约束是：
+\Fn{Get\allowbreak{}Field\allowbreak{}Value} 到流类型。共同约束是：
 \textbf{流必须活到读取完成}，在 \CppJava{} 里意味着
 连接对象的生命周期必须覆盖返回值的使用，这是最容易出悬挂句柄的地方。
 
@@ -2741,7 +2745,7 @@ Customer from_row(PGresult* r, int row) {
 \begin{itemize}
   \item \textbf{用 32 位接 64 位列}：\CppJava{} 静默截断，
         Java 抛异常，\CSharp{} 抛
-        \Tp{InvalidCastException}。只有 \CppJava{} 会
+        \Tp{Invalid\allowbreak{}Cast\allowbreak{}Exception}。只有 \CppJava{} 会
         ``跑得很好直到数据变大''。
   \item \textbf{金额走二进制浮点}：三语言都会。
         修复要同时动 schema（改成 \texttt{numeric}）与代码路径，
@@ -2831,10 +2835,10 @@ Java 与 \CSharp{} 由语法结构托管释放，
         事务是否结束、\texttt{search\_path}、会话级临时表、
         \texttt{SET LOCAL} 的效果，都要清。
   \item \textbf{Java}：HikariCP 是事实标准，关键参数是
-        \Tp{maximumPoolSize}、\Tp{minimumIdle}、
-        \Tp{connectionTimeout}、\Tp{idleTimeout}、
+        \Tp{maximum\allowbreak{}Pool\allowbreak{}Size}、\Tp{minimumIdle}、
+        \Tp{connection\allowbreak{}Timeout}、\Tp{idleTimeout}、
         \Tp{maxLifetime}（务必小于数据库侧的连接寿命）、
-        \Tp{leakDetectionThreshold}（借出超过阈值就打告警栈）。
+        \Tp{leak\allowbreak{}Detection\allowbreak{}Threshold}（借出超过阈值就打告警栈）。
   \item \textbf{\CSharp{}}：驱动内建池，连接串里
         \Tp{Pooling=true}（默认开）、\Tp{Max Pool Size}、
         \Tp{Min Pool Size}、\Tp{Connection Lifetime}、
@@ -2879,7 +2883,7 @@ SQL Server & READ COMMITTED（默认锁式） &
 \CSharp{} 用 \Tp{IsolationLevel} 枚举，
 \CppJava{} 只能 \texttt{SET TRANSACTION \allowbreak ISOLATION LEVEL ...}
 发语句，且各家语法不完全一致（SQLite 就没有这条语句，
-它用事务类型 \texttt{BEGIN DEFERRED/\allowbreak IMMEDIATE/EXCLUSIVE}）。
+它用事务类型 \texttt{BEGIN DEFERRED/\allowbreak{}\allowbreak IMMEDIATE/EXCLUSIVE}）。
 
 \section{批量写入：三语言的最快路径}
 
@@ -2904,7 +2908,7 @@ SQL Server & READ COMMITTED（默认锁式） &
         逐条自动提交会慢一到两个数量级。
   \item \textbf{\CppJava{} 通用建议}：批量插入用
         多值参数化语句或 \texttt{COPY}；
-        ``循环里单条 \Fn{PQexecParams}'' 只适合几百行以内。
+        ``循环里单条 \Fn{PQexec\allowbreak{}Params}'' 只适合几百行以内。
 \end{itemize}
 
 \section{超时、死锁与泄漏}
@@ -2993,7 +2997,7 @@ HikariCP \Tp{leakDetectionThreshold}；
 
 \subsection{SQLite：编译、绑定、步进、复位}
 
-\Fn{sqlite3\_prepare\_v2} 把文本编译成字节码并输出 \Tp{sqlite3\_stmt*}，第五参数 \Tp{tail} 指明文本用到哪里（一次带多条语句时要自己循环）。\Fn{sqlite3\_bind\_text}、\Fn{sqlite3\_bind\_int64}、\Fn{sqlite3\_bind\_null} 按\emph{从 1 开始}的下标填值；文本绑定的第四参数是析构标志：\Tp{SQLITE\_TRANSIENT} 让 SQLite 自己复制，\Tp{SQLITE\_STATIC} 表示借用你的缓冲——把临时 \Tp{std::string} 的 \Fn{c\_str} 用 STATIC 绑进去是最典型的随机崩溃来源。\Fn{sqlite3\_step} 返回 \Tp{SQLITE\_ROW} 或 \Tp{SQLITE\_DONE}，而 \Fn{sqlite3\_column\_text} 给的指针在下一次步进、\Fn{sqlite3\_reset} 或 \Fn{finalize} 之后\emph{失效}。复用靠 \Fn{sqlite3\_reset}，但它\emph{不清绑定值}：漏绑一列会沿用上一次的值而不是报错，要清得再调 \Fn{sqlite3\_clear\_bindings}。
+\Fn{sqlite3\_\allowbreak{}prepare\_\allowbreak{}v2} 把文本编译成字节码并输出 \Tp{sqlite3\_\allowbreak{}stmt*}，第五参数 \Tp{tail} 指明文本用到哪里（一次带多条语句时要自己循环）。\Fn{sqlite3\_\allowbreak{}bind\_\allowbreak{}text}、\Fn{sqlite3\_\allowbreak{}bind\_\allowbreak{}int64}、\Fn{sqlite3\_\allowbreak{}bind\_\allowbreak{}null} 按\emph{从 1 开始}的下标填值；文本绑定的第四参数是析构标志：\Tp{SQLITE\_\allowbreak{}TRANSIENT} 让 SQLite 自己复制，\Tp{SQLITE\_\allowbreak{}STATIC} 表示借用你的缓冲——把临时 \Tp{std::string} 的 \Fn{c\_str} 用 STATIC 绑进去是最典型的随机崩溃来源。\Fn{sqlite3\_\allowbreak{}step} 返回 \Tp{SQLITE\_ROW} 或 \Tp{SQLITE\_\allowbreak{}DONE}，而 \Fn{sqlite3\_\allowbreak{}column\_\allowbreak{}text} 给的指针在下一次步进、\Fn{sqlite3\_\allowbreak{}reset} 或 \Fn{finalize} 之后\emph{失效}。复用靠 \Fn{sqlite3\_\allowbreak{}reset}，但它\emph{不清绑定值}：漏绑一列会沿用上一次的值而不是报错，要清得再调 \Fn{sqlite3\_\allowbreak{}clear\_\allowbreak{}bindings}。
 
 把 \Tp{stmt} 长期缓存是 \CppJava{} 侧最常见的性能直觉，v2 也确实会在 schema 变化时自动重新编译。这个直觉要补三条：早于 v2 的 \Fn{sqlite3\_prepare} 返回 \Tp{SQLITE\_SCHEMA} 且要手工重来；自动重编译发生在下一次 \Fn{sqlite3\_step}，所以 ``列被迁移删掉'' 表现为\emph{运行期}失败而非启动期失败，需要版本校验（第 12 章）把它提前；一条停在 \Tp{SQLITE\_ROW}、既没 reset 也没 finalize 的语句会\textbf{持有读事务}——WAL 下 checkpoint 被卡住，DDL 与 \texttt{VACUUM} 报 \Tp{SQLITE\_BUSY}，共享缓存下还连累同进程其它连接。批量写入循环的结束处要显式 reset 或 finalize，别指望析构顺序正合你意。
 
@@ -3101,8 +3105,8 @@ SQL 只是注入的一种语法。托管程序也拼 shell，但 \CppJava{} 程�
   \item \textbf{shell 组合}：\Fn{system} 与 \Fn{popen} 把 \Tp{psql} 或 \Tp{sqlite3} 备份命令交给 \Tp{cmd.exe} 与 \Tp{/bin/sh}，于是分号、管道、反引号、变量引用全部生效。正解是\emph{不过 shell}：POSIX 用 \Fn{execve} 或 fork 加 \Fn{execvp} 传 argv 数组；Windows 用 \Fn{Create\allowbreak Process}，并记住命令行会被再解析一次（规则见 \Fn{CommandLine\allowbreak ToArgvW}），含空格参数必须自己加引号。
   \item \textbf{LIKE 与 GLOB 元字符}：绑定只保证 \texttt{\%}、\texttt{\_}（LIKE）与星号、问号、方括号（GLOB）被当字符存进语句，但 LIKE 语义仍把它们当模式解释。要么加 \texttt{ESCAPE} 子句并先转义，要么改用 ``substr 前缀比较''。PostgreSQL 的正则运算符与 \texttt{ILIKE} 再加一层：恶意模式能把 CPU 打满。
   \item \textbf{服务端文件访问}：\texttt{COPY \ldots{} FROM PROGRAM} 在服务器侧执行命令，需要超级用户或 \Tp{pg\_read\_server\_files}；\Fn{lo\_import} 与 \Fn{lo\_export} 接收的是\emph{服务器侧}路径。防线是角色权限，不是转义。
-  \item \textbf{扩展装载}：调用 \Fn{sqlite3\_enable\_load\_extension} 之后，\Fn{sqlite3\_load\_extension} 就是任意代码执行入口；SQLCipher 与遗留 see 扩展生态常要求装载扩展，此时路径必须来自常量，并优先用编译选项 \Tp{SQLITE\_OMIT\_LOAD\_\allowbreak EXTENSION} 把入口编掉。
-  \item \textbf{文件路径进语句}：SQLite 的 \texttt{ATTACH DATABASE} 与 SQLCipher 的 \texttt{PRAGMA key} 并用时，密钥以\emph{语句文本}形式存在并可能进日志；SQL Server 的 \texttt{RESTORE DATABASE \ldots{} FROM DISK} 与 \texttt{BULK INSERT} 同理。路径要白名单，密钥改用 \Fn{sqlite3\_key\_v2} 这类不经文本的接口（第 13 章）。
+  \item \textbf{扩展装载}：调用 \Fn{sqlite3\_\allowbreak{}enable\_\allowbreak{}load\_\allowbreak{}extension} 之后，\Fn{sqlite3\_\allowbreak{}load\_\allowbreak{}extension} 就是任意代码执行入口；SQLCipher 与遗留 see 扩展生态常要求装载扩展，此时路径必须来自常量，并优先用编译选项 \Tp{SQLITE\_\allowbreak{}OMIT\_\allowbreak{}LOAD\_\allowbreak{}\allowbreak EXTENSION} 把入口编掉。
+  \item \textbf{文件路径进语句}：SQLite 的 \texttt{ATTACH DATABASE} 与 SQLCipher 的 \texttt{PRAGMA key} 并用时，密钥以\emph{语句文本}形式存在并可能进日志；SQL Server 的 \texttt{RESTORE DATABASE \ldots{} FROM DISK} 与 \texttt{BULK INSERT} 同理。路径要白名单，密钥改用 \Fn{sqlite3\_\allowbreak{}key\_\allowbreak{}v2} 这类不经文本的接口（第 13 章）。
 \end{enumerate}
 \end{warning}
 
@@ -3257,7 +3261,7 @@ PRAGMA foreign_keys = ON;
 
 \section{托管生态的做法：可以借的纪律}
 
-\textbf{Java 世界。}Flyway 的约定是三件事：文件名里写版本（\Tp{V1\_\_init.sql}、\Tp{V2\_\_add\_index.sql}，语义化版本也可）、历史表里写校验和、\texttt{baseline} 用来 ``接管已经存在的库''（\Tp{baselineVersion} 之前的脚本被承认但不执行，\Tp{baselineOnMigrate} 让首次运行自动打底）。Liquibase 的抽象更厚一层：changelog 可以是 XML、YAML 或 SQL，单位是 \texttt{changeset}，每个 changeset 有 \texttt{author} 与 \texttt{id}、可写 \texttt{rollback}、可用 \texttt{preConditions} 做环境条件判断，锁在 \Tp{DATABASE\_\allowbreak CHANGELOG\_\allowbreak LOCK} 表里。两者的共同点是\emph{把迁移当代码评审的对象}：一次 PR 里同时出现实体类改动与 \texttt{.sql} 脚本，才允许合并。Spring Boot 的做法值得注意也值得警惕：\texttt{flyway.migrate} 被挂在应用启动流程里，于是 ``每个实例启动都可能去改模式''——多副本同时拉起时依赖它的锁表；\CppJava{} 若照抄 ``启动即迁移''，必须自己有锁（下一节）。
+\textbf{Java 世界。}Flyway 的约定是三件事：文件名里写版本（\Tp{V1\_\allowbreak{}\_\allowbreak{}init.sql}、\Tp{V2\_\allowbreak{}\_\allowbreak{}add\_\allowbreak{}index.sql}，语义化版本也可）、历史表里写校验和、\texttt{baseline} 用来 ``接管已经存在的库''（\Tp{baseline\allowbreak{}Version} 之前的脚本被承认但不执行，\Tp{baseline\allowbreak{}On\allowbreak{}Migrate} 让首次运行自动打底）。Liquibase 的抽象更厚一层：changelog 可以是 XML、YAML 或 SQL，单位是 \texttt{changeset}，每个 changeset 有 \texttt{author} 与 \texttt{id}、可写 \texttt{rollback}、可用 \texttt{pre\allowbreak{}Conditions} 做环境条件判断，锁在 \Tp{DATABASE\_\allowbreak{}\allowbreak CHANGELOG\_\allowbreak{}\allowbreak LOCK} 表里。两者的共同点是\emph{把迁移当代码评审的对象}：一次 PR 里同时出现实体类改动与 \texttt{.sql} 脚本，才允许合并。Spring Boot 的做法值得注意也值得警惕：\texttt{flyway.migrate} 被挂在应用启动流程里，于是 ``每个实例启动都可能去改模式''——多副本同时拉起时依赖它的锁表；\CppJava{} 若照抄 ``启动即迁移''，必须自己有锁（下一节）。
 
 \textbf{\CSharp{} 世界。}EF Core 的 \Tp{dotnet ef migrations add} 不是读你的 SQL，而是把\emph{模型快照}（\Tp{ModelSnapshot.cs}）与当前 \Tp{DbContext} 配置做差，生成一个带 \Fn{Up} 与 \Fn{Down} 的类，其中每句 DDL 是一次 \texttt{migrationBuilder.Sql} 或强类型调用；\Tp{dotnet ef database update} 执行并把 ID 写进 \Tp{\_\_EFMigrations\_\allowbreak History}，\Tp{dotnet ef migrations script} 可以只导出不执行（默认还带幂等包装）。快照文件是关键：删掉或手工改它，之后所有 diff 都会失真。对 \CppJava{} 可借的东西是三件：\emph{一份 ``当前模式长什么样'' 的快照文件}（可以是 \texttt{.schema} 转储）、\emph{按 ID 排序且带校验和的脚本目录}、\emph{一张历史表}。没有一样需要反射或运行时元数据，所以没有借口。
 
@@ -3410,7 +3414,7 @@ CI 集成 & 直接调自写二进制 & CLI、Maven、Gradle、容器 & CLI 与 M
   \item \CppJava{} 没有迁移工具是事实，但缺的只是纪律而非能力：一张历史表、一个有序带校验和的脚本目录、一步一事务、一把锁。
   \item 原子性由数据库决定：PostgreSQL 可整步事务、MySQL 隐式提交、SQLite 可包事务但 \texttt{PRAGMA} 与 \texttt{VACUUM} 例外。
   \item 顺序看文件名与版本号，永远不要看 ``applied at'' 时间戳。
-  \item SQLite 的改列是十二步重建，外键开关必须在事务外改、收尾必跑 \Tp{foreign\_key\_check} 并与 golden 模式 diff。
+  \item SQLite 的改列是十二步重建，外键开关必须在事务外改、收尾必跑 \Tp{foreign\_\allowbreak{}key\_\allowbreak{}check} 并与 golden 模式 diff。
   \item 数据变更走 expand-contract，每步能独立发布与独立回滚。
 \end{itemize}
 \end{guideline}
@@ -3423,13 +3427,13 @@ CI 集成 & 直接调自写二进制 & CLI、Maven、Gradle、容器 & CLI 与 M
 
 第 5 章把 ``密钥材料'' 当成字节来讨论，那一章的结论在这里全部适用，只是主角换成\emph{数据库凭据}：一段能换取数据访问权的字节。先划清楚连接串里哪些部分敏感。\textbf{口令}当然敏感；\textbf{TLS 相关项}在多数人意料之外——PostgreSQL 的 \Tp{sslmode} 从 \Tp{require} 降到 \Tp{prefer} 或 \Tp{disable}、\Tp{sslrootcert} 被删掉，等价于把口令改成明文传输；SQL Server 侧的经典陷阱是 \Tp{TrustServer\_\allowbreak Certificate=True}（配合 \Tp{Encrypt=True} 时它关掉证书校验，中间人可以直接拿到登录凭据，而连接看起来仍是 ``加密的''）。\textbf{SQLite 没有口令}，它的秘密是\emph{文件路径}加上 SQLCipher 的密钥：\texttt{PRAGMA key} 走语句文本，密钥会进语句日志与崩溃转储（第 5 节展开），正确入口是 \Fn{sqlite3\_key\_v2}。\textbf{云数据库的 IAM token} 是短期凭据（RDS 的签名 token 有效期 15 分钟，Azure AD 令牌更短），它们同样要当秘密存，但\emph{不该}长存——存了也没用，过期即失效，这是把 ``长期口令'' 换成 ``短期凭据'' 的全部意义。
 
-语法上分两派。\textbf{key=value 派}：libpq 的连接串是 \texttt{host=... dbname=... user=... password=... sslmode=...}（值含空格或特殊字符时要单引号包住并把内部单引号翻倍），同一串也可写成 URI \texttt{postgresql://\allowbreak user:pass@\allowbreak host:5432/\allowbreak db?sslmode=\allowbreak require}，此时用户名与口令必须做百分号编码——\texttt{@}、\texttt{:}、\texttt{\%}、\texttt{/} 不编码会把解析结果整个改错，这是 ``连接串能连不能拆'' 的常见成因。SQL Server 的 ADO.NET 串是 \texttt{Data Source=...;Initial Catalog=...; User ID=...;Password=...;Encrypt=True}，ODBC 用 \texttt{Driver=\{ODBC Driver 18 for SQL Server\};...}，注意 18 版驱动默认 \Tp{Encrypt=True}，不写 \Tp{TrustServer\_\allowbreak Certificate} 就连不上自签证书——于是运维文档里出现那句最危险的话：``把 TrustServer\allowbreak Certificate 打开就好了''。MySQL 的 C API 根本没有串：\Fn{mysql\_real\_connect} 按位置传 host、user、passwd、db，因此 ``把密码藏进一个字符串'' 这条路不存在，但 ``藏进配置文件'' 的需求同样存在。
+语法上分两派。\textbf{key=value 派}：libpq 的连接串是 \texttt{host=... dbname=... user=... password=... sslmode=...}（值含空格或特殊字符时要单引号包住并把内部单引号翻倍），同一串也可写成 URI \texttt{postgresql://\allowbreak{}\allowbreak user:pass@\allowbreak host:5432/\allowbreak{}\allowbreak db?sslmode=\allowbreak require}，此时用户名与口令必须做百分号编码——\texttt{@}、\texttt{:}、\texttt{\%}、\texttt{/} 不编码会把解析结果整个改错，这是 ``连接串能连不能拆'' 的常见成因。SQL Server 的 ADO.NET 串是 \texttt{Data Source=...;Initial Catalog=...; User ID=...;Password=...;Encrypt=True}，ODBC 用 \texttt{Driver=\{ODBC Driver 18 for SQL Server\};...}，注意 18 版驱动默认 \Tp{Encrypt=True}，不写 \Tp{Trust\allowbreak{}Server\_\allowbreak{}\allowbreak Certificate} 就连不上自签证书——于是运维文档里出现那句最危险的话：``把 TrustServer\allowbreak Certificate 打开就好了''。MySQL 的 C API 根本没有串：\Fn{mysql\_\allowbreak{}real\_\allowbreak{}connect} 按位置传 host、user、passwd、db，因此 ``把密码藏进一个字符串'' 这条路不存在，但 ``藏进配置文件'' 的需求同样存在。
 
 \begin{warning}[title=连接串里的三个假安全]
 \begin{itemize}
   \item \textbf{``这串里没有密码所以不是秘密''}：只有 \Tp{Integrated Security} 或 \Tp{SSPI}（Windows 单点登录）、socket 加 peer 认证、workload identity 才真的没有秘密；\Tp{Trusted\_Connection=True} 在别的机器上会退化成 ``用当前进程的账户身份''，账户权限往往远大于应用需要。
   \item \textbf{``口令存在配置文件里而不是代码里就安全了''}：两者对\emph{同一个用户}的可读性没有区别，区别只在于文件会不会被备份、被打进容器镜像、被提交进仓库。
-  \item \textbf{``驱动会把密码清掉''}：libpq 把 \Tp{password} 存进 \Tp{PGconn} 结构（重连与 \Fn{PQsetPassword} 都要用），你清零自己的缓冲并不会清掉它的副本。清副本这件事只能靠 ``让驱动少拿几次口令'' 而不是事后擦。
+  \item \textbf{``驱动会把密码清掉''}：libpq 把 \Tp{password} 存进 \Tp{PGconn} 结构（重连与 \Fn{PQset\allowbreak{}Password} 都要用），你清零自己的缓冲并不会清掉它的副本。清副本这件事只能靠 ``让驱动少拿几次口令'' 而不是事后擦。
 \end{itemize}
 \end{warning}
 
@@ -3437,23 +3441,23 @@ CI 集成 & 直接调自写二进制 & CLI、Maven、Gradle、容器 & CLI 与 M
 
 \textbf{一，写死在源码里。}它一定会进 \Tp{.rodata}，于是 \texttt{strings} 一眼可见；即便加一层异或或 ``运行时拼接''，也只是让 grep 失败而不是让攻击者失败；更麻烦的是它\emph{永远}留在版本历史与已经发出去的每个二进制里。结论：这是唯一一种没有 ``正确用法'' 的放法。
 
-\textbf{二，环境变量。}它比源码好在 ``不进二进制''，代价是三个泄漏面：Linux 上 \Tp{/proc/PID/\allowbreak environ} 可被同 uid 的进程与 root 读；它会被\emph{整个子进程树}继承（你的程序 \Fn{system} 一下，密码就在别人的 argv 环境里，第 11 章）；Windows 上环境块可被同权限进程读取，\texttt{Get-Process} 与 \Tp{Get-CimInstance Win32\_Process} 一类的取进程信息入口还会暴露命令行。容器编排里 ``env 注入'' 之所以普遍，是因为它\emph{不落盘}；把它当持久存储仍是错的。
+\textbf{二，环境变量。}它比源码好在 ``不进二进制''，代价是三个泄漏面：Linux 上 \Tp{/proc/PID/\allowbreak{}\allowbreak environ} 可被同 uid 的进程与 root 读；它会被\emph{整个子进程树}继承（你的程序 \Fn{system} 一下，密码就在别人的 argv 环境里，第 11 章）；Windows 上环境块可被同权限进程读取，\texttt{Get-Process} 与 \Tp{Get-CimInstance Win32\_Process} 一类的取进程信息入口还会暴露命令行。容器编排里 ``env 注入'' 之所以普遍，是因为它\emph{不落盘}；把它当持久存储仍是错的。
 
 \textbf{三，配置文件。}默认权限是致命的：新建文件通常是 0644，同机任意用户可读；正确做法是创建时就用 0600（POSIX 用 \Fn{open} 加 \Tp{O\_CREAT} 与模式 0600 一次搞定，先 0644 再 \Fn{chmod} 有竞态窗口），Windows 上要靠 ACL 而不是只读属性。配置文件是唯一\emph{可以当兜底}的方式：它能满足 ``只有这个用户读得到、崩溃重启后还在、可被人审阅'' 三条，前提是权限对、路径不被打进镜像与备份。
 
-\textbf{四，命令行参数。}最差：\texttt{ps -ef}、\Tp{/proc/PID/\allowbreak cmdline}、任务调度器日志、shell history 全都留下明文，而且窗口极长（进程活多久它就在多久）。只有一种例外是合理的：\texttt{--password-file} 或从标准输入读，而不是 \texttt{-pSECRET}。
+\textbf{四，命令行参数。}最差：\texttt{ps -ef}、\Tp{/proc/PID/\allowbreak{}\allowbreak cmdline}、任务调度器日志、shell history 全都留下明文，而且窗口极长（进程活多久它就在多久）。只有一种例外是合理的：\texttt{--password-file} 或从标准输入读，而不是 \texttt{-pSECRET}。
 
 \section{操作系统密钥库：三平台各自能做到什么}
 
 \subsection{Windows：凭据管理器与 DPAPI}
 
-凭据管理器的接口是 \Fn{CredWriteW}、\Fn{CredReadW}、\Fn{CredDeleteW} 与 \Fn{CredEnumerateW}，条目类型用 \Tp{CRED\_TYPE\_GENERIC}，\Tp{TargetName} 是键（约定形如 \Tp{LegacyGeneric:\allowbreak target=MyApp/\allowbreak db/prod}），\Tp{Persist} 分 \Tp{CRED\_PERSIST\_\allowbreak LOCAL\_MACHINE} 与 \Tp{CRED\_PERSIST\_\allowbreak ENTERPRISE}（后者会随域账户漫游），凭据体上限是 512 字节。要点是它的\emph{安全边界}：generic 凭据对\textbf{同一用户的任何进程}都可读，没有应用级 ACL，所以它防的是 ``别人翻你的磁盘''，不防 ``以你的身份跑的恶意代码''。
+凭据管理器的接口是 \Fn{CredWriteW}、\Fn{CredReadW}、\Fn{CredDeleteW} 与 \Fn{Cred\allowbreak{}EnumerateW}，条目类型用 \Tp{CRED\_\allowbreak{}TYPE\_\allowbreak{}GENERIC}，\Tp{TargetName} 是键（约定形如 \Tp{Legacy\allowbreak{}Generic:\allowbreak target=My\allowbreak{}App/\allowbreak{}\allowbreak db/\allowbreak{}\allowbreak{}prod}），\Tp{Persist} 分 \Tp{CRED\_\allowbreak{}PERSIST\_\allowbreak{}\allowbreak LOCAL\_\allowbreak{}MACHINE} 与 \Tp{CRED\_\allowbreak{}PERSIST\_\allowbreak{}\allowbreak ENTERPRISE}（后者会随域账户漫游），凭据体上限是 512 字节。要点是它的\emph{安全边界}：generic 凭据对\textbf{同一用户的任何进程}都可读，没有应用级 ACL，所以它防的是 ``别人翻你的磁盘''，不防 ``以你的身份跑的恶意代码''。
 
-DPAPI 是另一层：\Fn{CryptProtectData} 与 \Fn{CryptUnprotectData} 用登录口令派生的主密钥（用户域或机器域）加密一段字节。可传 \Tp{CRYPTPROTECT\_UI\_FORBIDDEN} 禁止弹框（服务进程必须加，否则会静默挂住），可用额外 entropy 把密文绑到你的 salts 上——但 entropy 是\emph{附加}条件，不是秘密管理：它通常也存在磁盘上。机器域（\Tp{CRYPTPROTECT\_LOCAL\_MACHINE}）意味着 ``任何能读到主密钥文件的账户都能解''，管理员与 \Tp{SYSTEM} 都可以；用户域则是同用户任意进程可解。DPAPI-NG（\Fn{NCryptProtectSecret}）支持 ACL 与多用户共享，代价是要写安全描述符。诚实结论：DPAPI 让 ``离线拿走这个文件'' 变成拿不走，它\emph{不是}密钥管理系统的替代品，也\textbf{不能}替代第 5 章的数据密钥层级（把 DEK 用 DPAPI 包裹是合理的；把主密钥交给 DPAPI 并宣称 ``密钥不落地'' 是不诚实的）。
+DPAPI 是另一层：\Fn{Crypt\allowbreak{}Protect\allowbreak{}Data} 与 \Fn{Crypt\allowbreak{}Unprotect\allowbreak{}Data} 用登录口令派生的主密钥（用户域或机器域）加密一段字节。可传 \Tp{CRYPTPROTECT\_\allowbreak{}UI\_\allowbreak{}FORBIDDEN} 禁止弹框（服务进程必须加，否则会静默挂住），可用额外 entropy 把密文绑到你的 salts 上——但 entropy 是\emph{附加}条件，不是秘密管理：它通常也存在磁盘上。机器域（\Tp{CRYPTPROTECT\_\allowbreak{}LOCAL\_\allowbreak{}MACHINE}）意味着 ``任何能读到主密钥文件的账户都能解''，管理员与 \Tp{SYSTEM} 都可以；用户域则是同用户任意进程可解。DPAPI-NG（\Fn{NCrypt\allowbreak{}Protect\allowbreak{}Secret}）支持 ACL 与多用户共享，代价是要写安全描述符。诚实结论：DPAPI 让 ``离线拿走这个文件'' 变成拿不走，它\emph{不是}密钥管理系统的替代品，也\textbf{不能}替代第 5 章的数据密钥层级（把 DEK 用 DPAPI 包裹是合理的；把主密钥交给 DPAPI 并宣称 ``密钥不落地'' 是不诚实的）。
 
 \subsection{macOS：Keychain Services}
 
-新写法是 Security framework 的 \Fn{SecItemCopyMatching}、\Fn{SecItemAdd}、\Fn{SecItemDelete}，查询字典里放 \Tp{kSecClassGenericPassword}、\Tp{kSecAttrService}、\Tp{kSecAttrAccount}，并显式带 \Tp{kSecUseData\allowbreak ProtectionKeychain} 走 data-protection keychain。老式 \Fn{SecKeychainItemCreate} 与 \Fn{SecKeychainFind\allowbreak GenericPassword} 一族属于遗留路径，沙盒与 daemon 场景下不要用。三条实践约束：条目 ACL 决定 ``哪个应用能读''，第一次读会弹框，用户点 ``始终允许'' 之后才不打扰；访问组（\Tp{kSecAttrAccessGroup}）要求代码签名，ad-hoc 签名的二进制之间无法共享条目；SSH 或 CI 这类\emph{无图形登录会话}的场景下 keychain 是锁着的，只能靠 \texttt{security unlock-keychain} 之类的外部动作打开——也就是说 macOS 上的 CLI 在服务器环境里照样要退回文件。
+新写法是 Security framework 的 \Fn{Sec\allowbreak{}Item\allowbreak{}Copy\allowbreak{}Matching}、\Fn{SecItemAdd}、\Fn{Sec\allowbreak{}Item\allowbreak{}Delete}，查询字典里放 \Tp{k\allowbreak{}Sec\allowbreak{}Class\allowbreak{}Generic\allowbreak{}Password}、\Tp{k\allowbreak{}Sec\allowbreak{}Attr\allowbreak{}Service}、\Tp{k\allowbreak{}Sec\allowbreak{}Attr\allowbreak{}Account}，并显式带 \Tp{k\allowbreak{}Sec\allowbreak{}Use\allowbreak{}Data\allowbreak Protection\allowbreak{}Keychain} 走 data-protection keychain。老式 \Fn{Sec\allowbreak{}Keychain\allowbreak{}Item\allowbreak{}Create} 与 \Fn{Sec\allowbreak{}Keychain\allowbreak{}Find\allowbreak Generic\allowbreak{}Password} 一族属于遗留路径，沙盒与 daemon 场景下不要用。三条实践约束：条目 ACL 决定 ``哪个应用能读''，第一次读会弹框，用户点 ``始终允许'' 之后才不打扰；访问组（\Tp{k\allowbreak{}Sec\allowbreak{}Attr\allowbreak{}Access\allowbreak{}Group}）要求代码签名，ad-hoc 签名的二进制之间无法共享条目；SSH 或 CI 这类\emph{无图形登录会话}的场景下 keychain 是锁着的，只能靠 \texttt{security unlock-\allowbreak{}keychain} 之类的外部动作打开——也就是说 macOS 上的 CLI 在服务器环境里照样要退回文件。
 
 \subsection{Linux：三套机制，一个尴尬结论}
 
@@ -3549,7 +3553,7 @@ Secret load_db_secret(const std::string& slot) {
 \begin{itemize}
   \item \textbf{每环境一套角色与秘密}：开发库的口令不该能连预发；环境切换靠切角色而不是切 \Tp{sslmode}。
   \item \textbf{短期凭据优于长期口令}：能签 token 就不要发密码，能发证书就不要发口令（PostgreSQL 的 \texttt{cert} 认证、\texttt{scram-sha-256} 加定期轮换），并把 ``口令轮换'' 做成发布流程而不是手工事故。
-  \item \textbf{传统文件各自的权限要求}：libpq 的 \Tp{.pgpass} 格式是 \texttt{hostname:\allowbreak port:\allowbreak database:\allowbreak username:\allowbreak password}，权限必须是 0600 否则被忽略（Windows 上没有等价文件）；MySQL 的 \Tp{my.cnf} 里 \texttt{[client] password=...} 同样要求严格权限，\Fn{mysql\_config\_editor} 生成的 \Tp{mylogin.cnf} 只是\emph{混淆}不是加密；Oracle 的 \Tp{cwallet.sso} 自动登录钱包依赖文件系统权限，且 \Tp{mkstore} 的钱包口令仍是同一个问题。
+  \item \textbf{传统文件各自的权限要求}：libpq 的 \Tp{.pgpass} 格式是 \texttt{hostname:\allowbreak port:\allowbreak database:\allowbreak username:\allowbreak password}，权限必须是 0600 否则被忽略（Windows 上没有等价文件）；MySQL 的 \Tp{my.cnf} 里 \texttt{[client] password=...} 同样要求严格权限，\Fn{mysql\_\allowbreak{}config\_\allowbreak{}editor} 生成的 \Tp{mylogin.cnf} 只是\emph{混淆}不是加密；Oracle 的 \Tp{cwallet.sso} 自动登录钱包依赖文件系统权限，且 \Tp{mkstore} 的钱包口令仍是同一个问题。
   \item \textbf{秘密绝不进日志、错误消息与崩溃报告}：打印连接串前先脱敏（保留字段名，把 \texttt{password} 一类的值换成星号，\texttt{sslrootcert} 这类路径可以留着）。
 \end{itemize}
 
@@ -3583,7 +3587,7 @@ Secret load_db_secret(const std::string& slot) {
 \endfoot
 源码里的字面量 & 任何拿到二进制的人（\texttt{strings}） & 在，且永久留在版本历史 & 无，任何情况都不该用 \\
 \addlinespace
-环境变量 & 同 uid 进程、\Tp{/proc/PID/\allowbreak environ}、子进程树 & 在（取决于编排系统重注入） & 容器一次性注入，不当持久存储 \\
+环境变量 & 同 uid 进程、\Tp{/proc/PID/\allowbreak{}\allowbreak environ}、子进程树 & 在（取决于编排系统重注入） & 容器一次性注入，不当持久存储 \\
 \addlinespace
 命令行参数 & 同机所有用户（\texttt{ps} 与进程快照） & 进程活着就在 & 只用于 ``传文件路径'' 而不是传值 \\
 \addlinespace
@@ -4092,7 +4096,7 @@ try {
 更深。诚实的结论是：\emph{这里 \CSharp{} 与 \CppJava{} 做了同一个决定}——
 框架给了选项，但成本由数据库拓扑决定，而不是由语言决定。
 
-\Tp{async}/\Tp{await} 真正改变的是 outbox 循环的形状：
+\Tp{async}/\allowbreak{}\Tp{await} 真正改变的是 outbox 循环的形状：
 
 \begin{itemize}
   \item \textbf{阻塞点没了，并发约束更强}：\Tp{await} 期间线程被交还，
@@ -4466,9 +4470,9 @@ EF Core 与其迁移、FluentMigrator &
 \section{OpenSSL：错误队列是线程局部的}
 
 OpenSSL 不抛异常，用\emph{每线程}的 FIFO 队列记录 ``哪里出了事''。
-\Fn{ERR\_get\_error} 弹出一个打包了库、函数与原因的
-\Tp{unsigned long}；\Fn{ERR\_peek\_error\_line} 与
-\Fn{ERR\_peek\_error\_line\_data} 只看不弹，适合在保留原始码的前提下
+\Fn{ERR\_\allowbreak{}get\_\allowbreak{}error} 弹出一个打包了库、函数与原因的
+\Tp{unsigned long}；\Fn{ERR\_\allowbreak{}peek\_\allowbreak{}error\_\allowbreak{}line} 与
+\Fn{ERR\_\allowbreak{}peek\_\allowbreak{}error\_\allowbreak{}line\_\allowbreak{}data} 只看不弹，适合在保留原始码的前提下
 拿到源文件与行号。三个必须遵守的规矩：
 
 \begin{itemize}
@@ -4589,8 +4593,8 @@ JDBC 4 要求驱动尽量填对）、\Fn{getErrorCode}（厂商自定义整数�
   \item \Tp{BadPaddingException} 在 CBC 时代含义模糊，如今看到它
         就该怀疑格式约定（第 4 章的 padding oracle 讨论）。
 \end{itemize}
-另外还有两类兜不住的：\emph{不受检}的 \Tp{ProviderException}
-与弱 provider 抛出的 \Tp{ArrayIndexOutOfBounds}，
+另外还有两类兜不住的：\emph{不受检}的 \Tp{Provider\allowbreak{}Exception}
+与弱 provider 抛出的 \Tp{Array\allowbreak{}Index\allowbreak{}Out\allowbreak{}Of\allowbreak{}Bounds}，
 这类只能靠测试与换 provider，不要指望异常语义。
 
 \section{\CSharp{}：异常类型分供应商，判据看码不看文本}
@@ -4605,13 +4609,13 @@ Npgsql 走 \Tp{PostgresException.SqlState}，并且有
 本地库侧 \Tp{SqliteException} 用 \Fn{SqliteErrorCode} 与
 \Fn{SqliteExtendedErrorCode}，与第 8 章讲的 SQLite 码族一致。
 
-加密侧统一是 \Tp{CryptographicException}：
+加密侧统一是 \Tp{Cryptographic\allowbreak{}Exception}：
 它的 \Fn{Message} 依赖区域设置，\textbf{判据用 HRESULT}
-（如 \Tp{NTE\_BAD\_KEY}、\Tp{NTE\_BAD\_MAGIC} 一类的 Windows 错误码）。
-\Tp{CryptographicException} 常常在 ``解密'' 而不是 ``配置错'' 时出现，
+（如 \Tp{NTE\_\allowbreak{}BAD\_\allowbreak{}KEY}、\Tp{NTE\_\allowbreak{}BAD\_\allowbreak{}MAGIC} 一类的 Windows 错误码）。
+\Tp{Cryptographic\allowbreak{}Exception} 常常在 ``解密'' 而不是 ``配置错'' 时出现，
 所以先确认参数与格式版本，再怀疑密钥；
 标签校验失败在 \Tp{AesGcm} 上就是它，与 Java 的
-\Tp{AEADBadTagException} 同义。
+\Tp{AEADBad\allowbreak{}Tag\allowbreak{}Exception} 同义。
 
 \section{症状到入口的最小决策表}
 

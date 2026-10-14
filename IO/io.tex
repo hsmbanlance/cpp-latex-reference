@@ -236,6 +236,10 @@
 }
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 % ==================== 封面 ====================
@@ -485,12 +489,12 @@ void modern_file_io() {
 \midrule
 类型安全 & 否 & 是（模板化 \Tp{operator<<}） \\
 资源管理 & 手动 \Fn{fclose} & RAII 自动关闭 \\
-二进制 I/O & \Fn{fread}/\Fn{fwrite} & \Fn{read}/\Fn{write} \\
-错误处理 & \Fn{ferror}/\Tp{errno} & 状态位 / 异常 \\
+二进制 I/O & \Fn{fread}/\allowbreak{}\Fn{fwrite} & \Fn{read}/\allowbreak{}\Fn{write} \\
+错误处理 & \Fn{ferror}/\allowbreak{}\Tp{errno} & 状态位 / 异常 \\
 自定义缓冲 & \Fn{setvbuf} & \Fn{pubsetbuf}（有限） \\
 性能（大批量） & 通常略优 & 取决于实现 \\
 格式化输出 & \Fn{fprintf} & \Tp{operator<<} + manipulators \\
-64 位定位 & \Fn{fseeko}/\Fn{ftello} & \Fn{seekg}/\Fn{seekp}（\Tp{streamoff}） \\
+64 位定位 & \Fn{fseeko}/\allowbreak{}\Fn{ftello} & \Fn{seekg}/\allowbreak{}\Fn{seekp}（\Tp{streamoff}） \\
 \bottomrule
 \end{tabular}
 \end{compare}
@@ -537,7 +541,7 @@ void filesystem_demo() {
 \end{lstlisting}
 
 \begin{guideline}[title=错误处理：异常 vs error\_code]
-\Tp{std::filesystem} 的几乎每个函数都有两个重载版本：抛 \Tp{std::filesystem::filesystem\_error} 异常版和接受 \Tp{std::error\_code\&} 输出版。在热路径或性能敏感代码中，优先使用 \Tp{error\_code} 版本以避免异常开销：
+\Tp{std::\allowbreak{}filesystem} 的几乎每个函数都有两个重载版本：抛 \Tp{std::\allowbreak{}filesystem::\allowbreak{}filesystem\_\allowbreak{}error} 异常版和接受 \Tp{std::\allowbreak{}error\_\allowbreak{}code\&} 输出版。在热路径或性能敏感代码中，优先使用 \Tp{error\_code} 版本以避免异常开销：
 
 \begin{lstlisting}
 std::error_code ec;
@@ -673,7 +677,7 @@ private:
 
 \section{Socket 概念模型}
 
-Socket 是网络通信的端点抽象。操作系统将 socket 暴露为文件描述符（POSIX）或句柄（Windows），使得网络 I/O 可复用文件 I/O 的 \Fn{read}/\Fn{write} 语义。
+Socket 是网络通信的端点抽象。操作系统将 socket 暴露为文件描述符（POSIX）或句柄（Windows），使得网络 I/O 可复用文件 I/O 的 \Fn{read}/\allowbreak{}\Fn{write} 语义。
 
 一个 TCP 连接由四元组唯一标识：\texttt{\seqsplit{(local\_ip,\ local\_port,\ remote\_ip,\ remote\_port)}}。
 
@@ -833,7 +837,7 @@ int tcp_client(const char* host, uint16_t port) {
 
 \section{UDP 通信}
 
-UDP 不需要 \Fn{connect}/\Fn{accept}，直接使用 \Fn{sendto}/\Fn{recvfrom}：
+UDP 不需要 \Fn{connect}/\allowbreak{}\Fn{accept}，直接使用 \Fn{sendto}/\allowbreak{}\Fn{recvfrom}：
 
 \posixlabel
 \begin{lstlisting}[style=cstyle]
@@ -883,7 +887,7 @@ void set_nonblocking(int fd) {
 }
 \end{lstlisting}
 
-非阻塞模式下，\Fn{read}/\Fn{write} 在无法立即完成时返回 \Tp{-1}
+非阻塞模式下，\Fn{read}/\allowbreak{}\Fn{write} 在无法立即完成时返回 \Tp{-1}
 并设置 \Tp{errno} 为 \Tp{EAGAIN}（或 \Tp{EWOULDBLOCK}）。
 
 \subsection{select / poll / epoll}
@@ -1166,7 +1170,7 @@ if (ec == asio::error::eof) {
 \section{IPC 机制概览}
 
 \begin{compare}[title=IPC 机制选型]
-\begin{tabularx}{\textwidth}{lXXX}
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{机制} & \textbf{数据模型} & \textbf{关系要求} & \textbf{典型延迟} \\
 \midrule
@@ -1230,7 +1234,7 @@ void pipe_demo(void) {
 \end{lstlisting}
 
 \begin{note}[title=管道容量]
-匿名管道的内核缓冲区大小有限（Linux 默认 64\,KB，可通过 \Tp{/proc/sys/fs/pipe-max-size} 调整）。写端满时 \Fn{write()} 阻塞（或返回 \Tp{EAGAIN}），读端空时 \Fn{read()} 阻塞。使用 \Fn{fcntl()} 的 \Tp{F\_SETPIPE\_SZ} 可以调整单个管道的容量。
+匿名管道的内核缓冲区大小有限（Linux 默认 64\,KB，可通过 \Tp{/proc/\allowbreak{}\allowbreak{}sys/\allowbreak{}\allowbreak{}fs/\allowbreak{}\allowbreak{}pipe-\allowbreak{}max-\allowbreak{}size} 调整）。写端满时 \Fn{write()} 阻塞（或返回 \Tp{EAGAIN}），读端空时 \Fn{read()} 阻塞。使用 \Fn{fcntl()} 的 \Tp{F\_\allowbreak{}SETPIPE\_\allowbreak{}SZ} 可以调整单个管道的容量。
 \end{note}
 
 \subsection{管道重定向与 shell 管道}
@@ -1365,7 +1369,7 @@ void shm_reader(void) {
 
 \textbf{生命周期}：\Fn{shm\_unlink()} 删除名称，但已映射的进程仍可访问，直到所有映射解除后内存才释放。
 
-\textbf{同步}：共享内存本身不提供同步。必须配合 POSIX 信号量（\Fn{sem\_open}/\Fn{sem\_wait}/\Fn{sem\_post}）或互斥锁使用。
+\textbf{同步}：共享内存本身不提供同步。必须配合 POSIX 信号量（\Fn{sem\_open}/\allowbreak{}\Fn{sem\_wait}/\allowbreak{}\Fn{sem\_post}）或互斥锁使用。
 
 \textbf{编译链接}：需要 \texttt{-lrt}（Linux）链接 POSIX 实时库。
 \end{guideline}
@@ -1500,14 +1504,14 @@ void win_named_pipe_client(void) {
 \end{lstlisting}
 
 \begin{compare}[title=POSIX FIFO vs Windows Named Pipe]
-\begin{tabularx}{\textwidth}{lXX}
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{特性} & \textbf{POSIX FIFO} & \textbf{Windows Named Pipe} \\
 \midrule
 通信方向 & 单向（需两个 FIFO 实现双向） & 双向（\Tp{PIPE\_ACCESS\_DUPLEX}） \\
 数据模式 & 字节流 & 字节流 / 消息模式 \\
 多实例 & 不支持 & 支持（最多 256 实例） \\
-异步 I/O & \Fn{select}/\Fn{poll} & \Tp{OVERLAPPED} + \Fn{GetOverlappedResult} \\
+异步 I/O & \Fn{select}/\allowbreak{}\Fn{poll} & \Tp{OVERLAPPED} + \Fn{GetOverlappedResult} \\
 安全控制 & 文件权限 & 安全描述符（ACL） \\
 \bottomrule
 \end{tabularx}
@@ -1678,7 +1682,7 @@ void bip_reader() {
 \end{lstlisting}
 
 \begin{warning}[title=共享内存中的 STL 容器]
-标准 \Tp{std::vector<int>} \textbf{不能}直接放入共享内存——它内部使用默认分配器，在堆上分配缓冲区，而另一个进程的堆地址是不同的。必须使用 \Tp{boost::interprocess::allocator} 或 \cpp{}17 的 polymorphic allocator，让容器的所有内存分配都发生在共享内存段内。
+标准 \Tp{std::\allowbreak{}vector<int>} \textbf{不能}直接放入共享内存——它内部使用默认分配器，在堆上分配缓冲区，而另一个进程的堆地址是不同的。必须使用 \Tp{boost::\allowbreak{}interprocess::\allowbreak{}allocator} 或 \cpp{}17 的 polymorphic allocator，让容器的所有内存分配都发生在共享内存段内。
 \end{warning}
 
 \subsection{进程间字符串}
@@ -1844,7 +1848,7 @@ void consumer() {
 \begin{guideline}[title=Boost.Interprocess 同步原语要点]
 \Tp{interprocess\_mutex}：与 \Tp{std::mutex} 接口类似，但存放在共享内存中，可跨进程加锁。支持 \Tp{timed\_lock} 超时获取。
 
-\Tp{interprocess\_condition}：跨进程条件变量。\textbf{必须}与 \Tp{scoped\_lock<interprocess\_mutex>} 配合使用。
+\Tp{interprocess\_\allowbreak{}condition}：跨进程条件变量。\textbf{必须}与 \Tp{scoped\_\allowbreak{}lock<interprocess\_\allowbreak{}mutex>} 配合使用。
 
 \Tp{scoped\_lock}：RAII 封装，等价于 \Tp{std::lock\_guard}。
 
@@ -3167,7 +3171,7 @@ private:
 \section{设计模式总结}
 
 \begin{compare}[title=自定义流设计模式]
-\begin{tabularx}{\textwidth}{lXXX}
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{模式} & \textbf{继承} & \textbf{重写} & \textbf{适用场景} \\
 \midrule
@@ -3186,7 +3190,7 @@ DuplexStream & \Tp{streambuf} & \Fn{overflow}, \Fn{underflow}, \Fn{sync} & 双�
 
 \textbf{线程安全}：\Tp{streambuf} 本身\textbf{不是}线程安全的。如果多个线程共享同一个流，需要外部加锁或在 \Tp{streambuf} 内部加锁。
 
-\textbf{异常安全}：\Fn{overflow} 和 \Fn{sync} 中应捕获异常并通过 \Fn{setstate(ios::badbit)} 通知流状态，而不是让异常穿透——除非用户显式启用了异常（\Fn{exceptions(ios::badbit)}）。
+\textbf{异常安全}：\Fn{overflow} 和 \Fn{sync} 中应捕获异常并通过 \Fn{setstate(ios::\allowbreak{}badbit)} 通知流状态，而不是让异常穿透——除非用户显式启用了异常（\Fn{exceptions(ios::\allowbreak{}badbit)}）。
 
 \textbf{析构函数}：\Tp{streambuf} 的析构函数\textbf{不会}自动调用 \Fn{sync()}。在子类的析构函数中显式调用 \Fn{sync()} 以确保缓冲区数据被刷出。
 

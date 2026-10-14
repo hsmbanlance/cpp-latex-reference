@@ -351,6 +351,10 @@
     top=0pt,bottom=0pt]\small\bfseries VBA\end{tcolorbox}}
 
 % ======================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 % ======================================================
 
@@ -1153,7 +1157,7 @@ int main() {
 \section{方案选型矩阵}\label{sec:matrix}
 
 \begin{compare}[title={传统文本脚本引擎综合对比}]
-\begin{tabularx}{\textwidth}{lXXXXX}
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{特性} & \textbf{Lua} & \textbf{Python} & \textbf{Angel\seqsplit{Script}} & \textbf{Chai\seqsplit{Script}} & \textbf{Squirrel} \\
 \midrule
@@ -1170,11 +1174,11 @@ JIT & LuaJIT & 无 & 无 & 无 & 无 \\
 
 \begin{compare}[title={游戏引擎脚本与工业/办公脚本对比}]
 {\small
-\begin{tabularx}{\textwidth}{lXXXXX}
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{特性} & \textbf{Blueprint} & \textbf{Verse} & \textbf{Tcl} & \textbf{Guile} & \textbf{VBA} \\
 \midrule
-形态 & 可视化/\seqsplit{Verse}前端 & 文本（函数式） & 文本（命令式） & 文本（Lisp） & 文本（BASIC） \\
+形态 & 可视化/\allowbreak{}\seqsplit{Verse}前端 & 文本（函数式） & 文本（命令式） & 文本（Lisp） & 文本（BASIC） \\
 宿主 & UE 引擎 & UEFN / UE6+ & 任意 C/C++ & GNU 项目 & Office / CAD \\
 类型系统 & 动态 & 静态+逻辑 & 动态 & 动态 & COM VARIANT \\
 热更新 & 保存即生效 & 保存即生效 & 重新 Eval & 重新 Eval & 即时执行 \\
@@ -1363,7 +1367,7 @@ hello_world_device := class(creative_device):
 \section{Verse 与 UE C++ 的关系}\label{sec:verse-cpp}
 
 \begin{compare}[title={Verse vs Blueprint vs C++ 在 UE 生态中的定位（含 UE6+ 规划）}]
-\begin{tabularx}{\textwidth}{lXXX}
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{维度} & \textbf{C++} & \textbf{Blueprint} & \textbf{Verse} \\
 \midrule
@@ -1593,7 +1597,7 @@ Visual Basic for Applications（VBA）是 Microsoft 推出的嵌入式脚本语�
 \begin{guideline}[title={VBA 嵌入架构}]
 \begin{itemize}
   \item \textbf{宿主模型}：VBA 运行在宿主应用程序内嵌的 VBE（Visual Basic Editor）中。宿主通过 COM（Component Object Model）向 VBA 暴露对象模型（Object Model），VBA 代码通过操作这些 COM 对象来控制宿主行为。
-  \item \textbf{对象模型}：每个宿主定义自己的对象层次结构。Excel 的 \Tp{Application $\to$ Workbook $\to$ Worksheet $\to$ Range}；AutoCAD 的 \Tp{AcadApplication $\to$ AcadDocument $\to$ ModelSpace}。
+  \item \textbf{对象模型}：每个宿主定义自己的对象层次结构。Excel 的 \Tp{Application $\to$ Workbook $\to$ Worksheet $\to$ Range}；AutoCAD 的 \Tp{Acad\allowbreak{}Application $\to$ Acad\allowbreak{}Document $\to$ Model\allowbreak{}Space}。
   \item \textbf{分发机制}：VBA 使用后期绑定（\Tp{IDispatch}）调用 COM 对象方法，允许脚本在运行时动态发现和调用宿主提供的接口——无需编译时类型信息。
 \end{itemize}
 \end{guideline}
@@ -2222,7 +2226,7 @@ C++ 和 C\# 在脚本化方面存在根本性的架构差异：
   \item \textbf{嵌入式 Web/IoT}：Duktape 或 QuickJS（嵌入式 JavaScript），适合需要 JavaScript 生态但资源受限的场景。
   \item \textbf{学术研究/DSL 设计}：Guile/Scheme，宏系统允许在语言层面定义新语法，适合编译器研究和领域特定语言。
   \item \textbf{C\#/.NET 项目}：优先使用 Roslyn Scripting（同语言，零学习成本）；若需要沙箱隔离则考虑 IL 动态生成。
-  \item \textbf{插件系统}：C\# 用反射 + \Tp{Assembly.LoadFrom}；C++ 用脚本引擎或动态库（\Fn{dlopen}/\Fn{LoadLibrary}）。
+  \item \textbf{插件系统}：C\# 用反射 + \Tp{Assembly.LoadFrom}；C++ 用脚本引擎或动态库（\Fn{dlopen}/\allowbreak{}\Fn{LoadLibrary}）。
 \end{itemize}
 \end{bestpractice}
 

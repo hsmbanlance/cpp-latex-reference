@@ -319,6 +319,10 @@
 }
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 % ==================== 封面 ====================
@@ -812,7 +816,7 @@ auto operator|(const C1& c1, const C2& c2) {
 \end{lstlisting}
 
 \begin{note}[title=语义的彻底改变]
-对内置整数类型而言，\Op{|} 仍然是按位或；只有当左操作数满足 \seqsplit{\texttt{std::ranges::range}} 概念时，新的重载才会被选中。这种``按概念分发''保证了既有代码（如 \Tp{flags = a | b}）不会受到任何影响。
+对内置整数类型而言，\Op{|} 仍然是按位或；只有当左操作数满足 \seqsplit{\texttt{std::\allowbreak{}ranges::\allowbreak{}range}} 概念时，新的重载才会被选中。这种``按概念分发''保证了既有代码（如 \Tp{flags = a | b}）不会受到任何影响。
 \end{note}
 
 \subsection{与 \csharp{} LINQ 的区分}
@@ -889,7 +893,7 @@ var r = v.Where(n => n % 2 == 0).Squared().Take(3);
 \subsection{为什么两种语言做了相反的选择}
 
 \begin{itemize}
-  \item \textbf{\csharp{}}：LINQ（2007 年）的灵感主要来自 SQL 与函数式语言中的 \Tp{map}/\Tp{filter}。设计组选择``点号链 + 扩展方法''，因为它对所有 \Tp{IEnumerable<T>} 自动可用，无需类型实现任何特殊接口；同时引入 \Tp{from/where/select} 查询语法，让熟悉 SQL 的开发者无缝过渡。\csharp{} 的运算符重载范围受限——\Op{|} 必须保留按位/逻辑语义，不能挪用为管道符。
+  \item \textbf{\csharp{}}：LINQ（2007 年）的灵感主要来自 SQL 与函数式语言中的 \Tp{map}/\allowbreak{}\Tp{filter}。设计组选择``点号链 + 扩展方法''，因为它对所有 \Tp{IEnumerable<T>} 自动可用，无需类型实现任何特殊接口；同时引入 \Tp{from/where/select} 查询语法，让熟悉 SQL 的开发者无缝过渡。\csharp{} 的运算符重载范围受限——\Op{|} 必须保留按位/逻辑语义，不能挪用为管道符。
   \item \textbf{\cpp{}}：Ranges（\cpp{20}）的灵感主要来自 F\#、Haskell 的函数组合算子以及 Unix shell 的 \texttt{|}。设计组（Eric Niebler 等）刻意选择 \Op{|}，原因有三：视觉上与 shell 管道一致，可读性强；借助运算符重载，无需引入新关键字；概念约束（\seqsplit{\texttt{std::ranges::range}}）保证只对 range 类型生效，与内置位或不冲突。
 \end{itemize}
 

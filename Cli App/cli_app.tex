@@ -217,6 +217,10 @@
 \newcommand{\Bk}{\allowbreak}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -368,7 +372,7 @@ $ stty sane                   # 恢复合理默认值（终端被打乱时自救
 \item Ctrl-C 不再产生 \Tp{SIGINT}（若清掉 \Tp{ISIG}），程序要自己识别
       \Tp{0x03} 字节。这一点在全屏 TUI 里通常是想要的，否则每次 Ctrl-C
       都会直接终止程序而不给清理终端的机会。
-\item \Tp{VMIN}/\Tp{VTIME} 的组合决定读取的阻塞语义：两者皆为 0 表示完全
+\item \Tp{VMIN}/{\Bk}\Tp{VTIME} 的组合决定读取的阻塞语义：两者皆为 0 表示完全
       非阻塞，读不到就返回 0；\Tp{VMIN}=1、\Tp{VTIME}=0 表示阻塞直到一字节；
       \Tp{VMIN}=0、\Tp{VTIME}=n 表示最多等 n 个十分之一秒。
 \end{itemize}
@@ -911,10 +915,10 @@ void install_interrupt() {
 应当把 \Tp{signal.h} 与 \Tp{unistd.h} 一并包含；这里为了突出结构做了省略。
 
 \textbf{Windows 没有 \Tp{SIGWINCH}}。替代方案有两条：其一是用
-\Fn{ReadConsoleInput} 读 \Tp{WINDOW\_BUFFER\_SIZE\_EVENT} 记录，
+\Fn{Read{\Bk}Console{\Bk}Input} 读 \Tp{WINDOW\_{\Bk}BUFFER\_{\Bk}SIZE\_{\Bk}EVENT} 记录，
 但这要求你持有控制台输入句柄并消费事件，和``从 stdin 读文本''互斥；
 其二是\emph{轮询}：以 100 到 250 ms 的间隔调用
-\Fn{GetConsoleScreenBufferInfo}，比较尺寸是否变化。对进度条这种
+\Fn{Get{\Bk}Console{\Bk}Screen{\Bk}Buffer{\Bk}Info}，比较尺寸是否变化。对进度条这种
 本来就按帧驱动的东西，轮询完全够用；对全屏 TUI，则应该把尺寸检查
 挂在按键读取的空隙上，而不是新建定时器线程。
 
@@ -2035,8 +2039,8 @@ v2.4 起），它会给主 App 自动追加 \Opt{generate-completion}，
 
 \begin{note}[title={Windows 的两个遗留坑}]
 一是长路径：默认上限 260 个字符，超出时 \Fn{CreateFileW} 报
-\Tp{ERROR\_PATH\_NOT\_FOUND}。出路有三条——让用户启用组策略或清单里的
-\Tp{longPathAware}（Windows 10 1607 起）、在路径前加
+\Tp{ERROR\_{\Bk}PATH\_{\Bk}NOT\_{\Bk}FOUND}。出路有三条——让用户启用组策略或清单里的
+\Tp{long{\Bk}Path{\Bk}Aware}（Windows 10 1607 起）、在路径前加
 \Tp{\textbackslash\textbackslash?\textbackslash{}} 前缀绕过规范化（代价是必须给绝对
 已规范化路径、不能用正斜杠、也不再屏蔽 \Tp{CON} 与 \Tp{NUL}
 这类保留名）、或者干脆拒绝并给出清楚的提示。
@@ -2506,7 +2510,7 @@ Ctrl-C 在 readline/linenoise 里\emph{只丢弃当前行}并把提示符重画�
 都解析 1049；走纯 Console API 的路线没有备用屏概念，只能靠读写
 屏幕缓冲区尺寸自行模拟，不建议。
 
-原始模式的进入条件与第 1 章一致，但 TUI 对 \Tp{VMIN}/\Tp{VTIME} 的取值
+原始模式的进入条件与第 1 章一致，但 TUI 对 \Tp{VMIN}/{\Bk}\Tp{VTIME} 的取值
 不同：需要``睡在 \Fn{read} 里等按键、但要周期性醒来重绘''时，
 \Tp{VMIN}=0、\Tp{VTIME}=1（100 ms 粒度）或改用 \Fn{poll} 显式超时。
 下面这个守卫对象把两件事合成一个 RAII 单元，并额外挂了 \Fn{atexit}
@@ -2649,7 +2653,7 @@ class Screen {
 \subsection{尺寸变化：SIGWINCH 与 RESIZE\_EVENT}
 
 POSIX 侧，\Tp{SIGWINCH} 到达时处理器只置标志位（第 2 章的规则），
-阻塞中的 \Fn{read}/\Fn{poll} 以 \Tp{EINTR} 返回，主循环重查
+阻塞中的 \Fn{read}/{\Bk}\Fn{poll} 以 \Tp{EINTR} 返回，主循环重查
 \Tp{TIOCGWINSZ}、\Fn{resize} 两张缓冲、下一帧全量重绘。别在处理器里
 调 ioctl 再直接重绘——那不是 async-signal-safe 的做法。Windows 侧没有
 信号：控制台输入队列里有 \Tp{RESIZE\_EVENT} 记录，但只有当你持有并
@@ -2748,7 +2752,7 @@ curses 模式、恢复普通输出——这反而是个有用的技巧：TUI 里
 
 termbox2 是 termbox 的活跃分支，单文件编译，API 十几枚：
 \Fn{tb\Bk\_init}、\Fn{tb\Bk\_set\Bk\_cell}、\Fn{tb\Bk\_present}、
-\Fn{tb\Bk\_peek}/\Fn{tb\Bk\_dequeue\Bk\_event}（带超时的输入队列）。
+\Fn{tb\Bk\_peek}/{\Bk}\Fn{tb\Bk\_dequeue\Bk\_event}（带超时的输入队列）。
 它把 8.3 节的双缓冲网格\emph{直接作为公开接口}：你每帧逐格写，
 \Fn{present} 负责 diff 与输出。没有控件、没有布局、没有颜色管理策略，
 全部自己来。对``只想甩掉转义序列细节、控件自己写''的需求这是最干净的
@@ -2757,7 +2761,7 @@ termbox2 是 termbox 的活跃分支，单文件编译，API 十几枚：
 \subsection{FTXUI：现代 C++ 的默认答案}
 
 \cpp{17}，DOM 式组件树，声明式组合：\Tp{Filler}、\Tp{Flex}、
-\Tp{vbox}/\Tp{hbox}、输入框与菜单等组件开箱即用，渲染器每帧做布局
+\Tp{vbox}/{\Bk}\Tp{hbox}、输入框与菜单等组件开箱即用，渲染器每帧做布局
 与 diff，支持活动帧率与定帧两种模式。事件流统一为字符、鼠标、
 终端三色等价物。要点是它的成本模型：\emph{界面是一棵每帧重建的树}
 ——回调里返回新 DOM，库负责比对。写起来极舒服，但帧帧重建树意味着
@@ -3251,9 +3255,9 @@ Windows 走 CreateProcessW 加引用拼接，管道与句柄生命周期都封�
 \Fn{u8path} 但把调用点集中到一两个转换函数，内部交换串不要两种类型混用。
 
 \begin{note}[title={char8\_t 的三处编译期摩擦}]
-一、\Tp{p.u8string()} 的返回类型在 \cpp{17} 是 \Tp{std::string}、在 \cpp{20} 是
-\Tp{std::u8string}，于是 \Tp{std::string s = p.u8string();} 会在升级语言标准时编译失败。
-二、两者之间只有 \Fn{reinterpret\_cast} 一条桥，哪怕字节完全相同。三、\Fn{strlen} 与一切
+一、\Tp{p.{\Bk}u8string()} 的返回类型在 \cpp{17} 是 \Tp{std::string}、在 \cpp{20} 是
+\Tp{std::{\Bk}u8string}，于是 \Tp{std::{\Bk}string s = p.{\Bk}u8string();} 会在升级语言标准时编译失败。
+二、两者之间只有 \Fn{reinterpret\_{\Bk}cast} 一条桥，哪怕字节完全相同。三、\Fn{strlen} 与一切
 只吃 \Tp{const char*} 的 C 接口都拒绝 \Tp{char8\_t*}。这三处摩擦正是它的价值：类型里从此写着``这串字节是 UTF-8''。
 \end{note}
 
@@ -3271,8 +3275,8 @@ Windows 走 CreateProcessW 加引用拼接，管道与句柄生命周期都封�
 
 \begin{warning}[title={四条出路与各自的边界}]
 \begin{enumerate}[label=\arabic*.,leftmargin=2.2em]
-\item \textbf{显式加宽再调 W 族}：\Fn{MultiByteToWideChar} 以 \Tp{CP\_UTF8} 配
-      \Tp{MB\_ERR\Bk \_INVALID\_CHARS} 转 UTF-16，之后只调 \Tp{*W}。唯一在任何构建、任何用户
+\item \textbf{显式加宽再调 W 族}：\Fn{Multi{\Bk}Byte{\Bk}To{\Bk}Wide{\Bk}Char} 以 \Tp{CP\_UTF8} 配
+      \Tp{MB\_{\Bk}ERR\Bk \_{\Bk}INVALID\_{\Bk}CHARS} 转 UTF-16，之后只调 \Tp{*W}。唯一在任何构建、任何用户
       locale 下都成立的做法，代价是每条 API 自己包一层（10.3.2）。
 \item \textbf{清单声明 UTF-8 作为进程 ACP}：manifest 的 \Tp{<application>} 元素下写
       \Tp{<activeCodePage>UTF-8</activeCodePage>}，Windows 10 1903 起生效，于是 \Tp{*A} 族、
@@ -3337,7 +3341,7 @@ std::optional<std::vector<char>> read_all(std::string_view p) {
 }
 \end{lstlisting}
 
-共享模式与顺序扫描提示（\Tp{FILE\_SHARE\Bk \_DELETE}、\Tp{FILE\_FLAG\Bk \_SEQUENTIAL\_SCAN}）
+共享模式与顺序扫描提示（\Tp{FILE\_{\Bk}SHARE\Bk \_{\Bk}DELETE}、\Tp{FILE\_{\Bk}FLAG\Bk \_{\Bk}SEQUENTIAL\_{\Bk}SCAN}）
 \Fn{\_wfopen} 给不了，那时换成 \Fn{CreateFileW} 加 \Fn{\_fdopen}，\Fn{read\_all} 的签名不变——这正是``唯一转换点''的好处。
 
 \subsection{argv：第一条被毁掉的中文文件名}
@@ -3955,8 +3959,8 @@ app-local 的坑是你要\emph{自己维护}那几个 DLL 的版本，并且必�
 
 在 CMake 里这件事有一个干净开关：策略 \Tp{CMP0091}（3.15 起）加上
 \Tp{CMAKE\Bk\_MSVC\Bk\_RUNTIME\Bk\_LIBRARY}，取值
-\Tp{Static}、\Tp{Dynamic} 及其 \Tp{Debug}/\Tp{Release} 变体，
-它会把 \Short{MT}/\Short{MD} 从 \Tp{CMAKE\Bk\_CXX\_FLAGS} 里拿走并
+\Tp{Static}、\Tp{Dynamic} 及其 \Tp{Debug}/{\Bk}\Tp{Release} 变体，
+它会把 \Short{MT}/{\Bk}\Short{MD} 从 \Tp{CMAKE\Bk\_CXX\_FLAGS} 里拿走并
 放进正确的 ABI 选项位置。混用旧式手工塞 \Short{MD} 到 flags 的写法
 是这一类 bug 的温床——它会静默覆盖，让同一个目标里出现两种运行时。
 
@@ -4059,7 +4063,7 @@ musl 的代价要写清：\textbf{locale 与宽字符支持是子集}。
 （或 lld 默认的多次扫描）。
 
 另一个只影响动态链接但常被误用的开关是 \Tp{-fvisibility=hidden}
-（配 \Tp{-fvisibility-inlines-hidden}）：默认符号全导出会让共享库的
+（配 \Tp{-fvisibility-{\Bk}inlines-{\Bk}hidden}）：默认符号全导出会让共享库的
 重定位表膨胀、启动变慢、还意外把内部符号变成 ABI。正确姿势是
 库内默认隐藏，只对导出宏用 \Tp{visibility} 属性显式放行。
 注意它对静态链接几乎没有体积收益，而且和 LTO 同时开时，
@@ -4109,9 +4113,9 @@ Homebrew 装的 GCC 是 keg-only 的，路径带版本号。于是
 动态库的位置用 install name 与 rpath 两级约定：库自己记录
 \lstinline|-install_name @rpath/libfoo.1.dylib|，
 可执行文件记录搜索目录 \lstinline|-Wl,-rpath,@loader_path/../lib|。
-\Tp{@rpath}、\Tp{@loader\_path}、\Tp{@executable\_path}
+\Tp{@rpath}、\Tp{@loader\_{\Bk}path}、\Tp{@executable\_{\Bk}path}
 三个token 由 \Tp{dyld} 在加载时展开，因此``把整个包拷到任意目录''能工作。
-事后修补用 \Fn{install\_name\_tool}：
+事后修补用 \Fn{install\_{\Bk}name\_{\Bk}tool}：
 
 \begin{lstlisting}[style=shellstyle,caption={查看与改写 Mach-O 的依赖路径}]
 $ otool -L build/imgres                    # 列出依赖及其 install name
@@ -4270,10 +4274,10 @@ $ cl /MT /O2 /Zi /Gy /Gw imgres.cpp /link /OPT:REF,ICF /LTCG
 \lstinline|include(GNUInstallDirs)|，它给出
 \Tp{CMAKE\Bk\_INSTALL\Bk\_BINDIR}、\Tp{LIBDIR}、\Tp{INCLUDEDIR}、
 \Tp{DATADIR}、\Tp{MANDIR}、\Tp{SYSCONFDIR}，
-并且在 Windows 上自动退化成 \Tp{bin}/\Tp{lib}。
-\Tp{RUNTIME}/\Tp{LIBRARY}/\Tp{ARCHIVE} 三个目标类别要分清楚
+并且在 Windows 上自动退化成 \Tp{bin}/{\Bk}\Tp{lib}。
+\Tp{RUNTIME}/{\Bk}\Tp{LIBRARY}/{\Bk}\Tp{ARCHIVE} 三个目标类别要分清楚
 （exe 与 DLL、带 SOVERSION 的库、导入库），
-CMake 3.14 起的 ``DESTINATION \Tp{bin}/\Tp{lib}''
+CMake 3.14 起的 ``DESTINATION \Tp{bin}/{\Bk}\Tp{lib}''
 加 \Tp{RUNTIME\_DEPENDENCY\_DIRECTORY} 会自动把依赖 DLL 拷进目标目录，
 比手工 \lstinline|install(FILES $<TARGET_PDB_FILE:...>)| 更可靠。
 
@@ -4317,10 +4321,10 @@ endif ()
 include(CPack)
 \end{lstlisting}
 
-CPack 的定位要说实话：\Tp{TGZ}/\Tp{ZIP} 很好用；\Tp{NSIS} 出的
+CPack 的定位要说实话：\Tp{TGZ}/{\Bk}\Tp{ZIP} 很好用；\Tp{NSIS} 出的
 EXE 安装器能用但脚本能力弱；\Tp{WIX} 出的 MSI 是企业分发需要的形态
 （能静默、能被 GPO 与 SCCM 装），但 WiX 的升级语义要求你\emph{永远}
-保持 \Tp{UpgradeCode} 不变；\Tp{DEB}/\Tp{RPM} 足够自用，
+保持 \Tp{UpgradeCode} 不变；\Tp{DEB}/{\Bk}\Tp{RPM} 足够自用，
 但要进官方仓库还得走发行版自己的打包流程；
 \Tp{productbuild} 需要自己写 component plist 并负责签名与公证。
 调用方式统一是：配置好后

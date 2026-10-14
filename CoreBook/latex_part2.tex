@@ -146,7 +146,7 @@ void read_data() {
 
 \textbf{R.6:} 避免裸 \texttt{new} 和裸 \texttt{delete} 表达式。它们应当被封装在 RAII 对象内部。
 
-\textbf{R.7:} 避免裸 \texttt{malloc} 和 \texttt{free}。在C++中应当使用 \texttt{new}/\texttt{delete}（通过智能指针间接使用）或标准容器。
+\textbf{R.7:} 避免裸 \texttt{malloc} 和 \texttt{free}。在C++中应当使用 \texttt{new}/\allowbreak{}\texttt{delete}（通过智能指针间接使用）或标准容器。
 
 \textbf{R.8:} 避免裸 \texttt{new} 和 \texttt{delete} 表达式——即使在成员函数中。
 
@@ -831,7 +831,7 @@ optional<size_t> find(const vector<int>& v, int target) {
 }
 \end{lstlisting}
 
-\textbf{要点：} 异常适合处理"不应该发生"的错误，\texttt{optional}/\texttt{expected} 适合处理"预期内可能发生"的错误。区分这两者是设计良好错误处理策略的关键。
+\textbf{要点：} 异常适合处理"不应该发生"的错误，\texttt{optional}/\allowbreak{}\texttt{expected} 适合处理"预期内可能发生"的错误。区分这两者是设计良好错误处理策略的关键。
 
 \subsection*{\textbf{规则 E.28:} 避免基于错误码的错误处理}
 
@@ -1426,7 +1426,7 @@ for (const auto& elem : v) {
 }
 \end{lstlisting}
 
-\textbf{要点：} 范围 \texttt{for} 适用于所有标准容器、数组、以及任何提供了 \texttt{begin()}/\texttt{end()} 的类型。只有在需要索引时才使用下标循环。
+\textbf{要点：} 范围 \texttt{for} 适用于所有标准容器、数组、以及任何提供了 \texttt{begin()}/\allowbreak{}\texttt{end()} 的类型。只有在需要索引时才使用下标循环。
 
 \subsection*{\textbf{规则 ES.60:} 避免 \texttt{new} 和 \texttt{delete} 表达式}
 
@@ -1733,7 +1733,7 @@ vector<string> create_names() {
 
 \subsection*{避免不必要的内存分配}
 
-动态内存分配（\texttt{new}/\texttt{malloc}）是相对昂贵的操作。在性能敏感的代码路径中，应当尽量减少内存分配。
+动态内存分配（\texttt{new}/\allowbreak{}\texttt{malloc}）是相对昂贵的操作。在性能敏感的代码路径中，应当尽量减少内存分配。
 
 \textbf{错误示例：}
 
@@ -1951,7 +1951,7 @@ if (!map.contains(key)) {
 
 \subsection*{\textbf{规则 CP.8:} 不要使用 \texttt{atomic\_flag} 实现自旋锁}
 
-\texttt{atomic\_flag} 是最底层的原子类型，它不提供等待机制。使用它实现自旋锁会浪费CPU周期。应当使用 \texttt{std::mutex} 或 \texttt{std::atomic} 配合 \texttt{wait}/\texttt{notify}。
+\texttt{atomic\_flag} 是最底层的原子类型，它不提供等待机制。使用它实现自旋锁会浪费CPU周期。应当使用 \texttt{std::mutex} 或 \texttt{std::atomic} 配合 \texttt{wait}/\allowbreak{}\texttt{notify}。
 
 \textbf{要点：} 自旋锁只在极短的临界区（几十纳秒级别）中有优势。对于大多数场景，\texttt{std::mutex} 是更好的选择，因为它在无法获取锁时会让出CPU。
 
@@ -2390,7 +2390,7 @@ string buf = format("Hello, {}! You are {} years old.", name, age);
 cout << buf << endl;
 \end{lstlisting}
 
-\textbf{要点：} C++替代C风格的对照表：\texttt{malloc/free} $\rightarrow$ \texttt{new/delete}（通过智能指针）或容器；\texttt{printf} $\rightarrow$ \texttt{cout} 或 \texttt{format}；裸数组 $\rightarrow$ \texttt{array}/\texttt{vector}；C字符串 $\rightarrow$ \texttt{string}/\texttt{string\_view}；\texttt{typedef} $\rightarrow$ \texttt{using}。
+\textbf{要点：} C++替代C风格的对照表：\texttt{malloc/free} $\rightarrow$ \texttt{new/delete}（通过智能指针）或容器；\texttt{printf} $\rightarrow$ \texttt{cout} 或 \texttt{format}；裸数组 $\rightarrow$ \texttt{array}/\allowbreak{}\texttt{vector}；C字符串 $\rightarrow$ \texttt{string}/\allowbreak{}\texttt{string\_view}；\texttt{typedef} $\rightarrow$ \texttt{using}。
 
 \subsection*{\textbf{规则 CPL.2:} 避免C风格的联合（union）}
 
@@ -2482,7 +2482,7 @@ log("Value: {}, Name: {}", 42, "hello");  // 类型安全
 
 \subsection*{\textbf{规则 CPL.5:} 不要使用 \texttt{setjmp}/\texttt{longjmp}}
 
-\texttt{setjmp}/\texttt{longjmp} 是C风格的非局部跳转机制。它们绕过析构函数，破坏RAII，导致资源泄漏和未定义行为。在C++中应当使用异常进行非局部控制流转移。
+\texttt{setjmp}/\allowbreak{}\texttt{longjmp} 是C风格的非局部跳转机制。它们绕过析构函数，破坏RAII，导致资源泄漏和未定义行为。在C++中应当使用异常进行非局部控制流转移。
 
 \textbf{错误示例：}
 
@@ -2520,7 +2520,7 @@ void caller() {
 }
 \end{lstlisting}
 
-\textbf{要点：} \texttt{setjmp}/\texttt{longjmp} 完全不了解C++的对象模型。它们与RAII、异常处理、构造/析构语义完全不兼容。在C++中绝对不应当使用。
+\textbf{要点：} \texttt{setjmp}/\allowbreak{}\texttt{longjmp} 完全不了解C++的对象模型。它们与RAII、异常处理、构造/析构语义完全不兼容。在C++中绝对不应当使用。
 
 \subsection*{\textbf{规则 CPL.6--CPL.10:} 更多C风格替代规则}
 
@@ -3050,9 +3050,9 @@ sort(arr.begin(), arr.end(), greater<int>());
 \begin{itemize}
 \item \textbf{\texttt{vector}:} 默认选择。连续内存，缓存友好，随机访问 $O(1)$，尾部插入均摊 $O(1)$。
 \item \textbf{\texttt{deque}:} 需要两端高效插入/删除时选择。
-\item \textbf{\texttt{list}/\texttt{forward\_list}:} 需要频繁在中间插入/删除且已有迭代器时选择（但通常 \texttt{vector} 仍然更快）。
-\item \textbf{\texttt{set}/\texttt{map}:} 需要有序遍历或 $O(\log n)$ 查找时选择。基于红黑树。
-\item \textbf{\texttt{unordered\_set}/\texttt{unordered\_map}:} 需要 $O(1)$ 平均查找时选择。基于哈希表。
+\item \textbf{\texttt{list}/\allowbreak{}\texttt{forward\_list}:} 需要频繁在中间插入/删除且已有迭代器时选择（但通常 \texttt{vector} 仍然更快）。
+\item \textbf{\texttt{set}/\allowbreak{}\texttt{map}:} 需要有序遍历或 $O(\log n)$ 查找时选择。基于红黑树。
+\item \textbf{\texttt{unordered\_set}/\allowbreak{}\texttt{unordered\_map}:} 需要 $O(1)$ 平均查找时选择。基于哈希表。
 \item \textbf{\texttt{array}:} 固定大小的数组。零开销，缓存友好。
 \end{itemize}
 

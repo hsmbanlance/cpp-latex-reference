@@ -212,6 +212,10 @@
 \newcommand{\Tp}[1]{\texttt{#1}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -521,7 +525,7 @@ target_link_libraries(myapp PRIVATE fmt::fmt spdlog::spdlog)
 \caption{依赖描述格式与版本管理能力对比}
 \label{tab:dep-desc}
 \small
-\begin{tabularx}{\textwidth}{l X X X X X}
+\begin{tabularx}{\textwidth}{l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
 \toprule
 \textbf{特性} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{Fetch\allowbreak Content} & \textbf{XMake} & \textbf{Git/SVN} \\
 \midrule
@@ -551,7 +555,7 @@ Git Submodule 天然通过 commit hash 锁定，SVN Externals 通过 \texttt{-r}
 \caption{构建集成方式对比}
 \label{tab:build-integration}
 \small
-\begin{tabularx}{\textwidth}{l X X X X X}
+\begin{tabularx}{\textwidth}{l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
 \toprule
 \textbf{特性} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{Fetch\allowbreak Content} & \textbf{XMake} & \textbf{Git/SVN} \\
 \midrule
@@ -573,7 +577,7 @@ CMake 集成   & Generator 文件 & Toolchain 文件 & 原生内置         & �
 \caption{平台适配能力对比}
 \label{tab:platform}
 \small
-\begin{tabularx}{\textwidth}{l X X X X X}
+\begin{tabularx}{\textwidth}{l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
 \toprule
 \textbf{特性} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{Fetch\allowbreak Content} & \textbf{XMake} & \textbf{Git/SVN} \\
 \midrule
@@ -602,7 +606,7 @@ CCI 为\textbf{有限的一组标准配置}预编译二进制包，覆盖范围�
 \caption{CCI 预编译二进制覆盖的标准配置}
 \label{tab:cci-configs}
 \small
-\begin{tabularx}{\textwidth}{l l l l}
+\begin{tabular}{l l l l}
 \toprule
 \textbf{平台} & \textbf{编译器} & \textbf{标准库/运行时} & \textbf{构建类型} \\
 \midrule
@@ -610,7 +614,7 @@ Windows x86\_64 & Visual Studio 2019 & 动态链接 (MD) & Release \\
 Linux x86\_64   & GCC 11            & libstdc++11    & Release \\
 macOS armv8     & Apple Clang 13.0  & libc++ (target 11.0) & Release \\
 \bottomrule
-\end{tabularx}
+\end{tabular}
 \end{table}
 
 \begin{warning}[ title={CCI 保证的边界}]
@@ -730,7 +734,7 @@ commit hash 锁定保证源码版本的确定性，但编译是否正确、
 \caption{各方案官方编译保证等级汇总}
 \label{tab:guarantee-summary}
 \small
-\begin{tabularx}{\textwidth}{l X X X}
+\begin{tabularx}{\textwidth}{l >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
 \toprule
 \textbf{方案} & \textbf{预编译二进制} & \textbf{CI 回归测试} & \textbf{完整性校验} \\
 \midrule
@@ -800,7 +804,7 @@ CPM.cmake 通过本地缓存部分解决了这个问题。
 
 \begin{warning}[ title={指定平台场景下的常见陷阱}]
 即使只面向单一平台，也要注意 ABI 兼容性。例如 Conan 的
-\texttt{settings.compiler.libcxx} 在 Linux 上区分 \texttt{libstdc++} 和
+\texttt{settings.\allowbreak{}compiler.\allowbreak{}libcxx} 在 Linux 上区分 \texttt{libstdc++} 和
 \texttt{libstdc++11}，混用会导致链接错误。建议在 profile 中显式指定所有 settings。
 \end{warning}
 
@@ -830,9 +834,9 @@ Git Sub    & 依赖极少、对构建确定性要求高   & $\star\star\star$ \\
 \section{场景二：跨平台应用/库}
 % =====================================================================
 
-跨平台是 C++ 包管理的核心挑战。同一个项目需要在 Windows/\allowbreak Linux/\allowbreak macOS 上编译，
-可能需要处理不同编译器（MSVC/\allowbreak GCC/\allowbreak Clang）、不同 C 标准库（glibc/\allowbreak musl/\allowbreak MSVCRT）、
-不同图形后端（Win32/\allowbreak X11/\allowbreak Cocoa）等差异。
+跨平台是 C++ 包管理的核心挑战。同一个项目需要在 Windows/\allowbreak{}\allowbreak Linux/\allowbreak{}\allowbreak macOS 上编译，
+可能需要处理不同编译器（MSVC/\allowbreak{}\allowbreak GCC/\allowbreak{}\allowbreak Clang）、不同 C 标准库（glibc/\allowbreak{}\allowbreak musl/\allowbreak{}\allowbreak MSVCRT）、
+不同图形后端（Win32/\allowbreak{}\allowbreak X11/\allowbreak{}\allowbreak Cocoa）等差异。
 
 % ---------------------------------------------------------------------
 \subsection{各方案的跨平台策略}
@@ -1133,7 +1137,7 @@ xmake build
 \caption{嵌入式构建框架集成对比}
 \label{tab:embedded-framework}
 \small
-\begin{tabularx}{\textwidth}{l X}
+\begin{tabularx}{\textwidth}{l >{\raggedright\arraybackslash}X}
 \toprule
 \textbf{方案} & \textbf{与 Buildroot/Yocto 的集成方式} \\
 \midrule
@@ -1307,7 +1311,7 @@ Git Sub    & 极致控制、与 Buildroot/Yocto 原生集成 & $\star\star\star\
 \caption{五种方案在四个场景下的综合评分（满分 5 分）}
 \label{tab:overall}
 \small
-\begin{tabularx}{\textwidth}{l c c c c c}
+\begin{tabular}{l c c c c c}
 \toprule
 \textbf{场景} & \textbf{Conan} & \textbf{Vcpkg} & \textbf{Fetch\allowbreak Content} & \textbf{XMake} & \textbf{Git/SVN} \\
 \midrule
@@ -1318,7 +1322,7 @@ Git Sub    & 极致控制、与 Buildroot/Yocto 原生集成 & $\star\star\star\
 \midrule
 \textbf{总分} & \textbf{18} & \textbf{17} & \textbf{17} & \textbf{12} & \textbf{13} \\
 \bottomrule
-\end{tabularx}
+\end{tabular}
 \end{table}
 
 \begin{note}[ title={评分说明}, unbreakable]
@@ -1396,7 +1400,7 @@ Conan 和 Vcpkg 的综合分最高，反映了它们作为专用包管理器在�
 \caption{各方案版本信息与参考资源}
 \label{tab:resources}
 \small
-\begin{tabularx}{\textwidth}{l l X}
+\begin{tabularx}{\textwidth}{l l >{\raggedright\arraybackslash}X}
 \toprule
 \textbf{方案} & \textbf{参考版本} & \textbf{官方资源} \\
 \midrule

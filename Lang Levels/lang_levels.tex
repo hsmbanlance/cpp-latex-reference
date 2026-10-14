@@ -247,6 +247,10 @@
 \newcommand{\MC}{\textsuperscript{\textregistered}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -315,7 +319,7 @@
 机器码今天仍然真实存在，只是``入口''上移了：链接器输出的
 ELF/PE/Mach-O 二进制、固件镜像、CPU 内部微码（microcode，比 ISA 更低的实现层）、
 以及 GPU/NPU 的 ISA（SASS、着色器微指令）。程序员日常通过编译产物、
-反汇编器和 \Tp{objdump}/\Tp{IDA} 与它间接打交道。
+反汇编器和 \Tp{objdump}/\allowbreak{}\Tp{IDA} 与它间接打交道。
 
 \section{低级语言：汇编的真实定位}
 
@@ -360,11 +364,11 @@ ELF/PE/Mach-O 二进制、固件镜像、CPU 内部微码（microcode，比 ISA 
   \item \textbf{双性格的具体内容}：
 \end{itemize}
 
-\begin{longtable}{@{}p{0.30\textwidth}p{0.31\textwidth}p{0.31\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.30\textwidth}>{\raggedright\arraybackslash}p{0.31\textwidth}>{\raggedright\arraybackslash}p{0.31\textwidth}@{}}
 \toprule
 \textbf{像高级语言的一面} & \textbf{像低级语言的一面} & \textbf{中介机制} \\
 \midrule
-\texttt{while}/\texttt{for}/\texttt{if} 控制流，表达式即语义 &
+\texttt{while}/\allowbreak{}\texttt{for}/\allowbreak{}\texttt{if} 控制流，表达式即语义 &
 每条控制流最终展开为条件跳转与标志位 &
 编译器透明展开，程序员可预测展开结果 \\
 \addlinespace
@@ -373,7 +377,7 @@ ELF/PE/Mach-O 二进制、固件镜像、CPU 内部微码（microcode，比 ISA 
 类型不隐藏表示，只辅助检查 \\
 \addlinespace
 源码跨 ISA 可移植 &
-\texttt{sizeof}/\texttt{alignof} 仍是机器的量 &
+\texttt{sizeof}/\allowbreak{}\texttt{alignof} 仍是机器的量 &
 ``可移植的是源码，不是布局假设'' \\
 \addlinespace
 \texttt{int i; a[i]} 可读性好 &
@@ -454,14 +458,14 @@ Java（1995）与 C\#（2000）在设计目标上就明确站到了光谱的另�
 
 \section{维度一：内存模型与对象表示}
 
-\begin{longtable}{@{}p{0.16\textwidth}p{0.255\textwidth}p{0.255\textwidth}p{0.24\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}p{0.255\textwidth}>{\raggedright\arraybackslash}p{0.255\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}@{}}
 \toprule
-\textbf{判据} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\textbf{判据} & \textbf{C/\allowbreak{}\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
 \midrule
-对象的内存布局 & 语言规定：\texttt{sizeof}/\texttt{alignof} 可查，
+对象的内存布局 & 语言规定：\texttt{sizeof}/\allowbreak{}\texttt{alignof} 可查，
   \texttt{struct} 成员顺序即布局（填充规则可预测） &
   实现规定：对象头、字段顺序、对齐均不在规范中 &
-  默认同 Java；显式布局需 \texttt{struct Layout} + \texttt{[StructLayout]}
+  默认同 Java；显式布局需 \texttt{struct Layout} + \texttt{[Struct\allowbreak{}Layout]}
   或 \texttt{[MarshalAs]} \\
 \addlinespace
 直接地址操作 & 指针一等公民；\texttt{memcpy}、\texttt{bit\_cast}、union 均合法 &
@@ -480,7 +484,7 @@ Java（1995）与 C\#（2000）在设计目标上就明确站到了光谱的另�
 \bottomrule
 \end{longtable}
 
-这一维度的结论最硬：\textbf{C/\Cplus{} 的对象模型是机器模型的忠实投影}，
+这一维度的结论最硬：\textbf{C/\allowbreak{}\Cplus{} 的对象模型是机器模型的忠实投影}，
 所以它``看得见硬件的形状''；Java/C\# 的对象模型是运行时为了
 GC 与验证而构造的\emph{虚拟布局}，硬件形状被刻意抹掉。
 这就是``中级''地位的第一块基石。
@@ -536,23 +540,23 @@ static Span<Packet> View(Memory<byte> buffer) =>
 三条常见误解需要先排掉：``静态类型 = 强类型''、``有 GC = 更安全''、
 ``弱类型 = 容易写出 bug''。类型系统真正要比的是\textbf{检查内容与检查时刻}。
 
-\begin{longtable}{@{}p{0.215\textwidth}p{0.245\textwidth}p{0.245\textwidth}p{0.21\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.215\textwidth}>{\raggedright\arraybackslash}p{0.245\textwidth}>{\raggedright\arraybackslash}p{0.245\textwidth}>{\raggedright\arraybackslash}p{0.21\textwidth}@{}}
 \toprule
-\textbf{检查项} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\textbf{检查项} & \textbf{C/\allowbreak{}\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
 \midrule
 静态检查范围 & 类型匹配、重载决议、模板约束（concept） &
   同左 + 更强的初始化 definite assignment &
   同左 + nullable 参考类型（\texttt{string?}，可开关） \\
 \addlinespace
-运行时类型验证 & 几乎为零（\texttt{dynamic\_cast} 可选） &
+运行时类型验证 & 几乎为零（\texttt{dynamic\_\allowbreak{}cast} 可选） &
   \texttt{instanceof}、向下转型检查、数组协变在线检查 &
-  \texttt{as}/\texttt{is}、数组协变在线检查 \\
+  \texttt{as}/\allowbreak{}\texttt{is}、数组协变在线检查 \\
 \addlinespace
 类型双关（重新解释表示） & 合法且有规则（\texttt{bit\_cast}、\texttt{char*} 别名） &
-  语言层禁止 & 需 \texttt{unsafe} 或 \texttt{MemoryMarshal}，并自行承担正确性 \\
+  语言层禁止 & 需 \texttt{unsafe} 或 \texttt{Memory\allowbreak{}Marshal}，并自行承担正确性 \\
 \addlinespace
 越界访问 & UB，不检查（可关闭/开启沙箱工具） &
-  恒检查，必抛 \texttt{IndexOutOfBounds} & 恒检查，必抛越界异常 \\
+  恒检查，必抛 \texttt{Index\allowbreak{}Out\allowbreak{}Of\allowbreak{}Bounds} & 恒检查，必抛越界异常 \\
 \addlinespace
 空值 & 裸指针可为空，解引用即 UB（\texttt{-fsanitize} 可捕捉） &
   \texttt{null} 解引用为单步异常 & 值类型不可空；参考类型可空，
@@ -587,9 +591,9 @@ C\# 一半编译一半运行。同一个语法位置，三种实现负担分配�
 
 \section{维度四：资源生命周期由谁驱动}
 
-\begin{longtable}{@{}p{0.18\textwidth}p{0.27\textwidth}p{0.225\textwidth}p{0.24\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.225\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}@{}}
 \toprule
-\textbf{机制} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\textbf{机制} & \textbf{C/\allowbreak{}\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
 \midrule
 内存回收 & 程序员：RAII 作用域结束即析构、即释放 &
   GC（分代、并发、可移动） &
@@ -600,8 +604,8 @@ C\# 一半编译一半运行。同一个语法位置，三种实现负担分配�
   内存不确定；\texttt{using} 语句确定调用 \texttt{Dispose} \\
 \addlinespace
 锁/文件/句柄 & RAII（\texttt{lock\_guard}、\texttt{unique\_fd}） &
-  try-with-resources（\texttt{AutoCloseable}） &
-  \texttt{using}/\texttt{await using}（编译为 try/finally） \\
+  try-\allowbreak{}with-\allowbreak{}resources（\texttt{Auto\allowbreak{}Closeable}） &
+  \texttt{using}/\allowbreak{}\texttt{await using}（编译为 try/finally） \\
 \addlinespace
 时间敏感资源 & 天然友好（析构可绑硬件时序） &
   困难：GC 暂停与 finalize 时机不可预算 &
@@ -611,13 +615,13 @@ C\# 一半编译一半运行。同一个语法位置，三种实现负担分配�
 
 生命周期是``中级 vs 高级''最容易被感知到的维度：
 \textbf{谁决定一行清理代码在什么时刻执行}。
-C/\Cplus{} 里是语言（作用域规则），Java/C\# 里是运行时（GC 线程与句柄表）。
+C/\allowbreak{}\Cplus{} 里是语言（作用域规则），Java/C\# 里是运行时（GC 线程与句柄表）。
 
 \section{维度五至维度八：执行、溢出、异常与互操作}
 
-\begin{longtable}{@{}p{0.17\textwidth}p{0.22\textwidth}p{0.225\textwidth}p{0.215\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}>{\raggedright\arraybackslash}p{0.225\textwidth}>{\raggedright\arraybackslash}p{0.215\textwidth}@{}}
 \toprule
-\textbf{维度} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\textbf{维度} & \textbf{C/\allowbreak{}\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
 \midrule
 五：编译目标与绑定时机 &
   静态本机码（AOT），链接完成即定型；可 LTO/PGO &
@@ -642,7 +646,7 @@ C/\Cplus{} 里是语言（作用域规则），Java/C\# 里是运行时（GC 线
 \end{longtable}
 
 维度六和维度七看起来琐碎，其实是层级判据：
-C/\Cplus{} 把``溢出后怎么办''交给程序员与硬件（所以能贴着 ALU 写），
+C/\allowbreak{}\Cplus{} 把``溢出后怎么办''交给程序员与硬件（所以能贴着 ALU 写），
 Java/C\# 把它收编进语言承诺（所以能在任意硬件上得到同一行为）。
 
 \section{维度九：优化者可见的信息量}
@@ -650,8 +654,8 @@ Java/C\# 把它收编进语言承诺（所以能在任意硬件上得到同一�
 抽象层级还决定``编译器知道什么''。这直接影响生成码质量：
 
 \begin{itemize}
-  \item C/\Cplus{} 里编译器知道：完整类型、对象大小、对齐、无 GC 干扰的栈帧、
-        指针别名假设（\texttt{restrict}/\texttt{\_\_restrict} 可显式承诺）。
+  \item C/\allowbreak{}\Cplus{} 里编译器知道：完整类型、对象大小、对齐、无 GC 干扰的栈帧、
+        指针别名假设（\texttt{restrict}/\allowbreak{}\texttt{\_\_restrict} 可显式承诺）。
         于是可以向量化、栈上替换、内联、循环展开。
   \item Java/C\# 里 JIT 知道：运行时类型 profile、对象图、内联缓存命中的实际类。
         于是可以做基于概率的去虚化、逃逸分析、OSR 替换；
@@ -668,7 +672,7 @@ JIT 优化的是``运行时观察到的统计世界''。这是两种不同的抽
 把前面所有维度收拢成一个词：\textbf{控制权的归属}。
 
 \begin{itemize}
-  \item C/\Cplus{}：程序员决定分配位置、释放时刻、内存布局、调用约定；
+  \item C/\allowbreak{}\Cplus{}：程序员决定分配位置、释放时刻、内存布局、调用约定；
         编译器决定指令选择；OS 决定页与调度。
   \item Java/C\#：运行时决定对象布局与移动、回收时刻、编译时机（解释/JIT/AOT）、
         以及大部分内联与去虚化决策；程序员决定业务结构与显式边界
@@ -678,9 +682,9 @@ JIT 优化的是``运行时观察到的统计世界''。这是两种不同的抽
 \begin{guideline}[title=本章小结：一张判据表]
 \subsection{第 2 章判据速览（八个可核对维度）}
 
-\begin{longtable}{@{}p{0.285\textwidth}p{0.22\textwidth}p{0.14\textwidth}p{0.14\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.285\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedright\arraybackslash}p{0.14\textwidth}@{}}
 \toprule
-\textbf{判据} & \textbf{问题} & \textbf{C/\Cplus{}} & \textbf{Java/C\#} \\
+\textbf{判据} & \textbf{问题} & \textbf{C/\allowbreak{}\Cplus{}} & \textbf{Java/C\#} \\
 \midrule
 内存模型 & 布局由谁规定 & 程序员（语言层） & 运行时 \\
 类型验证 & 何时验、验什么 & 编译期为主 & 编译期 + 运行时在线 \\
@@ -693,7 +697,7 @@ JIT 优化的是``运行时观察到的统计世界''。这是两种不同的抽
 \bottomrule
 \end{longtable}
 
-九个维度上，\textbf{C/\Cplus{} 全部落在``程序员掌管''一侧}，
+九个维度上，\textbf{C/\allowbreak{}\Cplus{} 全部落在``程序员掌管''一侧}，
 Java/C\# 全部落在``运行时掌管''一侧。这就是``中级 vs 高级''的可核对定义：
 中级 = 机器模型暴露且可预测；高级 = 机器模型隐藏并由运行时代管。
 \end{guideline}
@@ -709,7 +713,7 @@ Java/C\# 全部落在``运行时掌管''一侧。这就是``中级 vs 高级''�
 
 \section{显形一：``这个对象住在哪''是一个问题}
 
-在 C/\Cplus{} 中，下面四行都是合法且语义明确的选择：
+在 C/\allowbreak{}\Cplus{} 中，下面四行都是合法且语义明确的选择：
 
 \begin{lstlisting}[language=C++,caption={C++：同一类型的四种居住方式}]
 Widget a;                    // 自动存储期（栈帧内，析构随作用域）
@@ -733,7 +737,7 @@ var c = new List<Point>();        // 元素仍是值类型，但 List 本体在�
 
 \begin{center}
 \begin{tabular}{@{}l l l@{}}
-\textbf{C/\Cplus{}} & \textbf{C\#} & \textbf{Java} \\
+\textbf{C/\allowbreak{}\Cplus{}} & \textbf{C\#} & \textbf{Java} \\
 全显式（位置/对齐/布局） & 结构体与 \texttt{stackalloc} 可控 & 全交给运行时 \\
 \end{tabular}
 \end{center}
@@ -754,17 +758,17 @@ var c = new List<Point>();        // 元素仍是值类型，但 List 本体在�
 
 \section{显形三：并发代码里的``谁负责一致性''}
 
-\begin{longtable}{@{}p{0.20\textwidth}p{0.26\textwidth}p{0.26\textwidth}p{0.20\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.26\textwidth}>{\raggedright\arraybackslash}p{0.26\textwidth}>{\raggedright\arraybackslash}p{0.20\textwidth}@{}}
 \toprule
-\textbf{问题} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\textbf{问题} & \textbf{C/\allowbreak{}\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
 \midrule
 缓存一致性/可见性 & \texttt{std::atomic} + 内存序手选
   （\texttt{memory\_order} 六档） &
-  \texttt{volatile} 与 \texttt{synchronized} 隐含 acquire/release &
+  \texttt{volatile} 与 \texttt{synchronized} 隐含 acquire/\allowbreak{}\allowbreak{}release &
   \texttt{volatile}（仅可见性）+ \texttt{Interlocked} 系列 \\
 \addlinespace
 数据竞争定性 & 未定义行为（TSan 可查） &
-  良定义但不保证原子（除 \texttt{volatile long/double} 特例） &
+  良定义但不保证原子（除 \texttt{volatile long/\allowbreak{}\allowbreak{}double} 特例） &
   良定义，原子性另需保证 \\
 \addlinespace
 引用更新与回收 & 风险最高：无 GC 时指针更新需
@@ -774,7 +778,7 @@ var c = new List<Point>();        // 元素仍是值类型，但 List 本体在�
 \end{longtable}
 
 注意第三行：GC 在并发章节也会``显形''。它实际上替程序员解决了
-``指针指向的对象还活着吗''这一 C/\Cplus{} 并发最难的问题，
+``指针指向的对象还活着吗''这一 C/\allowbreak{}\Cplus{} 并发最难的问题，
 代价是第 4 章将量化的暂停与布局控制权的丧失。
 
 \begin{levelspectrum}[title=层级显形的判读法]
@@ -794,7 +798,7 @@ var c = new List<Point>();        // 元素仍是值类型，但 List 本体在�
 
 没有 GC 暂停、没有 JIT 预热、没有``首次调用慢''的档位切换：
 函数编译后的指令序列就是它每次运行执行的指令序列（忽略 CPU 自身的缓存效应）。
-这使 C/\Cplus{} 成为以下场景的默认选项：
+这使 C/\allowbreak{}\Cplus{} 成为以下场景的默认选项：
 
 \begin{itemize}
   \item 硬实时控制：电机 PWM 环路、音频回调（128 帧 $\times$ 4 批次，超时即爆音）、
@@ -829,7 +833,7 @@ struct alignas(64) QueueSlot { Desc head, tail; uint64_t counter; };
 \end{lstlisting}
 
 这样的代码在 L3 语言里没有对应物：不是``写起来更绕''，而是语言层
-根本不提供\texttt{packed}/\texttt{alignas}/物理地址这些概念。
+根本不提供\texttt{packed}/\allowbreak{}\texttt{alignas}/物理地址这些概念。
 Java 的 FFM API 与 C\# 的 \texttt{MemoryMappedFiles} 可以搬运字节，
 但布局契约的``类型化表达''仍需自行维护一张字段偏移表。
 
@@ -1086,7 +1090,7 @@ Entry[] pool = new Entry[1024];                            // 一块连续缓冲
 \textbf{读法}：分代假设让托管语言``大部分时候''为短命对象付很小的代价，
 但对象图一旦庞大（几百万小对象），布局税与追踪税同时到账。
 有趣的对称现象：L3 性能工程师的调优手册
-（数组化、池化、避免指针追逐、SOA）读起来像一本 C/\Cplus{} 优化手册。
+（数组化、池化、避免指针追逐、SOA）读起来像一本 C/\allowbreak{}\Cplus{} 优化手册。
 层级改变了默认成本，没改变缓存层次结构的物理学。
 
 \section{实验四：泛型容器与表示选择}
@@ -1229,7 +1233,7 @@ C\#/Java 依赖开发者\emph{选择}正确类型（\texttt{Stream} 不实现
 
 \section{值语义 vs 引用语义：同一个赋值的两种人格}
 
-\begin{longtable}{@{}p{0.22\textwidth}p{0.25\textwidth}p{0.23\textwidth}p{0.22\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedright\arraybackslash}p{0.23\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}@{}}
 \toprule
 \textbf{场景} & \textbf{C++} & \textbf{C\#} & \textbf{Java} \\
 \midrule
@@ -1246,7 +1250,7 @@ C\#/Java 依赖开发者\emph{选择}正确类型（\texttt{Stream} 不实现
 \section{元编程：编译期计算 vs 运行时反射 vs 源生成}
 
 \begin{itemize}
-  \item C++：\texttt{constexpr}/\texttt{consteval}（C++20 起图灵完备的编译期执行）、
+  \item C++：\texttt{constexpr}/\allowbreak{}\texttt{consteval}（C++20 起图灵完备的编译期执行）、
         模板元编程、C++26 静态反射（\texttt{std::meta}）方向。
         产物是代码本身，运行时看不见元编程。
   \item C\#：反射（运行时读元数据）、\texttt{dynamic}、源生成器
@@ -1273,11 +1277,11 @@ L3 程序的性能问题通常在``profiler + GC 日志''中解决。这是层�
 
 \section{托管语言向下的五级台阶}
 
-\begin{longtable}{@{}p{0.13\textwidth}p{0.36\textwidth}p{0.37\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}>{\raggedright\arraybackslash}p{0.36\textwidth}>{\raggedright\arraybackslash}p{0.37\textwidth}@{}}
 \toprule
 \textbf{台阶} & \textbf{手段} & \textbf{典型约束} \\
 \midrule
-1 无装箱抽象 & C\# \texttt{Span<T>}/\texttt{ref struct}/\texttt{stackalloc}；
+1 无装箱抽象 & C\# \texttt{Span<T>}/\allowbreak{}\texttt{ref struct}/\allowbreak{}\texttt{stackalloc}；
   Java \texttt{int[]} 原始类型数组 & \texttt{ref struct} 不能进泛型/捕获/字段；
   Java 无值类型泛型，API 断成两套 \\
 \addlinespace
@@ -1285,11 +1289,11 @@ L3 程序的性能问题通常在``profiler + GC 日志''中解决。这是层�
   Java 无（只能手工字段偏移表） & 与托管堆仍隔着对象头；
   布局契约靠单元测试守护 \\
 \addlinespace
-3 直接指针 & C\# \texttt{unsafe} + \texttt{fixed} + \texttt{NativeMemory}；
-  Java \texttt{sun.misc.Unsafe}（逐步弃用）$\to$ FFM \texttt{MemorySegment} &
+3 直接指针 & C\# \texttt{unsafe} + \texttt{fixed} + \texttt{Native\allowbreak{}Memory}；
+  Java \texttt{sun.\allowbreak{}misc.\allowbreak{}Unsafe}（逐步弃用）$\to$ FFM \texttt{Memory\allowbreak{}Segment} &
   需信任标记/编译开关；GC 可移动性靠 pin 对抗 \\
 \addlinespace
-4 本机互操作 & JNI/JNA/FFM；P/Invoke/\texttt{[LibraryImport]} &
+4 本机互操作 & JNI/JNA/FFM；P/Invoke/\allowbreak{}\texttt{[Library\allowbreak{}Import]} &
   编组税、生命周期跨边界、调试混合栈 \\
 \addlinespace
 5 直接生成本机码 & .NET NativeAOT；Java \texttt{gcc} 时代产物/GraalVM native &
@@ -1333,7 +1337,7 @@ try (Arena arena = Arena.ofConfined()) {
 真实系统常见的不是``选一门''，而是\textbf{按层级分工 + 稳定边界}：
 
 \begin{itemize}
-  \item \textbf{C/\Cplus{} 核心 + 托管外壳}：游戏引擎（Unreal 核心 + C\#/蓝图脚本层）、
+  \item \textbf{C/\allowbreak{}\Cplus{} 核心 + 托管外壳}：游戏引擎（Unreal 核心 + C\#/蓝图脚本层）、
         数据库（PG 核心 + 各语言驱动）、浏览器（C++ 引擎 + JS/V8 应用层）、
         Unity（C++ 原生层 + C\# 脚本层）是同一模式的四个变体。
   \item \textbf{边界设计的层级含义}：好的边界是``扁平、批量化、无生命周期跨调用''
@@ -1355,11 +1359,11 @@ try (Arena arena = Arena.ofConfined()) {
 
 \section{执行管线对照}
 
-\begin{longtable}{@{}p{0.15\textwidth}p{0.26\textwidth}p{0.26\textwidth}p{0.235\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.26\textwidth}>{\raggedright\arraybackslash}p{0.26\textwidth}>{\raggedright\arraybackslash}p{0.235\textwidth}@{}}
 \toprule
-\textbf{阶段} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\textbf{阶段} & \textbf{C/\allowbreak{}\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
 \midrule
-前端 & 编译器（Clang/GCC/MSVC） & javac & Roslyn(csc) \\
+前端 & 编译器（Clang/\allowbreak{}\allowbreak{}GCC/\allowbreak{}\allowbreak{}MSVC） & javac & Roslyn(csc) \\
 中间产物 & 目标文件（本机码+重定位） & 字节码 class & IL + 元数据 dll \\
 链接 & 静态/动态链接期符号解析 & 类加载 + 验证 & 程序集加载 + 验证 \\
 本机化 & 已是本机码 & 解释 $\to$ C1 $\to$ C2（分层） & 解释/预备码 $\to$ 分层 JIT \\
@@ -1384,13 +1388,13 @@ GC 不只是``自动释放''，它重新定义了语言的基本操作语义：
         ``区段''而不是``地址''。
 \end{itemize}
 
-C/\Cplus{} 阵营的``部分 GC''对应物是引用计数（\texttt{shared\_ptr}）
+C/\allowbreak{}\Cplus{} 阵营的``部分 GC''对应物是引用计数（\texttt{shared\_ptr}）
 与池/arena 分配器：它们不提供可移动性与全局可见对象图的推理，
 因此不能免除程序员对环与生命周期的责任。
 
 \section{元数据留存：层级差异的``档案学''维度}
 
-\begin{longtable}{@{}p{0.225\textwidth}p{0.235\textwidth}p{0.23\textwidth}p{0.23\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.225\textwidth}>{\raggedright\arraybackslash}p{0.235\textwidth}>{\raggedright\arraybackslash}p{0.23\textwidth}>{\raggedright\arraybackslash}p{0.23\textwidth}@{}}
 \toprule
 \textbf{信息} & \textbf{C++ 产物} & \textbf{Java class} & \textbf{C\# assembly} \\
 \midrule
@@ -1500,7 +1504,7 @@ C++ 继承 C 的底座后，在同一个程序里叠加了可与``高级语言''
 而且选择哪一种是\emph{逐语句}的决定，不是逐项目、逐团队的。
 
 \begin{levelspectrum}[title=``中级''在四个语言上的标定]
-\begin{tabular}{@{}p{0.125\textwidth}p{0.265\textwidth}p{0.27\textwidth}p{0.24\textwidth}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.125\textwidth}>{\raggedright\arraybackslash}p{0.265\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}@{}}
 \toprule
 \textbf{语言} & \textbf{贴近机器的一面} & \textbf{高层表达的一面} & \textbf{标定} \\
 \midrule
@@ -1516,7 +1520,7 @@ C\# & unsafe、Span、struct 可达 L2 & 泛型、LINQ、async 全套 & L3 主�
 
 \subsection*{不等于难度}
 
-学习曲线由\emph{失败模式}决定：C/\Cplus{} 入门难在 UB 与手动生命周期，
+学习曲线由\emph{失败模式}决定：C/\allowbreak{}\Cplus{} 入门难在 UB 与手动生命周期，
 但语言规则本身很小；Java/C\# 入门易，精通难在运行时行为
 （GC 调优、JIT 反优化、类加载、编组）。``高级语言更容易写出能跑的代码，
 中级语言更容易写出知道为什么跑的代码。''
@@ -1542,7 +1546,7 @@ C++20 概念系统表达能力不弱于任何类型类系统；
 如果要在论文或答辩中表述这个区别，建议放弃单轴``级别''，改用可防守的句子：
 
 \begin{itemize}
-  \item ``C/\Cplus{} 是\textbf{暴露机器模型的源码可移植语言}：
+  \item ``C/\allowbreak{}\Cplus{} 是\textbf{暴露机器模型的源码可移植语言}：
         程序员对布局、生命周期与溢出负责，编译器负责指令选择。''
   \item ``Java/C\# 是\textbf{以规范化运行时为中间层的托管语言}：
         运行时对布局、回收与验证负责，并以此换取可移植的执行与在线安全。''
@@ -1556,7 +1560,7 @@ C++20 概念系统表达能力不弱于任何类型类系统；
 
 想象同一套代码在四个层级被重写：内核态驱动（L1/L2）用 C 加少量汇编，
 用户态高性能服务（L2 上层）用 C++ 模板与 ranges，
-托管服务（L3）用 C\# 把性能热点下沉到 \texttt{Span}/\texttt{unsafe}，
+托管服务（L3）用 C\# 把性能热点下沉到 \texttt{Span}/\allowbreak{}\texttt{unsafe}，
 最后用 Java 通过 FFM 调用同一套 C ABI。
 你会发现：真正迁移的是\textbf{控制权}（谁掌管布局/回收/验证），
 而不是语法。语法层四门语言能互相模仿得惟妙惟肖，
@@ -1663,7 +1667,7 @@ ClickHouse/Doris 走 C++、Rust 入局），层级选择让位于
         并由运行时在线代管（验证、回收、编译）。
   \item 这条分界在九个维度上可逐条核验（布局、验证时机、泛型表示、
         生命周期、绑定时机、溢出、异常、互操作、优化信息量），
-        C/\Cplus{} 与 Java/C\# 在每个维度上都落在相反的一侧。
+        C/\allowbreak{}\Cplus{} 与 Java/C\# 在每个维度上都落在相反的一侧。
   \item 层级决定\textbf{成本归属与控制权归属}，不决定难度、不决定性能名次。
   \item 两个阵营都在向对方移动：C++ 长出一等高级抽象（零成本、代价可审计），
         L3 制度化向下逃生舱（Span/struct/FFM/AOT）。层级是\emph{默认立场}，
@@ -1679,9 +1683,9 @@ ClickHouse/Doris 走 C++、Rust 入局），层级选择让位于
 \chapter{十一维度四语言对照总表}
 
 {\small
-\begin{longtable}{@{}p{0.17\textwidth}p{0.23\textwidth}p{0.22\textwidth}p{0.22\textwidth}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.23\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}@{}}
 \toprule
-\textbf{维度} & \textbf{C/\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
+\textbf{维度} & \textbf{C/\allowbreak{}\Cplus{}} & \textbf{Java} & \textbf{C\#} \\
 \midrule
 机器模型可见性 & 直接可见（布局/对齐/地址） & 不可见 & 默认不可见，可申请 \\
 对象头与开销 & 无强制头，布局=声明 & 运行时决定（典型 12--16B/对象） & 同 Java，struct 可免 \\
@@ -1716,7 +1720,7 @@ ClickHouse/Doris 走 C++、Rust 入局），层级选择让位于
 安全点 & safepoint & GC/运行时可安全暂停线程的代码位置 \\
 编组 & marshalling & 跨 ABI/层级边界的表示转换 \\
 逃生舱 & escape hatch & 托管语言接近机器的制度化手段（第 7 章表） \\
-UB & undefined behavior & 未定义行为，C/\Cplus{} 标准保留的实现自由度 \\
+UB & undefined behavior & 未定义行为，C/\allowbreak{}\Cplus{} 标准保留的实现自由度 \\
 \bottomrule
 \end{longtable}
 }

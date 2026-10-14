@@ -260,6 +260,10 @@
 \newcommand{\CD}{\Lib{clangd}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -476,11 +480,11 @@ hdr/scope.h:3:19: note: expanded from macro 'BEGIN_SCOPE'
   \item 第一行的 \texttt{warning}、\texttt{error}、\texttt{note}、
         \texttt{fatal error} 是严重级别。\texttt{note} 永远依附于前一条
         主诊断，单独看没有意义。
-  \item 尾部方括号里的 \texttt{-Wunused-variable} 是\textbf{诊断组名}，
-        它就是开关的名字：\texttt{-Wno-unused-variable} 关掉它，
-        \texttt{-Werror=unused-variable} 单独把它升级成错误。
+  \item 尾部方括号里的 \texttt{-Wunused-{\Bk}variable} 是\textbf{诊断组名}，
+        它就是开关的名字：\texttt{-Wno-{\Bk}unused-{\Bk}variable} 关掉它，
+        \texttt{-Werror=unused-{\Bk}variable} 单独把它升级成错误。
         不知道组名就无法精确控制，所以不要用
-        \texttt{-fno-caret-diagnostics} 之类把这一栏关掉。
+        \texttt{-fno-{\Bk}caret-{\Bk}diagnostics} 之类把这一栏关掉。
   \item 源码行下方 \texttt{|} 里的 \texttt{\^{}} 与波浪线标出诊断覆盖的
         \textbf{源范围}（换算由 \texttt{SourceManager} 完成）。
         LSP 里诊断对象的 \texttt{range} 字段就来自这里，因此编辑器中
@@ -692,7 +696,7 @@ clangd   --version     | head -1
 
 \begin{itemize}
   \item Ubuntu 与 Debian：\texttt{apt install clang-tools-18}，
-        可执行文件在 \texttt{/usr/lib/\allowbreak llvm-18/\allowbreak bin/}，
+        可执行文件在 \texttt{/usr/lib/{\Bk}\allowbreak llvm-18/{\Bk}\allowbreak bin/}，
         另有 \texttt{/usr/bin/clang-format-18} 这类带后缀的名字。
         发行版默认的无后缀名字可能指向别的版本，
         用 \texttt{update-alternatives} 显式绑定。
@@ -1034,7 +1038,7 @@ Bazel 走的是完全不同的模型（构建图 + action cache），
 决定第三方头是否被当作系统头（\Tidy\ 默认不报告系统头里的诊断，
 \CD\ 也不会为它们做诊断）；\texttt{-std=} 决定语言模式，
 漏写就会让 \cpp{17} 的结构化绑定报错；\texttt{-D} 决定条件编译分支，
-漏写会让整块代码「消失」；\texttt{-c}/\texttt{-o} 告诉工具这是编译而非链接。
+漏写会让整块代码「消失」；\texttt{-c}/{\Bk}\texttt{-o} 告诉工具这是编译而非链接。
 
 \subsection*{交叉编译：内置头找不到}
 
@@ -1248,7 +1252,7 @@ I[..] All checks passed!
 头文件里补全只剩关键字 &
   走的是回退命令，没有项目的 \texttt{-I} &
   让同名 \texttt{.cpp} 进入数据库；或用 \texttt{Add} 手工补 \texttt{-I} \\
-\texttt{stddef.h}/\texttt{cstdint} 找不到 &
+\texttt{stddef.h}/{\Bk}\texttt{cstdint} 找不到 &
   工具链内置头目录没被学习（交叉编译、VS 自带 clang） &
   \Opt{query-driver} 指向真实编译器；检查
   \texttt{clang -print-resource-dir} \\
@@ -1563,7 +1567,7 @@ CI 缓存命中率归零、别人拿到的索引在你的机器上根本用不�
         甚至绝对路径，团队里一人升级 clang、一人改了 \texttt{-D}，模块就整体
         失效，缓存变成黑洞。
   \item \textbf{ABI 与分发}。模块没有稳定的跨版本 ABI，\texttt{.pcm}
-        无法像 \texttt{.o}/\texttt{.a} 那样在机器间可靠分发，网络文件系统上的
+        无法像 \texttt{.o}/{\Bk}\texttt{.a} 那样在机器间可靠分发，网络文件系统上的
         模块缓存一致性问题更是长期痛点。
 \end{itemize}
 
@@ -1924,11 +1928,11 @@ token 流里引用的编号表，协商阶段定好后整份文档都用它解�
 
 \begin{guideline}[title={能力协商决定后面哪些请求能发}]
 \begin{itemize}
-  \item 服务端没声明 \texttt{implementationProvider}，就不要发
-        \texttt{textDocument/implementation}\Bk{}——得到的是
-        \texttt{MethodNotFound}（$-32601$），而行为良好的客户端应直接把
+  \item 服务端没声明 \texttt{implementation{\Bk}Provider}，就不要发
+        \texttt{text{\Bk}Document/{\Bk}implementation}\Bk{}——得到的是
+        \texttt{Method{\Bk}Not{\Bk}Found}（$-32601$），而行为良好的客户端应直接把
         「查找实现」菜单项禁用，根本不发请求。
-  \item 客户端没声明 \texttt{snippetSupport}，服务端回传的
+  \item 客户端没声明 \texttt{snippet{\Bk}Support}，服务端回传的
         \texttt{\$\{1:xxx\}} 占位符会被当成字面文本插入，编辑器里
         看到一堆大括号。
   \item 没声明 \texttt{positionEncoding} 的客户端，默认被按 UTF-16 对待；
@@ -1979,12 +1983,12 @@ token 流里引用的编号表，协商阶段定好后整份文档都用它解�
 \end{lstlisting}
 
 版本号不只是记账工具。语义类请求（补全、重命名、代码动作）返回的
-\texttt{WorkspaceEdit} 是基于「回答那一刻」的 AST 计算出来的：
+\texttt{Workspace{\Bk}Edit} 是基于「回答那一刻」的 AST 计算出来的：
 若客户端拿着它回放到一份已经被后续 \texttt{didChange} 改过的文档上，
 插入点、区间跨度全部失效。规范要求在
-\texttt{WorkspaceEdit.changes}/\texttt{documentChanges} 里带上目标文档的
-\texttt{version}（\texttt{TextDocumentEdit} 的 \texttt{textDocument} 字段
-为 \texttt{VersionedDocumentUri\{uri, version\}}），
+\texttt{Workspace{\Bk}Edit.changes}/{\Bk}\texttt{document{\Bk}Changes} 里带上目标文档的
+\texttt{version}（\texttt{Text{\Bk}Document{\Bk}Edit} 的 \texttt{text{\Bk}Document} 字段
+为 \texttt{Versioned{\Bk}Document{\Bk}Uri\{uri, version\}}），
 客户端发现版本对不上必须\textbf{拒绝应用}。实战中「按了 code action
 却报编辑失败」的根因几乎都是缓冲区版本落后于请求发出时的版本。
 
@@ -1999,7 +2003,7 @@ LSP 把「对代码的提问」切成一组标准方法。理解它们最快的�
 \subsection{提问/回答类：光标换到哪就答到哪}
 \texttt{completion}（光标处能写什么；服务端遍历作用域链加候选排序，
 列表太长时用 \texttt{completionItem/resolve} 二次惰性补齐
-\texttt{detail}/\texttt{documentation}）、
+\texttt{detail}/{\Bk}\texttt{documentation}）、
 \texttt{hover}（这个标识符的声明长什么样）、
 \texttt{signatureHelp}（正在调哪个重载，来自 \texttt{Sema} 的重载决议候选集）、
 \texttt{definition} 与 \texttt{declaration}（\texttt{DeclRefExpr} 指向的
@@ -2011,23 +2015,23 @@ LSP 把「对代码的提问」切成一组标准方法。理解它们最快的�
 （全项目按名字模糊搜，返回平铺 \texttt{SymbolInformation[]}，依赖索引）、
 \texttt{prepareRename}（当前光标允不允许改名，可返回占位名）与
 \texttt{rename}（跨文件替换，返回 \texttt{WorkspaceEdit}）、
-\texttt{formatting}/\texttt{rangeFormatting}/\texttt{onTypeFormatting}
+\texttt{formatting}/{\Bk}\texttt{rangeFormatting}/{\Bk}\texttt{onTypeFormatting}
 （整篇/选区/输入时的 \texttt{TextEdit[]}，与第 9 章 \Fmt{} 同一引擎）。
 
 \subsection{诊断：push 与 pull 两种模型}
 经典模型是 push：服务端在任何时刻发现问题就推
-\texttt{textDocument/}\hspace{0pt}\texttt{publish}\hspace{0pt}\texttt{Diagnostics}，
+\texttt{text{\Bk}Document/}\hspace{0pt}\texttt{publish}\hspace{0pt}\texttt{Diagnostics}，
 参数含 \texttt{uri}、可选 \texttt{version}
 和诊断数组；每条 \texttt{Diagnostic} 有 \texttt{range}、
 \texttt{severity}（1 Error、2 Warning、3 Info、4 Hint）、
 \texttt{source}（如 \texttt{clang} 或 \texttt{clang-tidy}）、\texttt{code}
-与 \texttt{message}，以及可选 \texttt{relatedInformation}
+与 \texttt{message}，以及可选 \texttt{related{\Bk}Information}
 （\texttt{\{location, message\}} 列表，用来表达「此处未初始化是因为第 12 行
 构造函数没写它」这类跨位置理由）。
-新模型是 pull：客户端显式调 \texttt{textDocument/diagnostic}\Bk{}，
-服务端回 \texttt{DocumentDiagnosticReport}（\texttt{kind} 为
-\texttt{full}/\texttt{unchanged}，附 \texttt{resultId} 供增量复用），
-另有 \texttt{workspace/diagnostic} 和 \texttt{diagnostic/refresh}。
+新模型是 pull：客户端显式调 \texttt{text{\Bk}Document/{\Bk}diagnostic}\Bk{}，
+服务端回 \texttt{Document{\Bk}Diagnostic{\Bk}Report}（\texttt{kind} 为
+\texttt{full}/{\Bk}\texttt{unchanged}，附 \texttt{resultId} 供增量复用），
+另有 \texttt{workspace/{\Bk}diagnostic} 和 \texttt{diagnostic/{\Bk}refresh}。
 两种模型的取舍见下方对比框。
 
 \begin{compare}[title={push 与 pull 诊断的取舍}]
@@ -2055,7 +2059,7 @@ LSP 把「对代码的提问」切成一组标准方法。理解它们最快的�
 \texttt{semanticTokens/full/delta} 只需重发受影响部分。
 \texttt{inlayHint} 则返回要「画在源码空隙里」的灰色提示（推断类型、
 具名实参、循环边界），\texttt{label} 可拆多段并带
-\texttt{paddingLeft}/\texttt{paddingRight}。
+\texttt{paddingLeft}/{\Bk}\texttt{paddingRight}。
 
 \subsection{方法到实现：一张对照表}
 表~\ref{tab:ch04-methods} 把每个方法对应到 \CD\ 内部入口与等价的「手工 \CPP{} 操作」，
@@ -2075,7 +2079,7 @@ LSP 方法 & \CD\ 内部入口 & 等价的手工操作 \\
 \endhead
 \texttt{textDocument/}\hspace{0pt}\texttt{completion} & \texttt{CodeComplete}，走 \texttt{clang::Sema} 补全钩子 & 在光标处插入伪代码后重新解析，遍历作用域链收集候选 \\
 \midrule
-\texttt{hover}/\texttt{definition} & \texttt{ASTReader} 查 \texttt{DeclRefExpr} $\to$ \texttt{Decl} & 拿到 AST 后查引用指向的声明并格式化类型 \\
+\texttt{hover}/{\Bk}\texttt{definition} & \texttt{ASTReader} 查 \texttt{DeclRefExpr} $\to$ \texttt{Decl} & 拿到 AST 后查引用指向的声明并格式化类型 \\
 \midrule
 \texttt{references} & \texttt{XRef} 表加索引（\texttt{SymbolIndex}） & \texttt{RecursiveAST\hspace{0pt}Visitor} 全树扫引用，跨文件需项目索引 \\
 \midrule
@@ -2273,7 +2277,7 @@ I[09:47:06.314] Testing all features...
 I[09:47:06.889] All checks completed, 0 errors
 \end{lstlisting}
 
-日志前缀 \texttt{I}/\texttt{V}/\texttt{E} 分别是 info/verbose/error。
+日志前缀 \texttt{I}/{\Bk}\texttt{V}/{\Bk}\texttt{E} 分别是 info/verbose/error。
 读 \Opt{check} 输出先看三处：\texttt{Loaded compilation database} 路径对不对、
 \texttt{Compile command} 展开后的 \texttt{-std} 与 include 目录对不对、
 最后一行 \texttt{All checks completed, N errors}。
@@ -2368,8 +2372,8 @@ I[09:47:06.889] All checks completed, 0 errors
 \end{longtable}
 
 清单~\ref{lst:ch05-config} 给一份覆盖面最大的示例（多数键保持默认即可，
-这里是为了把键位摆全）。缩进即层级，布尔写 \texttt{Yes}/\texttt{No}
-或 \texttt{true}/\texttt{false} 均可。
+这里是为了把键位摆全）。缩进即层级，布尔写 \texttt{Yes}/{\Bk}\texttt{No}
+或 \texttt{true}/{\Bk}\texttt{false} 均可。
 
 \begin{lstlisting}[style=yamlstyle,caption={\texttt{.clangd} 全键位示例（覆盖面优先，非推荐组合）},label={lst:ch05-config}]
 # .clangd —— 项目根配置，入版本库
@@ -2507,7 +2511,7 @@ Completion 这类个人偏好留给成员在用户级配置里自定义——
 \CD\ 的诊断来自三层：编译器本身的 \texttt{-W} 家族警告、
 clang-tidy 检查（用 \Opt{clang-tidy} 命令行开关或
 \texttt{Diagnostics./}\hspace{0pt}\texttt{ClangTidy} 片段启用）、
-以及 \CD\ 自产的 \texttt{unused-includes} 一类提示。
+以及 \CD\ 自产的 \texttt{unused-{\Bk}includes} 一类提示。
 治理手段有四件，按侵入性从低到高排。
 
 第一件是 \Opt{Suppress}：按「诊断来源名」静音，支持三种写法——
@@ -2527,13 +2531,13 @@ Diagnostics:
     - clang-diagnostic-uninitialized
 \end{lstlisting}
 
-第二件是 \Opt{WarningsAsErrors}：把名单内的警告在编辑器里按错误渲染，
+第二件是 \Opt{Warnings{\Bk}As{\Bk}Errors}：把名单内的警告在编辑器里按错误渲染，
 与 \Opt{Suppress} 互补——先大面积静音，再把真正危险的几条点亮。
-第三件回到命令行层：在 \texttt{CompileFlags./}\hspace{0pt}\texttt{Add} 里加
+第三件回到命令行层：在 \texttt{Compile{\Bk}Flags./}\hspace{0pt}\texttt{Add} 里加
 \texttt{-Wno-xxx}，让警告在解析阶段就不产生；它与 \Opt{Suppress}
 效果相近，但会同时影响该 TU 里一切基于诊断的功能。
-第四件是针对 include 卫生的三档开关：\Opt{UnusedIncludes} 与
-\Opt{MissingIncludes} 各取 \texttt{None}、\texttt{Missing}、
+第四件是针对 include 卫生的三档开关：\Opt{Unused{\Bk}Includes} 与
+\Opt{Missing{\Bk}Includes} 各取 \texttt{None}、\texttt{Missing}、
 \texttt{Strict}，决定提示是否存在、是否可一键修复。
 
 \begin{warning}[title={别把 \texttt{.clangd} 当编译器配置乱加 \texttt{-Werror}}]
@@ -2726,7 +2730,7 @@ ccls 的接入方式和 \CD\ 一样：项目根放 \texttt{compile\_commands.jso
 \texttt{.cquery} 项目文件与独立的 JSON 索引，今天不需要再考虑）。选 ccls 意味着承担什么：
 
 \begin{itemize}
-  \item clang 前端版本被钉死在归档点，新语法（\cpp{20}/\cpp{23} 的较新特性、模块化）
+  \item clang 前端版本被钉死在归档点，新语法（\cpp{20}/{\Bk}\cpp{23} 的较新特性、模块化）
         会在编辑器里报错，而你的编译器已经支持它们；
   \item LSP 规范的新能力（标准 semantic tokens、inlay hints、pull diagnostics、
         progress 通知）不会补上，客户端越新越容易踩到未实现的方法；
@@ -2827,7 +2831,7 @@ CLion 同时提供可切换的后端：较新版本里可以把解析/补全交�
 
 \textbf{Qt Creator。}默认后端是 \texttt{clangcode} 插件，基于 libclang 的 C API
 （\texttt{clang\_cursor\_} 一族），只拿诊断、代码操作与跳转，索引与跨文件引用能力弱，
-编译参数从 \texttt{.pro}/\texttt{.qmake} 或 CMake 工程里推。新版本提供以 \CD\ 为代码模型的
+编译参数从 \texttt{.pro}/{\Bk}\texttt{.qmake} 或 CMake 工程里推。新版本提供以 \CD\ 为代码模型的
 可选路径（在 C++ 相关设置里切换，Qt Creator 负责生成编译数据库再把 \texttt{\_clangd.conf}
 交给它）。缺口是：libclang C API 拿不到完整的 Sema 结果，模板重载与自动推导会退化；
 收益是启动快、与 Qt 元对象系统（\texttt{Q\_OBJECT}/信号槽）的耦合处理得比裸 \CD\ 好。
@@ -3156,10 +3160,10 @@ cdt-gdb-adapter & gdb & 跨平台 & Eclipse/Theia 生态；独立进程 \\
         例如打开 libstdc++ 漂亮打印。
   \item \texttt{stopAtEntry}：进 main 就停；\texttt{externalConsole}：
         另开控制台窗口（Linux 下要 terminal x-terminal-emulator 一类）。
-  \item \texttt{symbolLoadInfo}：控制符号加载策略（\texttt{mode} 取
+  \item \texttt{symbol{\Bk}Load{\Bk}Info}：控制符号加载策略（\texttt{mode} 取
         \texttt{loadAll} 或按模块过滤，带 \texttt{excludeList}），
         大型程序启动慢时用它裁剪。
-  \item \texttt{preLaunchTask} 与 \texttt{postDebugTask}：调试前后各挂一个
+  \item \texttt{pre{\Bk}Launch{\Bk}Task} 与 \texttt{post{\Bk}Debug{\Bk}Task}：调试前后各挂一个
         \texttt{tasks.json} 的 label，把「先构建再调试」接上（见 \ref{sec:ch07-s3}）。
 \end{itemize}
 
@@ -3278,7 +3282,7 @@ problemMatcher 干的事很朴素：\textbf{拿正则扫任务输出，把一行
         \texttt{["relative", "\$\{workspaceFolder\}"]}）。
   \item \texttt{pattern}：一组正则，每个捕获组通过命名约定映射到
         \texttt{file}、\texttt{line}、\texttt{column}、\texttt{message}、
-        \texttt{code}、\texttt{kind}（kind 里 \texttt{warning}/\texttt{error} 决定颜色）。
+        \texttt{code}、\texttt{kind}（kind 里 \texttt{warning}/{\Bk}\texttt{error} 决定颜色）。
         跨多行诊断用 pattern 数组，每行一条正则。
   \item \texttt{source}：诊断来源名，会显示在标记上（如 \texttt{gcc}、\texttt{clang-tidy}）。
   \item 内建 matcher：\texttt{\$gcc}、\texttt{\$clang}（由 C/C++ 扩展贡献，
@@ -3332,21 +3336,21 @@ problemMatcher 干的事很朴素：\textbf{拿正则扫任务输出，把一行
         \texttt{indent\_size}：每级缩进空格数（或 \texttt{tab} 表示跟随 tab\_width）；
         \texttt{tab\_width}：一个 tab 显示成几格。
   \item \texttt{max\_line\_length}：行宽软上限。
-  \item \texttt{end\_of\_line}：\texttt{lf} 或 \texttt{crlf}；
-        \texttt{insert\_final\_newline}：文件末尾是否留换行；
-        \texttt{trim\_trailing\_whitespace}：是否去行尾空格；
+  \item \texttt{end\_{\Bk}of\_{\Bk}line}：\texttt{lf} 或 \texttt{crlf}；
+        \texttt{insert\_{\Bk}final\_{\Bk}newline}：文件末尾是否留换行；
+        \texttt{trim\_{\Bk}trailing\_{\Bk}whitespace}：是否去行尾空格；
         \texttt{charset}：\texttt{utf-8}、\texttt{latin1} 等。
   \item 选择器用 glob：\texttt{[*]} 全仓生效，\texttt{[*.c]}、\texttt{[*.h]}、
         \texttt{[*.\{c,h\}]} 按类型覆盖。
 \end{itemize}
 
 \Fmt\ 认识 \texttt{.editorconfig}：它会按当前文件名去匹配 section，读取
-\texttt{indent\_style}、\texttt{indent\_size}、\texttt{tab\_width}、
-\texttt{max\_line\_length} 这几项，映射到 \texttt{UseTab}、\texttt{IndentWidth}、
-\texttt{TabWidth}、\texttt{ColumnLimit}。想显式以它为准，可以把 \texttt{BasedOnStyle}
-写成 \texttt{EditorConfig}（较新版本的 \Fmt\ 才支持）。\textbf{冲突时谁赢}：
-在同一个 section 里，\texttt{.clang-format} 显式写的字段优先于 editorconfig 推出来的值；
-editorconfig 只填那些 \texttt{.clang-format} 没明说的字段。
+\texttt{indent\_{\Bk}style}、\texttt{indent\_{\Bk}size}、\texttt{tab\_width}、
+\texttt{max\_{\Bk}line\_{\Bk}length} 这几项，映射到 \texttt{UseTab}、\texttt{IndentWidth}、
+\texttt{TabWidth}、\texttt{ColumnLimit}。想显式以它为准，可以把 \texttt{Based{\Bk}On{\Bk}Style}
+写成 \texttt{Editor{\Bk}Config}（较新版本的 \Fmt\ 才支持）。\textbf{冲突时谁赢}：
+在同一个 section 里，\texttt{.clang-{\Bk}format} 显式写的字段优先于 editorconfig 推出来的值；
+editorconfig 只填那些 \texttt{.clang-{\Bk}format} 没明说的字段。
 
 为什么这样分工：\texttt{.editorconfig} 表达的是「这个仓库人眼看舒服的样子」——
 制表符还是空格、换行用哪种、行尾清不清，这些都是编辑器的行为，跟语法树无关。
@@ -3404,10 +3408,10 @@ trim_trailing_whitespace = false
   \item 编辑器先发 \texttt{textDocument/}\Bk\texttt{willSaveWaitUntil}
         （若服务器声明了该能力），
         \textbf{同步等}服务器返回要改的位置，客户端把改动应用后再落盘。
-  \item 落盘前/后依客户端设置跑格式化：\texttt{editor.formatOnSave}
-        触发 \texttt{textDocument/}\Bk\texttt{formatting}，默认格式化器由
-        \texttt{editor.}\Bk\texttt{defaultFormatter} 指定。
-  \item \texttt{editor.codeActionsOnSave} 里的 \texttt{source.fixAll}
+  \item 落盘前/后依客户端设置跑格式化：\texttt{editor.{\Bk}format{\Bk}On{\Bk}Save}
+        触发 \texttt{text{\Bk}Document/}\Bk\texttt{formatting}，默认格式化器由
+        \texttt{editor.}\Bk\texttt{default{\Bk}Formatter} 指定。
+  \item \texttt{editor.{\Bk}code{\Bk}Actions{\Bk}On{\Bk}Save} 里的 \texttt{source.{\Bk}fix{\Bk}All}
         触发「一次性应用所有 code action」；想只让 \CD\ 的 \Tidy\ 修复参与，
         用更窄的键（如 \texttt{source.fixAll.clangd}），值可以是
         \texttt{explicit} 或 \texttt{always}。
@@ -3422,10 +3426,10 @@ trim_trailing_whitespace = false
 局部的改动，重活留给显式的 code action。
 
 其余两端各一句：Neovim 用 \texttt{BufWritePre} 自动命令手动调
-\texttt{vim.lsp.buf.}\Bk\texttt{formatting\_sync()}（这就是同步的
-\texttt{willSaveWaitUntil}），格式化则靠 LSP 客户端插件或 \texttt{:Format};
-Emacs 的 \texttt{eglot} 提供 \texttt{eglot-}\Bk\texttt{format-on-save} 一类的 hook，
-\texttt{M-x} 侧走 \texttt{before-save-hook}。机制名字不同，串的都是同一条链。
+\texttt{vim.lsp.buf.}\Bk\texttt{formatting\_{\Bk}sync()}（这就是同步的
+\texttt{will{\Bk}Save{\Bk}Wait{\Bk}Until}），格式化则靠 LSP 客户端插件或 \texttt{:Format};
+Emacs 的 \texttt{eglot} 提供 \texttt{eglot-}\Bk\texttt{format-{\Bk}on-{\Bk}save} 一类的 hook，
+\texttt{M-x} 侧走 \texttt{before-{\Bk}save-{\Bk}hook}。机制名字不同，串的都是同一条链。
 
 \begin{guideline}[title={把保存链固定成一条可复现的路径}]
 团队里最好只留\textbf{一条}保存链：一个默认格式化器、一组
@@ -3453,7 +3457,7 @@ matcher 规则。凡是带个人绝对路径的东西（\texttt{miDebuggerPath} 
         通知。之后才有 \texttt{didOpen} 与各种请求。
   \item DAP：客户端发 \texttt{initialize}（带客户端能力）$\to$ adapter 回
         自身能力 $\to$ adapter 发 \texttt{initialized} \emph{事件}。
-        之后客户端下断点、发 \texttt{launch}/\texttt{attach}、再 \texttt{configurationDone}。
+        之后客户端下断点、发 \texttt{launch}/{\Bk}\texttt{attach}、再 \texttt{configurationDone}。
   \item 方向差异很关键：LSP 的 \texttt{initialized} 是\textbf{客户端发出去}的通知，
         DAP 的 \texttt{initialized} 是\textbf{服务器发出来}的事件。把它俩记反，
         写客户端时序时必错（第 8 章会真的手写一遍）。
@@ -3492,7 +3496,7 @@ matcher 规则。凡是带个人绝对路径的东西（\texttt{miDebuggerPath} 
 \endhead
 \bottomrule
 \endfoot
-\texttt{spawn\_server()} & 起子进程、接两根管道：POSIX \texttt{fork}/\texttt{execvp}，Windows \texttt{CreateProcess}（约 40 行） \\
+\texttt{spawn\_server()} & 起子进程、接两根管道：POSIX \texttt{fork}/{\Bk}\texttt{execvp}，Windows \texttt{CreateProcess}（约 40 行） \\
 \texttt{frame\_encode()} / \texttt{frame\_read()} & \texttt{Content-Length} 帧的编解码，长度按 UTF-8 字节数（约 30 行） \\
 \texttt{request()} / \texttt{notify()} & 分配自增 id、拼 JSON、写帧；通知不带 id（约 25 行） \\
 读循环线程 & 收帧、按 id 落进 \texttt{pending\_}、回调通知与服务器发起的请求（约 35 行） \\
@@ -3819,7 +3823,7 @@ LLVM 里 \texttt{clang-tools-extra} 有实验性的 LSP 客户端，\CD\ 自身�
 \Fmt\ 一次运行内部大致是四步。理解它们的顺序，就理解了它为什么又强又脆。
 
 \begin{enumerate}
-  \item \textbf{词法切分}。它复用 \CL/\CPP\ 的词法器把源文件切成
+  \item \textbf{词法切分}。它复用 \CL/{\Bk}\CPP\ 的词法器把源文件切成
     \Tp{FormatToken} 序列，每个 token 记住自己的原始空白、是否带行尾注释、
     是否属于宏、是否跨行。这一步\textbf{不做语法分析}，也没有类型信息。
   \item \textbf{语境标注}（\Tp{TokenAnnotator}）。逐个 token 判定它落在什么语境里：
@@ -3843,7 +3847,7 @@ LLVM 里 \texttt{clang-tools-extra} 有实验性的 LSP 客户端，\CD\ 自身�
 \subsection*{三个关键推论}
 \begin{itemize}
   \item \textbf{它不需要编译数据库}。第 2 章里 \CD\ 依赖
-    \texttt{compile\_commands.json}，而 \Fmt\ 只要文件名和一段文本就能工作。
+    \texttt{compile\_{\Bk}commands.json}，而 \Fmt\ 只要文件名和一段文本就能工作。
     未写完的代码、写坏的模板、缺 include 的文件都能格式化，
     所以它可以挂在保存钩子和 CI 上，而不需要先把整个项目编起来。
   \item \textbf{它不是 AST 格式化器}。它不「知道」这段是不是函数定义，只对 token 之间的
@@ -3851,7 +3855,7 @@ LLVM 里 \texttt{clang-tools-extra} 有实验性的 LSP 客户端，\CD\ 自身�
     属性（attribute）与 lambda 捕获——它只能猜。猜错的表现不是崩溃，
     而是\textbf{每次都能格式化成功，但结果不合你意}。
   \item \textbf{宏是二等公民}。\texttt{Q\_OBJECT} 一类靠宏名识别的构造，需要用
-    \texttt{ForEachMacros}、\texttt{StatementMacros} 这样的名单字段显式告诉它，
+    \texttt{For{\Bk}Each{\Bk}Macros}、\texttt{Statement{\Bk}Macros} 这样的名单字段显式告诉它，
     否则宏调用会被当成普通表达式参与断行。
 \end{itemize}
 
@@ -3931,20 +3935,20 @@ diff -u llvm.def my.def | grep -E '^[+-][A-Za-z]'
 
 \subsection{缩进族}\label{sec:ch09-s3-indent}
 
-\texttt{IndentWidth} 是基本步长（\texttt{LLVM}/\texttt{Chromium} 为 2，\texttt{Microsoft}
-为 4），\texttt{ContinuationIndentWidth} 是续行相对第一列多缩进多少（默认 4），
-\texttt{TabWidth} 只决定制表符按几列折算，\texttt{AccessModifierOffset} 常留 \texttt{-1}
+\texttt{IndentWidth} 是基本步长（\texttt{LLVM}/{\Bk}\texttt{Chromium} 为 2，\texttt{Microsoft}
+为 4），\texttt{Continuation{\Bk}Indent{\Bk}Width} 是续行相对第一列多缩进多少（默认 4），
+\texttt{TabWidth} 只决定制表符按几列折算，\texttt{Access{\Bk}Modifier{\Bk}Offset} 常留 \texttt{-1}
 让 \texttt{public:} 比类体少缩进一格（缩进 4 的风格里通常是 \texttt{-4}）。
-\texttt{UseTab} 的取值是 \texttt{Never}、\texttt{ForIndentation}、
-\texttt{ForContinuationAndIndentation}、\texttt{AlignWithSpaces}；
-老配置里的 \texttt{true}/\texttt{false} 仍被接受，新仓库请写枚举名。
+\texttt{UseTab} 的取值是 \texttt{Never}、\texttt{For{\Bk}Indentation}、
+\texttt{For{\Bk}Continuation{\Bk}And{\Bk}Indentation}、\texttt{Align{\Bk}With{\Bk}Spaces}；
+老配置里的 \texttt{true}/{\Bk}\texttt{false} 仍被接受，新仓库请写枚举名。
 
 \texttt{IndentPPDirectives} 管预处理指令的缩进（\texttt{None}、\texttt{AfterHash}、
-\texttt{BeforeHash}），\texttt{PPIndentWidth} 单独给它定步长；
-\texttt{IndentCaseLabels} 决定 \texttt{switch} 里的 \texttt{case} 要不要再进一层；
-\texttt{IndentGotoLabels} 较新版本默认 \texttt{true}；\texttt{NamespaceIndentation} 取
-\texttt{None}、\texttt{Inner}、\texttt{All}；\texttt{LambdaBodyIndentation} 决定 lambda
-体相对签名还是相对外层作用域缩进（\texttt{SignatureLocation}、\texttt{OuterScope}）。
+\texttt{BeforeHash}），\texttt{PPIndent{\Bk}Width} 单独给它定步长；
+\texttt{Indent{\Bk}Case{\Bk}Labels} 决定 \texttt{switch} 里的 \texttt{case} 要不要再进一层；
+\texttt{Indent{\Bk}Goto{\Bk}Labels} 较新版本默认 \texttt{true}；\texttt{Namespace{\Bk}Indentation} 取
+\texttt{None}、\texttt{Inner}、\texttt{All}；\texttt{Lambda{\Bk}Body{\Bk}Indentation} 决定 lambda
+体相对签名还是相对外层作用域缩进（\texttt{Signature{\Bk}Location}、\texttt{OuterScope}）。
 
 \texttt{ColumnLimit} 是所有断行决策的靶心：\texttt{LLVM} 是 80，\texttt{Microsoft} 是 120，
 \texttt{GNU} 是 0 表示不限宽（此时只做空白归一化）。改大它只影响断行位置；
@@ -3953,14 +3957,14 @@ diff -u llvm.def my.def | grep -E '^[+-][A-Za-z]'
 \subsection{大括号：\texttt{BreakBeforeBraces} 与 \texttt{BraceWrapping}}\label{sec:ch09-s3-braces}
 
 七个常用取值加 \texttt{Custom} 的语义差别见表 \ref{tab:ch09-braces}。
-选 \texttt{Custom} 时逐条写 \texttt{BraceWrapping} 子键：\texttt{AfterFunction}、
+选 \texttt{Custom} 时逐条写 \texttt{Brace{\Bk}Wrapping} 子键：\texttt{After{\Bk}Function}、
 \texttt{AfterClass}、\texttt{AfterStruct}、\texttt{AfterEnum}、\texttt{AfterUnion}、
-\texttt{AfterNamespace}、\texttt{AfterControlStatement}（取值有 \texttt{Never}、
+\texttt{After{\Bk}Namespace}、\texttt{After{\Bk}Control{\Bk}Statement}（取值有 \texttt{Never}、
 \texttt{Always}、\texttt{MultiLine}、\texttt{Macro}，更细的还有
 \texttt{TrueMacros}、\texttt{FalseMacros}）、\texttt{BeforeElse}、\texttt{BeforeCatch}、
-\texttt{BeforeWhile}、\texttt{BeforeLambdaBody}、\texttt{AfterCaseLabel}、
-\texttt{AfterExternBlock}、\texttt{IndentBraces}，以及控制「空的 record 要不要拆成三行」的
-\texttt{SplitEmptyRecord}、\texttt{SplitEmptyFunction}、\texttt{SplitEmptyNamespace}。
+\texttt{BeforeWhile}、\texttt{Before{\Bk}Lambda{\Bk}Body}、\texttt{After{\Bk}Case{\Bk}Label}、
+\texttt{After{\Bk}Extern{\Bk}Block}、\texttt{Indent{\Bk}Braces}，以及控制「空的 record 要不要拆成三行」的
+\texttt{Split{\Bk}Empty{\Bk}Record}、\texttt{Split{\Bk}Empty{\Bk}Function}、\texttt{Split{\Bk}Empty{\Bk}Namespace}。
 
 {\small
 \begin{longtable}{%
@@ -3994,17 +3998,17 @@ diff -u llvm.def my.def | grep -E '^[+-][A-Za-z]'
 
 \subsection{允许单行的那几个开关}\label{sec:ch09-s3-short}
 
-\texttt{Allow\-Short\-If\-State\-ments\-On\-ASingleLine} 的取值是 \texttt{Never}、
-\texttt{WithoutElse}、\texttt{AllIfElseAndElse}、\texttt{All}；布尔值 \texttt{true} 与
+\texttt{Allow\-Short\-If\-State\-ments\-On\-ASingle{\Bk}Line} 的取值是 \texttt{Never}、
+\texttt{WithoutElse}、\texttt{All{\Bk}If{\Bk}Else{\Bk}And{\Bk}Else}、\texttt{All}；布尔值 \texttt{true} 与
 \texttt{false} 是旧写法，大致等价于 \texttt{All} 与 \texttt{Never}。
-这个键的带后缀变体（\texttt{WithoutAssertions} 一类）在不同 LLVM 版本上拼法不同，
+这个键的带后缀变体（\texttt{Without{\Bk}Assertions} 一类）在不同 LLVM 版本上拼法不同，
 \textbf{一律以 \Opt{dump-config} 的输出为准}。
-\texttt{AllowShortFunctionsOnASingleLine} 取 \texttt{None}、\texttt{Empty}、\texttt{Inline}、
+\texttt{Allow{\Bk}Short{\Bk}Functions{\Bk}OnASingle{\Bk}Line} 取 \texttt{None}、\texttt{Empty}、\texttt{Inline}、
 \texttt{All}，其中 \texttt{Empty} 只把空函数体收成一行，是最不容易引起争议的档位。
-\texttt{AllowShortLambdasOnASingleLine} 取 \texttt{None}、\texttt{Empty}、\texttt{Inline}、
-\texttt{All}。同一族还有 \texttt{AllowShortBlocksOnASingleLine}、
-\texttt{AllowShortCaseLabelsOnASingleLine}、\texttt{AllowShortLoopsOnASingleLine}、
-\texttt{AllowShortEnumsOnASingleLine}，语义都是「够短就别拆」。
+\texttt{Allow{\Bk}Short{\Bk}Lambdas{\Bk}OnASingle{\Bk}Line} 取 \texttt{None}、\texttt{Empty}、\texttt{Inline}、
+\texttt{All}。同一族还有 \texttt{Allow{\Bk}Short{\Bk}Blocks{\Bk}OnASingle{\Bk}Line}、
+\texttt{Allow{\Bk}Short{\Bk}Case{\Bk}Labels{\Bk}OnASingle{\Bk}Line}、\texttt{Allow{\Bk}Short{\Bk}Loops{\Bk}OnASingle{\Bk}Line}、
+\texttt{Allow{\Bk}Short{\Bk}Enums{\Bk}OnASingle{\Bk}Line}，语义都是「够短就别拆」。
 
 这一族是格式化争议的最大来源：同一段 \texttt{if (x) return;} 在四种配置下有四种长相，
 而且每一种都「合法」。团队协商时只需要问一个问题——\textbf{提前返回要不要独占一行}。
@@ -4075,12 +4079,12 @@ diff -u llvm.def my.def | grep -E '^[+-][A-Za-z]'
 想要「左括号后立刻换行、右括号独占一行」的视觉效果，就把它们关掉并配
 \texttt{AlignAfterOpenBracket: BreakOnClose}。
 
-断行方向相关的还有：\texttt{BreakBefore\Bk BinaryOperators}（\texttt{None}、
-\texttt{NonAssignment}、\texttt{All}）、\texttt{BreakBefore\Bk TernaryOperators}（布尔，
-决定 \texttt{?:} 落在上一行尾还是下一行首）、\texttt{AlwaysBreak\Bk AfterReturnType}
+断行方向相关的还有：\texttt{Break{\Bk}Before\Bk Binary{\Bk}Operators}（\texttt{None}、
+\texttt{Non{\Bk}Assignment}、\texttt{All}）、\texttt{Break{\Bk}Before\Bk Ternary{\Bk}Operators}（布尔，
+决定 \texttt{?:} 落在上一行尾还是下一行首）、\texttt{Always{\Bk}Break\Bk After{\Bk}Return{\Bk}Type}
 （\texttt{None}、\texttt{All}、\texttt{TopLevel}，让返回类型单独一行；
-同名作用更窄的 \texttt{AlwaysBreak\Bk AfterDefinition\Bk ReturnType} 已废弃）、
-\texttt{AlwaysBreak\Bk BeforeMultilineStrings}、\texttt{BreakStringLiterals}
+同名作用更窄的 \texttt{Always{\Bk}Break\Bk After{\Bk}Definition\Bk Return{\Bk}Type} 已废弃）、
+\texttt{Always{\Bk}Break\Bk Before{\Bk}Multiline{\Bk}Strings}、\texttt{Break{\Bk}String{\Bk}Literals}
 （超长字符串字面量是否按词断开；关掉它会容忍超列）。
 
 构造器与继承列表方向上则是三个字段：
@@ -4100,9 +4104,9 @@ diff -u llvm.def my.def | grep -E '^[+-][A-Za-z]'
 \subsection{penalty：只在明显不对时才动}\label{sec:ch09-s4-penalty}
 
 最短路径求解的代价函数由一组「惩罚」字段构成，思路是：超出一列一个字符收多少代价
-（\texttt{PenaltyExcessCharacter}）、返回类型单独占一行收多少
-（\texttt{PenaltyReturnTypeOnItsOwnLine}）、在第一个调用参数处断收多少
-（\texttt{PenaltyBreakBeforeFirstCallParameter}），以及在赋值号后断、在注释里断、
+（\texttt{Penalty{\Bk}Excess{\Bk}Character}）、返回类型单独占一行收多少
+（\texttt{Penalty{\Bk}Return{\Bk}Type{\Bk}On{\Bk}Its{\Bk}Own{\Bk}Line}）、在第一个调用参数处断收多少
+（\texttt{Penalty{\Bk}Break{\Bk}Before{\Bk}First{\Bk}Call{\Bk}Parameter}），以及在赋值号后断、在注释里断、
 在 \texttt{<} 模板参数处断各收多少。这一族的键名在版本之间有增删与改名，
 所以\textbf{唯一可靠的做法是先 \Opt{dump-config} 再改}。
 
@@ -4113,22 +4117,22 @@ diff -u llvm.def my.def | grep -E '^[+-][A-Za-z]'
 
 \subsection{注释、空行与结构整理}\label{sec:ch09-s4-comment}
 
-\texttt{ReflowComments} 会把过长的普通注释按词重排（\texttt{LLVM} 默认开）。
-它和 \texttt{MaxEmptyLinesToKeep}（默认 1）、
-\texttt{KeepEmptyLinesAtTheStartOfBlocks}（\texttt{false} 表示块首空行删掉）、
-\texttt{SeparateDefinitionBlocks}（\texttt{Leave}、\texttt{Skip}、\texttt{Always}，
-定义之间强制留空行）、\texttt{EmptyLineBeforeAccessModifier}
-（\texttt{LogicalBlock}、\texttt{Never}、\texttt{Preserve}、\texttt{Always}）
+\texttt{Reflow{\Bk}Comments} 会把过长的普通注释按词重排（\texttt{LLVM} 默认开）。
+它和 \texttt{Max{\Bk}Empty{\Bk}Lines{\Bk}To{\Bk}Keep}（默认 1）、
+\texttt{Keep{\Bk}Empty{\Bk}Lines{\Bk}At{\Bk}The{\Bk}Start{\Bk}Of{\Bk}Blocks}（\texttt{false} 表示块首空行删掉）、
+\texttt{Separate{\Bk}Definition{\Bk}Blocks}（\texttt{Leave}、\texttt{Skip}、\texttt{Always}，
+定义之间强制留空行）、\texttt{Empty{\Bk}Line{\Bk}Before{\Bk}Access{\Bk}Modifier}
+（\texttt{Logical{\Bk}Block}、\texttt{Never}、\texttt{Preserve}、\texttt{Always}）
 共同决定纵向密度。
 
 \texttt{CommentPragmas} 是一个正则，声明「以这些词开头的注释是有意标记，别重排」，
 例如文档注释的标记、自己团队的 \texttt{NOLINT} 前缀。这是让 \Fmt\ 尊重注释语义的
 正规入口，比把注释整段包进 \texttt{clang-format off} 好得多（见 \ref{sec:ch09-s6}）。
 
-\texttt{FixNamespaceComments} 会补全或删掉命名空间结尾的
-\texttt{// namespace foo} 注释，配合 \texttt{ShortNamespaceLines} 决定多少行之内的
-短命名空间可以不写这条注释；\texttt{CompactNamespaces} 决定
-\texttt{namespace a \{ namespace b \}} 能否并成一行；\texttt{Cpp11BracedListStyle}
+\texttt{Fix{\Bk}Namespace{\Bk}Comments} 会补全或删掉命名空间结尾的
+\texttt{// namespace foo} 注释，配合 \texttt{Short{\Bk}Namespace{\Bk}Lines} 决定多少行之内的
+短命名空间可以不写这条注释；\texttt{Compact{\Bk}Namespaces} 决定
+\texttt{namespace a \{ namespace b \}} 能否并成一行；\texttt{Cpp11{\Bk}Braced{\Bk}List{\Bk}Style}
 让花括号初始化列表按 \cpp{11} 之后的习惯排版（内部不加空格、逗号后加空格）；
 \texttt{Standard}（例如 \texttt{c++17}、\texttt{Latest}）影响若干字段的默认组合，
 团队里请写同一个值。表 \ref{tab:ch09-fields} 把本章字段按「要不要协商」重新排了一次。
@@ -4182,10 +4186,10 @@ diff -u llvm.def my.def | grep -E '^[+-][A-Za-z]'
     数字小的组排前面；\texttt{SortPriority} 可以只影响排序而不影响分组。
     正则匹配的是\textbf{引号或尖括号里的路径文本}，所以 \texttt{"foo.h"} 与
     \texttt{<foo.h>} 是两条不同的通道，写规则时两边都要覆盖。
-  \item \texttt{MainIncludeStyle} 决定「与本翻译单元同名的那个 include」落在哪一组：
-    \texttt{RegexBased}（默认，用 \texttt{Include\Bk IsMainRegex} 判定）或
-    \texttt{CaseSensitive\Bk RegexBased}；\texttt{Include\Bk IsMainRegex} 默认容忍
-    \texttt{-inl}、\texttt{\_test} 一类的后缀，\texttt{Include\Bk IsMainSourceRegex}
+  \item \texttt{Main{\Bk}Include{\Bk}Style} 决定「与本翻译单元同名的那个 include」落在哪一组：
+    \texttt{RegexBased}（默认，用 \texttt{Include\Bk Is{\Bk}Main{\Bk}Regex} 判定）或
+    \texttt{Case{\Bk}Sensitive\Bk Regex{\Bk}Based}；\texttt{Include\Bk Is{\Bk}Main{\Bk}Regex} 默认容忍
+    \texttt{-inl}、\texttt{\_test} 一类的后缀，\texttt{Include\Bk Is{\Bk}Main{\Bk}Source{\Bk}Regex}
     管源文件侧的判定。
   \item 一条实用规则：把「本项目自己的头」设成最小 \texttt{Priority}，
     系统头与第三方头后置，这样违反依赖方向的引用会出现在最显眼的位置。
@@ -4276,7 +4280,7 @@ void store(Pixel *dst) {
   \texttt{.clang-format} 里写 \texttt{Disable: true} 会让整个文件原样不动，
   看起来「解决了」风格争论，实际把问题永久留在仓库里：这个目录的代码从此不受任何字段约束，
   新二进制版本发布时它的 diff 会一次性爆发。
-  正确做法是把有争议的那\textbf{一小段}用 \texttt{clang-format off}/\texttt{skip} 圈起来，
+  正确做法是把有争议的那\textbf{一小段}用 \texttt{clang-format off}/{\Bk}\texttt{skip} 圈起来，
   并在代码评审里要求写明理由；文件级的 \texttt{Disable} 只留给生成代码，
   而且更好的方式是直接在门禁里排除生成目录（第 10 章）。
 \end{warning}
@@ -4374,11 +4378,11 @@ SortIncludes: CaseSensitive
 \end{lstlisting}
 
 四处变化分别来自：续行缩进（\texttt{Continuation\hspace{0pt}IndentWidth}）、
-\texttt{BinPackParameters} 设为 \texttt{false}、
-\texttt{AllowShortIfStatements\hspace{0pt}OnASingleLine}
-管的是 \texttt{if} 本体而大括号仍由 \texttt{BraceWrapping} 决定、
-\texttt{AlignOperands} 与三元的对齐。最后一处空析构被拆成三行是
-\texttt{SplitEmptyFunction} 的效果——如果你的仓库里有大量 \texttt{= default} 的析构，
+\texttt{Bin{\Bk}Pack{\Bk}Parameters} 设为 \texttt{false}、
+\texttt{Allow{\Bk}Short{\Bk}If{\Bk}Statements\hspace{0pt}OnASingleLine}
+管的是 \texttt{if} 本体而大括号仍由 \texttt{Brace{\Bk}Wrapping} 决定、
+\texttt{Align{\Bk}Operands} 与三元的对齐。最后一处空析构被拆成三行是
+\texttt{Split{\Bk}Empty{\Bk}Function} 的效果——如果你的仓库里有大量 \texttt{= default} 的析构，
 记得把它设成 \texttt{false}，否则一次性格式化会造出一堆空块。
 
 \begin{bestpractice}[title={配置只放仓库根，子目录不放覆盖文件}]
@@ -4398,9 +4402,9 @@ SortIncludes: CaseSensitive
     \texttt{.clang-format} 从文件所在目录向上取第一个命中；都没有则
     \Opt{fallback-style}。CI 里写 \Opt{fallback-style=none}。
   \item 真正需要团队协商的字段不到十个：\texttt{ColumnLimit}、\texttt{IndentWidth}、
-    \texttt{UseTab}、\texttt{BreakBeforeBraces}、\texttt{AllowShort*} 一族、
-    \texttt{PointerAlignment}、\texttt{BinPack*}、\texttt{IncludeBlocks} 与
-    \texttt{SortIncludes}、\texttt{ReflowComments}。其余保持默认。
+    \texttt{UseTab}、\texttt{Break{\Bk}Before{\Bk}Braces}、\texttt{AllowShort*} 一族、
+    \texttt{Pointer{\Bk}Alignment}、\texttt{BinPack*}、\texttt{Include{\Bk}Blocks} 与
+    \texttt{Sort{\Bk}Includes}、\texttt{Reflow{\Bk}Comments}。其余保持默认。
   \item 升级 LLVM 之前先 \Opt{dump-config} 存基线，比对键清单再决定何时全量重格式化；
     一次性全量格式化与屏蔽 blame 的做法见第 10 章。
 \end{itemize}
@@ -4423,9 +4427,9 @@ CI 用的二进制版本和本地一致。缺任何一件，仓库最后都会�
     \Opt{backup-file} 决定备份后缀，静默无输出，退出码只反映「有没有读到文件」。
     它适合本地与 pre-commit，不适合门禁。
   \item \textbf{只检查}：\Opt{dry-run}（短写 \texttt{-n}）不改文件，把每一处需要格式化的位置
-    按 \texttt{file:line:col: warning: ... [-Wclang-format-violations]} 打到
+    按 \texttt{file:line:col: warning: ... [-Wclang-{\Bk}format-{\Bk}violations]} 打到
     \textbf{标准错误}；配合 \Opt{Werror} 才返回非零。这是门禁的正确用法。
-  \item \textbf{取差异}：\Opt{output-replacements-xml} 输出机器可读的替换列表
+  \item \textbf{取差异}：\Opt{output-{\Bk}replacements-{\Bk}xml} 输出机器可读的替换列表
     （带 offset、长度与替换文本），可以喂给脚本自己算行列；
     人可读的 unified diff 由 \texttt{git clang-format --diff}（\ref{sec:ch10-s3}）或
     \texttt{clang-format-diff.py} 给出。
@@ -4492,9 +4496,9 @@ git clang-format --diff HEAD -- a.cpp
     与 \texttt{AlignOperands}。第一轮对齐把列撑宽，第二轮就换一种断行方案。
   \item \texttt{ReflowComments} 与带前缀的注释块（例如行首连续的 \texttt{-} 列表、
     ASCII 图）：重排后前缀形状变了，第二次再重排又变回去。
-  \item \texttt{IncludeBlocks: Regroup} 与手写分组冲突：第一轮把组打散重排，
-    第二轮的 \texttt{MainIncludeStyle} 判定结果和第一轮不同（因为第一个 include 变了）。
-  \item \texttt{FixNamespaceComments} 配嵌套命名空间加 \texttt{NamespaceIndentation}
+  \item \texttt{Include{\Bk}Blocks: Regroup} 与手写分组冲突：第一轮把组打散重排，
+    第二轮的 \texttt{Main{\Bk}Include{\Bk}Style} 判定结果和第一轮不同（因为第一个 include 变了）。
+  \item \texttt{Fix{\Bk}Namespace{\Bk}Comments} 配嵌套命名空间加 \texttt{Namespace{\Bk}Indentation}
     的非 \texttt{None} 取值，注释补全与缩进互相牵引。
 \end{itemize}
 
@@ -4849,10 +4853,10 @@ Diagnostics:
   \item 清单不同：CI 只检查 \texttt{git ls-files}（已跟踪文件），
     本地格式化的是工作区里未 \texttt{add} 的新文件；反向也会发生
     （\texttt{.gitignore} 里的文件在 CI 中不存在）。
-  \item 行尾与编码：\texttt{core.autocrlf} 在 Windows 检出为 CRLF，
-    而配置里 \texttt{LineEnding} 或 \texttt{DeriveLineEnding} 让 \Fmt\ 认为应为 LF。
+  \item 行尾与编码：\texttt{core.{\Bk}autocrlf} 在 Windows 检出为 CRLF，
+    而配置里 \texttt{LineEnding} 或 \texttt{Derive{\Bk}Line{\Bk}Ending} 让 \Fmt\ 认为应为 LF。
     CI 与本地用同一个 \texttt{.gitattributes} 是唯一稳妥的办法。
-  \item 只格式化 diff 与格式化全文的差别：本地用 \texttt{git clang-format --staged}
+  \item 只格式化 diff 与格式化全文的差别：本地用 \texttt{git clang-{\Bk}format --staged}
     只动改动行，CI 检查全文——历史遗留的未格式化区域照样报错。
     对策是把门禁也限制在 diff 上（\ref{sec:ch10-s5-list} 的第二段），
     或者按表 \ref{tab:ch10-policy} 选全量策略。
@@ -4863,8 +4867,8 @@ Diagnostics:
   \item 门禁只用 \Opt{dry-run} 加 \Opt{Werror} 加 \Opt{fallback-style=none}；
     回写模式留给本地和 pre-commit。
   \item 先测自洽，再测幂等（列表 \ref{lst:ch10-idem}）；非幂等要改配置而不是改代码。
-  \item 增量格式化靠 \texttt{git clang-format}，全量格式化必须单独成提交，
-    并同步更新 \texttt{.git-blame-ignore-revs}。
+  \item 增量格式化靠 \texttt{git clang-{\Bk}format}，全量格式化必须单独成提交，
+    并同步更新 \texttt{.git-{\Bk}blame-{\Bk}ignore-{\Bk}revs}。
   \item 把 LLVM 版本钉在唯一一处，让 \texttt{rev}、CI 镜像、\CD\ 与
     \Opt{binary} 四个来源都对齐（表 \ref{tab:ch10-version}）。
 \end{itemize}
@@ -4874,7 +4878,7 @@ Diagnostics:
 \chapter{\Lib{uncrustify}、\Lib{astyle} 与 \texttt{gofmt} 之问}\label{ch:other-formatters}
 
 本章把视野拉开：先看 \Fmt\ 之外的两个仍在大量仓库里服役的工具 \Lib{astyle} 与
-\Lib{uncrustify}，再回答一个经常被提问的问题——为什么 \CL/\CPP\ 世界到现在也没有
+\Lib{uncrustify}，再回答一个经常被提问的问题——为什么 \CL/{\Bk}\CPP\ 世界到现在也没有
 一个像 Go 那样唯一、无配置、人人都用的 \texttt{gofmt}。
 这不是怀旧：仓库里往往同时存在三套排版器（老代码用 \Lib{astyle}、新代码用 \Fmt、
 CI 里还有人挂着 \Lib{uncrustify}），它们的输出互相不可幂等，
@@ -4970,9 +4974,9 @@ template <class T>
 它的键族前缀就是它的文档：
 
 \begin{itemize}
-  \item \texttt{nl\_*}：换行。形如 \texttt{nl\_<token>\_<token>}，
-    例如 \texttt{nl\_if\_brace}、\texttt{nl\_brace\_else}、
-    \texttt{nl\_func\_type\_name}，取值多是 \texttt{ignore}/\texttt{add}/\texttt{force}
+  \item \texttt{nl\_*}：换行。形如 \texttt{nl\_{\Bk}<token>\_{\Bk}<token>}，
+    例如 \texttt{nl\_{\Bk}if\_{\Bk}brace}、\texttt{nl\_{\Bk}brace\_{\Bk}else}、
+    \texttt{nl\_{\Bk}func\_{\Bk}type\_{\Bk}name}，取值多是 \texttt{ignore}/{\Bk}\texttt{add}/{\Bk}\texttt{force}
     或行数上下限（\texttt{nl\_max}）。
   \item \texttt{sp\_*}：空白。同样按 token 对命名，
     例如 \texttt{sp\_before\_ptr\_star}、\texttt{sp\_after\_comma}、
@@ -5025,7 +5029,7 @@ uncrustify -c repo.cfg -l cpp --frag --assume-filename old.cpp < part.cpp
   运算符回到同一行，两轮的净效果就可能不为零。
   对策三条：把 cfg 纳入版本控制并注释每个改过的键；钉死工具版本（同一个 tag 或同一个镜像）；
   每次升级先跑第 10 章的幂等自查脚本，再决定要不要接受新版本。
-  真有冲突时，用 \texttt{uncrustify off}/\texttt{on} 注释圈出该段，
+  真有冲突时，用 \texttt{uncrustify off}/{\Bk}\texttt{on} 注释圈出该段，
   别指望规则表自己收敛。
 \end{warning}
 
@@ -5310,8 +5314,8 @@ grep -rn "astyle\|uncrustify" .github .pre-commit-config.yaml tools/
 \begin{itemize}
 \item \textbf{AST matcher 层}：\CPP\ 前端把源码建成抽象语法树后，\texttt{clang::ast\_matchers} 提供一套声明式 DSL——\texttt{decl(...)}、\texttt{callExpr(...)}、\texttt{hasAncestor(...)} 等谓词可以像组合正则表达式一样组合。所谓「对 AST 的正则」就是这个意思：模式声明一次，遍历引擎负责匹配整棵树，规则作者不写递归访问代码。
 \item \textbf{规则实现层}：每个 check 一族一个子目录（\texttt{clang-tidy/}\allowbreak\texttt{bugprone/}、\texttt{clang-tidy/}\allowbreak\texttt{modernize/} 等），内部把 matcher 命中翻译为诊断信息与 fix-it。
-\item \textbf{基类层}\Tp{clang::tidy::ClangTidyCheck}：约定三个必须理解的虚函数——\Fn{registerMatchers}（AST 模式类）、\Fn{check}（命中后动作）、\Fn{storeOptions}（把可配置项落到选项表；需要时还要重写 \Fn{registerOptions} 读回）。
-\item \textbf{模块注册层}\Tp{ClangTidyModule}：一个模块注册一批 check，名字前缀（\texttt{bugprone-}、\texttt{modernize-}）就来自这里。
+\item \textbf{基类层}\Tp{clang::tidy::Clang{\Bk}Tidy{\Bk}Check}：约定三个必须理解的虚函数——\Fn{register{\Bk}Matchers}（AST 模式类）、\Fn{check}（命中后动作）、\Fn{store{\Bk}Options}（把可配置项落到选项表；需要时还要重写 \Fn{register{\Bk}Options} 读回）。
+\item \textbf{模块注册层}\Tp{Clang{\Bk}Tidy{\Bk}Module}：一个模块注册一批 check，名字前缀（\texttt{bugprone-}、\texttt{modernize-}）就来自这里。
 \item \textbf{driver 层}：对每个翻译单元（TU）建 AST、跑全部启用的 check，并把结果汇入统一的诊断列表；带 autofix 的结果由 \Tidy\ 内部的修复回写机制落盘，工具链细节见第 14 章。
 \end{itemize}
 \subsection{自定义 check 骨架}\label{sec:ch12-s1b}
@@ -5441,7 +5445,7 @@ clang-tidy main.cpp -p build --checks='-*,modernize-use-override'
 \item \texttt{CheckOptions}：逐 check 的参数，见 12.4.3。
 \item \texttt{HeaderFilterRegex}：正则决定哪些头文件内的诊断要显示；不写则默认只看被分析的 TU 自身。
 \item \texttt{HeaderFileExtensions} / \texttt{ImplementationFileExtensions}：声明哪些后缀算头/实现文件（默认已含 \texttt{h,hpp,hh} 等，嵌入式项目常要加 \texttt{inc}）。
-\item \texttt{CompilationDatabase}：个别版本的实验键，跨版本脚本请继续用 \texttt{-p} 或 \Opt{compile-commands-dir}，别指望写进配置文件。
+\item \texttt{Compilation{\Bk}Database}：个别版本的实验键，跨版本脚本请继续用 \texttt{-p} 或 \Opt{compile-{\Bk}commands-{\Bk}dir}，别指望写进配置文件。
 \item \texttt{User}：署名，出现在部分诊断与建议文本里。
 \item \texttt{FormatStyle}：autofix 后的重排版风格，\texttt{file} 表示读取 \texttt{.clang-format}（与第 9 章呼应）。
 \item \texttt{WarningsAsErrors}：把指定 check 升级为 error 以便 CI 变红，见 12.5.3。
@@ -5894,7 +5898,7 @@ pt.cpp:2:10: warning: member function 'Scale' can be made static [readability-co
 -  double Scale() const { return 2.0; }
 +  static double Scale() { return 2.0; }
 \end{lstlisting}
-可自动修复；公开类的头文件慎改——去掉 \texttt{this} 依赖是源码级接口变更。本族其余常用项：readability-const-return-type、readability-implicit-bool-conversion、readability-named-parameter、readability-else-after-return、readability-redundant-access-specifiers、readability-avoid-const-params-in-decls、readability-uppercase-literal-suffix（\texttt{3u} 转 \texttt{3U}，可自动修复）、readability-inconsistent-declaration-parameter-name——多为纯 AST、低开销，按口味逐个试开。
+可自动修复；公开类的头文件慎改——去掉 \texttt{this} 依赖是源码级接口变更。本族其余常用项：readability-{\Bk}const-{\Bk}return-{\Bk}type、readability-{\Bk}implicit-{\Bk}bool-{\Bk}conversion、readability-{\Bk}named-{\Bk}parameter、readability-{\Bk}else-{\Bk}after-{\Bk}return、readability-{\Bk}redundant-{\Bk}access-{\Bk}specifiers、readability-{\Bk}avoid-{\Bk}const-{\Bk}params-{\Bk}in-{\Bk}decls、readability-{\Bk}uppercase-{\Bk}literal-{\Bk}suffix（\texttt{3u} 转 \texttt{3U}，可自动修复）、readability-{\Bk}inconsistent-{\Bk}declaration-{\Bk}parameter-{\Bk}name——多为纯 AST、低开销，按口味逐个试开。
 
 \section{cppcoreguidelines 族实战}\label{sec:ch13-s5}
 \subsection{cppcoreguidelines-pro-bounds}\label{sec:ch13-s5a}
@@ -6012,7 +6016,7 @@ bounding of the memory buffer; replace with a length-bounded function. CWE-119 [
 -  strcpy(path, getenv("HOME"));
 +  std::snprintf(path, sizeof(path), "%s", getenv("HOME") ? getenv("HOME") : ".");
 \end{lstlisting}
-无 autofix；\texttt{security.insecureAPI.*} 子族覆盖 gets、strcat、sprintf 等。注意 \texttt{optin.} 前缀的 checker 默认不随 \texttt{clang-analyzer-*} 全开——写选择器时点名 \texttt{clang-analyzer-optin.performance.Padding}。
+无 autofix；\texttt{security.insecureAPI.*} 子族覆盖 gets、strcat、sprintf 等。注意 \texttt{optin.} 前缀的 checker 默认不随 \texttt{clang-{\Bk}analyzer-*} 全开——写选择器时点名 \texttt{clang-{\Bk}analyzer-{\Bk}optin.performance.Padding}。
 \begin{note}[title={analyzer 的成本税}]
 路径敏感引擎在解析循环、状态机、超长函数上可能触发路径爆炸并超时放弃。单 TU 秒级起步，CI 上务必只对增量行跑（第 10 章的门禁思路），或把 analyzer 族拆到夜间全量任务。
 \end{note}
@@ -6084,7 +6088,7 @@ use-after-move & bugprone-use-after-move 独占（运行时无味） & 静态\\
 \end{longtable}}
 
 \section{启用速查表}\label{sec:ch13-s9}
-汇总本章出现过的 check（版本以 clang-tidy 17--19 为基准，升级后先跑 \texttt{--list-checks} 复核）：
+汇总本章出现过的 check（版本以 clang-tidy 17--19 为基准，升级后先跑 \texttt{--list-{\Bk}checks} 复核）：
 {\small
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.28\textwidth} >{\raggedright\arraybackslash}p{0.09\textwidth} >{\raggedright\arraybackslash}p{0.10\textwidth} >{\raggedright\arraybackslash}p{0.09\textwidth} >{\raggedright\arraybackslash}p{0.24\textwidth}}
 \textbf{check} & \textbf{autofix} & \textbf{标准} & \textbf{完整 TU} & \textbf{典型误报场景}\\ \midrule
@@ -6234,10 +6238,10 @@ Diagnostics:
 ...
 \end{lstlisting}
 
-清单 \ref{lst:ch14-fixyaml} 里的字段名要逐字理解：\texttt{MainSourceFile} 是这次分析的入口文件；
-\texttt{DiagnosticName} 给出 check 名，审阅时按它排序与切分；\texttt{FileOffset}
+清单 \ref{lst:ch14-fixyaml} 里的字段名要逐字理解：\texttt{Main{\Bk}Source{\Bk}File} 是这次分析的入口文件；
+\texttt{Diagnostic{\Bk}Name} 给出 check 名，审阅时按它排序与切分；\texttt{FileOffset}
 是诊断本身的位置，而真正执行改写的是 \texttt{Replacements} 列表里的
-\texttt{Offset}/\texttt{Length}/\texttt{ReplacementText} 三元组。
+\texttt{Offset}/{\Bk}\texttt{Length}/{\Bk}\texttt{Replacement{\Bk}Text} 三元组。
 注意 \texttt{Length: 0} 表示纯插入；文件末尾独立的一行 \texttt{...} 是 YAML 文档结束标记，
 多份修复会拼成多个文档。
 
@@ -6379,7 +6383,7 @@ LSP 位置 & \textbf{UTF-16} 码元（行内 character） & 第 4 章协议的 \
 
 于是有两个实用结论。第一，含中文注释或字符串的文件里，\textbf{字节偏移}比「字符位置」大，
 手工照行列号推算 \texttt{Offset} 一定错；要算就用脚本按 UTF-8 编码长度算，
-或改用 \texttt{clang-rename} 的 \texttt{-line}/\texttt{-column}
+或改用 \texttt{clang-rename} 的 \texttt{-line}/{\Bk}\texttt{-column}
 （行列从 1 起，列同样按字节计）。
 
 \begin{lstlisting}[style=shellstyle,caption={同一位置的字节偏移与 UTF-16 码元数},label={lst:ch14-offset}]
@@ -6406,12 +6410,12 @@ PY
   \item 定位旧名字：\texttt{-offset}（\textbf{字节偏移}），或 \texttt{-line} 与
         \texttt{-column}；同名多处定义时用 \texttt{-select} 或其短形式 \texttt{-U}
         挑选第几个候选。
-  \item 指定新名字：\texttt{-name=}，可配合 \texttt{-prefix}/\texttt{-suffix}
+  \item 指定新名字：\texttt{-name=}，可配合 \texttt{-prefix}/{\Bk}\texttt{-suffix}
         与 \texttt{-regex} 做模式化批量改名。
-  \item 输出：默认原地改写；\Opt{export-replacements=\allowbreak dir}
+  \item 输出：默认原地改写；\Opt{export-{\Bk}replacements=\allowbreak dir}
         改为写出清单 \ref{lst:ch14-fileentries} 那种 \texttt{FileEntries} 格式，
-        再交给 \Bk clang-apply-replacements\Bk 落地。
-  \item 依赖：\texttt{--compile-commands-dir=build} 提供编译数据库；
+        再交给 \Bk clang-{\Bk}apply-{\Bk}replacements\Bk 落地。
+  \item 依赖：\texttt{--compile-{\Bk}commands-{\Bk}dir=build} 提供编译数据库；
         跨项目改名需要 \texttt{-M=} 指向一份预先建好的索引文件
         （\CD\ 的后台索引可直接复用其磁盘格式）。
 \end{itemize}
@@ -6488,7 +6492,7 @@ clang-query> q
 \end{lstlisting}
 
 会话里的命令记不住不如写成脚本：\texttt{:help} 列出全部命令，\texttt{let}
-给 matcher 命名以便复用，\texttt{enable}/\texttt{disable} 切换选项，\texttt{q} 退出。
+给 matcher 命名以便复用，\texttt{enable}/{\Bk}\texttt{disable} 切换选项，\texttt{q} 退出。
 批处理用 \texttt{-f=}，把查询文件与源文件、编译参数一起交给 CI，
 就得到一份「本周还剩多少处旧写法」的计数报表；这也是把「重构意图」固化成可复查资产的最省事方式。
 
@@ -6523,9 +6527,9 @@ ctest --test-dir build --output-on-failure
 \end{lstlisting}
 
 失败时的回退按步骤对应。第 1 步失败通常是数据库过期，重新生成
-\texttt{compile\_commands.json}（第 2 章）；第 3 步报冲突，回到第 1 步把族拆细，
-或加 \Opt{ignore-insert-conflict}；第 4 步 \texttt{--dry-run --Werror} 失败，
-说明 \texttt{.clang-format} 与替换文本的缩进假设打架，先让 \Fmt\ 单独收敛一次；
+\texttt{compile\_{\Bk}commands.json}（第 2 章）；第 3 步报冲突，回到第 1 步把族拆细，
+或加 \Opt{ignore-{\Bk}insert-{\Bk}conflict}；第 4 步 \texttt{--dry-{\Bk}run --Werror} 失败，
+说明 \texttt{.clang-{\Bk}format} 与替换文本的缩进假设打架，先让 \Fmt\ 单独收敛一次；
 第 5 步编译失败，说明这一族需要人工补 include 或前向声明（第 \ref{sec:ch14-s1} 节的第一条限制），
 最经济的处理是丢弃本批改动、把该 check 从白名单里摘掉。
 回退动作本身交给版本控制：一个族一个提交时，丢弃就是一行 revert。
@@ -6636,7 +6640,7 @@ clang++ -std=c++20 $WARN -Werror -c src/parser.cpp
 \textbf{不需要编译数据库也能工作}，在只有 Makefile、只有散装源码、
 或者构建系统在本机根本跑不起来的仓库里仍然能出结果。
 需要更准的搜索路径与宏定义时，也可以把数据库喂给它：
-\Opt{project=build/\allowbreak compile\_commands.json}，或者照旧手工给 \texttt{-I} 与 \texttt{-D}。
+\Opt{project=build/{\Bk}\allowbreak compile\_commands.json}，或者照旧手工给 \texttt{-I} 与 \texttt{-D}。
 
 \begin{lstlisting}[style=shellstyle,caption={\Bk cppcheck\Bk 的两种形态：门禁与裸扫},label={lst:ch15-cppcheck}]
 # gate form: a real exit code is what makes it a gate
@@ -6842,7 +6846,7 @@ Klocwork 强调增量索引与 IDE 内视图；PC-lint-plus 以精确与可调�
 
 GitHub CodeQL 是这一形态在开源生态里的版本：它把代码抽取成关系数据库，
 用声明式的 QL 语言查询。一个查询文件的结构是「一段元数据注释加一条
-\texttt{from}/\texttt{where}/\texttt{select}」：元数据里的 kind 字段决定它是告警型还是统计型，
+\texttt{from}/{\Bk}\texttt{where}/{\Bk}\texttt{select}」：元数据里的 kind 字段决定它是告警型还是统计型，
 \texttt{from} 声明要遍历的实体变量，\texttt{where} 给出约束，\texttt{select} 输出位置、
 消息与严重度。写查询的本质是在它提供的 \CPP\ 库（AST、CFG、数据流这些关系的集合）上
 做声明式筛选，再配一份同名的查询帮助文档，就能进规则集。
@@ -7099,7 +7103,7 @@ sanitizer 报出的崩溃：按缺陷对待，附最小复现用例与语料，�
 \end{longtable}
 }
 
-\texttt{condition} 的意义是让一份文件适配所有平台。不满足条件的 preset 在 \texttt{cmake}\Opt{list-presets} 里显示为不可用或直接消失，而不是报错，所以矩阵式 CI 可以共用同一份 presets。
+\texttt{condition} 的意义是让一份文件适配所有平台。不满足条件的 preset 在 \texttt{cmake}\Opt{list-{\Bk}presets} 里显示为不可用或直接消失，而不是报错，所以矩阵式 CI 可以共用同一份 presets。
 
 \subsection{buildPresets 与 testPresets}\label{sec:ch16-s3}
 
@@ -7107,7 +7111,7 @@ build preset 的字段少而关键：\texttt{configurePreset} 指向要构建哪
 
 这里有一条必须说清的边界：\textbf{\texttt{nativeToolOptions} 传给的是 ninja 或 make，不是编译器}。写由 \texttt{-k} 与 \texttt{0} 组成的数组让 ninja 在报错后继续构建其它目标是合理的；写 \texttt{-fsanitize=address} 则完全无效，因为编译器根本看不到它。sanitizer 属于编译与链接选项，正确落点是 configure preset 的 \texttt{cacheVariables}。
 
-test preset 除了 \texttt{configurePreset} 外，最重要的是 \texttt{output} 块（\texttt{verbosity}、\texttt{outputOnFailure}）、\texttt{execution} 块（把 \texttt{noTestsAction} 设为 \texttt{error} 可以防止「测试根本没跑」被当成绿色）、\texttt{filter} 与 \texttt{exclude} 块（按名称列表或标签排除慢用例），以及 \texttt{coverage} 块——它只在生成器支持覆盖率时有效，会把 \texttt{llvm-cov} 之类的原始数据留在构建目录里供夜间任务汇总。
+test preset 除了 \texttt{configure{\Bk}Preset} 外，最重要的是 \texttt{output} 块（\texttt{verbosity}、\texttt{output{\Bk}On{\Bk}Failure}）、\texttt{execution} 块（把 \texttt{no{\Bk}Tests{\Bk}Action} 设为 \texttt{error} 可以防止「测试根本没跑」被当成绿色）、\texttt{filter} 与 \texttt{exclude} 块（按名称列表或标签排除慢用例），以及 \texttt{coverage} 块——它只在生成器支持覆盖率时有效，会把 \texttt{llvm-cov} 之类的原始数据留在构建目录里供夜间任务汇总。
 
 \section{把质量工具的开关落进 preset}\label{sec:ch16-s4}
 
@@ -7248,7 +7252,7 @@ ctest --preset asan        # requires the asan build
 \section{唯一入口：verify.sh}\label{sec:ch16-s7}
 
 \begin{bestpractice}[title={一个仓库只允许一个质量门入口脚本}]
-把 configure、build、格式化检查、\Tidy、cppcheck、ctest 收进\texttt{scripts/verify.sh}，本地开发者与 CI 都调用同一个脚本、传同一个 preset 名。文档里只写这一条命令，不再罗列零散的工具调用。任何「CI 里额外多做一步」的需求都必须先落到脚本里，否则本地跑绿、CI 跑红的漂移会在两周内让人开始忽略这个门。
+把 configure、build、格式化检查、\Tidy、cppcheck、ctest 收进\texttt{scripts/{\Bk}verify.sh}，本地开发者与 CI 都调用同一个脚本、传同一个 preset 名。文档里只写这一条命令，不再罗列零散的工具调用。任何「CI 里额外多做一步」的需求都必须先落到脚本里，否则本地跑绿、CI 跑红的漂移会在两周内让人开始忽略这个门。
 \end{bestpractice}
 
 \begin{lstlisting}[style=shellstyle,caption={仓库级质量门脚本 scripts/verify.sh},label={lst:ch16-verify}]
@@ -7288,7 +7292,7 @@ printf "\n=== quality gate rc=%s ===\n" "$rc"
 exit "$rc"
 \end{lstlisting}
 
-脚本里有几处刻意的选择值得说明。第一，格式化步骤跑\textbf{全树}的 \Opt{dry-run} 加 \Opt{Werror}，因为它极快且必须绝对干净，任何一处不一致都要在 PR 里暴露；而 \Tidy\ 步骤只跑\textbf{改动行}（第 10 章的增量策略），全量留给夜间任务的 \texttt{run-clang-tidy}。第二，\texttt{clang-tidy-diff.py} 的 \texttt{-path build} 告诉它去\texttt{build/} 下找 compdb，它与 \texttt{-p1} 一起决定 diff 路径能否解析成绝对路径——这两处配错的症状是「一条检查都不报」，详见第 17 章。第三，cppcheck 用 \Opt{error-exitcode=2} 而不是默认的 0，这样脚本能用同一个 \texttt{rc} 变量收集退出码；\Opt{project=} 直接复用 CMake 导出的 compdb，避免第二套 include 路径来源。
+脚本里有几处刻意的选择值得说明。第一，格式化步骤跑\textbf{全树}的 \Opt{dry-run} 加 \Opt{Werror}，因为它极快且必须绝对干净，任何一处不一致都要在 PR 里暴露；而 \Tidy\ 步骤只跑\textbf{改动行}（第 10 章的增量策略），全量留给夜间任务的 \texttt{run-{\Bk}clang-{\Bk}tidy}。第二，\texttt{clang-{\Bk}tidy-{\Bk}diff.py} 的 \texttt{-path build} 告诉它去\texttt{build/} 下找 compdb，它与 \texttt{-p1} 一起决定 diff 路径能否解析成绝对路径——这两处配错的症状是「一条检查都不报」，详见第 17 章。第三，cppcheck 用 \Opt{error-{\Bk}exitcode=2} 而不是默认的 0，这样脚本能用同一个 \texttt{rc} 变量收集退出码；\Opt{project=} 直接复用 CMake 导出的 compdb，避免第二套 include 路径来源。
 
 \begin{lstlisting}[style=shellstyle,caption={夜间全量与本地最小闭环}]
 # Nightly: whole tree, emit a fixes file for the auto PR
@@ -7498,7 +7502,7 @@ CMakePresets 解决「进入正确状态」的成本：一条 \texttt{cmake}~\Op
   \item \textbf{命令行}：工具实际拿到的编译命令是什么。\CD\ 用 \Opt{check} 会原样打印它选中的命令；\Tidy\ 用 \Opt{list-checks} 能确认到底开了哪些检查；\Fmt\ 用 \Opt{dump-config} 打印最终生效的风格。
   \item \textbf{版本}：三个工具的 \Opt{version} 是否同一个 LLVM release，以及它们是否比配置文件里的字段更老。
   \item \textbf{索引}：跨文件能力（引用、实现跳转、全局改名、符号搜索）是否依赖尚未跑完或已被排除的后台索引。
-  \item \textbf{查找顺序}：显式的 \Opt{style}/\Opt{config} 参数、上级目录里的同名文件、全局配置、内置默认值，哪一层赢了。
+  \item \textbf{查找顺序}：显式的 \Opt{style}/{\Bk}\Opt{config} 参数、上级目录里的同名文件、全局配置、内置默认值，哪一层赢了。
 \end{enumerate}
 \end{guideline}
 
@@ -7553,7 +7557,7 @@ clangd --check=src/widget.cpp \
 \begin{itemize}
   \item \textbf{没找到 compdb}：日志出现 \texttt{Failed to find compilation database}。此时 \CD\ 退回 fallback command，只带语言标准与默认搜索路径，项目宏全部缺失。对策是从构建系统导出 compdb（第 2 章），或在 \texttt{.clangd} 的 \texttt{CompileFlags} 段里指定数据库目录。
   \item \textbf{找到了但条目没命中}：文件路径的分隔符或大小写不一致（Windows 高发），或者头文件本身没有条目。\CD\ 会尝试借用同目录源文件的命令，目录约定不成立时就退回 fallback。
-  \item \textbf{命令被改坏了}：外部配置用 \texttt{Add}/\texttt{Remove} 动过编译选项，删掉了必需的 \texttt{-I} 或把 \texttt{-std} 改低。把 \Opt{check} 打印的最终命令行与真实构建行逐字对比。
+  \item \textbf{命令被改坏了}：外部配置用 \texttt{Add}/{\Bk}\texttt{Remove} 动过编译选项，删掉了必需的 \texttt{-I} 或把 \texttt{-std} 改低。把 \Opt{check} 打印的最终命令行与真实构建行逐字对比。
   \item \textbf{编译器不可执行}：开了 \Opt{query-driver} 但路径写错，或驱动不在 \texttt{PATH} 里。后果是系统头与内建宏都取不到，表现为 \texttt{stddef.h not found} 这类基础错误。
 \end{itemize}
 
@@ -7676,7 +7680,7 @@ note: parameter declared here
 \begin{itemize}
   \item \textbf{位置}：\texttt{文件:行:列}，行与列都从 1 开始；列按码元计，第 4 章关于 UTF-16 偏移的结论适用于 LSP 侧的同一位置。
   \item \textbf{等级}：\texttt{error}、\texttt{warning}、\texttt{note} 三级，\texttt{note} 通常承载补充位置而不是独立问题。
-  \item \textbf{来源标记}：行尾方括号里是 check 名。\Tidy\ 自己的检查是可读的族名（例如 \texttt{bugprone-\allowbreak use-after-move}）；来自 clang 的编译器诊断被包装成 \texttt{clang-diagnostic-xxx}，对应原始的 \texttt{-Wxxx} 开关。看到 \texttt{clang-diagnostic-} 前缀，就该去调警告开关，而不是在 \texttt{Checks} 里找它。
+  \item \textbf{来源标记}：行尾方括号里是 check 名。\Tidy\ 自己的检查是可读的族名（例如 \texttt{bugprone-\allowbreak use-{\Bk}after-{\Bk}move}）；来自 clang 的编译器诊断被包装成 \texttt{clang-{\Bk}diagnostic-{\Bk}xxx}，对应原始的 \texttt{-Wxxx} 开关。看到 \texttt{clang-{\Bk}diagnostic-} 前缀，就该去调警告开关，而不是在 \texttt{Checks} 里找它。
   \item \textbf{补充信息}：\texttt{note} 或 related information 行指出「根因位置」或另一个相关文件，多数误判来自只读第一行。
   \item \textbf{fix-it 提示}：\texttt{replace 'x' with 'y'} 这类行给出可直接构造的替换，\Tidy\ 的 \Opt{fix} 与 \Opt{export-fixes} 就是把它们变成补丁。
 \end{itemize}
@@ -7698,7 +7702,7 @@ note: parameter declared here
   \item 在多个目录放 \texttt{.clang-format}：查找顺序是就近优先，多份必然漂移。
   \item 认为 \CD\ 报错就等于代码错：先确认它是按真实构建的编译命令在解析。
   \item 把 sanitizer 当静态分析：它们需要真实执行路径，覆盖不到的分支永远报不出来（第 15 章）。
-  \item 忽略 \texttt{clang-diagnostic-} 前缀：它说明问题属于编译器警告集，不属于某个 \Tidy\ check。
+  \item 忽略 \texttt{clang-{\Bk}diagnostic-} 前缀：它说明问题属于编译器警告集，不属于某个 \Tidy\ check。
   \item 指望 code action 修一切：能否自动修取决于插件与 check 是否提供 fix，缺 fix 时它只给建议。
 \end{enumerate}
 
@@ -7874,7 +7878,7 @@ Windows 上条目匹配不到 & 分隔符与盘符大小写混用 & \Opt{check} 
 \endlastfoot
 \texttt{AfterCaseLabel} & case 标签后的大括号 & 与 \texttt{Attach} 一致 \\
 \texttt{AfterClass} & 类与结构体 & \texttt{false} 或 \texttt{true} \\
-\texttt{AfterControlStatement} & \texttt{if}/\texttt{for}/\texttt{while} & \texttt{MultiLine} 折中 \\
+\texttt{AfterControlStatement} & \texttt{if}/{\Bk}\texttt{for}/{\Bk}\texttt{while} & \texttt{MultiLine} 折中 \\
 \texttt{AfterEnum}、\texttt{AfterStruct} & 枚举与结构体 & 常取 \texttt{true} \\
 \texttt{AfterFunction} & 函数定义与声明可分别设置 & 定义 \texttt{true} \\
 \texttt{AfterNamespace} & 命名空间 & \texttt{false} 居多 \\
@@ -7971,7 +7975,7 @@ Windows 上条目匹配不到 & 分隔符与盘符大小写混用 & \Opt{check} 
 
 \section{\texttt{.clangd} 配置速查}\label{sec:appA-s4}
 
-\CD\ 的配置分全局与项目两层：全局文件在用户配置目录的 \texttt{clangd/\allowbreak config.yaml}，项目文件是仓库（或任意上级目录）里的 \texttt{.clangd}。两者字段同名，项目文件优先级更高；同一目录还可放 \texttt{.clangd} 目录存放多份条件配置。下表的「作用域」列指该键是否可被 \texttt{If} 条件限定。
+\CD\ 的配置分全局与项目两层：全局文件在用户配置目录的 \texttt{clangd/{\Bk}\allowbreak config.yaml}，项目文件是仓库（或任意上级目录）里的 \texttt{.clangd}。两者字段同名，项目文件优先级更高；同一目录还可放 \texttt{.clangd} 目录存放多份条件配置。下表的「作用域」列指该键是否可被 \texttt{If} 条件限定。
 
 {\footnotesize
 \begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.28\textwidth}
@@ -7989,7 +7993,7 @@ Windows 上条目匹配不到 & 分隔符与盘符大小写混用 & \Opt{check} 
 \endhead
 \bottomrule
 \endlastfoot
-\texttt{If} & \texttt{PathPrefix}、\texttt{FilenameRegex}、\texttt{Directory}、\texttt{Index} 及 \texttt{AnyOf}/\texttt{AllOf}/\texttt{Not} & —— & 给整段配置设定生效条件 \\
+\texttt{If} & \texttt{PathPrefix}、\texttt{FilenameRegex}、\texttt{Directory}、\texttt{Index} 及 \texttt{AnyOf}/{\Bk}\texttt{AllOf}/{\Bk}\texttt{Not} & —— & 给整段配置设定生效条件 \\
 \texttt{CompileFlags.\allowbreak Compilation-\allowbreak Database} & 目录路径，默认为工作目录向上查找 & 是 & 指定 compdb 位置 \\
 \texttt{CompileFlags.Add} & 字符串列表，追加到编译命令尾部 & 是 & 补标准、宏、搜索路径 \\
 \texttt{CompileFlags.Remove} & 字符串列表，支持尾随 \texttt{*} 通配 & 是 & 删掉 clang 不认的参数 \\

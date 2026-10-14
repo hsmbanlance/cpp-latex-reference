@@ -441,6 +441,10 @@
 \makeindex
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 % ==================== 封面 ====================
@@ -564,7 +568,7 @@ add_library(mylib src/mylib.cpp)  (*@\# 类型由 BUILD\_SHARED\_LIBS 决定@*)
 
 \section{Modern CMake：目标属性}
 
-{\sloppy Modern CMake 的核心理念是 \textbf{一切皆目标}。避免使用目录级命令（如 \Fn{include\_directories}），改为目标级命令：\par}
+{\sloppy Modern CMake 的核心理念是 \textbf{一切皆目标}。避免使用目录级命令（如 \Fn{include\_\allowbreak{}directories}），改为目标级命令：\par}
 
 \cmakelabel
 \begin{lstlisting}[style=cmakestyle]
@@ -647,7 +651,7 @@ target_link_libraries(myapp PRIVATE
 \end{lstlisting}
 
 \begin{note}
-\Fn{find\_package} 的搜索路径受 \Tp{CMAKE\_PREFIX\_PATH} 影响。安装库时指定 \Tp{-DCMAKE\_INSTALL\_PREFIX=/path}，使用者将同一路径加入 \Tp{CMAKE\_PREFIX\_PATH} 即可发现。
+\Fn{find\_\allowbreak{}package} 的搜索路径受 \Tp{CMAKE\_\allowbreak{}PREFIX\_\allowbreak{}PATH} 影响。安装库时指定 \Tp{-DCMAKE\_\allowbreak{}INSTALL\_\allowbreak{}PREFIX=/path}，使用者将同一路径加入 \Tp{CMAKE\_\allowbreak{}PREFIX\_\allowbreak{}PATH} 即可发现。
 \end{note}
 
 \section{FetchContent：下载时依赖}
@@ -1700,7 +1704,7 @@ target_compile_features(nativelib PRIVATE cxx_std_20)
 CMake 在 NDK 环境中会收到以下预定义变量：
 
 \begin{guideline}[title=NDK CMake 变量]
-\begin{tabularx}{\textwidth}{lX}
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X}
 \toprule
 \textbf{变量} & \textbf{说明} \\
 \midrule
@@ -1716,7 +1720,7 @@ CMake 在 NDK 环境中会收到以下预定义变量：
 
 \section{ndk-build}
 
-{\sloppy\Tp{ndk-build} 是 NDK 的旧式构建系统，使用 \Tp{Android.mk}（Makefile 方言）和 \Tp{Application.mk}：\par}
+{\sloppy\Tp{ndk-build} 是 NDK 的旧式构建系统，使用 \Tp{Android.mk}（Makefile 方言）和 \Tp{Application.\allowbreak{}mk}：\par}
 
 \androidlabel
 \begin{lstlisting}[style=bashstyle]

@@ -221,6 +221,10 @@
 \newcommand{\seqkw}[1]{\seqsplit{\texttt{#1}}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -302,7 +306,7 @@ NTTP 的三条不变量：
 \cpp{17} 标准（[\texttt{temp.arg.nontype}]）规定 NTTP 的类型必须是以下之一：
 
 \begin{enumerate}
-  \item 整型（包括 \kw{bool}、\kw{char}、\kw{wchar\_t}、\kw{char16\_t}、\kw{char32\_t}、各种 \kw{int}/\kw{unsigned}）。
+  \item 整型（包括 \kw{bool}、\kw{char}、\kw{wchar\_t}、\kw{char16\_t}、\kw{char32\_t}、各种 \kw{int}/\allowbreak{}\kw{unsigned}）。
   \item 枚举类型。
   \item 指针类型（指向对象、函数、成员）。
   \item 左值引用类型。
@@ -1139,7 +1143,7 @@ static_assert(!std::is_same_v<decltype(m33), decltype(m44)>);
 
 下表汇总三大编译器对 \cpp{20} NTTP 扩展的支持情况（截至 2026 年初）：
 
-\begin{longtable}{@{}p{4.6cm} p{2.4cm} p{2.4cm} p{2.6cm}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{4.6cm} >{\raggedright\arraybackslash}p{2.4cm} >{\raggedright\arraybackslash}p{2.4cm} >{\raggedright\arraybackslash}p{2.6cm}@{}}
 \toprule
 \textbf{特性} & \textbf{GCC} & \textbf{Clang} & \textbf{MSVC} \\
 \midrule
@@ -1158,7 +1162,7 @@ static_assert(!std::is_same_v<decltype(m33), decltype(m44)>);
 \addlinespace
 \kw{std::array} 作为 NTTP       & 10+    & 12+    & 19.30+ \\
 \addlinespace
-\kw{std::string\_view} 作为 NTTP & 不支持 & 不支持 & 不支持 \\
+\kw{std::\allowbreak{}string\_\allowbreak{}view} 作为 NTTP & 不支持 & 不支持 & 不支持 \\
 \addlinespace
 裸字符串字面量直传 TString（P1423）& 实验性 & 实验性 & 不支持 \\
 \addlinespace
@@ -1320,7 +1324,7 @@ Concepts 把"这个 NTTP 实参合法吗"的检查从晦涩的实例化错误提
 
 \section{后续提案}
 
-\cpp{23}/\cpp{26} 还在继续放宽 NTTP 的限制：
+\cpp{23}/\allowbreak{}\cpp{26} 还在继续放宽 NTTP 的限制：
 
 \begin{itemize}
   \item \textbf{P1423R3}（C++23）：允许\emph{裸字符串字面量}直接传给结构化 NTTP，即 \kw{Field<"id">} 不再需要显式 \kw{TString\{"id"\}}。GCC 13、Clang 17 部分支持。

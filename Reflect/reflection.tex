@@ -181,6 +181,10 @@
 \newcommand{\Tp}[1]{\texttt{#1}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -319,7 +323,7 @@ int main() {
 
 \subsection{雅兰亭（yalantinglibs）}\label{subsec:ylt}
 
-雅兰亭是阿里巴巴开源的现代 C++20 工具库，其 \texttt{\seqsplit{struct\_unpack}} 和 \texttt{iguana} 组件提供了基于聚合体的反射能力。雅兰亭的核心优势是深度整合序列化（JSON/\allowbreak XML/\allowbreak Protobuf/\allowbreak YAML）和 RPC 框架。
+雅兰亭是阿里巴巴开源的现代 C++20 工具库，其 \texttt{\seqsplit{struct\_unpack}} 和 \texttt{iguana} 组件提供了基于聚合体的反射能力。雅兰亭的核心优势是深度整合序列化（JSON/\allowbreak{}\allowbreak XML/\allowbreak{}\allowbreak Protobuf/\allowbreak{}\allowbreak YAML）和 RPC 框架。
 
 \begin{lstlisting}[caption={雅兰亭: 聚合体序列化与反射}]
 #include <ylt/reflection/user_reflect_macro.hpp>
@@ -998,7 +1002,7 @@ std::cout << rp->name()->c_str();  // "Alice"
 \begin{table}[H]
 \centering
 \caption{反射序列化 vs Protobuf / FlatBuffers}
-\begin{tabularx}{\textwidth}{l p{4cm} p{4cm}}
+\begin{tabular}{l >{\raggedright\arraybackslash}p{4cm} >{\raggedright\arraybackslash}p{4cm}}
 \toprule
 \textbf{维度} & \textbf{反射序列化} & \textbf{Protobuf / FlatBuffers} \\
 \midrule
@@ -1023,7 +1027,7 @@ std::cout << rp->name()->c_str();  // "Alice"
 \addlinespace
 \textbf{自描述} & 可内嵌字段名 & 需附带 .proto 或反射服务 \\
 \bottomrule
-\end{tabularx}
+\end{tabular}
 \end{table}
 
 \subsection{选型指南}
@@ -1132,7 +1136,7 @@ class ReflectDemo {
 \begin{table}[H]
 \centering
 \caption{Java/C\# 反射 vs C++ 反射}
-\begin{tabularx}{\textwidth}{l p{3.5cm} p{5cm}}
+\begin{tabular}{l >{\raggedright\arraybackslash}p{3.5cm} >{\raggedright\arraybackslash}p{5cm}}
 \toprule
 \textbf{维度} & \textbf{Java / C\#} & \textbf{C++} \\
 \midrule
@@ -1158,7 +1162,7 @@ class ReflectDemo {
 \addlinespace
 安全性 & 沙箱 + SecurityManager & 无标准安全模型 \\
 \bottomrule
-\end{tabularx}
+\end{tabular}
 \end{table}
 
 Java 和 C\# 的反射建立在托管运行时之上：每个类在运行时都保留完整的类型信息（字段名、方法签名、注解等）。这种 ``pay for everything'' 的模型换来了极大的动态性——可以在运行时按字符串名查找任何类型和成员，可以动态加载程序集，可以绕过访问控制。
@@ -1183,7 +1187,7 @@ C++ 的哲学恰恰相反。标准 C++ 在编译后不保留任何类型名称�
 \caption{C++ 反射方案综合对比}
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabularx}{\textwidth}{
+\begin{tabular}{
   >{\raggedright\arraybackslash}p{2.5cm}
   >{\centering\arraybackslash}p{2.2cm}
   >{\centering\arraybackslash}p{2.2cm}
@@ -1205,7 +1209,7 @@ C++ 的哲学恰恰相反。标准 C++ 在编译后不保留任何类型名称�
 \textbf{C++ 标准} & $\ge$14/$\ge$20 & $\ge$20 & $\ge$11 & $\ge$11 & 26 \\
 \textbf{生态成熟度} & 高 & 中高 & 中 & 极高 & 未实现 \\
 \bottomrule
-\end{tabularx}
+\end{tabular}
 
 \vspace{4pt}
 \footnotesize{* Boost.PFR 成员名获取需 C++20+ 且仅限 MSVC/GCC/Clang；雅兰亭纯聚合体模式不支持按名查找}

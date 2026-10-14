@@ -302,6 +302,7 @@
 
 % ── Hyperref ──
 \usepackage{hyperref}
+\usepackage{array}
 \hypersetup{
   colorlinks=true,
   linkcolor=blue!70!black,
@@ -312,6 +313,10 @@
 }
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -654,7 +659,7 @@ static void QuickSort<T>(T[] arr, int lo, int hi)
 \end{lstlisting}
 
 \begin{compare}
-\begin{tabularx}{\textwidth}{lX}
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X}
   \textbf{分区策略} & C~和~C\#~使用 Lomuto 分区；C++~版本借助~\Fn{std::partition}~（Hoare 变体），通常更高效。\\
   \textbf{泛型} & C++~迭代器模板可排序~\Tp{vector}、\Tp{deque}、原生数组等；C\#~泛型约束~\Tp{IComparable<T>}~提供类型安全比较。\\
   \textbf{实践} & 生产环境应使用~\Fn{std::sort}~(C++) / \Fn{Array.Sort}~(C\#)，它们使用 Introsort（快排+堆排+插排混合）。\\
@@ -679,11 +684,11 @@ static void QuickSort<T>(T[] arr, int lo, int hi)
 
 \medskip\noindent\textbf{C\#}（\texttt{System}~命名空间）：
 
-\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\begin{tabularx}{\textwidth}{@{}l l >{\raggedright\arraybackslash}X@{}}
   \Fn{Array.Sort} & $\bigO{n\log n}$ & .NET 使用 \textbf{Introsort}（快排+堆排+插排混合），与 C++ \Fn{std::sort}~策略相同。\textbf{不稳定}。对~$\leq 16$~元素用插入排序，递归深度超~$2\log n$~用堆排序。 \\
   \Fn{List<T>.Sort} & $\bigO{n\log n}$ & 内部委托给~\Fn{Array.Sort}，行为一致。 \\
-  \Fn{OrderBy} & $\bigO{n\log n}$ & LINQ 扩展方法，\textbf{稳定排序}（保持相等元素的原始顺序）。延迟执行，调用~\Fn{ToList()}/\Fn{ToArray()}~时触发。 \\
-  \Fn{Array.BinarySearch} & $\bigO{\log n}$ & 内置二分搜索，返回非负下标表示找到；返回负数~$\sim i$~表示未找到，$i$~为插入位置。 \\
+  \Fn{OrderBy} & $\bigO{n\log n}$ & LINQ 扩展方法，\textbf{稳定排序}（保持相等元素的原始顺序）。延迟执行，调用~\Fn{ToList()}/\allowbreak{}\Fn{ToArray()}~时触发。 \\
+  \Fn{Array.\allowbreak{}Binary\allowbreak{}Search} & $\bigO{\log n}$ & 内置二分搜索，返回非负下标表示找到；返回负数~$\sim i$~表示未找到，$i$~为插入位置。 \\
 \end{tabularx}
 
 \medskip
@@ -765,7 +770,7 @@ static T[] MergeSort<T>(T[] arr) where T : IComparable<T>
 
 \begin{compare}
 C++~的~\Fn{std::merge}~使合并步骤一行完成；C\#~使用 range 表达式~\texttt{arr[..mid]}~简化拆分。
-C~版本需手动~\texttt{malloc}/\texttt{free}~管理临时数组，容易遗漏释放导致内存泄漏。
+C~版本需手动~\texttt{malloc}/\allowbreak{}\texttt{free}~管理临时数组，容易遗漏释放导致内存泄漏。
 \end{compare}
 
 \begin{stdspec}[title=归并排序相关标准库]
@@ -852,15 +857,15 @@ static void SiftDown<T>(T[] arr, int n, int i)
 \end{lstlisting}
 
 \begin{compare}
-C++~的~\Fn{std::make\_heap}~+~\Fn{std::sort\_heap}~将堆排序简化为两行调用；
+C++~的~\Fn{std::\allowbreak{}make\_\allowbreak{}heap}~+~\Fn{std::\allowbreak{}sort\_\allowbreak{}heap}~将堆排序简化为两行调用；
 C~和~C\#~需要手动实现 sift-down 逻辑。C\#~没有内置的堆排序函数，
-但~\Tp{PriorityQueue<TElement, TPriority>}~（.NET 6+）提供最小堆支持。
+但~\Tp{Priority\allowbreak{}Queue<TElement, TPriority>}~（.NET 6+）提供最小堆支持。
 \end{compare}
 
 \begin{stdspec}[title=堆操作算法族]
 \textbf{C++}~（\header{algorithm}）提供完整的堆操作原语，均作用于普通容器（\Tp{vector}~等）：
 
-\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\begin{tabularx}{\textwidth}{@{}l l >{\raggedright\arraybackslash}X@{}}
   \Fn{std::make\_heap} & $\bigO{n}$ & 将范围~$[first, last)$~重排为最大堆。Floyd 建堆法（自底向上 sift-down）。 \\
   \Fn{std::push\_heap} & $\bigO{\log n}$ & 假设~$[first, last-1)$~已是堆，将~$last-1$~处新元素上浮到正确位置。 \\
   \Fn{std::pop\_heap} & $\bigO{\log n}$ & 将堆顶与~$last-1$~交换，然后对~$[first, last-1)$~执行 sift-down。堆顶移至末尾。 \\
@@ -873,7 +878,7 @@ C~和~C\#~需要手动实现 sift-down 逻辑。C\#~没有内置的堆排序函�
 （\textbf{最大堆}）。入队~$\bigO{\log n}$、出队~$\bigO{\log n}$、查看堆顶~$\bigO{1}$。
 使用~\Tp{std::greater<T>}~可改为最小堆。不提供 decrease-key 操作。
 
-\medskip\noindent\textbf{C\#}~\Tp{PriorityQueue<TElement, TPriority>}（.NET 6+，\texttt{System.Collections.Generic}）：
+\medskip\noindent\textbf{C\#}~\Tp{Priority\allowbreak{}Queue<TElement, TPriority>}（.NET 6+，\texttt{System.\allowbreak{}Collections.\allowbreak{}Generic}）：
 入队/出队~$\bigO{\log n}$，查看最小优先级~$\bigO{1}$。\textbf{最小堆}（与 C++ 默认相反）。
 同样不支持 decrease-key，需通过惰性删除（enqueue 重复元素 + 跳过过时条目）处理。
 \end{stdspec}
@@ -945,7 +950,7 @@ static void CountingSort(int[] arr)
 
 \begin{compare}
 C++~使用结构化绑定~\texttt{auto [lo, hi]}~和~\Fn{std::partial\_sum}~简化前缀和计算。
-C\#~使用 LINQ 的~\Fn{Min()}/\Fn{Max()}~获取范围。C~需手动管理两个动态数组。
+C\#~使用 LINQ 的~\Fn{Min()}/\allowbreak{}\Fn{Max()}~获取范围。C~需手动管理两个动态数组。
 \end{compare}
 
 % ============================================================
@@ -1020,7 +1025,7 @@ static int BinarySearch<T>(T[] arr, T target)
 \end{lstlisting}
 
 \begin{compare}
-\begin{tabularx}{\textwidth}{lX}
+\begin{tabularx}{\textwidth}{l>{\raggedright\arraybackslash}X}
   \textbf{标准库} & C++~提供~\Fn{std::lower\_bound}、\Fn{std::upper\_bound}、\Fn{std::equal\_range}~三种变体；C\#~提供~\Fn{Array.BinarySearch}（返回负数表示未找到，取反得插入位置）。\\
   \textbf{溢出防护} & C~和~C\#~使用~\texttt{lo + (hi - lo) / 2}~避免整数溢出；C++~的~\Fn{std::lower\_bound}~内部已处理。\\
   \textbf{泛型} & C++~的迭代器接口可用于任意有序容器；C\#~的~\Tp{IComparable<T>}~约束保证比较安全。\\
@@ -1031,7 +1036,7 @@ static int BinarySearch<T>(T[] arr, T target)
 \textbf{C++}~（\header{algorithm}）定义四个二分搜索函数，均要求输入范围已排序，
 接受~\Tp{ForwardIterator}（$\bigO{\log n}$~比较，但前进操作可能~$\bigO{n}$~对于非随机访问迭代器）：
 
-\begin{tabularx}{\textwidth}{@{}l X@{}}
+\begin{tabularx}{\textwidth}{@{}l >{\raggedright\arraybackslash}X@{}}
   \Fn{std::lower\_bound} & 返回指向\textbf{第一个~$\geq$~value}~的元素的迭代器。不存在时返回~\texttt{last}。等价于 Python \texttt{bisect\_left}。 \\
   \Fn{std::upper\_bound} & 返回指向\textbf{第一个~$>$~value}~的元素的迭代器。等价于 Python \texttt{bisect\_right}。 \\
   \Fn{std::equal\_range} & 返回~\texttt{pair(lower\_bound, upper\_bound)}，一次调用获取所有等于 value 的元素范围。 \\
@@ -1040,16 +1045,16 @@ static int BinarySearch<T>(T[] arr, T target)
 
 \medskip
 标准\textbf{要求}比较次数为~$\bigO{\log n}$（精确为~$\lfloor\log_2 n\rfloor + \bigO{1}$），
-但对于~\Tp{ForwardIterator}（如~\Tp{std::list::iterator}），\texttt{advance}~操作使总复杂度为~$\bigO{n}$。
-只有~\Tp{RandomAccessIterator}（如~\Tp{vector::iterator}）才能达到真正的~$\bigO{\log n}$~总时间。
+但对于~\Tp{Forward\allowbreak{}Iterator}（如~\Tp{std::list::iterator}），\texttt{advance}~操作使总复杂度为~$\bigO{n}$。
+只有~\Tp{Random\allowbreak{}Access\allowbreak{}Iterator}（如~\Tp{vector::iterator}）才能达到真正的~$\bigO{\log n}$~总时间。
 
 \medskip\noindent\textbf{C\#}~\Fn{Array.BinarySearch<T>}~和~\Fn{List<T>.BinarySearch}：
 返回非负整数表示找到元素的下标；返回负数~$r$~时，$\sim r$~（按位取反）为应插入位置。
 要求数组已排序且元素实现~\Tp{IComparable<T>}。
 
 \medskip
-\textbf{C++ 有序容器}：\Tp{std::set}/\Tp{std::map}~标准仅要求~$\bigO{\log n}$~的插入/查找/删除，未指定具体实现（主流库多用平衡 BST）。提供~\Fn{find}/\Fn{lower\_bound}/\Fn{upper\_bound}~成员函数。
-\Tp{std::unordered\_set}/\Tp{std::unordered\_map}（哈希表）提供~$\bigO{1}$~平均的~\Fn{find}，但不支持有序查询。
+\textbf{C++ 有序容器}：\Tp{std::set}/\allowbreak{}\Tp{std::map}~标准仅要求~$\bigO{\log n}$~的插入/查找/删除，未指定具体实现（主流库多用平衡 BST）。提供~\Fn{find}/\allowbreak{}\Fn{lower\_\allowbreak{}bound}/\allowbreak{}\Fn{upper\_\allowbreak{}bound}~成员函数。
+\Tp{std::unordered\_\allowbreak{}set}/\allowbreak{}\Tp{std::unordered\_\allowbreak{}map}（哈希表）提供~$\bigO{1}$~平均的~\Fn{find}，但不支持有序查询。
 \end{stdspec}
 
 % ============================================================
@@ -1407,7 +1412,7 @@ static void LevelOrder(TreeNode? root, Action<int> visit)
 \begin{compare}
 C~的~BFS~使用固定大小数组模拟队列（需预估容量）；
 C++~使用~\Tp{std::queue}；C\#~使用~\Tp{Queue<T>}。
-回调方式：C~用函数指针，C++~用~\Tp{std::function}，C\#~用~\Tp{Action<T>}~委托。
+回调方式：C~用函数指针，C++~用~\Tp{std::\allowbreak{}function}，C\#~用~\Tp{Action<T>}~委托。
 \end{compare}
 
 % ── 13. 二叉搜索树 ──
@@ -1889,7 +1894,7 @@ static int Knapsack01(int W, int[] wt, int[] val)
 
 \begin{compare}
 三种语言实现几乎相同，关键区别在于内存管理：
-C~需手动~\texttt{calloc}/\texttt{free}，C++~用~\Tp{vector}~自动释放，C\#~用 GC 管理的数组。
+C~需手动~\texttt{calloc}/\allowbreak{}\texttt{free}，C++~用~\Tp{vector}~自动释放，C\#~用 GC 管理的数组。
 逆序遍历~\texttt{w}~保证每个物品只使用一次（0-1 约束）。
 \end{compare}
 
@@ -2365,7 +2370,7 @@ C\#~使用~\Fn{Array.Clone()}~保存排列快照。
 \begin{stdspec}[title=排列操作]
 \textbf{C++}~（\header{algorithm}）：
 
-\begin{tabularx}{\textwidth}{@{}l X@{}}
+\begin{tabularx}{\textwidth}{@{}l >{\raggedright\arraybackslash}X@{}}
   \Fn{std::next\_permutation} & 将范围重排为字典序的\textbf{下一个}排列。若已是最大排列（降序），则重排为最小排列（升序）并返回~\texttt{false}。\textbf{摊还~$\bigO{1}$}~（每~$n!$~次调用总交换次数为~$\bigO{n!}$）。要求~\Tp{BidirectionalIterator}。\\
   \Fn{std::prev\_permutation} & 对称操作：生成字典序的\textbf{上一个}排列。\\
   \Fn{std::is\_permutation} & 判断两个范围是否为同一集合的排列，$\bigO{n}$~（使用哈希计数）或~$\bigO{n^2}$~（纯比较）。\\
@@ -2492,15 +2497,15 @@ static int KmpSearch(string text, string pat)
 \end{lstlisting}
 
 \begin{compare}
-三种语言实现逻辑相同。C~版本需手动~\texttt{malloc}/\texttt{free}~LPS 数组。
+三种语言实现逻辑相同。C~版本需手动~\texttt{malloc}/\allowbreak{}\texttt{free}~LPS 数组。
 C++~返回~\Tp{vector<int>}~自动管理内存。C\#~使用~\texttt{string}~索引器（\texttt{pat[i]}）
-与 C++ 的~\texttt{string::operator[]}~等价。
+与 C++ 的~\texttt{string::\allowbreak{}operator[]}~等价。
 \end{compare}
 
 \begin{stdspec}[title=标准库字符串搜索]
 标准库均提供内置字符串搜索，实现策略因平台而异：
 
-\begin{tabularx}{\textwidth}{@{}l X@{}}
+\begin{tabularx}{\textwidth}{@{}l >{\raggedright\arraybackslash}X@{}}
   C++ \Fn{std::string::find} & 标准仅要求~$\bigO{nm}$~最差复杂度。libstdc++/libc++ 均使用优化朴素算法，短模式时性能接近 KMP。C++17 提供~\texttt{\seqsplit{boyer\_moore\_searcher}}~和~\texttt{\seqsplit{boyer\_moore\_horspool\_searcher}}~用于长文本搜索。 \\
   C\# \Fn{String.IndexOf} & .NET 6+ 在 x86/x64/ARM64 平台上使用 \textbf{SIMD 向量化}搜索（\texttt{Vector128/256}），对 ASCII 模式可达数 GB/s 吞吐。.NET 8 起对 UTF-16 模式也进行了优化。无 SIMD 平台回退到优化的朴素算法。 \\
   C \Fn{strstr} & C 标准库函数，实现未规定算法。glibc 使用 Two-Way String Matching（$\bigO{n}$~最差），musl 使用优化的朴素算法。 \\
@@ -2586,7 +2591,7 @@ static List<int> RabinKarp(string text, string pat)
 \end{lstlisting}
 
 \begin{compare}
-C++~使用~\Fn{std::string::substr}~验证匹配；C\#~使用~\Fn{string.CompareOrdinal}~避免分配子串。
+C++~使用~\Fn{std::\allowbreak{}string::\allowbreak{}substr}~验证匹配；C\#~使用~\Fn{string.\allowbreak{}Compare\allowbreak{}Ordinal}~避免分配子串。
 哈希冲突时两者都需逐字符验证。
 C~实现类似但需手动管理结果数组的动态扩容。
 \end{compare}
@@ -2648,7 +2653,7 @@ C++~的~\Tp{std::priority\_queue}~同样高效但默认是最大堆，需~\Tp{st
 \textbf{动态规划：}注意空间优化（滚动数组/一维 DP），C++~的~\Tp{vector}~和 C\#~的~\texttt{Span<T>}
 都可以高效实现。
 
-\textbf{字符串匹配：}对于单次匹配，标准库~\Fn{string::find}~(C++) / \Fn{String.IndexOf}~(C\#)~
+\textbf{字符串匹配：}对于单次匹配，标准库~\Fn{string::find}~(C++) / \Fn{String.Index\allowbreak{}Of}~(C\#)~
 通常足够（.NET 使用 SIMD 优化）。KMP/Rabin-Karp 适用于多次匹配或流式匹配场景。
 \end{bestpractice}
 
@@ -3189,7 +3194,7 @@ int largestRectangleArea(vector<int>& heights) {
 \textbf{复杂度}：$\bigO{n}$~时间（每个柱体最多入栈出栈各一次），$\bigO{n}$~空间。
 
 \begin{note}[title=C++20/23 现代特性速查]
-\begin{tabularx}{\textwidth}{@{}l X@{}}
+\begin{tabularx}{\textwidth}{@{}l >{\raggedright\arraybackslash}X@{}}
   \textbf{ranges::sort} & 直接接受容器，无需~\texttt{begin()/end()}。\\
   \textbf{views::filter/transform} & 惰性管道，零拷贝链式操作。\\
   \textbf{views::enumerate} & C++23，提供~\texttt{(index, value)}~结构化绑定。\\

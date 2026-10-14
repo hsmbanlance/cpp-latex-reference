@@ -213,6 +213,10 @@
 \newcommand{\Tp}[1]{\texttt{#1}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -235,7 +239,7 @@
 \chapter{operator new/delete 家族概览}
 % ================================================================
 
-C++ 将内存分配拆分为\textbf{原始内存获取}与\textbf{对象构造}两个层次。\texttt{operator new}/\texttt{operator delete} 仅负责获取与释放原始内存，\texttt{new}/\texttt{delete} 表达式则自动调用构造与析构函数。理解这一区分是掌握全部重载机制的前提。
+C++ 将内存分配拆分为\textbf{原始内存获取}与\textbf{对象构造}两个层次。\texttt{operator new}/\allowbreak{}\texttt{operator delete} 仅负责获取与释放原始内存，\texttt{new}/\allowbreak{}\texttt{delete} 表达式则自动调用构造与析构函数。理解这一区分是掌握全部重载机制的前提。
 
 \section{六个重载点}
 
@@ -390,8 +394,8 @@ void operator delete[](void* ptr, std::size_t) noexcept {
 
 \begin{warning}
 全局重载时，自定义 \texttt{operator new} 不能内部使用 \texttt{new} 表达式，
-否则会导致无限递归。必须使用 \texttt{malloc}/\texttt{free} 或
-\texttt{mmap}/\texttt{munmap} 等底层 API 进行实际内存分配。
+否则会导致无限递归。必须使用 \texttt{malloc}/\allowbreak{}\texttt{free} 或
+\texttt{mmap}/\allowbreak{}\texttt{munmap} 等底层 API 进行实际内存分配。
 \end{warning}
 
 \section{内存分配追踪}
@@ -499,7 +503,7 @@ void* operator new(std::size_t count,
 
 \section{裸机环境：无 malloc 的系统}
 
-在裸机（bare-metal）嵌入式系统中，标准库的 \texttt{malloc}/\texttt{free}
+在裸机（bare-metal）嵌入式系统中，标准库的 \texttt{malloc}/\allowbreak{}\texttt{free}
 可能根本不存在。此时必须全局重载 \texttt{operator new}，从预定义的内存池
 中分配内存。
 
@@ -949,7 +953,7 @@ int main() {
 \begin{itemize}
     \item 作用范围：\texttt{new T} 和 \texttt{delete p} 表达式
     \item 控制目标：对象 \texttt{T} 本身的内存来源
-    \item 触发条件：使用 \texttt{new}/\texttt{delete} 创建/销毁对象
+    \item 触发条件：使用 \texttt{new}/\allowbreak{}\texttt{delete} 创建/销毁对象
     \item 典型场景：对象池、嵌入式裸机、GPU 统一内存
 \end{itemize}
 
@@ -1097,7 +1101,7 @@ std::pmr::vector<float> host_data(
     \item \textbf{全局 operator new}：需要拦截所有分配（内存调试、泄漏检测），
           或在裸机环境中完全替代 \texttt{malloc}。
     \item \textbf{类级别 operator new}：特定类型的对象需要特殊分配位置
-          （对象池、统一内存），且主要通过 \texttt{new}/\texttt{delete} 创建。
+          （对象池、统一内存），且主要通过 \texttt{new}/\allowbreak{}\texttt{delete} 创建。
     \item \textbf{自定义 Allocator}：标准库容器的内部元素需要特殊分配
           （显存、共享内存、NUMA 内存），容器类型在编译时确定。
     \item \textbf{PMR 分配器}：需要在运行时动态切换分配策略，
@@ -1513,7 +1517,7 @@ int main() {
 \begin{itemize}
     \item \texttt{CudaVector} 对象本身在 CUDA 统一内存中。
     \item 对象控制块（\texttt{device\_ptr\_}、\texttt{size\_} 等）可被 GPU 直接访问。
-    \item 需要显式管理显存数据缓冲区的生命周期（构造函数/\allowbreak 析构函数中 \texttt{cudaMalloc}/\texttt{cudaFree}）。
+    \item 需要显式管理显存数据缓冲区的生命周期（构造函数/\allowbreak{}\allowbreak 析构函数中 \texttt{cudaMalloc}/\allowbreak{}\texttt{cudaFree}）。
     \item 适合需要在 GPU kernel 中访问向量元数据（如 size）的场景。
     \item \texttt{delete} 表达式同时释放统一内存中的对象和显存中的数据。
 \end{itemize}
@@ -1613,9 +1617,9 @@ ISO C（6.2.4p2）与 C++（basic.stc）都把对象的存储期（storage durat
   C99 的 VLA & 离开作用域（含异常离开）；
   VLA 离开块即失效 & automatic storage duration \\
 \addlinespace
-手动 & \texttt{new}/\texttt{new[]}、\texttt{malloc}/
-  \texttt{calloc}/\texttt{realloc}、\texttt{strdup} &
-  显式 \texttt{delete}/\texttt{free}，或进程结束 &
+手动 & \texttt{new}/\allowbreak{}\texttt{new[]}、\texttt{malloc}/
+  \texttt{calloc}/\allowbreak{}\texttt{realloc}、\texttt{strdup} &
+  显式 \texttt{delete}/\allowbreak{}\texttt{free}，或进程结束 &
   dynamic storage duration \\
 \addlinespace
 静态 & 全局/命名空间变量、\texttt{static} 局部与成员、
@@ -1794,12 +1798,12 @@ std::pmr::string name(&arena);       // 短生命周期字符串，零 free 成�
 固定容量 & \texttt{std::array}、\texttt{bitset}、
   C 数组 & 无分配器参数：随宿主（栈/堆/静态皆可） \\
 \addlinespace
-适配器 & \texttt{stack}/\texttt{queue} & 分配器来自\emph{底层容器} \\
+适配器 & \texttt{stack}/\allowbreak{}\texttt{queue} & 分配器来自\emph{底层容器} \\
 \addlinespace
 \texttt{std::string} & 分配器 + SSO & 短串住在对象内部（常为栈），
   长串才走分配器 \\
 \addlinespace
-框架容器 & Qt \texttt{QVector}/\texttt{QList}、UE \texttt{TArray} &
+框架容器 & Qt \texttt{QVector}/\allowbreak{}\texttt{QList}、UE \texttt{TArray} &
   走框架自己的分配入口（\texttt{FMemory::Malloc}、Qt 的 \texttt{qMalloc}），
   标准分配器参数不适用 \\
 \bottomrule
@@ -1818,11 +1822,11 @@ C++ 提供三个粒度的落点控制：
 指定地址 & placement \texttt{new (ptr)} & 你给的任意地址（MMIO、
   共享内存、栈缓冲、静态池）；\textbf{不接管释放} \\
 \addlinespace
-全局替换 & 重载 \texttt{::operator new}/\texttt{delete} &
+全局替换 & 重载 \texttt{::operator new}/\allowbreak{}\texttt{delete} &
   整个 TU/程序的所有 \texttt{new}：可转 \texttt{malloc}、
   \texttt{HeapAlloc}、\texttt{mmap}、池 \\
 \addlinespace
-类型替换 & 类内 \texttt{operator new}/\texttt{delete} &
+类型替换 & 类内 \texttt{operator new}/\allowbreak{}\texttt{delete} &
   该类型的专用池（对象大小固定，最适合定长分配器） \\
 \addlinespace
 容器替换 & \texttt{Allocator} 模板参数 / \texttt{pmr} &
@@ -1900,12 +1904,12 @@ void legacy() {
 \begin{itemize}
   \item \textbf{所有权类型化}：\texttt{unique\_ptr} 表示唯一拥有，
         \texttt{shared\_ptr} 表示共享拥有，
-        裸指针/\texttt{weak\_ptr} 表示\emph{借用观察}；
+        裸指针/\allowbreak{}\texttt{weak\_ptr} 表示\emph{借用观察}；
   \item \textbf{释放点确定化}：析构在最后一个拥有者消失的那一刻发生（RAII），
         异常路径同样成立；
   \item \textbf{自定义释放协议}：删除器把``释放''从 \texttt{delete}
         扩展到 \texttt{fclose}、\texttt{CFRelease}、
-        \texttt{CoTaskMemFree} 等库语义；
+        \texttt{Co\allowbreak{}Task\allowbreak{}Mem\allowbreak{}Free} 等库语义；
   \item \textbf{与移动语义协同}：转移所有权成为一次显式的 \texttt{std::move}，
         可被静态检查与 code review 追踪。
 \end{itemize}
@@ -1923,7 +1927,7 @@ void use(Widget& w);     // 借用：明确不接管所有权
 
 \begin{note}[title=智能指针不是``替代裸指针'']
 Core Guidelines 的 F-profile/R-profile 约定：拥有者用
-\texttt{unique\_ptr}/\texttt{shared\_ptr}，借用者用裸指针或引用
+\texttt{unique\_ptr}/\allowbreak{}\texttt{shared\_ptr}，借用者用裸指针或引用
 （\texttt{T*} 表示可空借用、\texttt{T\&} 表示非空借用）。
 \texttt{shared\_ptr} 也不能解决循环引用（需 \texttt{weak\_ptr}）
 与\emph{对象图整体回收}（需 GC 或 arena）。
@@ -2151,7 +2155,7 @@ pool->getThreadExecutor()->post([w = wp<SoundPool>(pool)] {
 （Binder 的 \texttt{BBinder} 用它清理线程状态），
 再等弱计数归零才销毁对象与引用块。
 NDK 侧则没有 \texttt{sp}，只有 C 层的引用计数惯例
-（\texttt{ANativeWindow\_incRef}/\texttt{decRef}、
+（\texttt{ANativeWindow\_incRef}/\allowbreak{}\texttt{decRef}、
 \texttt{AHardwareBuffer\_incRef}），Java/Kotlin 层交给 ART 的 GC。
 
 \begin{compare}[title=为什么 Android 不用 \texttt{std::shared\_ptr}]
@@ -2248,7 +2252,7 @@ Rust 走的是第三条路：所有权与借用时长都写成类型参数，
   \texttt{Box<dyn FnMut()>} 这样的闭包包装 \\
 \addlinespace
 悬垂、迭代器失效、数据竞争都是 UB &
-  借用冲突与 \texttt{Send}/\texttt{Sync} 违反是编译错误 &
+  借用冲突与 \texttt{Send}/\allowbreak{}\texttt{Sync} 违反是编译错误 &
   错误类别相同，报告时机从运行期前移到编译期 \\
 \bottomrule
 \end{longtable}
@@ -2410,7 +2414,7 @@ fn main() {
 \begin{itemize}
   \item \textbf{同样不规定位置}。\texttt{Box::new} 走 \texttt{GlobalAlloc}
         （默认即系统 \texttt{malloc}），
-        \texttt{\#[global\_allocator]} 换成 mimalloc、jemalloc
+        \texttt{\#[global\_\allowbreak{}allocator]} 换成 mimalloc、jemalloc
         与本章全局重载 \texttt{operator new} 是同一粒度的手段。
   \item \textbf{没有类级别重载的稳定等价物}。
         按类型分池要靠自定义分配器（\texttt{allocator\_api} 仍未稳定）
@@ -2461,8 +2465,8 @@ fn get(g: &Graph, id: usize) -> &Node { &g.slots[id] }
         标准库的 \texttt{Vec}、\texttt{Rc}、\texttt{RefCell}
         就是包在 \texttt{unsafe} 外面的安全外壳——
         与第 6.7 节框架把裸指针包成安全句柄是同一手法。
-  \item \texttt{Rc<RefCell<T>>} $\approx$ \texttt{shared\_ptr} 加手工标志位：
-        把编译期检查降级为运行期 \texttt{BorrowMutError}，
+  \item \texttt{Rc<Ref\allowbreak{}Cell<T>>} $\approx$ \texttt{shared\_ptr} 加手工标志位：
+        把编译期检查降级为运行期 \texttt{Borrow\allowbreak{}Mut\allowbreak{}Error}，
         换来的是``多所有者 + 可修改''终于可表达。
   \item 索引 / 句柄代替指针 $\approx$ arena：
         UE 的 \texttt{TWeakObjectPtr} 用（索引，序列号）二元组、
@@ -2506,15 +2510,15 @@ C\#、Java & 运行时（GC 与句柄），程序员不问 &
 \begin{itemize}
   \item \textbf{普通 C++ 对象}：默认 \texttt{unique\_ptr}，
         确需共享再 \texttt{shared\_ptr}，
-        借用一律裸指针或引用（\texttt{T*}/\texttt{T\&}）；
+        借用一律裸指针或引用（\texttt{T*}/\allowbreak{}\texttt{T\&}）；
   \item \textbf{框架对象}：QObject 派生类用父子树 + \texttt{QPointer}，
         UObject 用 \texttt{TObjectPtr} + \texttt{UPROPERTY}，
-        AOSP 原生类用 \texttt{sp}/\texttt{wp}；
+        AOSP 原生类用 \texttt{sp}/\allowbreak{}\texttt{wp}；
         \textbf{不要在同一所有权链上混用两套体系}；
   \item \textbf{非堆资源}：删除器比析构更可靠
-        （\texttt{unique\_ptr<FILE, int(*)(FILE*)>}、
-        \texttt{shared\_ptr<void>(p, dl\_free)}）；
-  \item \textbf{短生命周期批量对象}：优先 arena/\texttt{pmr}
+        （\texttt{unique\_\allowbreak{}ptr<FILE, int(*)(FILE*)>}、
+        \texttt{shared\_\allowbreak{}ptr<void>(p, dl\_\allowbreak{}free)}）；
+  \item \textbf{短生命周期批量对象}：优先 arena/\allowbreak{}\texttt{pmr}
         而不是智能指针：整块回收比逐个计数便宜一个数量级，
         且没有计数开销；
   \item \textbf{跨层边界}：只传\emph{借用}指针 + 长度，
@@ -2533,7 +2537,7 @@ C\#、Java & 运行时（GC 与句柄），程序员不问 &
         是唯一能把位置写进代码的手段，而它不接管释放。
   \item 容器把位置交给\textbf{分配器}（类型参数或 \texttt{pmr} 资源），
         伪容器与视图根本不分配，框架容器走框架自己的分配入口。
-  \item C\# 反过来：\texttt{struct}/\texttt{class} 把位置写进类型声明，
+  \item C\# 反过来：\texttt{struct}/\allowbreak{}\texttt{class} 把位置写进类型声明，
         值类型内联、参考类型必在托管堆，泛型容器无自定义分配器。
   \item 智能指针的目的 = 把所有权写进类型 + 把释放点交给作用域；
         \texttt{auto\_ptr} 因``复制即转走''违背值语义、
@@ -2543,7 +2547,7 @@ C\#、Java & 运行时（GC 与句柄），程序员不问 &
         共同趋势是向 \texttt{std} 靠拢（Qt6 别名 \texttt{unique\_ptr}），
         框架专属指针只用于框架对象。
   \item Rust 把\textbf{借用时长}写成类型参数 \texttt{'a} 并在编译期核对：
-        独占对应 \texttt{Box}、共享对应 \texttt{Rc}/\texttt{Arc}、
+        独占对应 \texttt{Box}、共享对应 \texttt{Rc}/\allowbreak{}\texttt{Arc}、
         弱引用对应 \texttt{Weak}、悬垂对应编译错误。
         但它同样不规定内存位置、泄漏仍是 safe，
         \texttt{unsafe} 与 \texttt{Rc<RefCell>} 就是退回 C++ 式约定的逃逸舱。

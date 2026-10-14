@@ -362,6 +362,10 @@
 \usepackage{seqsplit}
 
 % ===================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -383,7 +387,7 @@ CPU 与外部世界的交互只有两条路：\textbf{读写设备的存储/寄�
 
 本文把这两条路放在同一本书里讲。第~1~章建立硬件访问的分层模型，区分 PIO 与 MMIO、解释缓存一致性为何是驱动正确性的第一难题；第~2~章深入 PCIe 与 MMIO 实战：配置空间、BAR、\texttt{mmap}、doorbell、write-combining 与内存屏障；第~3~章讲 DMA 与中断：描述符环、coherent 与 streaming DMA、MSI-X、IOMMU；第~4~章转向低速总线协议 I2C（IIC）、SPI、UART 与 GPIO，说明"协议"与"地址"两类硬件接口的本质差异；第~5~章进入 GPU，讲 CUDA 的 SIMT 执行模型、内存层级与核函数编写；第~6~章讲 CUDA 的主机—设备内存模型与流并发；第~7~章给出跨厂商的 SYCL/oneAPI 模型并与 CUDA 概念映射；第~8~章简介 NPU 的架构差异与异构推理栈；第~9~章把两条路交汇，总结屏障、\kw{volatile} 与性能清单。除核函数外的各章都会区分 Unix 与 Windows 两套 API 词汇，并给出把差异下沉到三方库的做法。附录~A 用一个仿传感器把"驱动、HAL、应用接口"全链在 Linux、Android、Windows 上各走一遍；附录~B 走通一个 CUDA 算子从核函数到 PyTorch 绑定的最短路径。
 
-阅读本书需要熟悉 C/\cpp{} 与指针，了解基本的计算机组成（缓存、总线、中断）。第~5~章之后假设读者有一块可用的 GPU 或至少能阅读 CUDA 代码。
+阅读本书需要熟悉 C/\allowbreak{}\cpp{} 与指针，了解基本的计算机组成（缓存、总线、中断）。第~5~章之后假设读者有一块可用的 GPU 或至少能阅读 CUDA 代码。
 
 \section*{文档约定}
 
@@ -423,7 +427,7 @@ CPU 与外部世界的交互只有两条路：\textbf{读写设备的存储/寄�
 
 \begin{enumerate}[nosep]
   \item \textbf{一组地址}：设备把寄存器或内存映射进 CPU 的地址空间。CPU 用普通的 load/store 指令访问。这就是 MMIO（Memory-Mapped I/O）。
-  \item \textbf{一组端口}（仅 x86）：设备占用独立的 I/O 端口空间，CPU 用 \texttt{in}/\texttt{out} 指令访问。这就是 PIO（Port-Mapped I/O）。
+  \item \textbf{一组端口}（仅 x86）：设备占用独立的 I/O 端口空间，CPU 用 \texttt{in}/\allowbreak{}\texttt{out} 指令访问。这就是 PIO（Port-Mapped I/O）。
 \end{enumerate}
 
 现代设备几乎全部走 MMIO。原因有三：地址空间远大于 64KB 的端口空间；load 与 store 指令可以复用缓存与预取逻辑，这对 frame buffer 尤其重要；非 x86 架构（如 ARM、RISC-V）根本没有 I/O 端口指令。PIO 只残留在少数 legacy 设备上，例如串口 \texttt{16550}、并口、老式 VGA。
@@ -510,7 +514,7 @@ volatile uint32_t *map_bar0(int pci_fd, size_t len) {
 
 MMIO 窗口的缓存属性由页表项（PAT/MTRR）决定，常见三种：
 
-\begin{longtable}{p{2.6cm}p{4.6cm}p{7.5cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{7.5cm}}
 \toprule
 \textbf{策略} & \textbf{含义} & \textbf{适用} \\
 \midrule
@@ -520,7 +524,7 @@ MMIO 窗口的缓存属性由页表项（PAT/MTRR）决定，常见三种：
 \midrule
 \endhead
 UC（uncacheable） & 每次访问都到设备，严格保序 & 控制寄存器、doorbell \\
-WC（write-combining） & 写合并到 64B 行再突发，不保序 & frame buffer、显存写 \\
+WC（write-\allowbreak{}combining） & 写合并到 64B 行再突发，不保序 & frame buffer、显存写 \\
 WB（write-back） & 进 CPU 缓存 & 仅 prefetchable 且设备参与一致性 \\
 \bottomrule
 \end{longtable}
@@ -617,7 +621,7 @@ MmUnmapIoSpace((void *)regs, 0x1000);
 
 \subsection{三条路的对照}
 
-\begin{longtable}{p{2.4cm}p{3.9cm}p{4.0cm}p{4.0cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.4cm}>{\raggedright\arraybackslash}p{3.9cm}>{\raggedright\arraybackslash}p{4.0cm}>{\raggedright\arraybackslash}p{4.0cm}}
 \toprule
 \textbf{维度} & \textbf{裸机} & \textbf{Unix（Linux）} & \textbf{Windows} \\
 \midrule
@@ -677,7 +681,7 @@ void submit(struct desc *ring, unsigned *tail, void *buf, dma_addr_t pa, uint32_
 }
 \end{lstlisting}
 
-注意 \texttt{flags} 最后写、且写之前有 \Fn{wmb}：这是典型的\textbf{发布}（publish）模式。设备先看到 \texttt{OWN=device} 才会去读 \texttt{phys\_addr}/\texttt{length}，因此必须保证后两者先可见。
+注意 \texttt{flags} 最后写、且写之前有 \Fn{wmb}：这是典型的\textbf{发布}（publish）模式。设备先看到 \texttt{OWN=device} 才会去读 \texttt{phys\_addr}/\allowbreak{}\texttt{length}，因此必须保证后两者先可见。
 
 \section{coherent 与 streaming DMA}\label{sec:dma-types}
 
@@ -685,7 +689,7 @@ Linux DMA API 区分两类：
 
 \begin{itemize}[nosep]
   \item \textbf{一致性 DMA}（\Fn{dma\_alloc\_coherent}）：分配一块主机与设备都可见、且缓存策略已处理好的缓冲。适合描述符环、控制块这类双方频繁读写的结构。返回内核虚拟地址 + DMA 地址。
-  \item \textbf{流式 DMA}（\Fn{dma\_map\_single}/\Fn{dma\_map\_sg}）：把已有的内核缓冲临时映射给设备，用完 \Fn{dma\_unmap\_single}。适合一次性的大块数据（网络包、磁盘扇区）。在弱序平台上，map/unmap 隐含了必要的缓存同步。
+  \item \textbf{流式 DMA}（\Fn{dma\_map\_single}/\allowbreak{}\Fn{dma\_map\_sg}）：把已有的内核缓冲临时映射给设备，用完 \Fn{dma\_unmap\_single}。适合一次性的大块数据（网络包、磁盘扇区）。在弱序平台上，map/unmap 隐含了必要的缓存同步。
 \end{itemize}
 
 \begin{tcolorbox}[guideline={选型的经验法则}]
@@ -742,7 +746,7 @@ WdfInterruptCreate(device, &cfg, WDF_NO_OBJECT_ATTRIBUTES, &irq);
 /* EVT_WDF_INTERRUPT_ISR 跑 DIRQL, 只排队; DPC 里做实际处理 */
 \end{lstlisting}
 
-\begin{longtable}{p{3.4cm}p{5.5cm}p{5.5cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}p{5.5cm}>{\raggedright\arraybackslash}p{5.5cm}}
 \toprule
 \textbf{概念} & \textbf{Linux} & \textbf{Windows（KMDF）} \\
 \midrule
@@ -787,7 +791,7 @@ I2C（Inter-Integrated Circuit，也写作 IIC）是两线半双工总线：SDA�
 
 \subsection{Linux 用户态访问}
 
-Linux 把 I2C 控制器暴露为 \seqsplit{\texttt{/dev/i2c-N}}，用户态用 \seqsplit{\texttt{i2c-tools}} 或 \seqsplit{\texttt{ioctl(I2C\_SLAVE)}} + \texttt{read}/\texttt{write} 访问：
+Linux 把 I2C 控制器暴露为 \seqsplit{\texttt{/dev/i2c-N}}，用户态用 \seqsplit{\texttt{i2c-tools}} 或 \seqsplit{\texttt{ioctl(I2C\_SLAVE)}} + \texttt{read}/\allowbreak{}\texttt{write} 访问：
 
 \bashlabel
 \begin{lstlisting}[style=bashstyle]
@@ -815,7 +819,7 @@ SPI 是四线全双工：SCLK、MOSI、MISO、CS（每从设备一根）。没�
 
 \section{UART}\label{sec:uart}
 
-UART 是异步两线（TX/RX），无时钟线，靠双方约定的波特率与帧格式（起始位 + 数据位 + 校验 + 停止位）同步。经典控制器是 16550，其寄存器既可 PIO 也可 MMIO 访问（§1.1 的 \texttt{UART\_SR}/\texttt{UART\_DR} 即其抽象）。Linux 暴露为 \texttt{/dev/ttySn}，用 \texttt{termios} 配置波特率与帧格式。
+UART 是异步两线（TX/RX），无时钟线，靠双方约定的波特率与帧格式（起始位 + 数据位 + 校验 + 停止位）同步。经典控制器是 16550，其寄存器既可 PIO 也可 MMIO 访问（§1.1 的 \texttt{UART\_SR}/\allowbreak{}\texttt{UART\_DR} 即其抽象）。Linux 暴露为 \texttt{/dev/ttySn}，用 \texttt{termios} 配置波特率与帧格式。
 
 \begin{tcolorbox}[compare={I2C vs SPI vs UART}]
 \begin{itemize}[nosep]
@@ -834,7 +838,7 @@ GPIO 是最原始的硬件接口：单根线的电平输入/输出。Linux 现�
 
 Linux 把每条总线都做成文件：I2C 是 \seqsplit{\texttt{/dev/i2c-N}} 加 \texttt{ioctl}，SPI 是 \seqsplit{\texttt{/dev/spidevB.C}} 加 \texttt{ioctl}，UART 是 \texttt{/dev/ttyX} 加 termios，GPIO 是字符设备加 libgpiod。"一切皆文件"在低速总线上贯彻得最彻底。Windows 没有这棵设备树，四条总线的处境各不相同：
 
-\begin{longtable}{p{2.0cm}p{4.6cm}p{4.6cm}p{3.1cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.0cm}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{3.1cm}}
 \toprule
 \textbf{总线} & \textbf{Linux 用户态} & \textbf{Windows 用户态} & \textbf{备注} \\
 \midrule
@@ -846,7 +850,7 @@ Linux 把每条总线都做成文件：I2C 是 \seqsplit{\texttt{/dev/i2c-N}} �
 UART & /dev/ttyX 加 termios & COM 口：CreateFile 加 DCB & 两侧抽象最接近 \\
 I2C & /dev/i2c-N 加 ioctl & 无官方通道，需 SpbCx 驱动 & Windows 必先写驱动 \\
 SPI & /dev/spidevB.C 加 ioctl & 无官方通道，需 SpbCx 驱动 & 同上 \\
-GPIO & /dev/gpiochipN 加 libgpiod & WinRT 的 GPIO 类（仅 IoT 版） & 桌面 Windows 无通道 \\
+GPIO & /dev/\allowbreak{}\allowbreak{}gpiochipN 加 libgpiod & WinRT 的 GPIO 类（仅 IoT 版） & 桌面 Windows 无通道 \\
 \bottomrule
 \end{longtable}
 
@@ -898,7 +902,7 @@ CUDA 把一次核函数（kernel）启动组织为三级：grid $\rightarrow$ bl
 \end{itemize}
 
 \begin{tcolorbox}[guideline={写 kernel 的心智模型}]
-把自己想象成\textbf{一个 thread}：用 \texttt{threadIdx}/\texttt{blockIdx}/\texttt{blockDim} 算出"我是谁、该处理哪个数据"，只写自己那份。并行性来自硬件同时跑成千上万个这样的"你"。
+把自己想象成\textbf{一个 thread}：用 \texttt{threadIdx}/\allowbreak{}\texttt{blockIdx}/\allowbreak{}\texttt{blockDim} 算出"我是谁、该处理哪个数据"，只写自己那份。并行性来自硬件同时跑成千上万个这样的"你"。
 \end{tcolorbox}
 
 \section{第一个核函数：向量加}\label{sec:vecadd}
@@ -970,7 +974,7 @@ __global__ void transpose(const float *in, float *out, int w, int h) {
 \begin{itemize}[nosep]
   \item \Fn{\_\_syncthreads}：block 内所有 thread 屏障。注意不能在分支里让部分 thread 调用（未定义）。
   \item \Fn{\_\_threadfence}：保证本 thread 之前的写对其他 thread 可见（设备内）。
-  \item warp 原语：\Fn{\_\_shfl\_down\_sync}（warp 内寄存器洗牌，做归约无需 shared）、\Fn{\_\_ballot\_sync}（收集谓词位图）、\Fn{\_\_any\_sync}/\Fn{\_\_all\_sync}。
+  \item warp 原语：\Fn{\_\_shfl\_down\_sync}（warp 内寄存器洗牌，做归约无需 shared）、\Fn{\_\_ballot\_sync}（收集谓词位图）、\Fn{\_\_any\_sync}/\allowbreak{}\Fn{\_\_all\_sync}。
   \item 原子：\Fn{atomicAdd} 等，用于直方图、计数；竞争大时改用 warp 归约 + 少量原子。
 \end{itemize}
 
@@ -1214,7 +1218,7 @@ MMIO 用 \kw{volatile} + UC/WC 策略 + 屏障回答；DMA 用发布模式（先
 
 \section{三条链一览}
 
-\begin{longtable}{p{2.6cm}p{3.9cm}p{3.9cm}p{3.9cm}}
+\begin{longtable}{>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{3.9cm}>{\raggedright\arraybackslash}p{3.9cm}>{\raggedright\arraybackslash}p{3.9cm}}
 \toprule
 \textbf{层} & \textbf{Linux} & \textbf{Android} & \textbf{Windows} \\
 \midrule
@@ -1225,7 +1229,7 @@ MMIO 用 \kw{volatile} + UC/WC 策略 + 屏障回答；DMA 用发布模式（先
 \endhead
 驱动 & 内核 i2c 客户端驱动 & 同左（Android 内核即 Linux） & KMDF 驱动（可挂 SpbCx） \\
 中间层 & 无：sysfs 即接口 & 必须有：AIDL HAL 加 SensorService & 可选：传感器类扩展加 WinRT \\
-应用接口 & 读 sysfs 文件 & SensorManager（Java） & DeviceIoControl 或 WinRT \\
+应用接口 & 读 sysfs 文件 & SensorManager（Java） & Device\allowbreak{}Io\allowbreak{}Control 或 WinRT \\
 接口定义者 & 内核 ABI（hwmon 约定） & aidl 契约文件 & 驱动自定 IOCTL 或 WinRT 契约 \\
 \bottomrule
 \end{longtable}

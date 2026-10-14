@@ -1,6 +1,6 @@
 # C/C++ LaTeX 参考手册合集
 
-本仓库包含 **31 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
+本仓库包含 **36 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
 
 ## 目录结构
 
@@ -101,8 +101,23 @@ C、C++/
 ├── Math Geo DSP/                 # 数学·几何·信号处理库：BLAS/Eigen/FFTW/CGAL/GNU Radio/Meep 与 C/C++ 底层成因
 │   ├── math_geo_dsp.tex
 │   └── build.ps1
-└── LSP and Clang Tools/          # 语言服务器与代码质量工具：LSP/clangd/clang-format/clang-tidy/编译数据库与 CI 质量门
-    ├── lsp_clang_tools.tex
+├── LSP and Clang Tools/          # 语言服务器与代码质量工具：LSP/clangd/clang-format/clang-tidy/编译数据库与 CI 质量门
+│   ├── lsp_clang_tools.tex
+│   └── build.ps1
+├── Simulation and Games/         # 仿真与游戏：Ansys/Abaqus/OpenFOAM 扩展层与 Unreal/Unity/Godot 脚本层的 C/C++
+│   ├── simulation_and_games.tex
+│   └── build.ps1
+├── Audio Video Development/      # 音视频开发：ALSA/WASAPI 设备栈、FFmpeg/x264/Opus 编解码与实时流媒体管线
+│   ├── audio_video_development.tex
+│   └── build.ps1
+├── Rendering and Shaders/        # 渲染与着色器：GPU 绘图管线、GLSL/HLSL/SPIR-V 与 Vulkan/D3D12/Metal 的 C/C++
+│   ├── rendering_shaders.tex
+│   └── build.ps1
+├── Embedded and Realtime/        # 嵌入式与硬实时：启动链与链接脚本、RTOS 调度、中断与确定性 I/O 的 C/C++
+│   ├── embedded_realtime.tex
+│   └── build.ps1
+└── Code Style/                   # 代码风格：主流风格指南对比与谷歌译本滞后条款、inline 与异常的现代语义勘误
+    ├── code_style.tex
     └── build.ps1
 ```
 
@@ -127,7 +142,7 @@ C、C++/
 ### 编译
 
 ```powershell
-# 编译全部 31 个项目（每个 2 pass + TOC 修复）
+# 编译全部 36 个项目（每个 2 pass + TOC 修复）
 .\workflow.ps1 build-all
 
 # 编译单个项目
@@ -164,7 +179,7 @@ C、C++/
 .\workflow.ps1 list
 ```
 
-显示全部 31 个项目名及其对应的文件夹路径。
+显示全部 36 个项目名及其对应的文件夹路径。
 
 ### 打开 PDF
 
@@ -209,6 +224,11 @@ C、C++/
 | ParAlgo | Parallel Algorithms | 并行算法：ILP/SIMD/TLP 三种刻度与 roofline / CPU·GPU·NPU 硬件画像 / 执行域选型决策树（MLA·GEMM·attention 类算子上卡，分支密集·指针追逐·复杂控制流留 CPU）/ 线程池·TBB·OpenMP·std::execution·无锁与内存序 / CUDA 归约·scan·tiling·MLA 融合算子与 Ascend C·CANN / 显存搬运与 DLPack / pybind11 导出：GIL 规则·numpy 零拷贝·stub·scikit-build-core·cibuildwheel / 混合执行实战库与对拍基准 |
 | MathGDS | Math Geo DSP | 数学·几何·信号处理库：热路径经济学（SIMD·FMA·对齐·无 GC·确定性分配）与 ABI/FFI 四种绑定 / BLAS·LAPACK·Eigen·GSL·Boost.Math·Sundials·Ceres / 几何谓词与鲁棒计算（CGAL·GEOS·PROJ）、网格点云与光线（libigl·Open3D·Embree）、碰撞与刚体 / 声音侧 libsndfile·PortAudio·miniaudio·FFTW·CMSIS-DSP·iir1 / 电磁波侧 FDTD·Meep·openEMS·GNU Radio·SoapySDR·scikit-rf / Python 科学栈的 C/C++ 底层与一条采集-频谱-导出实战链 |
 | LSPTools | LSP and Clang Tools | 语言服务器与代码质量工具：clangd·libclang·LSP 三层解剖 / compile_commands.json 的生成与排错（CMake·compiledb·Bear）/ LSP 生命周期与请求-通知模型 / clangd 架构与 .clangd 配置、索引代价 / ccls·cpptools·CDT·Eclipse JDT 对比 / DAP 调试与 CMake Tools 闭环 / clang-format 机制与 .clang-format 逐字段、CI 门禁与增量格式化 / uncrustify·astyle 与"为什么 C/C++ 没有 go fmt" / clang-tidy 架构、checks 族与 .clang-tidy、apply-fixes 与 clang-rename·clang-move / cppcheck·IWYU·Coverity·CodeQL 与 sanitizer 的分界 / CMakePresets+CI 一键质量门与选型排障手册 |
+| SimGame | Simulation and Games | 仿真与游戏引擎的 C/C++ 脚本：非实时求解器与引擎脚本层的扩展方式（Ansys APDL·Workbench 脚本层次与 C/C++ 可介入点 / Fluent UDF 的 C 宏库、DEFINE_* 族与编译/解释加载 / Mechanical 用户材料与 Custom Results、Abaqus UMAT/VUMAT 与 C 混编 / OpenFOAM 求解器、场代数与自定义边界条件 / COMSOL 模型树、Simulink S-Function 与开源求解器的两种改法 / 网格 I/O、区域分解与检查点 / Unreal UHT·UObject、Unity 原生插件与 IL2CPP/Burst、Godot GDExtension / PhysX·Havok·Bullet/Jolt 的 C++ 接口与实时约束 / Lua·sol2·AngelScript 绑定与反射代价 / 硬件在环仿真、确定性时间步与网络同步 / USD·glTF·VTK·CGNS 数据交换 / 选型决策树与排障手册） |
+| AvDev | Audio Video Development | 音视频开发的 C/C++：设备与采集栈（ALSA·PipeWire·WASAPI·CoreAudio·JACK·V4L2）/ 采样、时钟漂移与缓冲、jitter buffer / 像素与平面格式（YUV·chroma 次采样·stride 对齐）/ 编码器 C ABI（libavcodec·x264·x265·libaom·SVT-AV1·libvpx·Opus）与码控 CRF·VBV·ABR / 硬件编解码与零拷贝（DXVA2·QSV·VA-API·NVDEC·VideoToolbox）/ 滤镜与音频 DSP 链（libavfilter·libswscale·swresample）/ 封装同步与容错（MP4·MKV·TS 时间基、PTS/DTS·edit list·错误隐藏）/ 流媒体协议（RTMP·SRT·RIST·LL-HLS·CMAF·WebRTC）与无锁实时管线、GStreamer·引擎与 WASM 集成 / 字幕与图文轨（WebVTT·TTML·CEA-608/708·SRT 的表示与时间轴对齐、多语言轨在清单里的挂载）与加密投递（HLS Sample-AES、CENC/CBSC 与 BMFF 保护方案、密钥轮换与授权链路）及 fMP4/CMAF 分片与清单表示 |
+| Render | Rendering and Shaders | 渲染与着色器的 C/C++：GPU 绘图管线与光栅化各阶段的可控点 / 着色语言三形态（GLSL·HLSL·MSL）与 SPIR-V 中间表示、glslang·dxc·slang·spirv-cross 编译链 / Vulkan 对象模型、命令缓冲、同步与显式内存绑定 / D3D12 与 Metal 的显式管线差异、OpenGL/EGL 的历史包袱 / PBR 光照、阴影与级联、前向+/延迟渲染、光线追踪（DXR·OptiX）/ 计算着色器与 GPU 驱动管线（culling·粒子·间接绘制）/ 纹理压缩、资源绑定与帧图 / 窗口系统与事件泵（GLFW·SDL·XCB·Wayland·Cocoa·ANativeWindow 的上下文创建、surface 生命周期与 DPI 缩放、跨平台 vsync 与帧节拍）与字形管线（FreeType 光栅与 hinting、HarfBuzz shaping、SDF/位图图集与文本排版）/ RenderDoc·GPU 时间戳与带宽预算 / bgfx·wgpu·Filament 与引擎选型 |
+| EmbRt | Embedded and Realtime | 嵌入式与硬实时的 C/C++：启动链与镜像布局（复位向量·Bootloader 交接·链接脚本 SECTIONS·.data/.bss 重定位·构造函数与早期栈堆约束）/ 中断与延迟构成（NVIC·GIC·APIC 优先级分组、中断线程化、响应-入口-服务-唤醒四段分解）/ 时间与计数器（单调时钟、tick 与 tickless、体系结构定时器与 TSC、PTP/gPTP）/ 裸机超循环与表驱动状态机 / RTOS 内核对象与调度（FreeRTOS·Zephyr·RTEMS·VxWorks，任务与栈定形、优先级反转与继承/天花板、静态创建与内存方案）/ 实时 Linux 与用户态硬实时（PREEMPT_RT、SCHED_FIFO/DEADLINE、isolcpus·nohz_full·mlockall 与缺页、cgroup 节流与透明大页）/ 无锁与确定性数据结构（SPSC/MPSC 环形缓冲、序列计数器、固定对象池）/ 实时 I/O 形态（ADC 触发扫描、DMA 双缓冲与循环、CAN/CAN-FD 总线负载、EtherCAT 分布式时钟与 TSN 调度类）/ 可观测性（cyclictest·oslat·ftrace·LTTng·ETM/ITM 与尾延迟统计）/ 失效安全与可靠性（窗口看门狗、超时与降级、ECC 与故障注入、IEC 61508·ISO 26262·DO-178 的可追溯性）/ 平台与工具链选型（MCU/MPU/实时 Linux 边界、CMSIS·HAL·Zephyr devicetree、交叉工具链与 QEMU/Renode·HIL 在环验证） |
+| CodeStyle | Code Style | 代码风格参考手册：主流风格指南的谱系与条款解剖（Google·LLVM·Chromium·Mozilla·C++ Core Guidelines·Linux 内核）/ 命名、头文件与 include 秩序、缩进与空白规则的跨风格对比 / clang-format·clang-tidy 与 CI 门禁落地 / 国内谷歌风格译本不更新与错译引发的问题：inline 条款停留在 C with Classes 时代而 C++11/17/23 下 inline 是 ODR 与链接语义而非展开建议（constexpr 隐含 inline、inline 变量、编译期内联由启发式与 LTO 决定）、异常禁令的"代价"误读（表驱动零成本模型下正常路径与上层调用代价可忽略，真实代价在代码体积、二进制大小与实时热路径）、RTTI 与其它失效条目盘点 / 按现代标准重写团队风格手册的方法与决策表 |
 
 ## 统一格式规范
 

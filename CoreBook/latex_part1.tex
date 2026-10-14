@@ -495,7 +495,7 @@ void read_data(const std::string& filename) {
 \end{lstlisting}
 
 \subsection{要点}
-使用 RAII（资源获取即初始化）原则管理所有资源。标准库中的智能指针、容器、锁和文件流都是 RAII 的范例。避免直接使用 \texttt{new}/\texttt{delete}、\texttt{malloc}/\texttt{free} 和手动的 \texttt{open}/\texttt{close}。
+使用 RAII（资源获取即初始化）原则管理所有资源。标准库中的智能指针、容器、锁和文件流都是 RAII 的范例。避免直接使用 \texttt{new}/\allowbreak{}\texttt{delete}、\texttt{malloc}/\allowbreak{}\texttt{free} 和手动的 \texttt{open}/\allowbreak{}\texttt{close}。
 
 % === P.9 ===
 \section{规则 P.9：不要浪费时间和空间}
@@ -729,7 +729,7 @@ std::vector<std::string> split(const std::string& s, char delim) {
   \item 选择规则 P.1 到 P.3 中的一条，在你熟悉的代码库中找到一个违反该规则的实例，并说明如何修复。
   \item 规则 P.8（不泄漏资源）和规则 P.9（不浪费时间和空间）看似可能冲突。讨论在什么情况下它们可能冲突，以及如何平衡。
   \item 使用 \texttt{constexpr} 重写一个你熟悉的运行时计算函数，使其能在编译时求值。使用 \texttt{static\_assert} 验证结果。
-  \item 设计一个 RAII 包装类，封装 POSIX 的 \texttt{socket}/\texttt{close} 接口，确保套接字资源不会泄漏。
+  \item 设计一个 RAII 包装类，封装 POSIX 的 \texttt{socket}/\allowbreak{}\texttt{close} 接口，确保套接字资源不会泄漏。
   \item 解释为什么"封装杂乱的构造"（P.11）与"直接在代码中表达思想"（P.1）并不矛盾。
 \end{enumerate}
 

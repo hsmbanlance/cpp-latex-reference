@@ -263,6 +263,10 @@
 \newcommand{\seqkw}[1]{\seqsplit{\texttt{#1}}}
 
 % ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
 \begin{document}
 
 \frontmatter
@@ -338,7 +342,7 @@ int sum(int n) {
 }
 \end{lstlisting}
 
-VLA 分配在栈上，离开作用域立即释放，没有 \kw{malloc}/\kw{free} 的负担，性能也比 \kw{alloca} 更安全（编译器知道大小，可以检查栈溢出）。
+VLA 分配在栈上，离开作用域立即释放，没有 \kw{malloc}/\allowbreak{}\kw{free} 的负担，性能也比 \kw{alloca} 更安全（编译器知道大小，可以检查栈溢出）。
 
 \section{C++ 中的处境}
 
@@ -459,7 +463,7 @@ struct Packet {
   \item \kw{std::vector<char> payload;} —— 把数据搬到堆上，但失去了"单次分配"的优势。
   \item \kw{std::unique\_ptr<char[]>} + 显式长度 —— 同样需要两次分配（控制块 + 数据）。
   \item C++20 \kw{std::span<char>} 视图 —— 不拥有存储，需要外部缓冲。
-  \item 手写 \kw{operator new} 重载，分配 \kw{sizeof(Packet) + n}，再用 \kw{std::launder} 和 \kw{std::construct\_at} 在尾部构造数组 —— 标准合法但繁琐。
+  \item 手写 \kw{operator new} 重载，分配 \kw{sizeof(Packet) + n}，再用 \kw{std::\allowbreak{}launder} 和 \kw{std::\allowbreak{}construct\_\allowbreak{}at} 在尾部构造数组 —— 标准合法但繁琐。
 \end{itemize}
 
 \section{编译器实测}
@@ -854,7 +858,7 @@ Apple Clang 是 macOS/iOS 系统自带的 Clang 变体，由 Apple 维护：
 
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{longtable}{@{}p{4.0cm} p{2.0cm} p{2.0cm} p{2.0cm} p{2.0cm}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{4.0cm} >{\raggedright\arraybackslash}p{2.0cm} >{\raggedright\arraybackslash}p{2.0cm} >{\raggedright\arraybackslash}p{2.0cm} >{\raggedright\arraybackslash}p{2.0cm}@{}}
 \toprule
 \textbf{特性} & \textbf{MSVC} & \textbf{GCC} & \textbf{Clang} & \textbf{Apple Clang} \\
 \midrule
@@ -877,7 +881,7 @@ strict aliasing 优化 & 关 & 开（-O2） & 开（-O2） & 开（-O2） \\
 \kw{typeof} (C23/C++) & 否 & 是 & 是 & 是 \\
 \kw{constexpr} (C23) & 否 & GCC 14+ & Clang 19+ & Xcode 16+ \\
 \kw{nullptr} (C23) & 否 & GCC 14+ & Clang 19+ & Xcode 16+ \\
-\kw{bool}/\kw{true}/\kw{false} (C23) & 否 & GCC 14+ & Clang 19+ & Xcode 16+ \\
+\kw{bool}/\allowbreak{}\kw{true}/\allowbreak{}\kw{false} (C23) & 否 & GCC 14+ & Clang 19+ & Xcode 16+ \\
 \kw{[[nodiscard]]} 属性 & 是 & 是 & 是 & 是 \\
 Itanium ABI & 否 & 是 & 是 & 是 \\
 MS ABI & 是 & 否 & clang-cl 是 & 否 \\
@@ -930,7 +934,7 @@ C23 把 \cpp{} 风格的 \kw{[[...]]} 属性引入 C，与 C++11/14/17/20 逐步
 
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{longtable}{@{}p{4.5cm} p{2.5cm} p{2.5cm} p{4.0cm}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{4.5cm} >{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{4.0cm}@{}}
 \toprule
 \textbf{属性} & \textbf{C 引入版本} & \textbf{C++ 引入版本} & \textbf{备注} \\
 \midrule
@@ -988,7 +992,7 @@ C23 同时移除了一些老特性，与 \cpp{} 拉齐：
 
 \begin{itemize}
   \item \textbf{类与对象模型}：\kw{class}、\kw{struct} 含成员函数、构造/析构、继承、多态、虚函数表、运算符重载、模板、Concepts、Ranges、Coroutines、Modules、Lambda、闭包、\kw{constexpr} 函数（C23 仍不支持）。
-  \item \textbf{异常}：\kw{try}/\kw{catch}/\kw{throw}、\kw{noexcept} 规格、栈展开。
+  \item \textbf{异常}：\kw{try}/\allowbreak{}\kw{catch}/\allowbreak{}\kw{throw}、\kw{noexcept} 规格、栈展开。
   \item \textbf{引用}：\kw{T\&}、右值引用 \kw{T\&\&}、移动语义。
   \item \textbf{命名空间}：\kw{namespace}、内联命名空间、匿名命名空间。
   \item \textbf{RAII}：智能指针、\kw{std::lock\_guard} 等资源管理模式。
@@ -1091,7 +1095,7 @@ MYLIB_API void mylib_init(void);
   \item VLA、FAM、复合字面量（除非用宏隔离，只在 C 模式下展开）。
   \item \cpp{} 专属：\kw{class}、\kw{template}、\kw{namespace}、\kw{operator} 重载、引用、异常、\kw{constexpr} 函数。
   \item C23 专属：\kw{typeof}、\kw{auto} 推导、\kw{[[...]]} 属性（除非用宏隔离）。
-  \item \kw{bool}/\kw{true}/\kw{false}：在 C17 及以前需要 \kw{<stdbool.h>}，C23 起内建。安全做法是 \kw{\#include <stdbool.h>} 始终带上。
+  \item \kw{bool}/\allowbreak{}\kw{true}/\allowbreak{}\kw{false}：在 C17 及以前需要 \kw{<stdbool.h>}，C23 起内建。安全做法是 \kw{\#include <stdbool.h>} 始终带上。
   \item \kw{nullptr}：C23/C++11 起内建，旧 C 模式要用 \kw{NULL}。
 \end{itemize}
 
@@ -1139,13 +1143,13 @@ target_include_directories(mylib PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE
 \end{lstlisting}
 
 \begin{bestpractice}
-跨 C/\cpp{} 项目的核心原则：
+跨 C/\allowbreak{}\cpp{} 项目的核心原则：
 \begin{enumerate}
   \item \textbf{公共 API 用纯 C}，避免 name mangling 和 ABI 不兼容。
   \item \textbf{实现可以用 \cpp{}}，但导出符号必须 \kw{extern "C"} 包装。
   \item \textbf{结构体里避免 FAM、VLA}，改用"长度字段 + 指针"或"句柄模式"。
   \item \textbf{错误处理用返回码}，不要用异常（C 接不住 \cpp{} 异常，反之也不行）。
-  \item \textbf{资源管理用 \kw{init}/\kw{destroy} 配对函数}，封装 \cpp{} 端的 RAII。
+  \item \textbf{资源管理用 \kw{init}/\allowbreak{}\kw{destroy} 配对函数}，封装 \cpp{} 端的 RAII。
   \item \textbf{CI 必须同时跑 C 和 \cpp{} 编译}，且至少覆盖 MSVC + GCC + Clang 三套。
 \end{enumerate}
 \end{bestpractice}
@@ -1160,7 +1164,7 @@ target_include_directories(mylib PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE
 
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{longtable}{@{}p{4.5cm} p{5.0cm} p{5.0cm}@{}}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{4.5cm} >{\raggedright\arraybackslash}p{5.0cm} >{\raggedright\arraybackslash}p{5.0cm}@{}}
 \toprule
 \textbf{特性} & \textbf{C 行为} & \textbf{C++ 行为} \\
 \midrule
@@ -1184,7 +1188,7 @@ union 非活跃成员读取 & 实现定义，普遍接受 & UB；C++20 起写入
 \kw{restrict} & C99 起标准 & 无标准对应；用 \kw{\_\_restrict} 扩展 \\
 \kw{\_Generic} & C11 起标准 & 无；用模板特化 \\
 \kw{\_Atomic} 限定符 & C11 起标准 & 无；用 \kw{std::atomic<T>} \\
-\kw{bool}/\kw{true}/\kw{false} & C23 起关键字 & 一直关键字 \\
+\kw{bool}/\allowbreak{}\kw{true}/\allowbreak{}\kw{false} & C23 起关键字 & 一直关键字 \\
 \kw{nullptr} & C23 起关键字 & C++11 起关键字 \\
 \kw{typeof} & C23 起标准 & 无；用 \kw{decltype} \\
 \kw{constexpr} & C23 起，仅对象 & C++11 起，对象+函数 \\
@@ -1192,9 +1196,9 @@ union 非活跃成员读取 & 实现定义，普遍接受 & UB；C++20 起写入
 \kw{[[attributes]]} & C23 起 6 个 & C++11 起持续扩展 \\
 二进制字面量 \kw{0b} & C23 起 & C++14 起 \\
 数字分隔符 \kw{'} & C23 起 & C++14 起 \\
-\kw{alignas}/\kw{alignof} & C23 起（C11 为 \kw{\_Alignas}） & C++11 起 \\
-\kw{thread\_local} & C23 起（C11 为 \kw{\_Thread\_local}） & C++11 起 \\
-\kw{static\_assert} & C23 起（C11 为 \kw{\_Static\_assert}） & C++11 起 \\
+\kw{alignas}/\allowbreak{}\kw{alignof} & C23 起（C11 为 \kw{\_Alignas}） & C++11 起 \\
+\kw{thread\_\allowbreak{}local} & C23 起（C11 为 \kw{\_\allowbreak{}Thread\_\allowbreak{}local}） & C++11 起 \\
+\kw{static\_\allowbreak{}assert} & C23 起（C11 为 \kw{\_\allowbreak{}Static\_\allowbreak{}assert}） & C++11 起 \\
 \end{longtable}
 \normalsize
 
