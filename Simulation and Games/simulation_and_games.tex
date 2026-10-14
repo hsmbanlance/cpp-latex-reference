@@ -4128,7 +4128,7 @@ C++ 侧的读法有两层：一层是构造/转换（拿不到就报错或回退
 在编辑器里跑扩展需要 editor 构建（带编辑器侧的类与回调）；玩家包用引擎导出模板
 （export templates）打包，扩展必须再出一份 release 构建，否则导出后类直接加载失败。
 
-\begin{lstlisting}[language=CMake, style=cmakestyle, caption={CMake 的最小构建形状：静态绑定层加共享扩展库}, label={lst:ch12-cmake}, framexleftmargin=12pt, framexrightmargin=12pt]
+\begin{lstlisting}[language=CMakeLD, style=cmakestyle, caption={CMake 的最小构建形状：静态绑定层加共享扩展库}, label={lst:ch12-cmake}, framexleftmargin=12pt, framexrightmargin=12pt]
 
 # 目标名与库文件后缀要和 .gdextension 里的键对得上
 cmake_minimum_required(VERSION 3.20)

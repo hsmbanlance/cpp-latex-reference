@@ -121,6 +121,68 @@ function Find-NoXTabularx {
     return $hits
 }
 
+# The reader-facing check "does the folio printed beside a chapter equal the one the contents page
+# declares" needs PDF text extraction, and the only extractor that survives our subset-font PDFs is
+# pymupdf -- AGPL, so it stays a local gate. These four invariants are the CI-side stand-in and they
+# are exactly the shapes the stale/harvested manual.toc defect produced: an empty contents, a folio
+# that points past the last page, a non-numeric or zero folio, and entries out of document order.
+function Find-TocIssues {
+    param([string]$TocText, [string]$SrcText, [int]$Pages)
+
+    $rows = @()
+    $bad  = @()
+    $key = '\contentsline'
+    $i = 0
+    while ($true) {
+        $p = $TocText.IndexOf($key, $i, [System.StringComparison]::Ordinal)
+        if ($p -lt 0) { break }
+        $j = $p + $key.Length
+        $g = @()
+        for ($k = 0; $k -lt 3; $k++) {
+            while ($j -lt $TocText.Length -and $TocText[$j] -match '[ \t\r\n]') { $j++ }
+            if ($j -ge $TocText.Length -or $TocText[$j] -ne '{') { $j = -1; break }
+            $d = 0; $s = $j
+            while ($j -lt $TocText.Length) {
+                if ($TocText[$j] -eq '\') { $j += 2; continue }
+                if ($TocText[$j] -eq '{') { $d++ }
+                elseif ($TocText[$j] -eq '}') { $d--; if ($d -eq 0) { break } }
+                $j++
+            }
+            if ($j -ge $TocText.Length) { $j = -1; break }
+            $g += $TocText.Substring($s + 1, $j - $s - 1)
+            $j++
+        }
+        if ($j -lt 0) { break }
+        $i = $j
+        if ($g.Count -lt 3) { continue }
+        $pg = $g[2].Trim()
+        if ($pg -cmatch '^\d+$') {
+            $rows += ,@($g[0].Trim(), [int]$pg)
+        } elseif ($pg -match '^[ivxlcdm]+$') {
+            # front matter is roman-numbered; keep it out of the arabic folio arithmetic
+            $rows += ,@($g[0].Trim(), -1)
+        } else {
+            $bad += ("non-numeric folio '" + ($pg -replace '\s+', ' ') + "' for level " + $g[0].Trim())
+        }
+    }
+
+    $use = @($rows | Where-Object { $_[0] -eq 'chapter' -or $_[0] -eq 'part' })
+    if ($use.Count -eq 0) { $use = @($rows | Where-Object { $_[0] -eq 'section' }) }
+    $nHead = ([regex]::Matches($SrcText, '\\(chapter|part)(\[[^\]]*\])?\{')).Count
+    if ($use.Count -eq 0 -and $nHead -gt 0) { $bad += ("contents holds no rows while the source has $nHead \\chapter|\\part") }
+    if ($Pages -gt 0) {
+        $mx = 0
+        foreach ($r in $use) {
+            if ($r[1] -lt 0) { continue }
+            if ($r[1] -eq 0) { $bad += ('folio 0 in contents at depth ' + $r[0]) }
+            if ($r[1] -gt $Pages) { $bad += ("declared folio $($r[1]) exceeds the $Pages-page PDF") }
+            if ($r[1] -lt $mx) { $bad += ("declared folio $($r[1]) goes backwards after $mx") }
+            if ($r[1] -gt $mx) { $mx = $r[1] }
+        }
+    }
+    return $bad
+}
+
 function Invoke-Build {
     param([string]$Name, [hashtable]$Info)
 
@@ -135,15 +197,25 @@ function Invoke-Build {
 
     if (-not (Test-Path -LiteralPath $buildScript)) {
         Write-Host "  [MISSING] build.ps1 not found!" -ForegroundColor Red
-        return [PSCustomObject]@{ Name=$Name; Status='MISSING'; Errors=-1; PlainErr=0; Overfull=-1; Refs=0; MultDef=0; NotConv=0; Align=0; Pages=-1; SizeKB='?' }
+        return [PSCustomObject]@{ Name=$Name; Status='MISSING'; Errors=-1; PlainErr=0; Overfull=-1; Refs=0; MultDef=0; NotConv=0; Align=0; TocIssues=0; Pages=-1; SizeKB='?' }
     }
 
     $srcTex = Join-Path $projDir $Info.tex
+    $srcClean = ''
     if (Test-Path -LiteralPath $srcTex) {
-        $noX = @(Find-NoXTabularx (((Get-Content -LiteralPath $srcTex -Raw -Encoding UTF8) -replace '(?<!\\)%.*', '')))
-        if ($noX.Count -gt 0) {
-            Write-Host "  [tabularx 无 X 列] $($noX.Count) 处，列声明: $(($noX | ForEach-Object { '|'.$_.'|' }) -join ' ')" -ForegroundColor Red
-            return [PSCustomObject]@{ Name=$Name; Status='FAIL'; Errors=0; PlainErr=0; Overfull=-1; Refs=0; MultDef=0; NotConv=0; Align=0; Pages=-1; SizeKB='?' }
+        $srcClean = (Get-Content -LiteralPath $srcTex -Raw -Encoding UTF8) -replace '(?<!\\)%.*', ''
+        $preIssues = @(Find-NoXTabularx $srcClean | ForEach-Object { "tabularx 无 X 列，列声明 |$_|" })
+        # listings' built-in CMake is not shipped by every TeX Live (Ubuntu 24.04's lstlang*.sty has
+        # no CMake entry), which is why each volume here defines its own cmake language in the
+        # preamble. A bare language=CMake compiles green on MiKTeX and errors only in CI.
+        if ($srcClean -match 'language=CMake\b' -and $srcClean -notmatch '\\lstdefinelanguage\{CMake\}') {
+            $preIssues += 'language=CMake without a local \lstdefinelanguage{CMake}'
+        }
+        if ($preIssues.Count -gt 0) {
+            foreach ($pr in $preIssues) {
+                Write-Host "  [静态] $($pr -replace '\s+', ' ')" -ForegroundColor Red
+            }
+            return [PSCustomObject]@{ Name=$Name; Status='FAIL'; Errors=0; PlainErr=0; Overfull=-1; Refs=0; MultDef=0; NotConv=0; Align=0; TocIssues=0; Pages=-1; SizeKB='?' }
         }
     }
 
@@ -219,17 +291,36 @@ function Invoke-Build {
         if ($nAux -lt $nLab) { $unwritten = $nLab - $nAux }
     }
 
+    # The contents page is \@@input from whichever .toc the final pass left behind: 8 volumes
+    # harvest <job>-manual.toc, the rest use <job>.toc, and a stale sibling of the other name is
+    # sitting in the same folder. Newest write time is the file that actually shipped.
+    $tocIssues = @()
+    $tocA = Join-Path $projDir ($Info.job + '.toc')
+    $tocB = Join-Path $projDir ($Info.job + '-manual.toc')
+    $tocPath = ''
+    if ((Test-Path -LiteralPath $tocA) -and (Test-Path -LiteralPath $tocB)) {
+        $tocPath = if ((Get-Item -LiteralPath $tocB).LastWriteTime -gt (Get-Item -LiteralPath $tocA).LastWriteTime) { $tocB } else { $tocA }
+    } elseif (Test-Path -LiteralPath $tocA) { $tocPath = $tocA }
+    elseif (Test-Path -LiteralPath $tocB) { $tocPath = $tocB }
+    if ($tocPath -and (Test-Path -LiteralPath $srcTex)) {
+        $tocIssues = @(Find-TocIssues (Get-Content -LiteralPath $tocPath -Raw -Encoding UTF8) $srcText $pages)
+    }
+
     $failed = $fullText -match '\u7f16\u8bd1\u5931\u8d25'
     # pages -le 0 = no "Output written" trailer at all, i.e. xelatex never finished the document.
     $status = if ($failed -or $errors -gt 0 -or $exitCode -gt 0 -or $unwritten -gt 0 -or
-                 $plainErr -gt 0 -or $multdef -gt 0 -or $notConv -gt 0 -or $align -gt 0 -or $pages -le 0) { 'FAIL' }
+                 $plainErr -gt 0 -or $multdef -gt 0 -or $notConv -gt 0 -or $align -gt 0 -or
+                 $tocIssues.Count -gt 0 -or $pages -le 0) { 'FAIL' }
               elseif ($overfull -gt 0)       { 'OVERFULL' }
               elseif ($dangling -gt 0)       { 'BADREF' }
               elseif ($errors -eq 0)         { 'OK' }
               else                           { 'UNKNOWN' }
 
     $color = switch ($status) { 'OK'{'Green'} 'OVERFULL'{'DarkYellow'} 'BADREF'{'DarkYellow'} 'FAIL'{'Red'} default{'Gray'} }
-    Write-Host "  [$status] Err=$errors PErr=$plainErr Ov=$overfull Al=$align Ref=$dangling MD=$multdef NC=$notConv Pg=$pages Exit=$exitCode ${sizeKB}KB ${elapsed}s" -ForegroundColor $color
+    Write-Host "  [$status] Err=$errors PErr=$plainErr Ov=$overfull Al=$align TI=$($tocIssues.Count) Ref=$dangling MD=$multdef NC=$notConv Pg=$pages Exit=$exitCode ${sizeKB}KB ${elapsed}s" -ForegroundColor $color
+    foreach ($t in $tocIssues) {
+        Write-Host "  [TOC] $t   (from $(Split-Path -Leaf $tocPath))" -ForegroundColor Red
+    }
     if ($unwritten -gt 0) {
         Write-Host "  [TRUNCATED] $unwritten label(s) never reached the .aux - the run stopped before \end{document}" -ForegroundColor Red
     }
@@ -270,7 +361,7 @@ function Invoke-Build {
         }
     }
 
-    return [PSCustomObject]@{ Name=$Name; Status=$status; Errors=$errors; PlainErr=$plainErr; Overfull=$overfull; Align=$align; Refs=$dangling; MultDef=$multdef; NotConv=$notConv; Pages=$pages; SizeKB=$sizeKB }
+    return [PSCustomObject]@{ Name=$Name; Status=$status; Errors=$errors; PlainErr=$plainErr; Overfull=$overfull; Align=$align; Refs=$dangling; MultDef=$multdef; NotConv=$notConv; Pages=$pages; SizeKB=$sizeKB; TocIssues=$tocIssues.Count }
 }
 
 function Invoke-Clean {
@@ -366,7 +457,7 @@ switch ($Action) {
 
         foreach ($r in $results) {
             $c = switch ($r.Status) { 'OK'{'Green'} 'OVERFULL'{'DarkYellow'} 'BADREF'{'DarkYellow'} 'FAIL'{'Red'} default{'Gray'} }
-            Write-Host ('  {0,-16} {1,-10} Err={2} PErr={7} Ov={3} Al={10} Ref={4} MD={8} NC={9} Pg={5} {6}KB' -f $r.Name,$r.Status,$r.Errors,$r.Overfull,$r.Refs,$r.Pages,$r.SizeKB,$r.PlainErr,$r.MultDef,$r.NotConv,$r.Align) -ForegroundColor $c
+            Write-Host ('  {0,-16} {1,-10} Err={2} PErr={7} Ov={3} Al={10} TI={11} Ref={4} MD={8} NC={9} Pg={5} {6}KB' -f $r.Name,$r.Status,$r.Errors,$r.Overfull,$r.Refs,$r.Pages,$r.SizeKB,$r.PlainErr,$r.MultDef,$r.NotConv,$r.Align,$r.TocIssues) -ForegroundColor $c
         }
 
         $tt = '{0:F1}' -f $totalSw.Elapsed.TotalSeconds
