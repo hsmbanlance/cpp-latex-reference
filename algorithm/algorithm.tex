@@ -189,7 +189,7 @@
 
 \titleformat{\chapter}[display]
   {\normalfont\huge\bfseries\color{algheadbg}}
-  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+  {\CTEXthechapter}{20pt}{\Huge}
 \titleformat{\section}
   {\normalfont\Large\bfseries\color{blue!70!black}}
   {\thesection}{1em}{}
@@ -878,9 +878,10 @@ C~和~C\#~需要手动实现 sift-down 逻辑。C\#~没有内置的堆排序函�
 （\textbf{最大堆}）。入队~$\bigO{\log n}$、出队~$\bigO{\log n}$、查看堆顶~$\bigO{1}$。
 使用~\Tp{std::greater<T>}~可改为最小堆。不提供 decrease-key 操作。
 
-\medskip\noindent\textbf{C\#}~\Tp{Priority\allowbreak{}Queue<TElement, TPriority>}（.NET 6+，\texttt{System.\allowbreak{}Collections.\allowbreak{}Generic}）：
+\medskip\noindent\textbf{C\#} 的 \Tp{Priority\allowbreak{}Queue<TElement, TPriority>}（.NET 6+，
+命名空间 \texttt{System.\allowbreak{}Collections.\allowbreak{}Generic}）：
 入队/出队~$\bigO{\log n}$，查看最小优先级~$\bigO{1}$。\textbf{最小堆}（与 C++ 默认相反）。
-同样不支持 decrease-key，需通过惰性删除（enqueue 重复元素 + 跳过过时条目）处理。
+同样不支持 decrease-key，需通过惰性删除（enqueue 重复元素，再跳过过时条目）处理。
 \end{stdspec}
 
 % ── 7. 计数排序 ──
@@ -2591,9 +2592,10 @@ static List<int> RabinKarp(string text, string pat)
 \end{lstlisting}
 
 \begin{compare}
-C++~使用~\Fn{std::\allowbreak{}string::\allowbreak{}substr}~验证匹配；C\#~使用~\Fn{string.\allowbreak{}Compare\allowbreak{}Ordinal}~避免分配子串。
+C++~用~\Fn{std::\allowbreak{}string::\allowbreak{}substr}~验证匹配。
+C\#~用~\Fn{string.\allowbreak{}Compare\allowbreak{}Ordinal}~避免分配子串。
 哈希冲突时两者都需逐字符验证。
-C~实现类似但需手动管理结果数组的动态扩容。
+C~实现类似，但需手动管理结果数组的动态扩容。
 \end{compare}
 
 % \part* 清页在写完标题之后，故目录行必须赶在 \@endpart 里写，否则页码记到空白背页。

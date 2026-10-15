@@ -310,7 +310,7 @@
 
 \titleformat{\chapter}[display]
   {\normalfont\huge\bfseries\color{toolheadbg}}
-  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+  {\CTEXthechapter}{20pt}{\Huge}
 \titleformat{\section}
   {\normalfont\Large\bfseries\color{blue!70!black}}
   {\thesection}{1em}{}
@@ -1875,12 +1875,12 @@ workgroup 尺寸，写成 \Tp{in} 而没有变量名是 compute 的合法特例�
 \Tp{uvec3}：\Tp{gl\_{\Bk}Work{\Bk}GroupID}、\Tp{gl\_{\Bk}Local{\Bk}InvocationID}、
 \Tp{gl\_{\Bk}Global{\Bk}InvocationID}、\Tp{gl\_{\Bk}Num{\Bk}Work{\Bk}Groups}。
 
-函数族大致分六类：几何（\Fn{dot}、\Fn{cross}、\Fn{normalize}、\Fn{length}、
-\Fn{distance}、\Fn{faceforward}、\Fn{reflect}、\Fn{refract}）、矩阵
-（\Fn{matrix{\Bk}Comp{\Bk}Mult}、\Fn{transpose}、\Fn{determinant}、\Fn{inverse}）、
-通用数值（\Fn{clamp}、\Fn{mix}、\Fn{step}、\Fn{smoothstep}、\Fn{fract}、
-\Fn{modf}）、指数对数与三角、打包（\Fn{pack{\Bk}Half2x16} 一族）以及原子
-（\Fn{atomicAdd}、\Fn{atomic{\Bk}Comp{\Bk}Swap} 一族，只能作用于 \Tp{buffer} 或
+函数族大致分六类。几何一族有 \Fn{dot}、\Fn{cross}、\Fn{normalize}、\Fn{length}、
+\Fn{distance}、\Fn{faceforward}、\Fn{reflect} 与 \Fn{refract}；矩阵一族有
+\Fn{matrix{\Bk}Comp{\Bk}Mult}、\Fn{transpose}、\Fn{determinant} 与 \Fn{inverse}；
+通用数值一族有 \Fn{clamp}、\Fn{mix}、\Fn{step}、\Fn{smoothstep}、\Fn{fract} 与
+\Fn{modf}；再就是指数对数与三角一族、打包一族（\Fn{pack{\Bk}Half2x16} 为首），
+以及原子一族（\Fn{atomicAdd}、\Fn{atomic{\Bk}Comp{\Bk}Swap} 为首，只能作用于 \Tp{buffer} 或
 \Tp{atomic\_{\Bk}uint} 计数器）。纹理族的分工最值得记住：\Fn{texture} 隐式求 LOD，
 因此依赖片元阶段的导数；\Fn{textureLod} 显式给层级，可以在任何阶段用；
 \Fn{textureGrad} 直接给出 \Tp{uv} 方向上的梯度，用于在分支内部手工喂导数；
@@ -2072,15 +2072,19 @@ float4 PSMain(VSOutput input) : SV_Target
 
 \section{资源类型族：纹理、缓冲与采样器}
 
-\HSL{} 把资源分成三类。第一类是只读纹理：\Tp{Texture1D}、\Tp{Texture2D}、
-\Tp{Texture3D}、\Tp{TextureCube}、\Tp{Texture2D\Bk Array}、\Tp{Texture2DMS}，取样
-方法是 \Tp{Sample}、\Tp{SampleLevel}、\Tp{Sample\Bk Bias}、\Tp{Sample\Bk Grad}、
-\Tp{SampleCmp}、\Tp{Gather}、\Tp{Load}，元信息靠 \Tp{Get\Bk Dimensions}，自身可算
-层级用 \Tp{Calculate\Bk Level{\Bk}Of{\Bk}Detail}。第二类是缓冲：\Tp{Buffer<float4>} 这类带
-类型的视图、\Tp{Structured{\Bk}Buffer} 与它的可写形态 \Tp{RW\Bk Structured{\Bk}Buffer}、按
-字节寻址的 \Tp{Byte{\Bk}Address{\Bk}Buffer} 与 \Tp{RWByte\Bk Address{\Bk}Buffer}、以及配合流式输出
-的 \Tp{Append\Bk Structured{\Bk}Buffer} 与 \Tp{Consume\Bk Structured{\Bk}Buffer}。第三类是
-采样状态：\Tp{Sampler{\Bk}State} 与 \Tp{Sampler\Bk Comparison{\Bk}State}。
+\HSL{} 把资源分成三类。
+\begin{itemize}
+  \item 只读纹理：\Tp{Texture1D}、\Tp{Texture2D}、\Tp{Texture3D}、\Tp{TextureCube}、
+        \Tp{Texture2D{\Bk}Array} 与 \Tp{Texture2DMS}。
+  \item 取样方法：\Tp{Sample}、\Tp{SampleLevel}、\Tp{Sample{\Bk}Bias}、\Tp{Sample{\Bk}Grad}、
+        \Tp{SampleCmp}、\Tp{Gather} 与 \Tp{Load}；元信息靠 \Tp{Get{\Bk}Dimensions}，
+        自身可算层级用 \Tp{Calculate{\Bk}Level{\Bk}Of{\Bk}Detail}。
+  \item 缓冲：\Tp{Buffer<float4>} 这类带类型的视图、\Tp{Structured{\Bk}Buffer} 与它的可写形态
+        \Tp{RW{\Bk}Structured{\Bk}Buffer}、按字节寻址的 \Tp{Byte{\Bk}Address{\Bk}Buffer} 与
+        \Tp{RWByte{\Bk}Address{\Bk}Buffer}，以及配合流式输出的 \Tp{Append{\Bk}Structured{\Bk}Buffer}
+        与 \Tp{Consume{\Bk}Structured{\Bk}Buffer}。
+  \item 采样状态：\Tp{Sampler{\Bk}State} 与 \Tp{Sampler{\Bk}Comparison{\Bk}State}。
+\end{itemize}
 
 采样器与纹理分离是 \HSL{} 早于 \GSL{} 落地的设计（老式 \Tp{sampler2D} 组合声明在
 新台阶里已不使用），它带来两个后果：同一个纹理可以在一次绘制里用不同采样器多次取样；
@@ -3456,9 +3460,9 @@ void UploadNextFrame(const void* src)
 
 \section{上下文、共享与表面：WGL、GLX、EGL}
 
-上下文创建从来不是 GL 自己的事：Windows 用 \Lib{WGL}（\Fn{wgl{\Bk}Choose{\Bk}Pixel{\Bk}FormatARB}
-选像素格式、\Fn{wgl{\Bk}Create{\Bk}Context{\Bk}AttribsARB} 定版本与 profile），X11 用
-\Lib{GLX}（\Fn{glXChooseFBConfig}、\Fn{glXCreate{\Bk}Context{\Bk}AttribsARB}），
+上下文创建从来不是 GL 自己的事：Windows 用 \Lib{WGL}，先 \Fn{wgl{\Bk}Choose{\Bk}Pixel{\Bk}FormatARB}
+选像素格式、再 \Fn{wgl{\Bk}Create{\Bk}Context{\Bk}AttribsARB} 定版本与 profile；X11 用
+\Lib{GLX}（\Fn{glXChooseFBConfig}、\Fn{glXCreate{\Bk}Context{\Bk}AttribsARB}）；
 嵌入式、Android 与 Wayland 用 \Lib{EGL}。EGL 把 ``可绘制表面'' 独立成
 \Tp{EGLSurface}，于是同一份 GL 对象可以画进窗口、pbuffer，或者干脆用
 \Lib{EGL\_{\Bk}KHR\_{\Bk}surfaceless\_{\Bk}context} 不要表面；Wayland 上窗口表面由合成器持有，
@@ -4349,29 +4353,31 @@ SSR 在屏幕空间沿反射方向步进，出屏即失败，因此必须与环�
 
 \subsection{Vulkan RT}
 
-三个扩展通常一起出现：\Lib{VK\_{\Bk}KHR\Bk\_{\Bk}acceleration\Bk\_{\Bk}structure}、
-\Lib{VK\_{\Bk}KHR\Bk\_{\Bk}ray\_{\Bk}tracing\_{\Bk}pipeline}、\Lib{VK\_{\Bk}KHR\Bk\_{\Bk}ray\_{\Bk}query}，
-外加 \Lib{VK\_{\Bk}KHR\Bk\_{\Bk}deferred\Bk\_{\Bk}host\_{\Bk}operations} 把构建挪到多主机线程。
-对象是 \Tp{Vk{\Bk}Acceleration{\Bk}StructureKHR}，构建信息
-\Tp{Vk{\Bk}Acceleration{\Bk}Structure\Bk Build{\Bk}Geometry{\Bk}InfoKHR} 里区分类型（顶/底层级）与
-模式（重建或更新），几何数据以设备地址形式给出（顶点、索引、可选的
-变换缓冲）。尺寸由 \Fn{vk{\Bk}Get{\Bk}Acceleration{\Bk}Structure\Bk Build{\Bk}SizesKHR} 询问，返回
-三个值：结果大小、scratch 大小与更新时的序列化大小。构建标志决定性能形状，
-它们共享 \Tp{VK\_{\Bk}BUILD\_{\Bk}ACCELERATION\_{\Bk}STRUCTURE}\Bk{\_...BIT\_KHR} 前缀：
-\Tp{PREFER\_{\Bk}FAST\_{\Bk}TRACE} 与 \Tp{PREFER\_{\Bk}FAST\_{\Bk}BUILD} 是互斥取向，
+三个扩展通常一起出现：\Lib{VK\_{\Bk}KHR{\Bk}\_{\Bk}acceleration{\Bk}\_{\Bk}structure}、
+\Lib{VK\_{\Bk}KHR{\Bk}\_{\Bk}ray\_{\Bk}tracing\_{\Bk}pipeline} 与 \Lib{VK\_{\Bk}KHR{\Bk}\_{\Bk}ray\_{\Bk}query}，
+外加 \Lib{VK\_{\Bk}KHR{\Bk}\_{\Bk}deferred{\Bk}\_{\Bk}host\_{\Bk}operations} 把构建挪到多主机线程。
+对象类型是 \Tp{Vk{\Bk}Acceleration{\Bk}StructureKHR}，构建信息类型见下。
+构建信息 \Tp{Vk{\Bk}Acceleration{\Bk}Structure{\Bk}Build{\Bk}Geometry{\Bk}InfoKHR} 里
+区分类型（顶/底层级）与模式（重建或更新），几何数据以设备地址形式给出
+（顶点、索引、可选的变换缓冲）。尺寸先问 \Fn{vk{\Bk}Get{\Bk}Acceleration{\Bk}Structure{\Bk}Build{\Bk}SizesKHR}，
+它返回三个值：结果大小、scratch 大小与更新时的序列化大小。
+
+构建标志决定性能形状，它们共享同一个长前缀，形如
+\Tp{VK\_{\Bk}BUILD\_{\Bk}ACCELERATION\_{\Bk}STRUCTURE\_{\Bk}...\_{\Bk}BIT\_{\Bk}KHR}：
+其中 \Tp{PREFER\_{\Bk}FAST\_{\Bk}TRACE} 与 \Tp{PREFER\_{\Bk}FAST\_{\Bk}BUILD} 是互斥取向，
 \Tp{ALLOW\_{\Bk}UPDATE} 允许 refit，\Tp{ALLOW\_{\Bk}COMPACTION} 允许产出压缩版本。
-压缩后用 \Fn{vk{\Bk}Cmd{\Bk}Write{\Bk}Acceleration{\Bk}Structures{\Bk}PropertiesKHR} 取实际大小，
-再以 \Fn{vk{\Bk}Cmd{\Bk}Copy{\Bk}Acceleration{\Bk}StructureKHR} 的 compaction 模式产出目标结构。
-管线侧的组类型是 general 与 hit group 两类，
-\Fn{vk{\Bk}Cmd{\Bk}Trace{\Bk}RaysKHR} 收四个
-\Tp{Vk{\Bk}Strided{\Bk}Device{\Bk}Address\Bk RegionKHR}，
-分别对应 raygen、miss、hit、callable。记录表的对齐规则由
-\Tp{Vk{\Bk}Physical{\Bk}Device\Bk Ray{\Bk}Tracing{\Bk}Pipeline{\Bk}PropertiesKHR} 给出的
-\Tp{shader{\Bk}Group{\Bk}Handle{\Bk}Size} 与 \Tp{shader{\Bk}Group{\Bk}Base{\Bk}Alignment} 决定：步长必须是
-前者的整数倍，起始地址必须按后者对齐------把这两个数写死是最常见的
-跨厂商崩溃源。
-\Tp{VK\_{\Bk}PIPELINE\_{\Bk}CREATE\Bk RAY\_{\Bk}TRACING\Bk NO\_{\Bk}NULL\Bk CLOSEST\_{\Bk}HIT\Bk SHADERS}\Bk{\_BIT\_KHR}
-这类管线标志能把 ``命中组里一定有对应着色器'' 变成契约，换来更快的遍历。
+压缩后要取实际大小，用 \Fn{vk{\Bk}Cmd{\Bk}Write{\Bk}Acceleration{\Bk}Structures{\Bk}PropertiesKHR}；
+产出目标结构则用 \Fn{vk{\Bk}Cmd{\Bk}Copy{\Bk}Acceleration{\Bk}StructureKHR} 的 compaction 模式。
+
+管线侧的组类型分 general 与 hit group 两类。\Fn{vk{\Bk}Cmd{\Bk}Trace{\Bk}RaysKHR} 收四个
+\Tp{Vk{\Bk}Strided{\Bk}Device{\Bk}Address{\Bk}RegionKHR}，
+分别对应 raygen、miss、hit、callable。记录表的对齐规则要看属性结构里的两个数，
+属性结构叫 \Tp{Vk{\Bk}Physical{\Bk}Device{\Bk}Ray{\Bk}Tracing{\Bk}Pipeline{\Bk}PropertiesKHR}，
+两个数是 \Tp{shader{\Bk}Group{\Bk}Handle{\Bk}Size} 与 \Tp{shader{\Bk}Group{\Bk}Base{\Bk}Alignment}：
+步长必须是前者的整数倍，起始地址必须按后者对齐------把这两个数写死是最常见的
+跨厂商崩溃源。另有一个管线标志值得记住，它把 ``命中组里一定有对应着色器''
+变成契约，换来更快的遍历：
+\Tp{VK\_{\Bk}PIPELINE\_{\Bk}CREATE{\Bk}RAY\_{\Bk}TRACING{\Bk}NO\_{\Bk}NULL{\Bk}CLOSEST\_{\Bk}HIT{\Bk}SHADERS\_{\Bk}BIT\_{\Bk}KHR}。
 
 \subsection{OptiX}
 

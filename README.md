@@ -189,6 +189,14 @@ C、C++/
 
 用系统默认 PDF 阅读器打开指定项目的输出文件。如果 PDF 不存在会提示先编译。
 
+### 校验 Pages 首页清单
+
+```powershell
+.\workflow.ps1 check
+```
+
+校验 `.github/gen_index.py` 与 `.github/copy_pdfs.ps1`：Python 能否解析导入、`PROJECTS` 是否与上面的项目注册表同序同数、`copy_pdfs.ps1` 是否覆盖每一册、以及在临时目录里用占位 PDF 真跑一遍 `main()` 生成 `index.html`（卡片数、链接数、有无未转义的 HTML）。`build-all` 在编译第一个项目之前就会跑这项校验，不通过则整条部署链路直接失败——这两份 Pages 清单历史上被漏改过，而 `build-all` 从不检查它们。新增项目时改完两份清单先跑一次 `check`。
+
 ### 项目名速查
 
 | 项目名 | 文件夹 | 主题 |

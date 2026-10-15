@@ -453,7 +453,7 @@
 
 % ===== 标题与章节格式 =====
 \usepackage{titlesec}
-\titleformat{\chapter}[display]{\huge\bfseries\color{algheadbg}}{\chaptertitlename\ \thechapter}{10pt}{\huge}
+\titleformat{\chapter}[display]{\huge\bfseries\color{algheadbg}}{\CTEXthechapter}{10pt}{\huge}
 \titleformat{\section}{\Large\bfseries\color{blue!70!black}}{\thesection}{8pt}{}
 \titleformat{\subsection}{\large\bfseries\color{blue!60!black}}{\thesubsection}{6pt}{}
 
@@ -2262,7 +2262,10 @@ UE 在 Windows 上禁用 \cpp{} 异常（\texttt{/EHs-c-}），不能使用 \tex
 \end{tcolorbox}
 
 \begin{tcolorbox}[note={打包分发}]
-Windows 上使用延迟加载（\texttt{Public\allowbreak{}Delay\allowbreak{}LoadDLLs}）时，必须通过 \texttt{Runtime\allowbreak{}Dependencies.\allowbreak{}Add} 将 DLL 注册为运行时依赖，否则打包后的游戏找不到 DLL。Linux/macOS 上若使用静态库（\texttt{.a}），则无需额外分发。
+Windows 上使用延迟加载时，属性名是 \texttt{Public\allowbreak{}Delay\allowbreak{}LoadDLLs}；
+此时必须通过 \texttt{Runtime\allowbreak{}Dependencies} 的 \texttt{Add} 方法
+把 DLL 注册为运行时依赖，否则打包后的游戏找不到 DLL。
+Linux 与 macOS 上若使用静态库（\texttt{.a}），则无需额外分发。
 \end{tcolorbox}
 
 % -------------------------------------------------------------------

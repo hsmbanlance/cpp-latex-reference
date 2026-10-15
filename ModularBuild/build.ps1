@@ -203,7 +203,7 @@ try {
     # ─── TOC 修复（LaTeX 2025-11-01 内核 bug 导致 .toc 为空）───
     $auxPath   = Join-Path $scriptDir "$jobName.aux"
     $manualToc = Join-Path $scriptDir "$jobName-manual.toc"
-    if (-not $SinglePass -and (Test-Path -LiteralPath $auxPath)) {
+    if (-not $hardFail -and -not $SinglePass -and (Test-Path -LiteralPath $auxPath)) {
         $tocEntries = Get-Content -LiteralPath $auxPath -Encoding UTF8 |
             Where-Object { $_ -match '\\@writefile\{toc\}' } |
             ForEach-Object {

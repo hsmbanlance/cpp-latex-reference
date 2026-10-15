@@ -177,7 +177,7 @@
 
 \titleformat{\chapter}[display]
   {\normalfont\huge\bfseries\color{algheadbg}}
-  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+  {\CTEXthechapter}{20pt}{\Huge}
 \titleformat{\section}
   {\normalfont\Large\bfseries\color{blue!70!black}}
   {\thesection}{1em}{}
@@ -3118,8 +3118,8 @@ Boost.Process 是目前最完整的跨平台答案：v2 代（Boost 1.85 起，
 
 \subsection{std::system：标准的那一行到底干了什么}
 
-\Fn{std::system}（\Tp{<cstdlib>}）把\emph{一整条字符串}交给
-\Tp{/bin/sh -c}（Windows：\Tp{cmd /c}），返回值只保证``环境相关''：
+\Fn{std::system}（\Tp{<cstdlib>}）把\emph{一整条字符串}交给 shell 执行：
+POSIX 下即 \Tp{/bin/sh -c}，Windows 下即 \Tp{cmd /c}，返回值只保证``环境相关''：
 POSIX 实现下是 \Fn{wait} 风格的 status（取退出码要 \Fn{WEXITSTATUS}，
 启动 shell 失败返回 -1），标准不承诺更多。它\emph{没有}引用工具、
 \emph{没有}管道控制、\emph{无法}不带 shell。适用清单极短：你确实
@@ -3341,8 +3341,9 @@ std::optional<std::vector<char>> read_all(std::string_view p) {
 }
 \end{lstlisting}
 
-共享模式与顺序扫描提示（\Tp{FILE\_{\Bk}SHARE\Bk \_{\Bk}DELETE}、\Tp{FILE\_{\Bk}FLAG\Bk \_{\Bk}SEQUENTIAL\_{\Bk}SCAN}）
-\Fn{\_wfopen} 给不了，那时换成 \Fn{CreateFileW} 加 \Fn{\_fdopen}，\Fn{read\_all} 的签名不变——这正是``唯一转换点''的好处。
+共享模式 \Tp{FILE\_{\Bk}SHARE\_{\Bk}DELETE} 与顺序扫描提示
+\Tp{FILE\_{\Bk}FLAG\_{\Bk}SEQUENTIAL\_{\Bk}SCAN} 这两项 \Fn{\_wfopen} 都给不了，
+那时换成 \Fn{CreateFileW} 加 \Fn{\_fdopen}，\Fn{read\_all} 的签名不变——这正是``唯一转换点''的好处。
 
 \subsection{argv：第一条被毁掉的中文文件名}
 
@@ -4062,8 +4063,8 @@ musl 的代价要写清：\textbf{locale 与宽字符支持是子集}。
 循环依赖的归档则用 \lstinline|-Wl,--start-group ... -Wl,--end-group|
 （或 lld 默认的多次扫描）。
 
-另一个只影响动态链接但常被误用的开关是 \Tp{-fvisibility=hidden}
-（配 \Tp{-fvisibility-{\Bk}inlines-{\Bk}hidden}）：默认符号全导出会让共享库的
+另一个只影响动态链接但常被误用的开关是 \Tp{-fvisibility=hidden}，
+它常与 \Tp{-fvisibility-{\Bk}inlines-{\Bk}hidden} 配对使用：默认符号全导出会让共享库的
 重定位表膨胀、启动变慢、还意外把内部符号变成 ABI。正确姿势是
 库内默认隐藏，只对导出宏用 \Tp{visibility} 属性显式放行。
 注意它对静态链接几乎没有体积收益，而且和 LTO 同时开时，

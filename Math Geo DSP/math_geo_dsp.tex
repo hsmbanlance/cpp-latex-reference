@@ -218,7 +218,7 @@
 
 \titleformat{\chapter}[display]
   {\normalfont\huge\bfseries\color{algheadbg}}
-  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+  {\CTEXthechapter}{20pt}{\Huge}
 \titleformat{\section}
   {\normalfont\Large\bfseries\color{blue!70!black}}
   {\thesection}{1em}{}
@@ -1551,7 +1551,14 @@ using quiet = pol::policy<
 double bad = bm::cyl_bessel_j(0.5, -1.0, quiet());
 \end{lstlisting}
 
-关键机制是 \Tp{policies::{\Bk}policy<...>} 与查询它的元函数（\Tp{precision\Bk\_{\Bk}policy}、\Tp{promotion\Bk\_{\Bk}policy}、\Tp{error\Bk\_{\Bk}policy}、\Tp{evaluation\Bk\_{\Bk}policy}）：精度目标、内部用什么类型累加、越界时抛异常还是安静返回一个可预测值，三件事各自是一个类型参数，于是调用点开销为零（代码路径在编译期就定死），代价是每个（类型，policy）组合各自实例化一份，编译时间与目标码体积同时上升，而且\textbf{没有可共享的 ABI}——你无法把 Boost.Math 编译进一个 \Tp{.so} 再宣称它对其他 Boost 版本二进制兼容。
+关键机制是 \Tp{policies::{\Bk}policy<...>} 与查询它的元函数。
+精度目标由 \Tp{precision\_{\Bk}policy} 给出，内部用什么类型累加由
+\Tp{promotion\_{\Bk}policy} 给出，越界时抛异常还是安静返回一个可预测值由
+\Tp{error\_{\Bk}policy} 给出，此外还有一个 \Tp{evaluation\_{\Bk}policy} 供求值环节取用。
+三件事各自是一个类型参数，于是调用点开销为零（代码路径在编译期就定死），
+代价是每个（类型，policy）组合各自实例化一份，编译时间与目标码体积同时上升，
+而且\textbf{没有可共享的 ABI}——你无法把 \Lib{Boost.Math} 编译进一个 \Tp{.so}，
+再宣称它对其他 \Lib{Boost} 版本二进制兼容。
 
 两处细节解释了这条路线的价值。其一是 \Tp{promote\_float}：\Tp{float} 的 \Tp{erf} 若直接用 24 位有效数字做极小极大逼近，末位误差会明显大于正确舍入；\Lib{Boost.Math} 的做法是内部在 \Tp{double} 或 \Tp{long double} 里算完再舍回，用一次类型往返买回几位余量，而 GSL 侧根本没有这个旋钮（接口只有 \Tp{double}，加宽由调用方做）。取向差别不是谁更准，而是\emph{精度预算写在哪一层}：模板参数，还是调用方代码。
 
@@ -1663,7 +1670,16 @@ Cephes 谱系 & \CL{} &
 \end{itemize}
 环境变量 \Tp{GSL\_RNG\_TYPE} 允许运行时换引擎，方便但不自证：日志里要同时记录引擎名与种子，否则一次``悄悄改了环境变量''就足以让两批数字对不上。
 
-\textbf{\CPP{}11 \Tp{<random>} 的分工。} 引擎一侧有 \Tp{mt19937}、\Tp{mt19937\_64}、\Tp{minstd\_{\Bk}rand}、\Tp{ranlux24}、\Tp{ranlux48} 与打乱用的 \Tp{knuth\_b}；分布一侧有 \Tp{uniform\_{\Bk}real\Bk\_{\Bk}distribution} 与 \Tp{normal\_{\Bk}distribution}、\Tp{poisson\_{\Bk}distribution}。两族彻底解耦：一个引擎可以喂任意分布，引擎与分布各自可拷贝、可独立播种。可复现性上有一条关键的非对称：\textbf{标准精确规定了引擎的算法与常数}，所以 \Tp{mt19937\_64} 在任何合规实现上产出同样的序列；而\emph{分布的抽样算法是实现自定义的}。同一个引擎配同一个种子，在 libstdc++、libc++ 与 MSVC STL 上 \Tp{normal\_{\Bk}distribution} 的取值可以不同。要逐位对拍就得把分布也固定下来：自己实现抽样，或选一个把分布也规定清楚的库。
+\textbf{\CPP{}11 \Tp{<random>} 的分工。} 引擎一侧有 \Tp{mt19937}、\Tp{mt19937\_64}、
+\Tp{minstd\_{\Bk}rand}、\Tp{ranlux24}、\Tp{ranlux48}，再加上打乱用的 \Tp{knuth\_b}；
+分布一侧有 \Tp{uniform\_{\Bk}real\_{\Bk}distribution}、\Tp{normal\_{\Bk}distribution} 与
+\Tp{poisson\_{\Bk}distribution}。两族彻底解耦：一个引擎可以喂任意分布，
+引擎与分布各自可拷贝、可独立播种。可复现性上有一条关键的非对称：
+\textbf{标准精确规定了引擎的算法与常数}，所以 \Tp{mt19937\_64} 在任何合规实现上
+产出同样的序列；而\emph{分布的抽样算法是实现自定义的}。
+同一个引擎配同一个种子，在 libstdc++、libc++ 与 MSVC STL 上
+\Tp{normal\_{\Bk}distribution} 的取值可以不同。要逐位对拍就得把分布也固定下来：
+自己实现抽样，或选一个把分布也规定清楚的库。
 
 两条与代价直接相关的性质：\Tp{mt19937} 的状态是 624 个 32 位字（约 2.5 KB），\Tp{mt19937\_64} 是 312 个 64 位字，所以``每线程一个引擎''在内存上没问题，但检查点与状态落盘要按这个尺寸预算；\Tp{minstd\_rand} 只有一个字的状态，落盘最便宜、派生最干净，代价是线性同余的格点结构与短周期。还要注意 \Tp{std::random\_device}：它的语义是``非确定性随机数''，用于播种而不是用于结果复现，某些实现会在熵源不足时阻塞，把它塞进热循环是典型的性能事故。
 
@@ -3809,7 +3825,16 @@ e^{\,j k\, \hat r \cdot \mathbf{r}'}\, \mathrm{d}S'
 
 电磁仿真没有``看一眼波形''这种验收手段，因为它太容易自我说服。可信的验证只有三类：解析对拍、守恒与对称性检查、网格收敛研究。
 
-\textbf{解析对拍。} 四个必须过的基准：其一，矩形波导主模 $TE_{10}$ 的截止频率 $f_c = 1/(2a\sqrt{\mu\epsilon})$（$a$ 为宽边）以及截止附近的相位常数与群速；其二，微带线的特征阻抗，Hammerstad 与 Jensen 的闭式给出宽厚比、有效介电常数与 $Z_0$（精度约百分之几，够用作对拍）；其三，自由空间损耗 $L = (4\pi d/\lambda)^{2}$ 与两副已知增益天线的链路预算；其四，介质平板的 Fabry--Pérot 谐振间隔 $\Delta f = c/(2nd)$。清单~\ref{lst:ch14-check} 给出前三个的 \CPP{} 实现与三分辨率外推。
+\textbf{解析对拍。} 四个必须过的基准：
+\begin{enumerate}
+  \item 矩形波导主模 $TE_{10}$ 的截止频率 $f_c = 1/(2a\sqrt{\mu\epsilon})$（$a$ 为宽边），
+        以及截止附近的相位常数与群速。
+  \item 微带线的特征阻抗：Hammerstad 与 Jensen 的闭式给出宽厚比、有效介电常数与 $Z_0$
+        （精度约百分之几，够用作对拍）。
+  \item 自由空间损耗 $L = (4\pi d/\lambda)^{2}$，与两副已知增益天线的链路预算。
+  \item 介质平板的 Fabry--P\'erot 谐振间隔 $\Delta f = c/(2nd)$。
+\end{enumerate}
+清单~\ref{lst:ch14-check} 给出前三个的 \CPP{} 实现与三分辨率外推。
 
 \begin{lstlisting}[style=cppstyle,label={lst:ch14-check},caption={三个解析基准的实现与三分辨率 Richardson 外推}]
 #include <cmath>

@@ -8,6 +8,9 @@ gen_index.py — 为 GitHub Pages 生成 index.html 首页
 
 import os
 import datetime
+# `escape`, not `import html`: main() binds a local named html for the rendered page, which would
+# shadow a module of that name.
+from html import escape
 
 PROJECTS = [
     ("SFINAE",        "sfinae_and_concepts.pdf",
@@ -239,15 +242,17 @@ def main():
     for tag, pdf, title, desc in PROJECTS:
         pdf_exists = os.path.isfile(os.path.join("_site", pdf))
         link_html = (
-            f'<a href="{pdf}">在线阅读 PDF</a>'
+            f'<a href="{escape(pdf, quote=True)}">在线阅读 PDF</a>'
             if pdf_exists
             else '<span style="color:var(--muted);font-size:.85rem;">PDF 编译失败</span>'
         )
+        # Card text is data from PROJECTS, and two descriptions name HTML-invisible things
+        # ("<algorithm>", "extern \"C\""). Interpolated raw, the browser eats the tag-shaped part.
         cards.append(
             f'    <div class="card">\n'
-            f'      <span class="badge">{tag}</span>\n'
-            f'      <h2>{title}</h2>\n'
-            f'      <p class="desc">{desc}</p>\n'
+            f'      <span class="badge">{escape(tag)}</span>\n'
+            f'      <h2>{escape(title)}</h2>\n'
+            f'      <p class="desc">{escape(desc)}</p>\n'
             f'      {link_html}\n'
             f'    </div>'
         )

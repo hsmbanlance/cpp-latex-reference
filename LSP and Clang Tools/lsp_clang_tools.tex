@@ -213,7 +213,7 @@
 
 \titleformat{\chapter}[display]
   {\normalfont\huge\bfseries\color{toolheadbg}}
-  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+  {\CTEXthechapter}{20pt}{\Huge}
 \titleformat{\section}
   {\normalfont\Large\bfseries\color{blue!70!black}}
   {\thesection}{1em}{}
@@ -1276,8 +1276,7 @@ I[..] All checks passed!
   \item 把 \texttt{build/} 整体加入 \texttt{.gitignore}，
         数据库与对象文件一样不进版本库。
   \item CI 里在跑质量工具之前先跑
-        \texttt{cmake -B build -G Ninja
-        -DCMAKE\_EXPORT\_COMPILE\_COMMANDS=ON}，
+        \texttt{cmake -B build -G Ninja -DCMAKE\_{\Bk}EXPORT\_{\Bk}COMPILE\_{\Bk}COMMANDS=ON}，
         并加一步存在性检查：文件不存在就失败，别把降级模式带进流水线。
   \item 多构建目录（Debug 与交叉编译）并存时，为每个目录配一份
         \texttt{.clangd}，用 \texttt{CompilationDatabase} 分别指向，
@@ -1928,7 +1927,7 @@ token 流里引用的编号表，协商阶段定好后整份文档都用它解�
 
 \begin{guideline}[title={能力协商决定后面哪些请求能发}]
 \begin{itemize}
-  \item 服务端没声明 \texttt{implementation{\Bk}Provider}，就不要发
+  \item 服务端没声明能力键 \texttt{implementation{\Bk}Provider}，就不要发方法
         \texttt{text{\Bk}Document/{\Bk}implementation}\Bk{}——得到的是
         \texttt{Method{\Bk}Not{\Bk}Found}（$-32601$），而行为良好的客户端应直接把
         「查找实现」菜单项禁用，根本不发请求。
@@ -3336,10 +3335,10 @@ problemMatcher 干的事很朴素：\textbf{拿正则扫任务输出，把一行
         \texttt{indent\_size}：每级缩进空格数（或 \texttt{tab} 表示跟随 tab\_width）；
         \texttt{tab\_width}：一个 tab 显示成几格。
   \item \texttt{max\_line\_length}：行宽软上限。
-  \item \texttt{end\_{\Bk}of\_{\Bk}line}：\texttt{lf} 或 \texttt{crlf}；
-        \texttt{insert\_{\Bk}final\_{\Bk}newline}：文件末尾是否留换行；
-        \texttt{trim\_{\Bk}trailing\_{\Bk}whitespace}：是否去行尾空格；
-        \texttt{charset}：\texttt{utf-8}、\texttt{latin1} 等。
+  \item \texttt{end\_{\Bk}of\_{\Bk}line}：\texttt{lf} 或 \texttt{crlf}。
+  \item \texttt{insert\_{\Bk}final\_{\Bk}newline}：文件末尾是否留换行。
+  \item \texttt{trim\_{\Bk}trailing\_{\Bk}whitespace}：是否去行尾空格。
+  \item \texttt{charset}：\texttt{utf-8}、\texttt{latin1} 等。
   \item 选择器用 glob：\texttt{[*]} 全仓生效，\texttt{[*.c]}、\texttt{[*.h]}、
         \texttt{[*.\{c,h\}]} 按类型覆盖。
 \end{itemize}
@@ -4426,9 +4425,9 @@ CI 用的二进制版本和本地一致。缺任何一件，仓库最后都会�
   \item \textbf{回写}：\Opt{in-place}（短写 \texttt{-i}）直接改文件，
     \Opt{backup-file} 决定备份后缀，静默无输出，退出码只反映「有没有读到文件」。
     它适合本地与 pre-commit，不适合门禁。
-  \item \textbf{只检查}：\Opt{dry-run}（短写 \texttt{-n}）不改文件，把每一处需要格式化的位置
-    按 \texttt{file:line:col: warning: ... [-Wclang-{\Bk}format-{\Bk}violations]} 打到
-    \textbf{标准错误}；配合 \Opt{Werror} 才返回非零。这是门禁的正确用法。
+  \item \textbf{只检查}：\Opt{dry-run}（短写 \texttt{-n}）不改文件，把每一处要格式化的位置
+    按 \texttt{file:line:col: warning: ...} 打到 \textbf{标准错误}，
+    方括号里的诊断名为 \texttt{[-Wclang-{\Bk}format-{\Bk}violations]}；配合 \Opt{Werror} 才返回非零。这是门禁的正确用法。
   \item \textbf{取差异}：\Opt{output-{\Bk}replacements-{\Bk}xml} 输出机器可读的替换列表
     （带 offset、长度与替换文本），可以喂给脚本自己算行列；
     人可读的 unified diff 由 \texttt{git clang-format --diff}（\ref{sec:ch10-s3}）或
@@ -5898,7 +5897,18 @@ pt.cpp:2:10: warning: member function 'Scale' can be made static [readability-co
 -  double Scale() const { return 2.0; }
 +  static double Scale() { return 2.0; }
 \end{lstlisting}
-可自动修复；公开类的头文件慎改——去掉 \texttt{this} 依赖是源码级接口变更。本族其余常用项：readability-{\Bk}const-{\Bk}return-{\Bk}type、readability-{\Bk}implicit-{\Bk}bool-{\Bk}conversion、readability-{\Bk}named-{\Bk}parameter、readability-{\Bk}else-{\Bk}after-{\Bk}return、readability-{\Bk}redundant-{\Bk}access-{\Bk}specifiers、readability-{\Bk}avoid-{\Bk}const-{\Bk}params-{\Bk}in-{\Bk}decls、readability-{\Bk}uppercase-{\Bk}literal-{\Bk}suffix（\texttt{3u} 转 \texttt{3U}，可自动修复）、readability-{\Bk}inconsistent-{\Bk}declaration-{\Bk}parameter-{\Bk}name——多为纯 AST、低开销，按口味逐个试开。
+可自动修复；公开类的头文件慎改——去掉 \texttt{this} 依赖是源码级接口变更。
+本族其余常用项多为纯 AST、低开销，按口味逐个试开：
+\begin{itemize}
+  \item readability-{\Bk}const-{\Bk}return-{\Bk}type
+  \item readability-{\Bk}implicit-{\Bk}bool-{\Bk}conversion
+  \item readability-{\Bk}named-{\Bk}parameter
+  \item readability-{\Bk}else-{\Bk}after-{\Bk}return
+  \item readability-{\Bk}redundant-{\Bk}access-{\Bk}specifiers
+  \item readability-{\Bk}avoid-{\Bk}const-{\Bk}params-{\Bk}in-{\Bk}decls
+  \item readability-{\Bk}uppercase-{\Bk}literal-{\Bk}suffix：\texttt{3u} 转 \texttt{3U}，可自动修复。
+  \item readability-{\Bk}inconsistent-{\Bk}declaration-{\Bk}parameter-{\Bk}name
+\end{itemize}
 
 \section{cppcoreguidelines 族实战}\label{sec:ch13-s5}
 \subsection{cppcoreguidelines-pro-bounds}\label{sec:ch13-s5a}

@@ -214,7 +214,7 @@
 
 \titleformat{\chapter}[display]
   {\normalfont\huge\bfseries\color{algheadbg}}
-  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+  {\CTEXthechapter}{20pt}{\Huge}
 \titleformat{\section}
   {\normalfont\Large\bfseries\color{blue!70!black}}
   {\thesection}{1em}{}
@@ -2120,12 +2120,12 @@ GC 管理对象，密钥需显式销毁 &
         hiredis 的 \Tp{redisReply}，各说各的协议。
 \end{itemize}
 
-它们的错误模型（返回码加 \Fn{sqlite3\_\allowbreak{}errmsg}、
-\Fn{PQresult\allowbreak{}Error\allowbreak{}Field}、\Tp{SQLSTATE}）、
-参数绑定方式（\Fn{sqlite3\_\allowbreak{}bind\_\allowbreak{}int64}、
-\Fn{PQexec\allowbreak{}Params} 的字符串数组、\Fn{SQLBind\allowbreak{}Parameter}）、
-结果遍历方式（\Fn{sqlite3\_\allowbreak{}step} 状态机、
-\Fn{PQntuples} 随机访问、\Fn{SQLFetch} 游标）都不同。
+它们的错误模型各不相同：sqlite 用返回码加 \Fn{sqlite3\_\allowbreak{}errmsg}，
+libpq 用 \Fn{PQresult\allowbreak{}Error\allowbreak{}Field}，ODBC 用 \Tp{SQLSTATE}。
+参数绑定也是三套写法：\Fn{sqlite3\_\allowbreak{}bind\_\allowbreak{}int64} 这类逐位绑定、
+\Fn{PQexec\allowbreak{}Params} 的字符串数组、\Fn{SQLBind\allowbreak{}Parameter}。
+结果遍历同样分歧：\Fn{sqlite3\_\allowbreak{}step} 是状态机，\Fn{PQntuples} 给随机访问，
+\Fn{SQLFetch} 走游标。
 所谓 ``\CppJava{} 的数据库层'' 实际是
 \textbf{项目自己写的那 300 行包装}。
 
@@ -2148,9 +2148,9 @@ JDBC 的分界非常清楚：\Tp{java.sql} 与 \Tp{javax.sql} 里全是接口
 \section{\CSharp{}：ADO.NET 的工厂抽象加内建池}
 
 ADO.NET 用 \Tp{Db\allowbreak{}Provider\allowbreak{}Factory} 把 ``造对象'' 这件事也抽象了：
-\Tp{Sql\allowbreak{}Connection}、\Tp{Npgsql\allowbreak{}Connection}、\Tp{My\allowbreak{}Sql\allowbreak{}Connector}
-各自提供工厂，代码可只依赖 \Tp{Db\allowbreak{}Connection}、\Tp{DbCommand}、
-\Tp{Db\allowbreak{}Data\allowbreak{}Reader}、\Tp{DbParameter}。
+\Tp{Sql\allowbreak{}Connection}、\Tp{Npgsql\allowbreak{}Connection} 与 \Tp{My\allowbreak{}Sql\allowbreak{}Connector}
+各自提供工厂，代码可以只依赖抽象类型 \Tp{Db\allowbreak{}Connection} 与 \Tp{DbCommand}，
+或者 \Tp{Db\allowbreak{}Data\allowbreak{}Reader} 与 \Tp{DbParameter}。
 连接池是\emph{内建}的（连接串 \Tp{Pooling=true} 默认开启），
 \Tp{Dispose} 归还而不是真关闭。
 更重要的是：EF Core 是生态里的一等 ORM，
@@ -3451,7 +3451,14 @@ CI 集成 & 直接调自写二进制 & CLI、Maven、Gradle、容器 & CLI 与 M
 
 \subsection{Windows：凭据管理器与 DPAPI}
 
-凭据管理器的接口是 \Fn{CredWriteW}、\Fn{CredReadW}、\Fn{CredDeleteW} 与 \Fn{Cred\allowbreak{}EnumerateW}，条目类型用 \Tp{CRED\_\allowbreak{}TYPE\_\allowbreak{}GENERIC}，\Tp{TargetName} 是键（约定形如 \Tp{Legacy\allowbreak{}Generic:\allowbreak target=My\allowbreak{}App/\allowbreak{}\allowbreak db/\allowbreak{}\allowbreak{}prod}），\Tp{Persist} 分 \Tp{CRED\_\allowbreak{}PERSIST\_\allowbreak{}\allowbreak LOCAL\_\allowbreak{}MACHINE} 与 \Tp{CRED\_\allowbreak{}PERSIST\_\allowbreak{}\allowbreak ENTERPRISE}（后者会随域账户漫游），凭据体上限是 512 字节。要点是它的\emph{安全边界}：generic 凭据对\textbf{同一用户的任何进程}都可读，没有应用级 ACL，所以它防的是 ``别人翻你的磁盘''，不防 ``以你的身份跑的恶意代码''。
+写、读、删三个入口是 \Fn{CredWriteW}、\Fn{CredReadW} 与 \Fn{CredDeleteW}，
+枚举走 \Fn{Cred\allowbreak{}EnumerateW}。
+条目类型用 \Tp{CRED\_\allowbreak{}TYPE\_\allowbreak{}GENERIC}；键是 \Tp{TargetName}，约定形如
+\Tp{Legacy\allowbreak{}Generic:\allowbreak target=My\allowbreak{}App/\allowbreak{}db/\allowbreak{}prod}；
+\Tp{Persist} 分两档，\Tp{CRED\_\allowbreak{}PERSIST\_\allowbreak{}LOCAL\_\allowbreak{}MACHINE} 与
+\Tp{CRED\_\allowbreak{}PERSIST\_\allowbreak{}ENTERPRISE}（后者会随域账户漫游）；凭据体上限是 512 字节。
+要点是它的\emph{安全边界}：generic 凭据对\textbf{同一用户的任何进程}都可读，
+没有应用级 ACL，所以它防的是 ``别人翻你的磁盘''，不防 ``以你的身份跑的恶意代码''。
 
 DPAPI 是另一层：\Fn{Crypt\allowbreak{}Protect\allowbreak{}Data} 与 \Fn{Crypt\allowbreak{}Unprotect\allowbreak{}Data} 用登录口令派生的主密钥（用户域或机器域）加密一段字节。可传 \Tp{CRYPTPROTECT\_\allowbreak{}UI\_\allowbreak{}FORBIDDEN} 禁止弹框（服务进程必须加，否则会静默挂住），可用额外 entropy 把密文绑到你的 salts 上——但 entropy 是\emph{附加}条件，不是秘密管理：它通常也存在磁盘上。机器域（\Tp{CRYPTPROTECT\_\allowbreak{}LOCAL\_\allowbreak{}MACHINE}）意味着 ``任何能读到主密钥文件的账户都能解''，管理员与 \Tp{SYSTEM} 都可以；用户域则是同用户任意进程可解。DPAPI-NG（\Fn{NCrypt\allowbreak{}Protect\allowbreak{}Secret}）支持 ACL 与多用户共享，代价是要写安全描述符。诚实结论：DPAPI 让 ``离线拿走这个文件'' 变成拿不走，它\emph{不是}密钥管理系统的替代品，也\textbf{不能}替代第 5 章的数据密钥层级（把 DEK 用 DPAPI 包裹是合理的；把主密钥交给 DPAPI 并宣称 ``密钥不落地'' 是不诚实的）。
 

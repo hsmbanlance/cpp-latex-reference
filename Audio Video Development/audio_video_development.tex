@@ -240,7 +240,7 @@
 
 \titleformat{\chapter}[display]
   {\normalfont\huge\bfseries\color{toolheadbg}}
-  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+  {\CTEXthechapter}{20pt}{\Huge}
 \titleformat{\section}
   {\normalfont\Large\bfseries\color{blue!70!black}}
   {\thesection}{1em}{}
@@ -552,8 +552,8 @@ def bad_realtime_tick(frames: int) -> None:
 打开任何一个音视频工程的依赖树，会发现一个稳定的分层：\emph{能被
 调用的那一层几乎全是 \CL{} 的 ABI}。具体地：
 \begin{itemize}
-  \item \DomVid{}/{\Bk}\DomAud{} 编解码内核：\Lib{libavcodec}、\Lib{libavformat}、
-        \Lib{libavutil}、\Lib{libswscale}、\Lib{libswresample} 全 \CL{}
+  \item \DomVid{}/{\Bk}\DomAud{} 编解码内核：\Lib{libavcodec}、\Lib{libavformat} 与
+        \Lib{libavutil}，加上 \Lib{libswscale}、\Lib{libswresample}，全 \CL{}
         接口；\Lib{x264}、\Lib{x265}、\Lib{libopus}、\Lib{libvpx}
         对外也是 \CL{} 头文件，即使 \Lib{x265} 内部是 \CPP{} 实现。
   \item 设备层：Linux 的 ALSA（\Fn{snd\_{\Bk}pcm\_{\Bk}writei} 一族的 \CL{} 函数）
@@ -1963,9 +1963,9 @@ static int alloc_frame(AVCodecContext *avctx, AVFrame *frame, int flags)
 \subsection{三层参数}
 
 同一个数值常常有三条写入路径，选错会静默无效。第一层是\textbf{公共字段}：
-\Tp{width}、\Tp{pix\_fmt}、\Tp{time\_base}、\Tp{gop\_size}、\Tp{bit\_rate}、
-\Tp{rc\_{\Bk}max\_{\Bk}rate}、\Tp{rc\_{\Bk}buffer\_{\Bk}size}、\Tp{qcompress}、\Tp{profile}、
-\Tp{level}、\Tp{thread\_{\Bk}count}、\Tp{extradata}——类型明确、编译期可查，但只覆盖
+\Tp{width}、\Tp{pix\_fmt}、\Tp{time\_base} 这类尺寸与时钟字段，\Tp{gop\_size}、\Tp{bit\_rate}、
+\Tp{rc\_{\Bk}max\_{\Bk}rate}、\Tp{rc\_{\Bk}buffer\_{\Bk}size}、\Tp{qcompress} 这类码率控制字段，
+以及 \Tp{profile}、\Tp{level}、\Tp{thread\_{\Bk}count}、\Tp{extradata}——类型明确、编译期可查，但只覆盖
 与容器和时钟相关的最小集合。第二层是 \Tp{AVOption} 通用面：几乎所有公共字段同时是
 选项，\Fn{av\_{\Bk}opt\_{\Bk}set\_{\Bk}int} 用字符串名 ``\Tp{bit\_rate}'' 写同一个字段，区别是
 名字要运行期查找，写错得到 \Tp{AVERROR(ENOENT)} 而不是编译错误。第三层是\textbf{私有
@@ -4794,15 +4794,20 @@ static void scan_side_data(AVPacket *p, int64_t video_pts_ms) {
 
 轨道身份有两层：容器内的标识与用途的标识。前者是 TS 的基本流号、MP4 的轨道号、Matroska 的
 轨道序号与全局唯一标识；FFmpeg 侧流对象上有一个整型标识字段承载格式专用号，另有一个字符串
-形式的标识符字段。后者是一组位标志 \Tp{AV\_{\Bk}DISPOSITION\_{\Bk}*}：\Tp{AV\_{\Bk}DISPOSITION\_{\Bk}DEFAULT}
-表示入网时的缺省选择，\Tp{AV\_{\Bk}DISPOSITION\_{\Bk}ORIGINAL} 标原始配音，
-\Tp{AV\_{\Bk}DISPOSITION\_{\Bk}DUBBING} 标配音版本，\Tp{AV\_{\Bk}DISPOSITION\_{\Bk}COMMENT} 给评论轨，
-\Tp{AV\_{\Bk}DISPOSITION\_{\Bk}DESCRIPTION} 给音频描述（为视障者补述画面的轨），
-\Tp{AV\_{\Bk}DISPOSITION\_{\Bk}FORCED} 只在画面里有不可省的文字（外语标题、铭牌）时置位，
-\Tp{AV\_{\Bk}DISPOSITION\_{\Bk}HEARING\_{\Bk}IMPAIRED} 与 \Tp{AV\_{\Bk}DISPOSITION\_{\Bk}VISUALLY\_{\Bk}IMPAIRED}
-是辅助技术旗，\Tp{AV\_{\Bk}DISPOSITION\_{\Bk}DEPENDENT} 表示这条轨必须与另一条同用才有意义，
-\Tp{AV\_{\Bk}DISPOSITION\_{\Bk}ATTACHED\_{\Bk}POK} 是把封面图当附件挂进容器。放置提示 \Tp{AV\_{\Bk}TRACK\_{\Bk}PLACING}
-表达``贴顶还是贴底''这类留位需求。
+形式的标识符字段。后者是一组位标志 \Tp{AV\_{\Bk}DISPOSITION\_{\Bk}*}，常用取值与各自含义如下：
+\begin{itemize}
+  \item \Tp{AV\_{\Bk}DISPOSITION\_{\Bk}DEFAULT}：入网时的缺省选择。
+  \item \Tp{AV\_{\Bk}DISPOSITION\_{\Bk}ORIGINAL}：标原始配音。
+  \item \Tp{AV\_{\Bk}DISPOSITION\_{\Bk}DUBBING}：标配音版本。
+  \item \Tp{AV\_{\Bk}DISPOSITION\_{\Bk}COMMENT}：给评论轨。
+  \item \Tp{AV\_{\Bk}DISPOSITION\_{\Bk}DESCRIPTION}：给音频描述，即为视障者补述画面的轨。
+  \item \Tp{AV\_{\Bk}DISPOSITION\_{\Bk}FORCED}：只在画面里有不可省的文字（外语标题、铭牌）时置位。
+  \item \Tp{AV\_{\Bk}DISPOSITION\_{\Bk}HEARING\_{\Bk}IMPAIRED}：听障辅助轨。
+  \item \Tp{AV\_{\Bk}DISPOSITION\_{\Bk}VISUALLY\_{\Bk}IMPAIRED}：视障辅助轨，与上一条合称辅助技术旗。
+  \item \Tp{AV\_{\Bk}DISPOSITION\_{\Bk}DEPENDENT}：这条轨必须与另一条同用才有意义。
+  \item \Tp{AV\_{\Bk}DISPOSITION\_{\Bk}ATTACHED\_{\Bk}POK}：把封面图当附件挂进容器。
+\end{itemize}
+放置提示 \Tp{AV\_{\Bk}TRACK\_{\Bk}PLACING} 表达``贴顶还是贴底''这类留位需求。
 
 语言与声道布局是另外两个正交维度。MP4、Matroska 与 TS 的语言码都是三字母（ISO 639-2 家族），
 FFmpeg 侧通过流元数据键 \Tp{language} 写入。音频的声道配置用 \Tp{AVChannelLayout} 显式表达

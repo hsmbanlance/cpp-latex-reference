@@ -5,7 +5,7 @@
 .DESCRIPTION
     统一管理 36 个子项目的编译、清理、状态检查。
 .PARAMETER Action
-    操作类型: build-all, build, clean-all, clean, status, list, open
+    操作类型: build-all, build, clean-all, clean, status, list, open, check
 .PARAMETER Project
     子项目名称（用于 build / clean / open），可用 list 查看
 .PARAMETER Pass
@@ -22,7 +22,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [ValidateSet('build-all','build','clean-all','clean','status','list','open')]
+    [ValidateSet('build-all','build','clean-all','clean','status','list','open','check')]
     [string]$Action,
 
     [string]$Project,
@@ -183,9 +183,123 @@ function Find-TocIssues {
     return $bad
 }
 
+# .github/gen_index.py is the last authoring step of the Pages pipeline and nothing on the local
+# side used to execute it: a SyntaxError in its PROJECTS data shipped a broken index (2026-10-15),
+# and a raw "<" in a card description renders as an HTML tag, so that card loses its text in the
+# browser. Validate it here, before compiling: parse + import, agreement with the build registry
+# and with copy_pdfs.ps1, then a sandbox render against placeholder PDFs.
+function Find-PagesIndexIssues {
+    $issues = @()
+    $genPy = Join-Path $base '.github\gen_index.py'
+    $copyPs = Join-Path $base '.github\copy_pdfs.ps1'
+    if (-not (Test-Path -LiteralPath $genPy)) { return @('.github/gen_index.py is missing') }
+    if (-not (Test-Path -LiteralPath $copyPs)) { return @('.github/copy_pdfs.ps1 is missing') }
+
+    # Windows ships a `python3.exe` store alias that exits 9009 instead of running, so a candidate
+    # counts only if it actually executes something.
+    $py = $null
+    foreach ($cand in @('python3', 'python', 'py')) {
+        if (-not (Get-Command $cand -ErrorAction SilentlyContinue)) { continue }
+        & $cand -c 'print(1)' 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) { $py = $cand; break }
+    }
+    if (-not $py) { return @('no runnable python (python3/python/py) on PATH - gen_index.py cannot be validated') }
+
+    $dumpSrc = @'
+import ast, importlib.util, json, sys
+sys.dont_write_bytecode = True  # exec_module would otherwise drop .github/__pycache__ into the repo
+path = sys.argv[1]
+ast.parse(open(path, encoding="utf-8").read())
+spec = importlib.util.spec_from_file_location("gen_index", path)
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+print(json.dumps(mod.PROJECTS))
+'@
+    $dumped = & $py -c $dumpSrc $genPy 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        return @('gen_index.py does not parse or import: ' + (($dumped | Out-String) -replace '\s+', ' ').Trim())
+    }
+    $rows = @($dumped -join '' | ConvertFrom-Json)
+
+    $jobs = @($projects.Values | ForEach-Object { $_.job })
+    $pdfs = @()
+    for ($k = 0; $k -lt $rows.Count; $k++) {
+        $r = @($rows[$k])
+        if ($r.Count -ne 4) { $issues += ("PROJECTS row {0} has {1} fields, expected (tag, pdf, title, desc)" -f $k, $r.Count); continue }
+        foreach ($f in $r) { if (-not ($f -is [string]) -or $f.Trim() -eq '') { $issues += ("PROJECTS row {0} ({1}) holds an empty field" -f $k, $r[0]) } }
+        $pdfs += $r[1]
+    }
+    if ($rows.Count -ne $jobs.Count) {
+        $issues += ("PROJECTS lists {0} volumes, the build registry lists {1}" -f $rows.Count, $jobs.Count)
+    }
+    foreach ($t in (@($rows | ForEach-Object { if (@($_).Count -eq 4) { $_[0] } }) | Group-Object | Where-Object { $_.Count -gt 1 })) {
+        $issues += ("duplicate tag {0} in PROJECTS" -f $t.Name)
+    }
+    # Only compare row by row while the two lists are the same length: after one insertion or
+    # deletion every following row mismatches, and that wall of text hides the real difference.
+    $limit = if ($pdfs.Count -eq $jobs.Count) { $pdfs.Count } else { 0 }
+    for ($k = 0; $k -lt $limit; $k++) {
+        if ($pdfs[$k] -ne ($jobs[$k] + '.pdf')) {
+            $issues += ("PROJECTS row {0} is {1} but the registry row {0} is {2}.pdf (the two lists must stay in the same order)" -f $k, $pdfs[$k], $jobs[$k])
+        }
+    }
+    foreach ($j in ($jobs | Where-Object { $pdfs -notcontains ($_ + '.pdf') })) { $issues += ("PROJECTS has no entry for {0}.pdf" -f $j) }
+    foreach ($p in ($pdfs | Where-Object { $jobs -notcontains $_.Replace('.pdf', '') })) { $issues += ("PROJECTS lists unknown artifact {0}" -f $p) }
+
+    $copyText = Get-Content -LiteralPath $copyPs -Raw -Encoding UTF8
+    $copyJobs = @([regex]::Matches($copyText, "job\s*=\s*'([^']+)'") | ForEach-Object { $_.Groups[1].Value })
+    $copyDirs = @([regex]::Matches($copyText, "dir\s*=\s*'([^']+)'") | ForEach-Object { $_.Groups[1].Value })
+    $regDirs = @($projects.Values | ForEach-Object { $_.dir })
+    foreach ($j in ($jobs | Where-Object { $copyJobs -notcontains $_ })) { $issues += ("copy_pdfs.ps1 would not deploy {0}.pdf" -f $j) }
+    foreach ($j in ($copyJobs | Where-Object { $jobs -notcontains $_ })) { $issues += ("copy_pdfs.ps1 lists job {0} that the registry does not build" -f $j) }
+    foreach ($d in ($regDirs | Where-Object { $copyDirs -notcontains $_ })) { $issues += ("copy_pdfs.ps1 has no folder entry for '{0}'" -f $d) }
+
+    $renderSrc = @'
+import os, sys
+sys.dont_write_bytecode = True
+os.chdir(sys.argv[1])
+import importlib.util
+spec = importlib.util.spec_from_file_location("gen_index", sys.argv[2])
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+mod.main()
+'@
+    $sandbox = Join-Path ([System.IO.Path]::GetTempPath()) ('pagesindex_' + [Guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path (Join-Path $sandbox '_site') | Out-Null
+    foreach ($j in $jobs) { New-Item -ItemType File -Path (Join-Path $sandbox ('_site\' + $j + '.pdf')) | Out-Null }
+    $rendered = & $py -c $renderSrc $sandbox $genPy 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        $issues += ('gen_index.py main() failed: ' + (($rendered | Out-String) -replace '\s+', ' ').Trim())
+    }
+    $htmlPath = Join-Path $sandbox '_site\index.html'
+    if (-not (Test-Path -LiteralPath $htmlPath)) {
+        $issues += 'gen_index.py main() wrote no _site/index.html'
+    } else {
+        $page = Get-Content -LiteralPath $htmlPath -Raw -Encoding UTF8
+        $cards = ([regex]::Matches($page, 'class="card"')).Count
+        if ($cards -ne $jobs.Count) { $issues += ("index.html renders {0} cards, expected {1}" -f $cards, $jobs.Count) }
+        $dead = ([regex]::Matches($page, 'PDF 编译失败')).Count
+        if ($dead -gt 0) { $issues += ("{0} card(s) report a failed build instead of a link" -f $dead) }
+        foreach ($j in $jobs) {
+            if ($page -notmatch ('href="' + [regex]::Escape($j) + '\.pdf"')) { $issues += ("index.html links to no {0}.pdf" -f $j) }
+        }
+        # html.escape() in the card template is what keeps "<algorithm>" readable; if it is ever
+        # dropped, the raw tag shape comes back and the browser silently deletes that text.
+        foreach ($pat in @('<h2>(?<t>.*?)</h2>', '<p class="desc">(?<t>.*?)</p>')) {
+            foreach ($m in [regex]::Matches($page, $pat)) {
+                if ($m.Groups['t'].Value -cmatch '<[A-Za-z/]') {
+                    $t = $m.Groups['t'].Value -replace '\s+', ' '
+                    $issues += ('unescaped markup in a card: ' + $t.Substring(0, [Math]::Min(60, $t.Length)))
+                }
+            }
+        }
+    }
+    Remove-Item -LiteralPath $sandbox -Recurse -Force -ErrorAction SilentlyContinue
+    return $issues
+}
+
 function Invoke-Build {
     param([string]$Name, [hashtable]$Info)
-
     $projDir = "$base\$($Info.dir)"
     $buildScript = "$projDir\build.ps1"
     $logPath = Join-Path $projDir ($Info.job + '.log')
@@ -432,6 +546,15 @@ function Show-List {
 # ─── Main ───
 switch ($Action) {
     'build-all' {
+        $idxIssues = @(Find-PagesIndexIssues)
+        foreach ($t in $idxIssues) {
+            Write-Host "  [Pages 首页] $($t -replace '\s+', ' ')" -ForegroundColor Red
+        }
+        if ($idxIssues.Count -gt 0) {
+            Write-Host '  BLOCKED: Pages 首页清单未过校验，跳过编译也不部署' -ForegroundColor Red
+            exit 1
+        }
+
         $results = @()
         $totalSw = [System.Diagnostics.Stopwatch]::StartNew()
 
@@ -501,6 +624,21 @@ switch ($Action) {
 
     'list' {
         Show-List
+    }
+
+    'check' {
+        # Standalone entry point for the Pages index gate; build-all runs the same check and
+        # refuses to compile or deploy while it reports anything.
+        $idxIssues = @(Find-PagesIndexIssues)
+        if ($idxIssues.Count -eq 0) {
+            Write-Host '  [OK] gen_index.py parses, its PROJECTS list matches the build registry' -ForegroundColor Green
+            Write-Host '       and copy_pdfs.ps1, and renders one linked card per volume' -ForegroundColor Green
+            exit 0
+        }
+        foreach ($t in $idxIssues) {
+            Write-Host "  [FAIL] $($t -replace '\s+', ' ')" -ForegroundColor Red
+        }
+        exit 1
     }
 
     'open' {

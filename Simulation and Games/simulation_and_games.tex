@@ -245,7 +245,7 @@
 
 \titleformat{\chapter}[display]
   {\normalfont\huge\bfseries\color{toolheadbg}}
-  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+  {\CTEXthechapter}{20pt}{\Huge}
 \titleformat{\section}
   {\normalfont\Large\bfseries\color{blue!70!black}}
   {\thesection}{1em}{}
@@ -2486,7 +2486,7 @@ wmake -debug              # 带调试符号的编译
 
 % ============================================================
 % ---- frag_ch07.tex ----
-\chapter{其余扩展面：COMSOL、Simulink S-Function 与开源求解器}
+\chapter{其余扩展面：COMSOL 与 Simulink 的 S-Function，以及开源求解器}
 \label{ch:ch07-other-extensions}
 
 前几章讲的都是某一家求解器怎么接你的代码。本章把镜头拉远：\DomCAE{} 侧的扩展面其实只有四种基本形状，差别集中在\textbf{语言}、\textbf{编译时机}、\textbf{运行时机}这三条轴上。把三轴想清楚，换一个平台时就不用重学一遍世界观，只需要重查一遍入口函数的参数表。本章依次看模型树驱动的多物理场平台（以 COMSOL 一类为参照）、控制侧的 Simulink S-Function、开源求解器特有的``改源码还是写插件''这条分岔，最后给一份选平台时的提问清单。具体 API 名只写有把握的部分，其余一律描述调用形状并注明以官方文档为准。

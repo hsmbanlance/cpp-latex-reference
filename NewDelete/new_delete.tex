@@ -178,7 +178,7 @@
 
 \titleformat{\chapter}[display]
   {\normalfont\huge\bfseries\color{algheadbg}}
-  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+  {\CTEXthechapter}{20pt}{\Huge}
 \titleformat{\section}
   {\normalfont\Large\bfseries\color{blue!70!black}}
   {\thesection}{1em}{}
@@ -1517,7 +1517,8 @@ int main() {
 \begin{itemize}
     \item \texttt{CudaVector} 对象本身在 CUDA 统一内存中。
     \item 对象控制块（\texttt{device\_ptr\_}、\texttt{size\_} 等）可被 GPU 直接访问。
-    \item 需要显式管理显存数据缓冲区的生命周期（构造函数/\allowbreak{}\allowbreak 析构函数中 \texttt{cudaMalloc}/\allowbreak{}\texttt{cudaFree}）。
+    \item 显存数据缓冲区的生命周期要自己管：构造函数里 \texttt{cudaMalloc}，
+          析构函数里 \texttt{cudaFree}。
     \item 适合需要在 GPU kernel 中访问向量元数据（如 size）的场景。
     \item \texttt{delete} 表达式同时释放统一内存中的对象和显存中的数据。
 \end{itemize}
