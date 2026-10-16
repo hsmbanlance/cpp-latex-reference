@@ -1,6 +1,6 @@
 # C/C++ LaTeX 参考手册合集
 
-本仓库包含 **36 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
+本仓库包含 **39 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
 
 ## 目录结构
 
@@ -116,8 +116,17 @@ C、C++/
 ├── Embedded and Realtime/        # 嵌入式与硬实时：启动链与链接脚本、RTOS 调度、中断与确定性 I/O 的 C/C++
 │   ├── embedded_realtime.tex
 │   └── build.ps1
-└── Code Style/                   # 代码风格：主流风格指南对比与谷歌译本滞后条款、inline 与异常的现代语义勘误
-    ├── code_style.tex
+├── Code Style/                   # 代码风格：主流风格指南对比与谷歌译本滞后条款、inline 与异常的现代语义勘误
+│   ├── code_style.tex
+│   └── build.ps1
+├── Performance and Measurement/  # 性能剖析与测量学：时钟与计数器、统计判据、perf/VTune/Instruments/Tracy 的跨平台实测口径
+│   ├── performance_measurement.tex
+│   └── build.ps1
+├── Undefined Behavior/           # 未定义行为与标准一致性：UB 与实现定义及未指定的分界、生命周期与别名、内存模型、标准库约定
+│   ├── undefined_behavior.tex
+│   └── build.ps1
+└── Compiler and Linker/          # 编译器与链接器：从源码到镜像的流水线、目标文件与链接、加载执行与三平台 ABI
+    ├── compiler_and_linker.tex
     └── build.ps1
 ```
 
@@ -142,7 +151,7 @@ C、C++/
 ### 编译
 
 ```powershell
-# 编译全部 36 个项目（每个 2 pass + TOC 修复）
+# 编译全部 39 个项目（每个 2 pass + TOC 修复）
 .\workflow.ps1 build-all
 
 # 编译单个项目
@@ -179,7 +188,7 @@ C、C++/
 .\workflow.ps1 list
 ```
 
-显示全部 36 个项目名及其对应的文件夹路径。
+显示全部 39 个项目名及其对应的文件夹路径。
 
 ### 打开 PDF
 
@@ -237,6 +246,9 @@ C、C++/
 | Render | Rendering and Shaders | 渲染与着色器的 C/C++：GPU 绘图管线与光栅化各阶段的可控点 / 着色语言三形态（GLSL·HLSL·MSL）与 SPIR-V 中间表示、glslang·dxc·slang·spirv-cross 编译链 / Vulkan 对象模型、命令缓冲、同步与显式内存绑定 / D3D12 与 Metal 的显式管线差异、OpenGL/EGL 的历史包袱 / PBR 光照、阴影与级联、前向+/延迟渲染、光线追踪（DXR·OptiX）/ 计算着色器与 GPU 驱动管线（culling·粒子·间接绘制）/ 纹理压缩、资源绑定与帧图 / 窗口系统与事件泵（GLFW·SDL·XCB·Wayland·Cocoa·ANativeWindow 的上下文创建、surface 生命周期与 DPI 缩放、跨平台 vsync 与帧节拍）与字形管线（FreeType 光栅与 hinting、HarfBuzz shaping、SDF/位图图集与文本排版）/ RenderDoc·GPU 时间戳与带宽预算 / bgfx·wgpu·Filament 与引擎选型 |
 | EmbRt | Embedded and Realtime | 嵌入式与硬实时的 C/C++：启动链与镜像布局（复位向量·Bootloader 交接·链接脚本 SECTIONS·.data/.bss 重定位·构造函数与早期栈堆约束）/ 中断与延迟构成（NVIC·GIC·APIC 优先级分组、中断线程化、响应-入口-服务-唤醒四段分解）/ 时间与计数器（单调时钟、tick 与 tickless、体系结构定时器与 TSC、PTP/gPTP）/ 裸机超循环与表驱动状态机 / RTOS 内核对象与调度（FreeRTOS·Zephyr·RTEMS·VxWorks，任务与栈定形、优先级反转与继承/天花板、静态创建与内存方案）/ 实时 Linux 与用户态硬实时（PREEMPT_RT、SCHED_FIFO/DEADLINE、isolcpus·nohz_full·mlockall 与缺页、cgroup 节流与透明大页）/ 无锁与确定性数据结构（SPSC/MPSC 环形缓冲、序列计数器、固定对象池）/ 实时 I/O 形态（ADC 触发扫描、DMA 双缓冲与循环、CAN/CAN-FD 总线负载、EtherCAT 分布式时钟与 TSN 调度类）/ 可观测性（cyclictest·oslat·ftrace·LTTng·ETM/ITM 与尾延迟统计）/ 失效安全与可靠性（窗口看门狗、超时与降级、ECC 与故障注入、IEC 61508·ISO 26262·DO-178 的可追溯性）/ 平台与工具链选型（MCU/MPU/实时 Linux 边界、CMSIS·HAL·Zephyr devicetree、交叉工具链与 QEMU/Renode·HIL 在环验证） |
 | CodeStyle | Code Style | 代码风格参考手册：主流风格指南的谱系与条款解剖（Google·LLVM·Chromium·Mozilla·C++ Core Guidelines·Linux 内核）/ 命名、头文件与 include 秩序、缩进与空白规则的跨风格对比 / clang-format·clang-tidy 与 CI 门禁落地 / 国内谷歌风格译本不更新与错译引发的问题：inline 条款停留在 C with Classes 时代而 C++11/17/23 下 inline 是 ODR 与链接语义而非展开建议（constexpr 隐含 inline、inline 变量、编译期内联由启发式与 LTO 决定）、异常禁令的"代价"误读（表驱动零成本模型下正常路径与上层调用代价可忽略，真实代价在代码体积、二进制大小与实时热路径）、RTTI 与其它失效条目盘点 / 按现代标准重写团队风格手册的方法与决策表 |
+| PerfMeas | Performance and Measurement | 性能剖析与测量学参考手册：时钟源与计数器（CLOCK_MONOTONIC·rdtsc·TSC 频率与失步·Windows 高精度计时器·GPU 时钟域）/ 口径定义（墙钟与 CPU 时间、用户与内核时间分账、并发下的占用率歧义、延迟与吞吐的对偶、p50·p99·p999 尾延迟）/ 统计判据（多次运行的分布、置信区间与最小可检出差异、A/B 交替与阶跃偏置、warmup 与稳态、观测者效应）/ 微基准框架 Google Benchmark·hyperfine 与反优化防护（常量折叠、内存屏障、DoNotOptimize）/ 采样剖析 perf record 与调用栈展开（帧指针·DWARF·LBR 的代价与失真）、火焰图与差分火焰图 / PMU 事件计数（cycles·instructions·IPC·cache/TLB miss·TopDown 微架构分层）/ 缓存、分支与指令级归因（局部性对照实验、向量化报告一族、把指标送回代码位置）/ 内存与分配剖析（heaptrack·massif·Callgrind·MTMD·ETW 堆事件）/ I/O 与存储测量（块设备队列深度·页缓存冷热·fio 口径·延迟分账）/ 并发下的测量（伸缩性曲线、伪共享、占用率歧义）/ 编译器与构建口径（-O 级别·-DNDEBUG·LTO·PGO·内联的真实语义）/ 三平台对照（Linux perf·eBPF/BCC，Windows ETW·XPerf·VTune，macOS Instruments·powermetrics）/ GPU 与异构计时（CUDA event 与流同步语义、nsys·Nsight Compute 口径差别）/ 带宽与拓扑（显存·PCIe·NUMA 距离·STREAM 型上限·多卡）/ 连续性能与线上采样（CI 基线门禁、回归检测阈值、生产环境低开销采样预算）/ 测量反模式（口径偷换、归因偷换、不可复现的结论）/ 三张速查附录（三平台工具与权限对照、指标与命令行参数速查、术语与按症状排障手册） |
+| UBeh | Undefined Behavior | 未定义行为与标准一致性参考手册：五种行为类别的分界与标准文本读法（良好定义·UB·实现定义·未指定·畸形与不要求诊断，as-if 规则凭什么成立）/ 为什么任何语言都免不了未定义行为（撤回承诺是优化的定价基础，术语条目应该这样查）/ 消毒器与静态分析的口径（UBSan·ASan·MSVC 消毒器与 /analyze·警告档位·静态分析边界）/ 生命周期、对象表示与 trap 表示（存储期·placement new·std::bit_cast·std::start_lifetime_as）/ 指针的合法性（算术·比较·derived pointer·provenance·reinterpret_cast 边界）/ 严格别名与类型双关（char 例外·may_alias·厂商差异）/ 对齐（alignas·alignof·未对齐访问·assume_aligned 与打包陷阱）/ 求值顺序与副作用（sequenced before·函数参数·初始化顺序·重载逗号运算符）/ 整型边界（有符号溢出·除法取余·移位越界·位域与 char 符号性）/ 内存模型与 data race（修改顺序·可见性与顺序保证·volatile 不是同步·memory_order 合法取值）/ 自我移动、noexcept 与 terminate 的边界（部分移动对象·异常路径·unexpected 演化）/ 标准库的前置条件（下标与迭代器失效·算法区间·string_view 悬挂·optional 空访问·assert 与 NDEBUG）/ 实现定义与未指定：可移植边界的写法（去哪里查、怎么固化进 CI）/ 标准库约定（包含模型·特性测试宏·库调试模式·分配器与容器约定·hash 稳定性）/ 前向兼容与缺陷报告回译（语言兼容与 ABI 兼容之别·弃用移除清单）/ 三张速查附录（五种行为类别速查·消毒器与诊断开关对照·常见未定义行为案例与最小复现清单） |
+| CompLink | Compiler and Linker | 编译器与链接器参考手册：流水线形状与实现的载体（预处理·语法与语义分析·AST·IR·优化·指令选择·链接，以及语言可自举而实现载体几乎全是 C/C++ 与其他中级语言——GCC 与 Clang 是 C++、CPython 与 MRI 是 C、V8 与 HotSpot 是 C++、Rust 编译器坐在 LLVM 之上）/ 预处理、头文件与模块（宏展开顺序·头文件守卫·Modules 与 BMI）/ 名字解析、重载决议与模板实例化（两阶段查找·依赖名与非依赖名·实例化时机）/ 中间表示与静态单赋值（LLVM IR 与 GIMPLE·phi 与支配树·别名元数据）/ 优化管线、整程序优化与反馈驱动（内联·常量传播·循环变换·向量化·LTO 与 PGO 与 BOLT 的机制侧）/ 指令选择与寄存器分配（DAG 匹配·机器描述·图着色·线性扫描·spill）/ 目标文件与符号表（节与段·重定位类型·ELF 与 PE 与 Mach-O 对照）/ 静态链接（符号解析与链接顺序·弱符号与 COMDAT 与 ODR·段回收与折叠·归档与部分链接）/ 动态链接与加载执行（PIC 与 GOT 与 PLT·延迟绑定·符号插入·dlopen 查找语义·三平台加载器·TLS 模型·ASLR 与 PIE·控制流保护与栈展开表）/ 调用约定：系统 V、MS x86-64、AArch64 与 RISC-V（影子空间·红色区域·可变参数·结构体传递与返回）/ 数据布局：对齐、打包与位域（填充·packed 与 pragma pack 的 ABI 后果）/ 字节序与数据模型（大小端与转换内建·char 符号性·wchar_t 宽度·LLP64 与 LP64）/ C++ ABI：名字修饰、虚表与展开表（vtable 与 RTTI 布局·异常表·noexcept 落地·跨 so 与跨 DLL 稳定性）/ 编辑器与 IDE 如何消费编译器的产物（诊断格式·编译数据库·语言服务器读的到底是哪份产物）/ 端到端演练：从源码到镜像（把一条命令拆开看每步的输入输出）/ 三张速查附录（命令行与产物查看工具速查·三平台两架构的 ABI 速查·主流实现的载体语言与自举关系一览） |
 
 ## 统一格式规范
 

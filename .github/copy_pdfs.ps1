@@ -48,7 +48,10 @@ $projects = @(
     @{ dir = 'Audio Video Development';         job = 'audio_video_development' },
     @{ dir = 'Rendering and Shaders';           job = 'rendering_shaders' },
     @{ dir = 'Embedded and Realtime';           job = 'embedded_realtime' },
-    @{ dir = 'Code Style';                      job = 'code_style' }
+    @{ dir = 'Code Style';                      job = 'code_style' },
+    @{ dir = 'Performance and Measurement';     job = 'performance_measurement' },
+    @{ dir = 'Undefined Behavior';              job = 'undefined_behavior' },
+    @{ dir = 'Compiler and Linker';             job = 'compiler_and_linker' }
 )
 
 $copied = 0
