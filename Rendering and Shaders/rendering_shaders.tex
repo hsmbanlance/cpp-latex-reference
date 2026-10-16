@@ -1626,7 +1626,7 @@ $d \approx 2n = 0.2$ 处：一半编码只服务于相机前 20 厘米，剩下�
 左面 $= r_3 + r_0$、右面 $= r_3 - r_0$、下面 $= r_3 + r_1$、上面 $= r_3 - r_1$、
 远面 $= r_3 - r_2$；近平面依赖深度约定，$[-1,1]$ 时是 $r_3 + r_2$，
 而 $[0,1]$ 的条件是 $z \ge 0$，于是近平面就是 $r_2$ 本身。
-每个面除以法线长度后，球体测试是 $\Fn{dot}(N, C) + d \ge -r$：每个面三次乘法、
+每个面除以法线长度后，球体测试是 $\Tp{dot}(N, C) + d \ge -r$：每个面三次乘法、
 三次加法，六个面合计约 $36$ 次浮点操作（逐面测试时大多数球在一两个面上就判负，可提前退出）。
 
 预算要算在总开销上：一万个包围球是 $3.6 \times 10^{5}$ 次浮点操作，在任何现代 \DomCPU\
@@ -3493,11 +3493,11 @@ renderbuffer、framebuffer、program、pipeline、sampler、query 与 sync 对�
 
 \section{扩展、版本与功能门控}
 
-版本查询看 \Fn{glGetString}(\Tp{GL\_VERSION}) 与
+版本查询看 \Tp{glGetString}(\Tp{GL\_VERSION}) 与
 \Tp{GL\_CONTEXT\_MAJOR\_VERSION}，profile 看
 \Tp{GL\_CONTEXT\_PROFILE\_MASK}，鲁棒性看 \Tp{GL\_RESET\_ISOLATION\_BEHAVIOR}。
-扩展列表在 3.0 之前是 \Fn{glGetString}(\Tp{GL\_EXTENSIONS}) 的一整串字符串（有
-长度上限，因此 3.0 之后必须逐条用 \Fn{glGetStringi}(\Tp{GL\_EXTENSIONS}, i) 取，
+扩展列表在 3.0 之前是 \Tp{glGetString}(\Tp{GL\_EXTENSIONS}) 的一整串字符串（有
+长度上限，因此 3.0 之后必须逐条用 \Tp{glGetStringi}(\Tp{GL\_EXTENSIONS}, i) 取，
 计数用 \Tp{GL\_NUM\_EXTENSIONS}）。名字后缀说明可信度：\Lib{ARB} 是多家厂商一致
 通过、最可能进入核心的路径；\Lib{KHR} 是 Khronos 评审但尚未进核心；\Lib{EXT}
 是单家或少数实现，跨厂商行为可能不同；带厂商前缀的（\Lib{NV}、\Lib{AMD}、

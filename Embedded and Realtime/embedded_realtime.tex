@@ -6341,8 +6341,8 @@ RTOS（\Lib{FreeRTOS}、\Lib{Zephyr}、\Lib{ThreadX}、\Lib{RTEMS}） & 十微�
 \Tp{\_sidata} & \Tp{.data} 在 flash 中的起始（源）地址 & 由链接器生成，名字要与启动代码引用完全一致 \\
 \Tp{\_sdata} 与 \Tp{\_edata} & \Tp{.data} 运行区间界 & 拷贝按半开区间写，闭区间会多拷一个字 \\
 \Tp{\_sbss} 与 \Tp{\_ebss} & \Tp{.bss} 区间界 & 按字清零时若 \Tp{.bss} 未 4 对齐会漏尾字节 \\
-\Fn{PROVIDE}() & 提供可被覆盖的符号默认值 & 注册表边界符号用 PROVIDE，避免重复定义 \\
-\Fn{ASSERT}() & 链接期检查条件，失败即中断构建 & 用来断言向量表所在区、heap 与栈不重叠、余量下限，比事后调查看得早 \\
+\Tp{PROVIDE}() & 提供可被覆盖的符号默认值 & 注册表边界符号用 PROVIDE，避免重复定义 \\
+\Tp{ASSERT}() & 链接期检查条件，失败即中断构建 & 用来断言向量表所在区、heap 与栈不重叠、余量下限，比事后调查看得早 \\
 \end{longtable}
 
 最小骨架的要点是``两区三段两界一断言''：

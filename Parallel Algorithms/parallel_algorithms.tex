@@ -3572,7 +3572,7 @@ target_link_libraries(_C PRIVATE pa_kernels)
 按``探测到再开''处理，探测失败就关掉 \GPU{}目标、照常产出
 \CPU{}模块，并在 \Tp{import} 元数据里记录本次构建启用了哪些后端
 （写进生成的 \Tp{\_build\_info.py}）。工具链探测本身按显式路径、
-环境变量、默认安装位置三级查找；CUDA 可用 \Fn{find\_package}(CUDA)
+环境变量、默认安装位置三级查找；CUDA 可用 \Tp{find\_package}(CUDA)
 或 \Tp{CUDAToolkit}，\NPU{}侧（CANN 类工具包）没有统一标准，做法
 是查环境变量（如工具包根目录变量）与 \Fn{find\_library} 组合，找不到
 就把对应选项静默降级——降级要留日志，构建产物要可追溯。跨版本

@@ -1079,15 +1079,15 @@ $\rightarrow$ 判敛''。UDF 不是插在这个循环外面的调用者，而是
 结构是：第一个实参是用户起的函数名（宏会把它变成求解器查找的符号），
 后面的实参由宏名决定。最常见的三种形状是
 
-\Fn{DEFINE\_PROFILE(名字, thread, position)} —— \Tp{thread} 是边界线程指针，
+\Tp{DEFINE\_PROFILE(名字, thread, position)} —— \Tp{thread} 是边界线程指针，
 \Tp{position} 是求解器传进来的槽位号，写回时原样传给
-\Fn{F\_PROFILE(f, thread, position)}；
+\Tp{F\_PROFILE(f, thread, position)}；
 
-\Fn{DEFINE\_SOURCE(名字, c, t, dS, eqn)} —— \Tp{c} 是单元索引，\Tp{t} 是单元
+\Tp{DEFINE\_SOURCE(名字, c, t, dS, eqn)} —— \Tp{c} 是单元索引，\Tp{t} 是单元
 线程，\Tp{dS} 是源项对因变量的导数数组（求解器用它进雅可比），
 \Tp{eqn} 是当前方程号；返回值就是这个单元的源项数值；
 
-\Fn{DEFINE\_ADJUST(名字, domain)} —— 每迭代一次，实参是求解域句柄，
+\Tp{DEFINE\_ADJUST(名字, domain)} —— 每迭代一次，实参是求解域句柄，
 在里面自己发起遍历。
 
 物性类钩子（密度、黏度、比热一类）用的是``单元进、标量出''的形状：
@@ -1100,9 +1100,9 @@ $\rightarrow$ 判敛''。UDF 不是插在这个循环外面的调用者，而是
 遍历对象由两套循环宏承担，形状对称：
 
 \begin{itemize}
-  \item 面遍历：\Fn{begin\_f\_loop(f, thread)} \ldots \Fn{end\_f\_loop(f, thread)}，
+  \item 面遍历：\Tp{begin\_f\_loop(f, thread)} \ldots \Tp{end\_f\_loop(f, thread)}，
         用于边界剖面类钩子。
-  \item 单元遍历：\Fn{begin\_c\_loop(c, thread)} \ldots \Fn{end\_c\_loop(c, thread)}，
+  \item 单元遍历：\Tp{begin\_c\_loop(c, thread)} \ldots \Tp{end\_c\_loop(c, thread)}，
         用于源项与物性类钩子（这两个宏在新版本里还分裂出若干带不同
         语义的变体，用途差别在``是否包含鬼单元''，选哪个以官方说明为准）。
   \item 域级遍历：先按线程迭代（把域内所有同类线程走一遍），再在线程内
@@ -4623,7 +4623,7 @@ Lua 的 C 接口不是``函数指针加参数列表''，而是一棵\textbf{虚�
 返回值''。栈在 C 侧是 \Tp{lua\_State*}（Lua 里叫 thread），一个 \Tp{lua\_State}
 一条栈；协程是另一条 \Tp{lua\_State}，与主线程共享全局表但有自己的栈。索引规则
 要背下来：绝对索引从 1 开始数到 \Fn{lua\_gettop}，负索引从 -1（栈顶）往回数，
-\Fn{lua\_upvalueindex}(k) 让一个 C 函数带几个隐藏槽位。
+\Tp{lua\_upvalueindex}(k) 让一个 C 函数带几个隐藏槽位。
 
 清单 \ref{lst:ch14-lua-cfunction} 是最小完整的一段：一个 userdata 型对象加
 两个 C 函数。每行右侧注明它对栈做了什么。

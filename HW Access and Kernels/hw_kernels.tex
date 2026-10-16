@@ -546,7 +546,7 @@ std::atomic_thread_fence(std::memory_order_seq_cst);  // 或 mfence
 doorbell 是 MMIO 里最经典的模式：主机把请求写进共享内存（描述符环），然后写一个寄存器"敲门"通知设备来取。设备处理完再写另一个寄存器（或触发中断）通知主机。这套生产者—消费者模型是第~3~章描述符环的基础，也是 GPU 命令提交（command submission）的原型。
 
 \begin{tcolorbox}[note={doorbell 的写必须是"可见且有序"的}]
-doorbell 写之前，所有描述符写必须对设备可见。在 x86 上 WC 写 + \texttt{mfence}（或 UC 写天然保序）即可；在弱序架构上需要 \Fn{wmb()} 之类的写屏障。漏掉屏障的表现是"设备读到半写的描述符"，极难复现。
+doorbell 写之前，所有描述符写必须对设备可见。在 x86 上 WC 写 + \texttt{mfence}（或 UC 写天然保序）即可；在弱序架构上需要 \Tp{wmb()} 之类的写屏障。漏掉屏障的表现是"设备读到半写的描述符"，极难复现。
 \end{tcolorbox}
 
 \section{直接访问特定物理地址：裸机、Unix、Windows 三条路}\label{sec:direct-phys}

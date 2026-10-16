@@ -687,7 +687,7 @@ static void QuickSort<T>(T[] arr, int lo, int hi)
 \begin{tabularx}{\textwidth}{@{}l l >{\raggedright\arraybackslash}X@{}}
   \Fn{Array.Sort} & $\bigO{n\log n}$ & .NET 使用 \textbf{Introsort}（快排+堆排+插排混合），与 C++ \Fn{std::sort}~策略相同。\textbf{不稳定}。对~$\leq 16$~元素用插入排序，递归深度超~$2\log n$~用堆排序。 \\
   \Fn{List<T>.Sort} & $\bigO{n\log n}$ & 内部委托给~\Fn{Array.Sort}，行为一致。 \\
-  \Fn{OrderBy} & $\bigO{n\log n}$ & LINQ 扩展方法，\textbf{稳定排序}（保持相等元素的原始顺序）。延迟执行，调用~\Fn{ToList()}/\allowbreak{}\Fn{ToArray()}~时触发。 \\
+  \Fn{OrderBy} & $\bigO{n\log n}$ & LINQ 扩展方法，\textbf{稳定排序}（保持相等元素的原始顺序）。延迟执行，调用~\Tp{ToList()}/\allowbreak{}\Tp{ToArray()}~时触发。 \\
   \Fn{Array.\allowbreak{}Binary\allowbreak{}Search} & $\bigO{\log n}$ & 内置二分搜索，返回非负下标表示找到；返回负数~$\sim i$~表示未找到，$i$~为插入位置。 \\
 \end{tabularx}
 
@@ -951,7 +951,7 @@ static void CountingSort(int[] arr)
 
 \begin{compare}
 C++~使用结构化绑定~\texttt{auto [lo, hi]}~和~\Fn{std::partial\_sum}~简化前缀和计算。
-C\#~使用 LINQ 的~\Fn{Min()}/\allowbreak{}\Fn{Max()}~获取范围。C~需手动管理两个动态数组。
+C\#~使用 LINQ 的~\Tp{Min()}/\allowbreak{}\Tp{Max()}~获取范围。C~需手动管理两个动态数组。
 \end{compare}
 
 % ============================================================
@@ -1833,7 +1833,7 @@ static int[]? TopoSort(List<int>[] adj)
 \begin{compare}
 两种实现逻辑完全一致。C++~返回空~\Tp{vector}~表示有环；
 C\#~返回~\texttt{null}（\Tp{int[]?}~可空类型）。
-C\#~使用~\Fn{List<int>.ToArray()}~转换结果。
+C\#~使用~\Tp{List<int>.ToArray()}~转换结果。
 \end{compare}
 
 % ============================================================
@@ -2365,7 +2365,7 @@ static List<int[]> Permute(int[] nums)
 \begin{compare}
 C++~提供~\Fn{std::next\_permutation}~直接生成下一个排列（字典序），
 无需手写回溯逻辑。C\#~和~C~无此内置功能，需手动实现回溯。
-C\#~使用~\Fn{Array.Clone()}~保存排列快照。
+C\#~使用~\Tp{Array.Clone()}~保存排列快照。
 \end{compare}
 
 \begin{stdspec}[title=排列操作]

@@ -964,11 +964,11 @@ int winsock_init() {
 \midrule
 初始化 & 必须 \Fn{WSAStartup}，POSIX 无需初始化 \\
 socket 类型 & \Tp{SOCKET}（\Tp{UINT\_PTR}），不是 \Tp{int} \\
-错误码 & \Fn{WSAGetLastError()}，不是 \Tp{errno} \\
-关闭 & \Fn{closesocket()}，不是 \Fn{close()} \\
+错误码 & \Tp{WSAGetLastError()}，不是 \Tp{errno} \\
+关闭 & \Tp{closesocket()}，不是 \Tp{close()} \\
 \Tp{EAGAIN} & 对应 \Tp{WSAEWOULDBLOCK} (10035) \\
-非阻塞 & \Fn{ioctlsocket()}，不是 \Fn{fcntl} \\
-多路复用 & \Fn{select()} 可用但低效；推荐 \Tp{WSAEventSelect} 或 IOCP \\
+非阻塞 & \Tp{ioctlsocket()}，不是 \Fn{fcntl} \\
+多路复用 & \Tp{select()} 可用但低效；推荐 \Tp{WSAEventSelect} 或 IOCP \\
 \bottomrule
 \end{tabular}
 \end{warning}
@@ -1197,7 +1197,7 @@ Mailslot & 数据报，单向 & 无关系（含网络） & 中等 \\
 
 \subsection{匿名管道（pipe）}
 
-匿名管道是最基本的 IPC 机制，由 \Fn{pipe()} 系统调用创建一对文件描述符（读端和写端），通常与 \Fn{fork()} 配合使用。
+匿名管道是最基本的 IPC 机制，由 \Tp{pipe()} 系统调用创建一对文件描述符（读端和写端），通常与 \Tp{fork()} 配合使用。
 
 \posixlabel
 \begin{lstlisting}[style=cstyle]
@@ -1234,7 +1234,7 @@ void pipe_demo(void) {
 \end{lstlisting}
 
 \begin{note}[title=管道容量]
-匿名管道的内核缓冲区大小有限（Linux 默认 64\,KB，可通过 \Tp{/proc/\allowbreak{}\allowbreak{}sys/\allowbreak{}\allowbreak{}fs/\allowbreak{}\allowbreak{}pipe-\allowbreak{}max-\allowbreak{}size} 调整）。写端满时 \Fn{write()} 阻塞（或返回 \Tp{EAGAIN}），读端空时 \Fn{read()} 阻塞。使用 \Fn{fcntl()} 的 \Tp{F\_\allowbreak{}SETPIPE\_\allowbreak{}SZ} 可以调整单个管道的容量。
+匿名管道的内核缓冲区大小有限（Linux 默认 64\,KB，可通过 \Tp{/proc/\allowbreak{}\allowbreak{}sys/\allowbreak{}\allowbreak{}fs/\allowbreak{}\allowbreak{}pipe-\allowbreak{}max-\allowbreak{}size} 调整）。写端满时 \Tp{write()} 阻塞（或返回 \Tp{EAGAIN}），读端空时 \Tp{read()} 阻塞。使用 \Tp{fcntl()} 的 \Tp{F\_\allowbreak{}SETPIPE\_\allowbreak{}SZ} 可以调整单个管道的容量。
 \end{note}
 
 \subsection{管道重定向与 shell 管道}
@@ -1275,7 +1275,7 @@ void shell_pipe(void) {
 
 \subsection{命名管道（FIFO）}
 
-命名管道通过 \Fn{mkfifo()} 创建，以文件系统路径为标识，\textbf{无亲缘关系}的进程也可以通信。
+命名管道通过 \Tp{mkfifo()} 创建，以文件系统路径为标识，\textbf{无亲缘关系}的进程也可以通信。
 
 \posixlabel
 \begin{lstlisting}[style=cstyle]
@@ -1308,7 +1308,7 @@ void fifo_reader(void) {
 \end{lstlisting}
 
 \begin{warning}[title=FIFO 打开语义]
-\Tp{open()} 打开 FIFO 时的行为取决于方向：\textbf{只写打开}（\Tp{O\_WRONLY}）会阻塞，直到有进程以只读方式打开同一 FIFO；反之亦然。使用 \Tp{O\_NONBLOCK} 可避免阻塞，但写端在没有读端时 \Fn{open()} 会返回 \Tp{-1}（\Tp{ENXIO}）。
+\Tp{open()} 打开 FIFO 时的行为取决于方向：\textbf{只写打开}（\Tp{O\_WRONLY}）会阻塞，直到有进程以只读方式打开同一 FIFO；反之亦然。使用 \Tp{O\_NONBLOCK} 可避免阻塞，但写端在没有读端时 \Tp{open()} 会返回 \Tp{-1}（\Tp{ENXIO}）。
 \end{warning}
 
 \section{POSIX 共享内存}
@@ -1367,7 +1367,7 @@ void shm_reader(void) {
 \begin{guideline}[title=POSIX 共享内存要点]
 \textbf{命名规则}：名称必须以 \texttt{/} 开头（如 \texttt{/my\_shm}），在 Linux 上对应 \texttt{/dev/shm/} 目录下的文件。
 
-\textbf{生命周期}：\Fn{shm\_unlink()} 删除名称，但已映射的进程仍可访问，直到所有映射解除后内存才释放。
+\textbf{生命周期}：\Tp{shm\_unlink()} 删除名称，但已映射的进程仍可访问，直到所有映射解除后内存才释放。
 
 \textbf{同步}：共享内存本身不提供同步。必须配合 POSIX 信号量（\Fn{sem\_open}/\allowbreak{}\Fn{sem\_wait}/\allowbreak{}\Fn{sem\_post}）或互斥锁使用。
 
@@ -1777,7 +1777,7 @@ void bip_mq_receiver() {
 \begin{bestpractice}[title=消息队列设计要点]
 \textbf{固定大小消息}：Boost.Interprocess 消息队列要求每条消息不超过构造时指定的 \Tp{max\_msg\_size}。对于变长数据，建议将实际数据放入共享内存，消息队列仅传递偏移量和长度。
 
-\textbf{优先级}：\Fn{send()} 的优先级参数使高优先级消息先被 \Fn{receive()} 取出。
+\textbf{优先级}：\Tp{send()} 的优先级参数使高优先级消息先被 \Tp{receive()} 取出。
 
 \textbf{清理}：程序退出前应调用 \Tp{message\_queue::remove()} 删除队列。若异常退出，POSIX 上队列名在 \texttt{/dev/mqueue/} 中残留，需手动清理。
 \end{bestpractice}
@@ -1925,7 +1925,7 @@ void sysv_shm_demo(void) {
 消息队列 & \Fn{mq\_open}（优先级） & \Fn{msgget}（消息类型） \\
 信号量 & \Fn{sem\_open}（命名） & \Fn{semget}（集合） \\
 线程安全 & 天然支持 & 需额外注意 \\
-清理 & \Fn{*\_unlink()} & \Fn{*ctl(*, IPC\_RMID)} \\
+清理 & \Tp{*\_unlink()} & \Tp{*ctl(*, IPC\_RMID)} \\
 推荐度 & \textbf{首选} & 遗留系统维护 \\
 \bottomrule
 \end{tabularx}
@@ -2660,10 +2660,10 @@ C++ iostream 的设计分为两层：
 \toprule
 \textbf{虚函数} & \textbf{触发时机} & \textbf{重写要求} \\
 \midrule
-\Fn{overflow(int\_type)} & 输出缓冲区满，或无缓冲区时每次写入 & \textbf{必须} \\
-\Fn{xsputn(const char*, n)} & \Fn{sputn()} 批量写入 & 可选（性能优化） \\
-\Fn{sync()} & \Fn{flush()} 或 \Tp{std::endl} & 可选 \\
-\Fn{setbuf(char*, n)} & \Fn{pubsetbuf()} 设置缓冲区 & 可选 \\
+\Tp{overflow(int\_type)} & 输出缓冲区满，或无缓冲区时每次写入 & \textbf{必须} \\
+\Tp{xsputn(const char*, n)} & \Tp{sputn()} 批量写入 & 可选（性能优化） \\
+\Tp{sync()} & \Tp{flush()} 或 \Tp{std::endl} & 可选 \\
+\Tp{setbuf(char*, n)} & \Tp{pubsetbuf()} 设置缓冲区 & 可选 \\
 \bottomrule
 \end{tabularx}
 \end{compare}
@@ -2673,10 +2673,10 @@ C++ iostream 的设计分为两层：
 \toprule
 \textbf{虚函数} & \textbf{触发时机} & \textbf{重写要求} \\
 \midrule
-\Fn{underflow()} & 输入缓冲区空，需要填充更多数据 & \textbf{必须} \\
-\Fn{uflow()} & 类似 \Fn{underflow}，但推进读指针 & 可选（有默认实现） \\
-\Fn{xsgetn(char*, n)} & \Fn{sgetn()} 批量读取 & 可选（性能优化） \\
-\Fn{showmanyc()} & 查询可用字符数 & 可选 \\
+\Tp{underflow()} & 输入缓冲区空，需要填充更多数据 & \textbf{必须} \\
+\Tp{uflow()} & 类似 \Fn{underflow}，但推进读指针 & 可选（有默认实现） \\
+\Tp{xsgetn(char*, n)} & \Tp{sgetn()} 批量读取 & 可选（性能优化） \\
+\Tp{showmanyc()} & 查询可用字符数 & 可选 \\
 \bottomrule
 \end{tabularx}
 \end{compare}
@@ -2685,14 +2685,14 @@ C++ iostream 的设计分为两层：
 
 \Tp{streambuf} 维护两个独立的缓冲区区域：
 
-\textbf{输出区（put area）}：由 \Fn{setp()} 设置，包含三个指针——\Tp{pbase()}（起始）、\Tp{pptr()}（当前写入位置）、\Tp{epptr()}（末尾）。当 \Tp{pptr() == epptr()} 时，\Fn{overflow()} 被调用。
+\textbf{输出区（put area）}：由 \Tp{setp()} 设置，包含三个指针——\Tp{pbase()}（起始）、\Tp{pptr()}（当前写入位置）、\Tp{epptr()}（末尾）。当 \Tp{pptr() == epptr()} 时，\Tp{overflow()} 被调用。
 
-\textbf{输入区（get area）}：由 \Fn{setg()} 设置，包含三个指针——\Tp{eback()}（起始）、\Tp{gptr()}（当前读取位置）、\Tp{egptr()}（末尾）。当 \Tp{gptr() == egptr()} 时，\Fn{underflow()} 被调用。
+\textbf{输入区（get area）}：由 \Tp{setg()} 设置，包含三个指针——\Tp{eback()}（起始）、\Tp{gptr()}（当前读取位置）、\Tp{egptr()}（末尾）。当 \Tp{gptr() == egptr()} 时，\Tp{underflow()} 被调用。
 
 \begin{note}[title=有缓冲 vs 无缓冲]
-\textbf{有缓冲模式}：在构造函数中分配缓冲区并调用 \Fn{setp()}。写入操作先进入缓冲区，满时触发 \Fn{overflow()} 批量刷出。吞吐量更高。
+\textbf{有缓冲模式}：在构造函数中分配缓冲区并调用 \Tp{setp()}。写入操作先进入缓冲区，满时触发 \Tp{overflow()} 批量刷出。吞吐量更高。
 
-\textbf{无缓冲模式}：不调用 \Fn{setp()}。每次写入都立即触发 \Fn{overflow()}。实现更简单，但性能较低。适合对延迟敏感的场景（如日志立即刷盘）。
+\textbf{无缓冲模式}：不调用 \Tp{setp()}。每次写入都立即触发 \Tp{overflow()}。实现更简单，但性能较低。适合对延迟敏感的场景（如日志立即刷盘）。
 \end{note}
 
 \section{示例 1：NullStream（丢弃所有输出）}
@@ -3190,9 +3190,9 @@ DuplexStream & \Tp{streambuf} & \Fn{overflow}, \Fn{underflow}, \Fn{sync} & 双�
 
 \textbf{线程安全}：\Tp{streambuf} 本身\textbf{不是}线程安全的。如果多个线程共享同一个流，需要外部加锁或在 \Tp{streambuf} 内部加锁。
 
-\textbf{异常安全}：\Fn{overflow} 和 \Fn{sync} 中应捕获异常并通过 \Fn{setstate(ios::\allowbreak{}badbit)} 通知流状态，而不是让异常穿透——除非用户显式启用了异常（\Fn{exceptions(ios::\allowbreak{}badbit)}）。
+\textbf{异常安全}：\Fn{overflow} 和 \Fn{sync} 中应捕获异常并通过 \Tp{setstate(ios::\allowbreak{}badbit)} 通知流状态，而不是让异常穿透——除非用户显式启用了异常（\Tp{exceptions(ios::\allowbreak{}badbit)}）。
 
-\textbf{析构函数}：\Tp{streambuf} 的析构函数\textbf{不会}自动调用 \Fn{sync()}。在子类的析构函数中显式调用 \Fn{sync()} 以确保缓冲区数据被刷出。
+\textbf{析构函数}：\Tp{streambuf} 的析构函数\textbf{不会}自动调用 \Tp{sync()}。在子类的析构函数中显式调用 \Tp{sync()} 以确保缓冲区数据被刷出。
 
 \textbf{移动语义}：\Tp{streambuf} 不可移动或拷贝（包含原始指针）。如果需要移动流对象，使用 \Tp{unique\_ptr<streambuf>} 管理生命周期。
 \end{bestpractice}

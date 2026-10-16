@@ -683,7 +683,7 @@ int main() {
 
 \begin{guideline}
 \textbf{SL.con.3}：优先使用 \texttt{vector}。只有在需要频繁在头部插入/删除时
-才考虑 \texttt{deque}。deque 不支持 \Fn{data()}，不能将底层内存传给 C 风格 API。
+才考虑 \texttt{deque}。deque 不支持 \Tp{data()}，不能将底层内存传给 C 风格 API。
 \end{guideline}
 
 \begin{note}
@@ -1478,7 +1478,7 @@ int main() {
 
 \begin{note}
 \texttt{stack::pop()} 不返回弹出的值（出于异常安全考虑：如果返回值需要拷贝构造，
-而拷贝构造抛出异常，元素就丢失了）。正确做法是先 \Fn{top()} 再 \Fn{pop()}。
+而拷贝构造抛出异常，元素就丢失了）。正确做法是先 \Tp{top()} 再 \Tp{pop()}。
 \end{note}
 
 \begin{compare}
@@ -1842,7 +1842,7 @@ C++ 的 \texttt{string} 是可变值类型，\texttt{+=} 在原对象上修改�
 空终止   & 保证 & 不保证 & 视图可能不是 C 字符串 \\
 拷贝开销 & $O(n)$ & $O(1)$ & 视图拷贝只是复制指针+长度 \\
 \bottomrule
-\multicolumn{4}{l}{\small * string\_view 的 \Fn{data()} 返回 \texttt{const char*}}
+\multicolumn{4}{l}{\small * string\_view 的 \Tp{data()} 返回 \texttt{const char*}}
 \end{tabularx}
 \end{table}
 
@@ -2061,7 +2061,7 @@ C++ 的 \texttt{span} 没有生命周期追踪，可以存储在堆上，但需�
 \Tp{layout\_left}           & 列优先布局（Fortran/MATLAB 风格） \\
 \Tp{layout\_stride}         & 自定义步幅布局 \\
 \Tp{mdspan<T, Extents, Layout, Accessor>} & 多维视图本体 \\
-\Fn{submdspan()}            & 创建子视图（切片） \\
+\Tp{submdspan()}            & 创建子视图（切片） \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -2948,7 +2948,7 @@ int main() {
 
 \begin{guideline}
 \textbf{R.1}：优先使用标准库提供的视图适配器。自定义视图应继承
-\texttt{view\_interface} 以获得免费的 \Fn{empty()}、\Fn{size()} 等成员函数。
+\texttt{view\_interface} 以获得免费的 \Tp{empty()}、\Tp{size()} 等成员函数。
 确保视图满足 \texttt{view} 概念的要求（拷贝/赋值为 $O(1)$）。
 \end{guideline}
 

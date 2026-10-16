@@ -3018,7 +3018,7 @@ HikariCP \Tp{leakDetectionThreshold}；
 
 \subsection{JDBC 与 ADO.NET：现成对象里藏着的开关}
 
-JDBC 的绑定接口是 \Fn{setInt}、\Fn{setString} 与 \Fn{setNull}(下标, \Tp{Types.X})，下标同样从 1 开始。两处 \CppJava{} 没有的便利：传 \Tp{RETURN\_\allowbreak GENERATED\_\allowbreak KEYS} 或列名数组的 \Fn{prepare\allowbreak Statement} 直接取回自增主键（PostgreSQL 对应 \texttt{RETURNING}，SQLite 要自己调 \Fn{sqlite3\_last\_insert\_rowid}）；服务端游标要先 \Fn{setAutoCommit}(false) 再给 \Fn{setFetchSize}，MySQL 驱动则需 \Tp{Integer.\allowbreak MIN\_\allowbreak VALUE} 这类约定值才逐行流式读。两个与本章相关的开关：MySQL Connector/J 的 \Tp{useServer\allowbreak PrepStmts} \emph{默认关闭}，此时驱动在客户端做转义替换而不是真参数化；pgjdbc 的 \Tp{prepareThreshold}（默认 5）决定第几次执行才切到服务端具名语句。
+JDBC 的绑定接口是 \Fn{setInt}、\Fn{setString} 与 \Tp{setNull}(下标, \Tp{Types.X})，下标同样从 1 开始。两处 \CppJava{} 没有的便利：传 \Tp{RETURN\_\allowbreak GENERATED\_\allowbreak KEYS} 或列名数组的 \Fn{prepare\allowbreak Statement} 直接取回自增主键（PostgreSQL 对应 \texttt{RETURNING}，SQLite 要自己调 \Fn{sqlite3\_last\_insert\_rowid}）；服务端游标要先 \Tp{setAutoCommit}(false) 再给 \Fn{setFetchSize}，MySQL 驱动则需 \Tp{Integer.\allowbreak MIN\_\allowbreak VALUE} 这类约定值才逐行流式读。两个与本章相关的开关：MySQL Connector/J 的 \Tp{useServer\allowbreak PrepStmts} \emph{默认关闭}，此时驱动在客户端做转义替换而不是真参数化；pgjdbc 的 \Tp{prepareThreshold}（默认 5）决定第几次执行才切到服务端具名语句。
 
 \CSharp{} 的正写是 \Fn{Parameters.Add} 同时给参数名、\Tp{SqlDbType} 与长度；\Fn{AddWithValue} 按运行时值\emph{推断}类型，字符串会变成 ``长度等于当前值长度'' 的 \Tp{nvarchar}，于是计划缓存堆满同一逻辑查询的变体，还引入隐式转换；表值参数、\Tp{xml}、CLR UDT 只有 \Tp{SqlDbType} 能表达。第二类 ``嗅探'' 是 SQL Server 的 parameter sniffing：用\emph{第一次}执行的参数值挑计划，偏斜数据下表现为 ``同一存储过程时快时慢''。最后一条 \Tp{SqlClient} 专属注：命令文本里的 \texttt{@name} 会被解析成参数占位符，注释或字面量里出现的 \texttt{@} 单词能触发 ``必须声明标量变量'' 这种看着像注入事故的报错。
 

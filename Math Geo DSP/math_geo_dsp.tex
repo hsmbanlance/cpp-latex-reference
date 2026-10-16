@@ -1633,7 +1633,7 @@ Cephes 谱系 & \CL{} &
 
 \textbf{接口的形状就是开销的形状。} GSL 的求积入口是
 \[{\small
-\Fn{gsl\_integration\_qag}(f,\ \texttt{params},\ a,\ b,\ \texttt{epsabs},\ \texttt{epsrel},\ \texttt{limit},\ w,\ \texttt{result},\ \texttt{abserr})
+\Tp{gsl\_integration\_qag}(f,\ \texttt{params},\ a,\ b,\ \texttt{epsabs},\ \texttt{epsrel},\ \texttt{limit},\ w,\ \texttt{result},\ \texttt{abserr})
 }\]
 其中 $f$ 是 \Tp{double (*f)(double, void *)} 形式，挂在 \Tp{gsl\_function} 结构里；$w$ 是 \Fn{gsl\_integration\Bk\_workspace\Bk\_alloc} 分配的长生命周期工作区，存划分栈与中间结果，可复用。三条推论都能落到代价上：
 \begin{itemize}
@@ -1654,14 +1654,14 @@ Cephes 谱系 & \CL{} &
 
 随机数是本章里唯一一个``选错不会立刻报错''的部件：结果照样跑出来，只是再也复现不了，或者两条流之间有说不清的统计相关性。
 
-\textbf{\Fn{rand()} 为什么不能用。} 四条独立的理由：
+\textbf{\Tp{rand()} 为什么不能用。} 四条独立的理由：
 \begin{enumerate}
-\item 状态是\emph{进程级全局量}。\Fn{srand()} 只有一个种子槽，进程里任何一处调用（第三方库、宿主、甚至一段无关的老代码）都会重置或推进它。``两条独立的流''在这个接口下无从表达。
+\item 状态是\emph{进程级全局量}。\Tp{srand()} 只有一个种子槽，进程里任何一处调用（第三方库、宿主、甚至一段无关的老代码）都会重置或推进它。``两条独立的流''在这个接口下无从表达。
 \item 线程不安全。不加锁的实现里，两个线程会读到同一个值或整段跳过；后果是同样的种子、同样的线程数，结果随调度而变，既不可复现也难解释。
 \item 序列质量与位宽。若干经典实现里低位的有效周期远小于全长，\Tp{RAND\_MAX} 可能只有 32767；于是 \Tp{rand() \% K} 带明显的模偏置，缩放到 $[0,1)$ 也留下格点结构。蒙特卡洛积分对高维格点结构尤其敏感（线性同余类发生器的超平面结构是有文献记载的失效模式），这不是风格洁癖。
 \item 序列不是任何标准规定的。同一份代码在两种 libc 上给出完全不同的数字，跨平台对拍失去意义。
 \end{enumerate}
-如果只想洗牌或抽样而不关心复现，显式状态版本（\Tp{drand48}、\Fn{nrand48}、\Fn{jrand48}，把 \Tp{unsigned short xi[3]} 交给调用方保管）比 \Fn{rand()} 体面，但它是 48 位线性同余，别拿去做蒙特卡洛。\Fn{random} 与 \Fn{initstate} 一类的显式缓冲接口可复现性更好，但序列同样不在任何标准里。
+如果只想洗牌或抽样而不关心复现，显式状态版本（\Tp{drand48}、\Fn{nrand48}、\Fn{jrand48}，把 \Tp{unsigned short xi[3]} 交给调用方保管）比 \Tp{rand()} 体面，但它是 48 位线性同余，别拿去做蒙特卡洛。\Fn{random} 与 \Fn{initstate} 一类的显式缓冲接口可复现性更好，但序列同样不在任何标准里。
 
 \textbf{\Lib{GSL} 的取法：引擎是表加句柄。} 状态类型 \Tp{gsl\_rng\_state} 由 \Fn{gsl\_rng\Bk\_malloc} 分配、\Fn{gsl\_rng\_set} 播种、\Fn{gsl\_rng\_free} 释放；引擎本身是全局符号表里的条目，例如 \Tp{gsl\_rng\Bk\_mt19937} 与更宽的 \Tp{gsl\_rng\Bk\_mt19937\_64}，\Tp{gsl\_rng\_taus} 与 \Tp{gsl\_rng\_gfsr2} 这类位发生器。取值入口统一成三个：整数用 \Fn{gsl\_rng\_get}，$[0,1)$ 用 \Fn{gsl\_rng\Bk\_uniform}，有界整数用 \Fn{gsl\_rng\Bk\_uniform\Bk\_int}。抽样分布则被拆成近乎纯函数的一族，比如 \Fn{gsl\_ran\Bk\_poisson}、\Fn{gsl\_ran\Bk\_gaussian\Bk\_boxmuller} 与需要 state 以复用查表的 \Fn{gsl\_ran\Bk\_gaussian\Bk\_ziggurat}。两个值得注意的接口：
 \begin{itemize}
@@ -1787,7 +1787,7 @@ print("quad_vec", integrate.quad_vec(
 \item \Lib{Boost.Math} 用头文件-only 模板把开销挪到编译期，用 \Tp{policies::policy} 把精度（\Tp{promote\_float}、\Tp{promote\_double}）、性能与错误处理（\Tp{raise\_error} 与 \Tp{ignore\_error}）做成类型参数；换来零链接成本与可向量化的热循环，代价是编译期、目标码膨胀、没有稳定 ABI。
 \item 特殊函数必须由底层实现：分段调度、极小极大有理逼近的系数、极点与溢出与递推方向的手写处理，三样都在库里面。库外重写丢掉的不是代码量，而是边界处理与测试基准。
 \item 自适应求积的接口形状决定开销：\Fn{gsl\_integration\Bk\_qag} 是回调、工作区与 \Tp{epsabs}、\Tp{epsrel} 判据；端点奇异要用区间类型或 \Fn{qaws} 权重显式表达，无穷与振荡各有专门入口。\CPP{} 侧 \Tp{quadgk} 与双指数变换把同一族方法做成模板。有括区求根的稳健默认是 \Fn{toms748\_solve}。
-\item 随机数的第一位属性是可复现性：\Fn{rand()} 与 \Fn{srand()} 因为进程级全局状态而不该出现在任何计算结果里；\CPP{}11 规定了引擎序列、没规定分布算法；\Lib{Random123} 用索引代替状态，因此适合 \Lang{GPU}、逐位复现与廉价检查点。
+\item 随机数的第一位属性是可复现性：\Tp{rand()} 与 \Tp{srand()} 因为进程级全局状态而不该出现在任何计算结果里；\CPP{}11 规定了引擎序列、没规定分布算法；\Lib{Random123} 用索引代替状态，因此适合 \Lang{GPU}、逐位复现与廉价检查点。
 \item 蒙特卡洛的可复现分块有四条纪律（按索引派生流、固定合并顺序、样本归属与线程数无关、把发生器身份写进产物）；高精度按``主循环 \Tp{double}、累加 \Tp{long double}、验证用 \Tp{\_\_float128} 或 \Lib{mpmath}''分工，并把 \Tp{long double} 的宽度当运行时事实而不是假设。
 \end{enumerate}
 \end{guideline}

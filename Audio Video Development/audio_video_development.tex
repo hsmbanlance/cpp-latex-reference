@@ -1885,7 +1885,7 @@ static int enc_finish(int (*cb)(void *, AVPacket *), void *ctx)
 \end{lstlisting}
 
 \begin{warning}[title={排空不等于关闭}]
-只有 \Fn{avcodec\_send\_frame(enc, NULL)} 被接受之后 receive 才返回
+只有 \Tp{avcodec\_send\_frame(enc, NULL)} 被接受之后 receive 才返回
 \Tp{AVERROR\_EOF}。正常编码途中循环 receive 拿到的是 \Tp{AVERROR(EAGAIN)}，它的
 意思是``再多喂一帧''而不是``结束了''，把它当 EOF 是延迟累积类故障的常见成因，附录
 \ref{ap:apC-selection} 的排障表也列了它。想中止本轮、丢掉挂起帧，调
@@ -2043,7 +2043,7 @@ FFmpeg 的公开结构体（\Tp{AVCodecContext}、\Tp{AVFrame}、\Tp{AVPacket}�
   等价于 CLI 的 \Opt{preset} 加 \Opt{tune}。\Fn{x264\_param\_parse} 接受与 CLI
   长选项同名（不带前缀横线）的键，返回值能区分``名字不认识''与``值不合法''，
   所以它可以当校验器用。
-\item \Fn{x264\_picture\_init}(pic) 只做一件事：把属于调用方的元数据
+\item \Tp{x264\_picture\_init}(pic) 只做一件事：把属于调用方的元数据
   （\Tp{i\_pts}、\Tp{opaque}、\Tp{i\_type}）复位到``自动''。像素内存仍由你给；
   想让库给就调 \Fn{x264\_picture\_alloc}，之后 \Fn{x264\_picture\_clean}。
 \item \Fn{x264\_encoder\_encode} 的返回值是本次输出的\textbf{总字节数}，出参给
