@@ -495,8 +495,11 @@
 
 \cpplabel
 
-\begin{warning}[title=规则 C.65 延伸：不重载 \texttt{||}、\texttt{\&\&}、\texttt{,}]
-对于用户自定义类型，\textbf{不应重载}逻辑或 \texttt{||}、逻辑与 \texttt{\&\&} 和逗号运算符 \texttt{,}。原因是这三个运算符在内置版本中具有特殊的求值语义，重载后会丧失这些语义，导致代码行为违反直觉。
+\begin{warning}[title={规则 C.65 延伸：不重载 \texttt{||}、\texttt{\&\&}、\texttt{,}}]
+对于用户自定义类型，\textbf{不应重载}逻辑或 \texttt{||}、逻辑与 \texttt{\&\&} 和逗号运算符 \texttt{,}。
+这里丧失的是两样不同的东西，得分开说：\textbf{短路求值}在重载版本里一定拿不到，两个操作数必然都完成求值；
+\textbf{操作数定序}在 \cpp{17} 之前同样丢失，\cpp{17} 起按运算符写法调用时才与内置版本一致（见下文）。
+无论定序那一半最后站在哪一边，违反直觉的后果都落在「两侧都被求值」这条上。
 \end{warning}
 
 \subsection{短路求值的丧失}
@@ -529,55 +532,71 @@ Bool b = a || Bool(expensive_check());
 // (*@\textcolor{red}{危险：即使 a 为 true，expensive\_check() 仍然被执行！}@*)
 \end{lstlisting}
 
-\subsection{逗号运算符的求值顺序保证丧失}
+\subsection{逗号运算符：定序按写法保留，丢弃左值不保留}
 
-内置逗号运算符保证\textbf{从左到右}求值，且左侧的副作用在右侧求值前完成。重载后变为普通函数调用，参数的求值顺序在 \cpp{17} 之前是\textbf{未指定的}。
+内置逗号运算符保证\textbf{从左到右}求值，左侧的全部副作用在右侧求值之前完成，
+并且丢弃左侧的值：整个表达式的类型与值都取右侧。
+重载之后，「左侧先求值」这一条从 \cpp{17} 起按运算符写法调用时仍然成立，
+但「丢弃左侧」不再由语言保证，返回什么完全取决于函数自己的 \texttt{return} 语句。
 
-\subsection{\cpp{20} 及以上的重要变化}
+\subsection{\cpp{17} 起的重要变化}
 
-\begin{note}[title=C++20 求值顺序规则]
-从 \cpp{20} 起（P0145R3），\textbf{函数调用表达式中实参之间的求值顺序}虽然仍是\textbf{未指定的}（unspecified），但用户定义的 \texttt{operator||}、\texttt{operator\&\&} 和 \texttt{operator,} 的参数求值顺序已经由标准\textbf{明确规定}为从左到右（sequenced-before），与内置版本一致。
+\begin{note}[title={C++17 求值顺序规则（P0145R3）}]
+\cpp{17} 的提案 P0145R3 在这里带来两处变化。
+其一，函数调用表达式中各实参之间不再是「可以任意交错的未指定顺序」，而是
+\textbf{indeterminately sequenced}：先后仍不确定，但两个实参的求值不会互相穿插。
+其二，用户定义的 \Op{||}、\Op{\&\&} 与 \Op{,} \textbf{按运算符写法}调用时，
+沿用被它们重载的那个内置运算符的定序规则，左侧 sequenced-before 右侧，与内置版本一致；
+把同一个表达式改写成函数调用写法 \texttt{operator||(a, b)}，这条保证立刻消失，
+退回第一条的普通实参规则。也就是说，顺序取决于\textbf{写法}，不取决于被调的那个函数。
 
-换言之，\cpp{20} 解决了重载版本中``参数求值顺序不确定''的问题，但\textbf{短路求值仍然无法恢复}——函数调用的语义决定了所有实参都必须在函数体执行前完成求值。
+同一提案还规定了赋值右侧先于赋值动作、重载移位运算符左侧先于右侧，
+因此链式的 \texttt{std::cout << f() << g()} 从 \cpp{17} 起按书写顺序求值。
 
-因此，即使在 \cpp{20} 及以上，仍然\textbf{不建议重载这三个运算符}。
+\textbf{短路求值仍然无法恢复}：函数调用的语义决定了所有实参必须在函数体执行之前完成求值。
+因此即使在 \cpp{17} 及以上，仍然\textbf{不建议重载这三个运算符}。
 \end{note}
 
 \begin{lstlisting}[language=C++]
-// C++20: 求值顺序已定义，但短路仍然丢失
+// C++17 起：定序已恢复，短路仍然丢失
 struct Flag { bool v; };
 
 Flag operator||(Flag a, Flag b) {
-    return {a.v || b.v};  // a 和 b 都已求值后才进入函数体
+    return {a.v || b.v};  // a 与 b 都已求值后才进入函数体
 }
 
 Flag x{true};
 Flag y = x || Flag(may_throw());
-// C++17 及之前: may_throw() 是否执行未指定
-// C++20 起:     may_throw() 一定执行（因为 x 先求值，然后 y 再求值）
-//              但无论如何 may_throw() 都会被调用——短路丧失
+// 任何版本：may_throw() 都会被调用——重载实现不出短路
+// C++17 起按运算符写法：x 的求值 sequenced-before Flag(may_throw())
+// C++17 之前：两个实参的求值先后不定
+// 写成 operator||(x, Flag(may_throw()))：退回普通调用，先后同样不定
 \end{lstlisting}
 
 \begin{bestpractice}[title=替代方案]
-如果需要自定义类型的逻辑运算，使用命名函数代替运算符重载：
+如果需要自定义类型的逻辑运算，使用命名函数代替运算符重载。
+但要真正拿到短路，右侧必须传\emph{可调用对象}而不是传值：
+函数的实参一律在函数体执行之前完成求值，按值接收的参数没有惰性可言。
 
 \begin{lstlisting}[language=C++]
 struct Bool {
     bool val_;
 
-    // 命名函数，语义清晰
-    bool and_also(const Bool& other) const {
-        return val_ && other.val_;  // 内置 && 保留短路
+    // 命名函数，语义清晰；右侧传可调用对象才谈得上延迟
+    template <class F>
+    bool and_also(F&& f) const {
+        return val_ && static_cast<bool>(f());  // 内置 && 保留短路
     }
 
-    bool or_else(const Bool& other) const {
-        return val_ || other.val_;  // 内置 || 保留短路
+    template <class F>
+    bool or_else(F&& f) const {
+        return val_ || static_cast<bool>(f());  // 内置 || 保留短路
     }
 };
 
 Bool a{true};
-bool result = a.or_else(Bool(expensive_check()));
-// (*@\textcolor{green!60!black}{安全：or\_else 的参数仅在 val\_ 为 false 时才构造}@*)
+bool result = a.or_else([] { return expensive_check(); });
+// (*@\textcolor{green!60!black}{真惰性：val\_ 为 true 时函数体不执行，lambda 也不会被调用}@*)
 \end{lstlisting}
 \end{bestpractice}
 
@@ -1495,7 +1514,7 @@ K += B.transpose() * D * B * (det_j * weight);
 \begin{enumerate}
   \item \textbf{遵循代数结构}：运算符重载应有数学基础。复数构成域，重载四则运算合理；\Tp{Student} 不构成代数结构，重载 \Op{+} 无意义。
   \item \textbf{最小惊讶原则}：\Op{+} 应该做加法，\Op{==} 应该做相等判断。如果用户需要查文档才能理解 \texttt{a + b} 做了什么，就不应该重载。
-  \item \textbf{不重载 \texttt{||}、\texttt{\&\&}、\texttt{,}}：即使 \cpp{20} 已修复求值顺序问题，短路语义仍然丧失。
+  \item \textbf{不重载 \texttt{||}、\texttt{\&\&}、\texttt{,}}：\cpp{17} 起按运算符写法调用时定序已经与内置版本一致，但短路语义永远拿不回来；改成函数调用写法，连定序也一起丢掉。
   \item \textbf{二元运算符用非成员}：确保两侧都能隐式转换（Core Guidelines C.60）。
   \item \textbf{\cpp{20} 优先使用 \texttt{<=>}}：减少比较运算符的样板代码。
   \item \textbf{浮点数慎用 \texttt{==}}：浮点数是实数的有限精度近似，直接使用 \texttt{==} 几乎总是错误的。
