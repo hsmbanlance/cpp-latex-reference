@@ -34,6 +34,17 @@
 \definecolor{algheadbg}{HTML}{1A3C5E}
 \definecolor{csharptype}{HTML}{006400}
 \definecolor{cmheadbg}{HTML}{4EAA25}
+% -- 对比语言（Java / C\# / Rust / C）--
+\definecolor{javakeyword}{HTML}{A020F0}
+\definecolor{javatype}{HTML}{005A9C}
+\definecolor{javaheadbg}{HTML}{1565C0}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharpheadbg}{HTML}{68217A}
+\definecolor{rustkeyword}{HTML}{CE4257}
+\definecolor{rusttype}{HTML}{B7410E}
+\definecolor{rustmacro}{HTML}{2E8B2E}
+\definecolor{rustheadbg}{HTML}{B7410E}
+\definecolor{cheadbg}{HTML}{34495E}
 
 % ===== listings =====
 \usepackage{listings}
@@ -97,6 +108,129 @@
   escapeinside={(*@}{@*)}
 }
 
+% ---- C ----
+\lstdefinestyle{cstyle}{%
+  language=C,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={%
+    size_t,ptrdiff_t,int8_t,int16_t,int32_t,int64_t,
+    uint8_t,uint16_t,uint32_t,uint64_t,uintptr_t,intptr_t,
+    NULL,printf,puts,fprintf,sprintf,snprintf,
+    malloc,calloc,realloc,free,memcpy,memset,strlen,strcpy,strncpy,strcmp,
+    assert,fopen,fclose,fread,fwrite,
+    _Generic,typeof,__builtin_types_compatible_p
+  },
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Java ----
+\lstdefinestyle{javastyle}{%
+  language=Java,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{javakeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    record,sealed,permits,var,yield,
+    native,strictfp,transient,volatile,synchronized
+  },
+  emph={%
+    int,long,short,byte,float,double,boolean,char,void,
+    String,Object,Integer,Long,Double,Float,Boolean,
+    System,Class,Thread,Exception,RuntimeException,
+    Override,FunctionalInterface,Deprecated,SuppressWarnings,
+    List,Map,Set,ArrayList,HashMap,Optional,Stream
+  },
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- C\#（listings 无内置语言，本地定义）----
+\lstdefinelanguage{CSharp}{%
+  morekeywords={%
+    abstract,as,base,bool,break,byte,case,catch,char,checked,class,const,
+    continue,decimal,default,delegate,do,double,else,enum,event,explicit,
+    extern,false,finally,fixed,float,for,foreach,goto,if,implicit,in,
+    int,interface,internal,is,lock,long,namespace,new,null,object,operator,
+    out,override,params,private,protected,public,readonly,ref,return,sbyte,
+    sealed,short,sizeof,stackalloc,static,string,struct,switch,this,throw,
+    true,try,typeof,uint,ulong,unchecked,unsafe,ushort,using,var,void,
+    volatile,while,async,await,record,required,file,init,nint,nuint
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]'
+}[keywords,comments,strings]
+
+\lstdefinestyle{csharpstyle}{%
+  language=CSharp,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{csharpkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={%
+    int,long,short,byte,float,double,decimal,bool,char,string,void,
+    object,dynamic,nint,nuint,
+    String,Int32,Int64,IntPtr,UIntPtr,
+    List,Dictionary,HashSet,Task,Span,Memory,
+    Console,Math,Convert,StringBuilder
+  },
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Rust（listings 无内置语言，本地定义）----
+\lstdefinelanguage{Rust}{%
+  morekeywords={%
+    as,break,const,continue,crate,dyn,else,enum,extern,false,fn,for,
+    if,impl,in,let,loop,match,mod,move,mut,pub,ref,return,static,struct,
+    super,trait,true,type,unsafe,use,where,while,async,await,self,Self,
+    macro_rules,yield,try
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]"
+}[keywords,comments,strings]
+
+\lstdefinestyle{ruststyle}{%
+  language=Rust,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{rustkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={%
+    i8,i16,i32,i64,i128,isize,
+    u8,u16,u32,u64,u128,usize,
+    f32,f64,bool,char,str,String,
+    Vec,Box,Option,Result,Some,None,Ok,Err,
+    Rc,Arc,Cell,RefCell,Mutex,
+    HashMap,HashSet,BTreeMap,BTreeSet
+  },
+  emphstyle=\color{rusttype},
+  emph=[2]{println,print,format,format_args,vec,assert,assert_eq,write,writeln},
+  emphstyle=[2]{\color{rustmacro}},
+  escapeinside={(*@}{@*)}
+}
+
 \lstset{style=cppstyle}
 
 % ===== tcolorbox =====
@@ -117,6 +251,26 @@
   \tcbox[on line,colback=cmheadbg,colframe=cmheadbg,
     boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
     colupper=white,fontupper=\scriptsize\bfseries]{CMake}}
+
+\newcommand{\clabel}{%
+  \tcbox[on line,colback=cheadbg,colframe=cheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{C}}
+
+\newcommand{\javalabel}{%
+  \tcbox[on line,colback=javaheadbg,colframe=javaheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{Java}}
+
+\newcommand{\csharplabel}{%
+  \tcbox[on line,colback=csharpheadbg,colframe=csharpheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{C\#}}
+
+\newcommand{\rustlabel}{%
+  \tcbox[on line,colback=rustheadbg,colframe=rustheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{Rust}}
 
 % ===== tcolorbox 提示框 =====
 \newtcolorbox{guideline}[1][]{
@@ -212,7 +366,7 @@
   urlcolor=blue!60!black,
   bookmarks=true,
   pdfauthor={hsmbanlance},
-  pdftitle={C++20 非类型模板参数扩展参考},
+  pdftitle={C++20 模板参数与泛型机制},
 }
 
 % ===== 自定义命令 =====
@@ -232,9 +386,11 @@
 \begin{titlepage}
 \centering
 \vspace*{4cm}
-{\Huge\bfseries C++20 非类型模板参数扩展\par}
+{\Huge\bfseries C++20 模板参数与泛型机制\par}
 \vspace{1cm}
-{\LARGE 从整型到浮点、结构化类与具名指针\par}
+{\LARGE 非类型模板参数扩展 · 五语言泛型机制对照\par}
+\vspace{0.35cm}
+{\LARGE 用概念与显式实例化把实现收回源文件\par}
 \vfill
 {\large \today\par}
 \end{titlepage}
@@ -1350,5 +1506,3583 @@ NTTP 扩展看似只是一个语法层面的放宽，实际上它把 \cpp{} 模�
 对库作者而言，这是一次重新审视 API 设计的机会：哪些参数其实应当是 NTTP？哪些"策略对象"其实应当是具名指针？哪些运行期分支其实应当是模板特化？把这些从运行期搬到编译期，往往能换来数量级的性能提升与一个数量级的 bug 减少。
 
 对应用开发者而言，理解 NTTP 扩展有助于读懂现代 \cpp{20} 库的实现——从 \kw{std::format} 的格式串、\kw{Boost.PFR} 的反射、到 \kw{mp-units} 的物理量纲，背后都是同一套机制。
+
+% ====================================================================
+% 泛型：与 C\#／Java／Rust／C 的机制对照，以及模板实现的头文件暴露问题
+% ====================================================================
+
+\part{泛型：五种语言的机制对照}
+
+\chapter{泛型不是一种机制：四条分类轴}
+
+把 Java、C\#、Rust、\cpp{} 和 C 放在一起谈“泛型”，几乎每次讨论都会滑向两个方向：
+一边是“Java 的泛型是假的，只是语法糖”，另一边是“\cpp{} 模板最强，什么都能做”。
+两种说法都抓住了一部分事实，但都把一个多维问题压成了一维排名。
+
+更可靠的读法是：这五种语言提供的不是同一种机制的五个强弱版本，而是五个不同的
+设计取舍点。它们在某些点上根本没有可比性——问“\cpp{} 模板在运行期能不能拿到类型参数”，
+就像问“C\# 的 \kw{foreach} 在编译期生成几个机器码分支”一样，问题预设了对方并不存在的实体。
+
+本章不讲任何一种语言的细节，只建立坐标系。它做三件事：把“泛型”这个词拆成三个
+可以分别承诺的能力；给出四条可以逐一定位五种语言的分类轴；说明为什么“真泛型／伪泛型”
+这对词应该被替换成“运行期是否具化”这一条单独的轴。后面五章各自沿着这条坐标系展开：
+Java 一节解释擦除，C\# 一节解释具化与共享代码，Rust 一节解释单体化与 trait 求解，
+\cpp{} 一节回到本册前十三章的实例化机制，C 一节说明没有类型参数时靠什么补偿。
+
+\section{泛型到底承诺了什么：先把三件事分开}
+
+谈“某语言支持泛型”之前，需要明确这个词包裹了三个彼此独立的承诺。
+
+\textbf{(a) 参数化类型。}能写出 \kw{List<T>} 这样的类，把类型本身当作构造组件。
+这条承诺影响的是\emph{数据表示}：容器里存的是什么、字段宽度是多少、内存布局何时确定。
+C、\cpp{}、C\#、Java、Rust 都能以各自的方式做到（C 靠 \kw{void*} 加约定，勉强做到）。
+
+\textbf{(b) 参数化函数与算法。}能写出一份 \kw{sort}，作用于任意元素类型。
+这条承诺影响的是\emph{代码复用单位}：一份源码，多处使用。这里各语言差别最大——
+Java 的泛型方法在字节码层面只有一份擦除后的实现，C\# 对引用类型实参也共享实现，
+而 \cpp{} 与 Rust 为每组类型实参各生成一份。同样是“复用一份源码”，
+复用的层次完全不同：前者复用机器码，后者只复用文本。
+
+\textbf{(c) 约束。}能声明“类型参数 $T$ 必须满足什么条件才允许代入”。
+这条承诺影响的是\emph{错误的归属}：约束存在时，接口外的实参在调用点就被拒绝，
+错误短而准确；约束缺失时（经典 \cpp{} 无 concepts 的写法），错误发生在实例化内部，
+报错点离真正的非法调用隔了几层模板。
+
+三条承诺的支持度\emph{不齐平}，这是全部比较的起点。举两个反例：
+Swift 长期支持参数化类型与协议约束，但对“跨模块的泛型特化”另有取舍；
+经典 \cpp{}（\cpp{98}）在 (c) 上只有一道隐式墙——约束要么写在文档里，要么靠
+SFINAE 手工搭建（另见《SFINAE 与概念》册）。把“支持泛型”当成布尔值，
+就等于假设这三条承诺总是同生同灭，而事实并非如此。
+
+\section{四条分类轴}
+
+下面四条轴各自只回答一个问题，因此彼此不可替代。任何一条轴上的位置，
+都不能推出另一条轴上的位置。
+
+\subsection{轴一：绑定与检查发生在什么时刻}
+
+\textbf{\cpp{} 与 Rust：编译期。}类型实参在编译期绑定到形式参数，合法性在编译期判定。
+代价是定义可见性约束：\cpp{} 的模板定义必须在实例化点可见（这就是本册后面“实现暴露”
+一节讨论头文件与显式实例化的原因）；Rust 的泛型函数在单体化前完成 trait 求解。
+
+\textbf{C\#：编译期完整检查 $+$ IL 生成期保留类型参数 $+$ JIT 或 AOT 特化。}
+编译器（Roslyn）在编译期检查约束、生成\emph{仍带类型参数}的 IL，并把约束写进元数据。
+真正的类型替换发生在更晚的时刻：值类型实参由运行时做类型安全的特化，引用类型实参
+在多数控的运行时中倾向共享一份已编译代码（canonical instantiation），
+而 Native AOT 把特化决策提前到发布构建期。同一个“泛型方法”，
+它的机器码在什么时刻存在、有几份，取决于运行时策略而不只取决于源码。
+
+\textbf{Java：编译期检查 $+$ 运行期擦除。}\kw{javac} 的静态类型检查是完整且真实的，
+检查完成后类型参数被擦除为上界，需要时插入强制转换与桥接方法；运行期只有一份字节码。
+“编译期检查为真”与“运行期不保留类型参数”是这条轴上的\emph{两个阶段}，
+把它们混为一谈正是“伪泛型”误读的根源。
+
+\textbf{C：预处理期或运行期约定。}\kw{\#define} 宏展开、\kw{\_Generic} 选择（\kw{\_Generic}
+是 C11 起的类型选择表达式，本质仍是手写分发）、复用同一份代码配 \kw{void*} 与
+函数指针比较器（\kw{qsort} 是后者的代表），或者构建期生成代码（\clabel{} 与
+\cmakelabel{} 都可行，见下文“C 一节”）。没有任何一条路把类型检查交给语言本身。
+
+\subsection{轴二：运行期是否保留类型参数（具化与擦除）}
+
+这条轴只有一个问题：类型参数在程序运行时是否还是一个可查询的实体。
+
+\textbf{C\#：具化（reified）。}\kw{typeof(T)} 合法，\kw{new T()} 在有无参构造约束时合法，
+每个闭合类型（closed type，如 \kw{List<int>} 与 \kw{List<string>}）有独立的运行期类型对象，
+值类型实参的数组元素是真实的 \kw{int}，没有装箱。
+
+\textbf{Java：擦除（erased）。}运行期所有 \kw{List<T>} 都是同一个 \kw{List.class}。
+\kw{new T()}、\kw{T[] x = new T[0]}、\kw{x instanceof T} 均不合法；
+泛型信息只以 \kw{Signature} 属性的形式残留在类文件里，供反射有限读取，
+不能参与运行期判定。
+
+\textbf{\cpp{} 与 Rust：既非具化也非擦除——类型参数在生成物里不存在。}
+代码已按具体类型生成完毕，运行期没有“参数化类型”这一层可以询问。
+问“这个 \kw{vector} 的 \kw{T} 是什么”在编译期有确定答案，在运行期除非引入 RTTI
+（\kw{typeid}，且有成本与退化风险）否则根本不成其为问题。
+对这两个语言说“具化”或“擦除”都是范畴错误：擦除意味着“先擦掉本已存在的类型信息”，
+而这里从来没有生成过可擦除的类型参数实体。
+
+\textbf{C：靠 \kw{void*} 时类型信息完全丢失。}只剩约定（callback 签名与容器约定同一类型）
+或手工 tag（判别式枚举字段，见《C 接口设计与不透明句柄》册的 tagged union 一节）。
+手工 tag 的代价是：类型与 tag 的一致性由程序员维护，编译器无法帮忙检查。
+
+\begin{note}[title={擦除的一处可见后果：\kw{ConcurrentHashMap} 为什么禁止 null 键值}]
+Java 的 \kw{Map.get(k)} 擦除后返回 \kw{Object}。若允许值为 null，则“键不存在”与
+“键存在且值为 null”两种情况返回同样的结果，无法区分；要区分就得再调用一次
+\kw{containsKey}，而这在并发容器上两次调用之间状态可能已变。
+\kw{java.util.concurrent.ConcurrentHashMap} 因此直接禁止 null 键与 null 值——
+这是运行期擦除把接口表达能力削弱的实例，而不是实现者的随意选择。
+\end{note}
+
+\subsection{轴三：代码生成策略}
+
+这条轴决定三件可观察的事：代码尺寸、冷启动、能否只编译一次。
+
+\textbf{单体化／全特化（monomorphization）。}\cpp{} 隐式实例化、Rust 的泛型函数、
+C\# 的值类型实参。每组类型实参生成一份专属代码，调用是直接的，无装箱无查表。
+代价是代码膨胀：同一段逻辑可能被复制几十份，冲击指令缓存并延长构建或 JIT 时间；
+\cpp{} 还会把编译期诊断推到很晚。
+
+\textbf{共享代码 $+$ 运行期类型检查。}C\# 的引用类型实参（canonical instantiation）。
+引用类型有统一的表示（托管引用），故可共享同一份本机代码，在方法入口做一次类型
+合法性检查；二进制尺寸与冷启动更友好，代价是那一次入口检查与间接性。
+
+\textbf{一份擦除后的代码 $+$ 装箱或强制转换。}Java。运行期只有一份实现，
+内存占用最小；代价是值类型必须装箱（\kw{ArrayList<Integer>} 里是引用堆对象，
+不是连续 \kw{int} 数组），以及擦除带来的转换与桥接。Project Valhalla
+（值类／specialization，仍在孵化阶段，多数实现尚未提供）试图部分缓解这一点。
+
+\textbf{复制粘贴或宏展开。}C。每份副本独立、可单独改动，是彻底的单体化；
+代价是没有类型检查、没有统一维护点、错误在多份副本中重复出现。
+
+同一份源码在不同策略下的可观察差别，一句话即可概括：单体化把成本付在\emph{代码体积与
+构建时间}上，共享或擦除把成本付在\emph{间接性与装箱}上，复制粘贴把成本付在\emph{维护}上。
+
+\subsection{轴四：约束在何处检查、以什么形态报错}
+
+\textbf{命名接口式约束。}Java 的 \kw{<T extends Bound>}、C\# 的 \kw{where} 子句、
+Rust 的 trait bound。约束是接口的一部分，编译期即可判定，违反约束的实参在调用点被拒。
+三者形态不同：Java 的上界只允许方法（不允许静态成员、不允许构造），
+C\# 的 \kw{where} 可以要求 \kw{new()}、可以要求值类型，
+Rust 的 trait bound 在单体化前由 trait 求解器检查，缺失实现时给出定位准确的错误。
+
+\textbf{可选的显式约束。}\cpp{} 的 concepts（\cpp{20} 起）。不写约束时完全合法，
+此时靠实例化错误兜底；写了约束则把错误前移到调用点。约束是\emph{可选}的，
+这正是 \cpp{} 与其余三者最大的形态差异（细节另见《SFINAE 与概念》册）。
+
+\textbf{无约束概念。}C 的 \kw{void*}。约束只存在于文档与约定中，违反时没有任何
+编译期或运行期信号，只有未定义行为。
+
+\subsection{五语×四轴：概览}
+
+\begin{table}
+\centering
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.09\textwidth}
+                >{\raggedright\arraybackslash}p{0.18\textwidth}
+                >{\raggedright\arraybackslash}p{0.15\textwidth}
+                >{\raggedright\arraybackslash}p{0.21\textwidth}
+                >{\raggedright\arraybackslash}p{0.15\textwidth}}
+\toprule
+语言 & 绑定与检查时机 & 运行期是否具化 & 代码生成策略 & 约束形态 \\
+\midrule
+\cpp{} & 编译期；定义须在实例化点可见 & 无类型参数实体（RTTI 另计） &
+单体化：隐式实例化，每组实参一份 & concepts 可选；不写则靠实例化错误 \\
+Rust & 编译期，单体化前完成 trait 求解 & 无类型参数实体 &
+单体化：泛型函数按实参生成 & trait bound 必写，检查在调用点 \\
+C\# & 编译期检查 $\rightarrow$ IL 保留参数 $\rightarrow$ JIT／AOT 特化 &
+具化：\kw{typeof(T)} 可用 & 值类型特化；引用类型共享代码 $+$ 入口检查 &
+\kw{where} 子句，可含 \kw{new()} 与 \kw{struct} 约束 \\
+Java & 编译期检查 $+$ 运行期擦除 & 擦除：全部 \kw{List} 同一 \kw{Class} &
+一份擦除代码 $+$ 装箱或强制转换 & \kw{<T extends Bound>}，只能约束方法 \\
+C & 预处理期宏展开，或运行期约定 & 无：\kw{void*} 丢尽类型 &
+复制粘贴或宏展开，或构建期生成 & 无约束概念，仅文档与约定 \\
+\bottomrule
+\end{tabular}
+\caption{五种语言在四条分类轴上的位置概览}
+\end{table}
+
+这张表可以直接当后面五章的索引来用。读表时请留意一个事实：第三列与第四列在
+\cpp{}／Rust 与 Java 之间是\emph{相关}的（都不保留运行期类型参数），但相关关系不是
+因果关系——单体化的动机是零成本抽象，擦除的动机是在已有字节码与虚拟机上向后兼容。
+同一列上的相邻两行，背后是完全不同的设计目标。
+
+\section{把“真泛型／伪泛型”换成“运行期是否具化”}
+
+“真泛型／伪泛型”这对流行词的毛病在于：它只衡量轴二一条轴，却被当成全图排名来使用。
+把“Java 是伪泛型”读成“Java 的类型检查是假的”，是一个具体的、可以指出错在哪里的误读。
+
+事实分布是这样的：Java 的静态类型检查发生在编译期，且是完整的——把不匹配的实参传给
+\kw{List<String>}，\kw{javac} 会拒绝。Java 缺的是运行期具化能力，
+即无法在运行时询问、创建、按类型分派那个 \kw{T}。这两件事在轴一与轴二上，
+属于两个不同的位置，一个为真、一个为缺，不能互相推导。
+
+反过来看 C\#：具化确实带来运行期能力（\kw{typeof(T)}、\kw{new T()}、值类型实参无装箱），
+但代价不是零。代价是 JIT 与运行库必须理解类型参数这一概念——IL 要携带类型参数、
+元数据要携带约束、运行时要做特化决策与类型安全校验、每个闭合类型要有独立类型对象。
+把这套机制描述成“C\# 比 Java 更泛型”，等于用一句评价掩盖了一笔架构开销。
+
+\begin{guideline}[title={分类轴的口径}]
+后续五章一律按四条轴定位，不再使用“真／伪”“强／弱”这类排名说法：
+(1) 绑定与检查时机；(2) 运行期是否具化；(3) 代码生成策略；(4) 约束形态与检查位置。
+评价任何一种机制时，只在同一轴内部比较，跨轴的结论必须显式说明代价落在哪一列。
+若要批评某语言“泛型不完整”，必须先指出它指的是四条轴中的哪一条，并给出另一条轴上的
+代价作为对照。
+\end{guideline}
+
+\begin{warning}[title={一句话禁令}]
+“运行期不保留类型参数”不等于“编译期检查形同虚设”，也不等于“没有参数化复用”；
+“运行期具化”不等于“代码体积可控”，也不等于“检查更严格”。
+轴二与轴一、轴三之间没有蕴含关系，任何由此及彼的推论都是错的。
+\end{warning}
+
+\section{\texorpdfstring{\cpp{} 模板在四条轴上的位置}{C++ 模板在四条轴上的位置}}
+
+把 \cpp{} 模板称作“运行期参数化类型系统”是不准确的。它是编译期的按需代码生成器：
+类型参数不是运行期实体，而是一个编译期的名字替换与推导装置，只在被使用时才展开成代码。
+泛型（参数化容器与算法）只是它最常见的用途；同一个机制还承担策略（policy-based design，
+把行为作为类型参数注入）、维度（本册前十三章的非类型模板参数 \cpp{20} 扩展）、
+编译期分支（\kw{if constexpr}）与元编程（编译期计算，另见《编译期计算与常量求值》册）。
+因此本册前面讨论 NTTP、后面讨论实例化点与实现暴露的机制，就是 \cpp{} 版的“泛型实现”。
+四条轴上它的位置是：轴一编译期、轴二无类型参数实体、轴三单体化、轴四约束可选。
+
+同一个需求——“对任意可比较元素类型排序”——在两种机制下的写法差异，最能看出轴二与轴四。
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle,caption={\cpp{}：类型参数在编译期被消耗，生成物里没有 \kw{T}}]
+#include <algorithm>
+#include <functional>
+#include <iostream>
+#include <vector>
+
+template <class Iter, class Cmp>
+void my_sort(Iter first, Iter last, Cmp cmp) { std::sort(first, last, cmp); }
+
+int main() {
+    std::vector<int> v = {5, 2, 9, 1};
+    my_sort(v.begin(), v.end(), std::less<int>{});   // direct call, no boxing
+    for (int x : v) std::cout << x << ' ';
+    std::cout << '\n';
+}
+\end{lstlisting}
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle,caption={C\#：类型参数在运行期仍然可问，代价是运行时必须理解它}]
+using System;
+
+class Program {
+    static void Show<T>(T[] data) where T : IComparable<T> {
+        Array.Sort<T>(data);
+        Console.Write(typeof(T).Name + ":");        // T still exists at runtime
+        foreach (T item in data) Console.Write(" " + item);
+        Console.WriteLine();
+    }
+
+    static void Main() {
+        Show(new int[]    { 5, 2, 9, 1 });
+        Show(new string[] { "pear", "apple", "fig" });
+    }
+}
+\end{lstlisting}
+
+两段代码的\emph{源码}长度接近，机制却分处两列。左侧 \kw{my\_sort} 的 \kw{Iter} 与 \kw{Cmp}
+在编译期被消耗干净，调用是直接的，也没有任何运行期类型标签；
+若给 \kw{std::sort} 传入不可比较的元素类型，错误出现在实例化内部，隔着几层模板。
+右侧 \kw{Show<T>} 带着 \kw{where} 约束，实参不满足约束时在\emph{调用点}就被拒绝；
+而 \kw{typeof(T)} 之所以合法，是因为运行时确实为每个闭合类型保留了类型对象。
+
+\begin{compare}[title={问“\kw{T} 是什么类型”的两个问题合法性不同}]
+\textbf{问 \cpp{} 模板：“这个实例的 \kw{T} 是什么类型？”}——这个问题只有编译期答案。
+在调试器里看已生成的 \kw{std::vector<int>} 机器码，找不到 \kw{T}，因为它已被展开；
+若想在运行期问，得改用 \kw{typeid} 并把 \kw{T} 存进对象，那是自己再造一层类型信息。
+
+\textbf{问 C\#：“这个实例的 \kw{T} 是什么类型？”}——这是一个合法的运行期问题。
+\kw{typeof(T)} 直接给出答案，泛型类型实例携带自己的类型参数元数据，
+反射、\kw{is} 判定、按类型分派都可以问它。
+
+结论：两个语言不是在同一件事上谁更强，而是\emph{这个问题的定义域不同}。
+在 \cpp{} 里问它得到的是编译期答案；在 C\# 里问它得到的是运行期答案，
+而这份答案的存在本身就是一项被设计出来的能力，也是它自己的开销来源。
+\end{compare}
+
+\section{本部分路线图}
+
+后五章各自解决一条轴上的困惑，可按需只读自己关心的那一章。
+
+\begin{itemize}
+\item \textbf{Java 一节：轴二与轴一的错位。}擦除究竟擦掉了什么、留下了什么；
+桥接方法与合成 \kw{checkcast}；为什么 \kw{T[]} 与 \kw{new T()} 不合法；
+类型检查为真与运行期不可问为何同时成立。
+\item \textbf{C\# 一节：轴二与轴三的耦合。}具化的实现成本；闭合类型与独立类型对象；
+值类型特化与引用类型共享代码的分岔，以及 Native AOT 把决策提前后发生的变化。
+\item \textbf{Rust 一节：轴三与轴四。}单体化如何在 trait 求解器的边界上控制代码膨胀
+（\kw{Box<dyn Trait>} 作为动态分派的出口）；约束必写带来的报错位置优势。
+\item \textbf{\cpp{} 一节：轴一的决定性后果。}实例化点、定义可见性与错误前移；
+本册前十三章的 NTTP 如何作为第四条轴之外的维度参与同一机制；
+显式实例化与 extern template 如何把编译期机制翻译成链接期议题
+（另见《编译器与链接器》册的 COMDAT 一节）。
+\item \textbf{实现暴露一节（轴一的产品）。}模板定义为什么必须进头文件、
+接口与实现的耦合在这里如何被强制暴露，以及不透明句柄、显式实例化清单、
+PImpl 各自把成本付在哪一列（另见《CRTP 与 PImpl》册）。
+\item \textbf{C 一节：轴四缺失时的补偿手段。}\kw{void*} 加约定、宏展开、
+\kw{qsort} 式的回调契约、构建期代码生成，以及\emph{C 泛型}在 \kw{\_Generic}
+层面的近似与其边界。
+\end{itemize}
+
+\begin{bestpractice}[title={读后面五章时的用法}]
+把这四条轴当作 checklist 而不是评分表。每章末尾会给出“该语言在四轴上的位置”
+与“代价落在哪一列”两栏；设计新接口时，先决定自己需要哪几列的能力，
+再决定把成本付在哪一列——顺序反过来（先选语言再解释取舍）只会得出排名式结论。
+\end{bestpractice}
+
+\chapter{Java：类型擦除的“伪泛型”}
+
+Java 是四条分类轴上一个非常典型的组合：约束在编译期检查，代码只生成一份，运行期不保留任何具化的类型参数。
+它因此获得了一种奇怪的声誉——“类型系统是完整的，但运行期是瞎的”。本章把擦除的机制、后果、代价与补救手段逐条摊开，
+最后回到四条轴上定位。
+
+\section{擦除是什么，以及为什么选它}
+
+\textbf{历史约束决定了技术方案。} JDK 1.5 的 JSR 14（2004 年落地）面对的局面不是“从零设计泛型”，而是
+“已有海量字节码、类库与第三方框架必须在同一台 JVM 上继续运行”。如果泛型具化到运行期，
+\kw{List<String>} 与 \kw{List<Integer>} 就是两个不同的类，那么旧代码里以 \kw{List} 形式编译的调用点、
+以及所有按名字与描述符查找方法的字节码指令都要重新定义。为了保住二进制兼容（binary compatibility），
+JSR 14 选择了\textbf{编译期检查 + 生成期擦除}：类型检查在 \kw{javac} 里做真，
+写进 class 文件的却是没有类型参数的形态。
+
+\textbf{擦除的规则很机械。}（JLS 4.7“擦除与可具体化类型”）
+
+\begin{itemize}
+  \item 类型变量擦除到它的\textbf{最左声明上界}：无界的 \kw{T} 擦除到 \kw{Object}，
+        有单一上界的（\kw{T extends CharSequence}）擦除到 \kw{CharSequence}；
+        交叉上界 \kw{T extends A \& B} 只擦除到最左的 \kw{A}，
+        代码里凡用到 \kw{B} 的成员，编译器再补一个到 \kw{B} 的强制转换。
+  \item 参数化类型擦除掉实参：\kw{List<String>}、\kw{List<? extends Number>}、\kw{List} 擦除后都是 \kw{List}。
+        所以 \kw{List<String>} 与 \kw{List<Integer>} 在运行期是同一个类，
+        \kw{getClass()} 返回同一个 \kw{Class} 对象，无法据此分派。
+  \item 泛型数组 \kw{T[]} 擦除到上界的数组类型，但\textbf{元素类型必须可具体化（reifiable）}才能被真正创建。
+  \item 类型参数并没有全部消失：它们以 \kw{Signature} 属性的形式留在类、字段、方法与父类的签名里，
+        供编译器、IDE、注解处理器与 \kw{java.lang.reflect} 读取；
+        运行期的\textbf{对象头里没有类型参数}，堆上的实例对泛型信息一无所知。
+\end{itemize}
+
+也就是说，擦除丢掉的只是“运行期具化”这一件事，而不是“类型参数曾经存在过”这一事实。下面这份代码展示了
+同一份源码在 class 文件里的等价形态：原始类型、编译器插入的强制转换，以及（示意）合成方法。
+
+\javalabel
+\begin{lstlisting}[style=javastyle,caption={泛型源码与擦除后的等价形态：原始类型、checkcast 与合成桥方法}]
+// ---- 源码：交给 javac 的版本 ----
+class Names {
+    private java.util.List<String> list = new java.util.ArrayList<>();
+
+    public void add(String s) { list.add(s); }
+    public String first()     { return list.get(0); }
+
+    // 泛型方法：<T extends CharSequence> T pick(T) 擦除为 CharSequence pick(CharSequence)
+    public <T extends CharSequence> T pick(T value) { return value; }
+}
+
+// ---- 擦除后 class 文件里的等价形态（示意；原始类型会触发 rawtypes 警告） ----
+class NamesErased {
+    private java.util.List list = new java.util.ArrayList();   // 擦除：去掉 <String>
+
+    public void add(String s) { list.add(s); }                 // 参数已是 String，无需转换
+    public String first()     { return (String) list.get(0); }  // javac 插入 checkcast
+
+    public CharSequence pick(CharSequence value) { return value; }
+    // 字段 list 的擦除描述符是 Ljava/util/List;，Signature 属性写作
+    //   Ljava/util/List<Ljava/lang/String;>;
+    // 方法 pick 的擦除描述符是 (Ljava/lang/CharSequence;)Ljava/lang/CharSequence;，
+    // Signature 属性写作 <T::Ljava/lang/CharSequence;>(TT;)TT;
+}
+
+// ---- 协变覆写与桥方法：源码里只有一个 get，字节码里有两个 ----
+class GenBox<T> {
+    private T value;
+    public T get()          { return value; }
+    public void set(T item) { value = item; }
+}
+
+class IntBox extends GenBox<Integer> {
+    @Override
+    public Integer get() { return 42; }         // 返回类型协变，合法
+    // 父类成员擦除后是 Object get()，与 Integer get() 的签名不同，
+    // 于是 javac 在本类再合成一个桥方法（源码写不出来，字节码里带 ACC_BRIDGE|ACC_SYNTHETIC）：
+    //   public Object get() { return (Object) get(); }   // 委托给真正的 Integer get()
+}
+\end{lstlisting}
+
+注意 \kw{add} 里没有插入转换：写入端的类型检查完全在编译期完成，擦除后不需要任何运行期动作；
+读取端才需要 \kw{checkcast}，因为返回值要以具体类型参与后续计算。这个不对称就是后文所有“坑”的根源。
+
+\section{擦除的直接后果}
+
+擦除带来的限制不是零散的语法禁令，而是同一个事实的多种表现：字节码里没有类型参数可用。逐条列举如下。
+
+\begin{itemize}
+  \item \textbf{不能} \kw{new T()}。编译器无法知道 \kw{T} 是什么，也就无法发出 \kw{new} 指令与构造方法调用。
+        补救是显式传入工厂或 \kw{Class<T>} 再反射创建。
+  \item \textbf{不能} \kw{T.class}。类字面量要求编译期就知道运行期类型；类型变量恰恰不知道。
+  \item \textbf{不能} \kw{instanceof T}，也不能在 \kw{instanceof} 右侧写带具体实参的参数化类型
+        （JLS 15.20.2 只允许可具体化的类型，即 \kw{List<?>} 这类全无界通配符形态）。
+  \item \textbf{不能} \kw{catch (T e)}。异常处理靠运行期类型匹配，\kw{T} 在运行期不存在；
+        同时它也无法被重抛为具体类型。
+  \item \textbf{不能创建} \kw{T[]}：\kw{new T[10]} 是编译错误；能做的只是
+        \kw{T[] a = (T[]) new Object[n]}，代价是一条 unchecked 警告。
+        \kw{new List<String>[10]} 同样非法——数组组件必须可具体化。
+  \item \textbf{静态上下文不能引用类型参数}。\kw{static} 成员属于原始类，被所有参数化实例共享，
+        而类型变量属于某个具体实例化，二者生命周期不匹配。
+  \item \textbf{仅类型参数不同的重载签名冲突}：\kw{f(List<String>)} 与 \kw{f(List<Integer>)} 擦除后
+        都是 \kw{f(List)}，报 name clash / same erasure。同理，父类的 \kw{erase} 后同名方法会互相抵消。
+  \item \textbf{不能对类型变量做常量分派}：\kw{switch} 的常量标签要求选择器是 \kw{char}、整型、\kw{String} 或枚举，
+        \kw{T} 不在其中，所以 \kw{switch (t)} 配常量标签会编译失败
+        （javac 的说法是 incompatible types: int cannot be converted to \kw{T}），
+        即便上界写成 \kw{T extends Integer} 也一样；JDK 21 的模式 \kw{switch} 允许
+        \kw{case Integer i} 这样的模式标签，但那是对值的运行期类别分派，与类型参数无关。
+  \item \textbf{基本类型不能作类型参数}：\kw{List<int>} 是错误，必须写 \kw{List<Integer>}。
+        装箱的代价是实打实的：64 位 JVM 加压缩指针下，一个 \kw{Integer} 实例是
+        8 字节标记字 + 4 字节类指针 + 4 字节 \kw{int}，恰好 16 字节；容器内部的数组每个槽位还要再存 4 字节引用。
+        与之相比 \kw{int[]} 每元素只占 4 字节。更微妙的是缓存：
+        \kw{Integer.valueOf} 对 $-128$ 到 $127$ 返回共享实例（区间上界可用 \kw{-XX:AutoBoxCacheMax} 调大），
+        于是 \kw{==} 只在这个区间内“碰巧成立”；\kw{Long}、\kw{Short}、\kw{Byte} 有同样的区间，
+        \kw{Character} 只缓存 \kw{0} 到 \kw{127}，\kw{Boolean} 则两个值全缓存。算术密集的泛型代码因此既慢又容易写出依赖缓存的错误比较。
+  \item \textbf{注解的成员值取不到类型参数}：它既不是编译期常量，也拿不到 \kw{T.class}；
+        可变参数的泛型数组则需要 \kw{@SafeVarargs} 背书，否则留下 unchecked 警告。
+\end{itemize}
+
+下表把常见的后果归拢为“可观测症状 + 官方或社区的补救”：
+
+\begin{table}[!htbp]
+\centering
+\caption{擦除的后果、可观测症状与补救手段}
+\begin{tabularx}{0.80\textwidth}{>{\raggedright\arraybackslash}p{0.19\textwidth}>{\raggedright\arraybackslash}p{0.26\textwidth}>{\raggedright\arraybackslash}X}
+\toprule
+后果 & 可观测症状 & 官方/社区补救 \\
+\midrule
+\kw{T.class}、\kw{new T()} 非法 & 框架无法凭 \kw{Class} 反推元素类型，\kw{getClass()} 看不出参数化差异 & 传入 \kw{Class<T>} 或工厂；\kw{Supplier<T>}（\kw{Stream.generate} 即如此） \\
+运行期不具化 & 泛型信息不在对象上，只在 \kw{Signature} 属性里 & super type token 技巧（本章后文）；反射读父类实参 \\
+基本类型必须装箱 & \kw{List<Integer>} 数值循环慢、内存膨胀、\kw{==} 语义随缓存区间漂移 & 原始类型专用集合（\kw{IntList} 式类库）、\kw{IntStream} 等原始类型流；退回 \kw{int[]} 手写循环 \\
+\kw{T[]} 与泛型数组不可创建 & 通用容器只能持 \kw{Object[]}，取出即 unchecked 转换 & \kw{@SafeVarargs}；把元素存成 \kw{Object[]} 并在边界处转换 \\
+仅类型参数不同的重载冲突 & 想为 \kw{List<String>} 与 \kw{List<Integer>} 写两套逻辑时编译失败 & 改名（\kw{f} / \kw{fList}）或按 \kw{Class<T>} 在运行期分派 \\
+原始类型混用破坏完整性 & 写入处安静，读取处抛 \kw{ClassCastException} & \kw{-Xlint:unchecked} 与 \kw{-Werror}；禁止原始类型入参；第三方检查器 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{桥接方法与协变}
+
+擦除还留下一类源码里看不见、但确实存在于字节码中的方法：\textbf{桥接方法（bridge method）}。
+它由编译器生成，用于把“类型替换之后的协变关系”重新接到“擦除后的原始签名”上，
+典型场景有两个：覆写方法的协变返回类型，以及覆写泛型成员时对参数与返回类型的实例化替换。
+
+桥方法不是理论构造，反射一眼就能看到：对 \kw{IntBox} 调用 \kw{getDeclaredMethods()}，
+会得到两条同名记录，一条返回 \kw{Integer} 且 \kw{isBridge()} 为假，
+另一条返回 \kw{Object} 且 \kw{isBridge()} 为真；后者就是编译器合成的转发壳。
+它带来三条实际影响：
+
+\begin{itemize}
+  \item \textbf{反射可见但会被标记}。按方法名扫描时，桥方法与真实方法会一起冒出来，
+        框架必须先把合成的那一个筛掉，判据是 \kw{isBridge()} 返回真。
+        Spring 为此专门准备了一个工具类 \kw{BridgeMethodResolver} 来成对识别两者，
+        漏掉这一步的类库会把同一个逻辑方法注册两遍。
+  \item \textbf{注解可见性容易踩空}。注解只落在真实方法上，桥方法一个都不带，
+        而反射返回列表的顺序并不保证，所以扫描时必须以非合成的那一个为准。
+        同理，判断覆写关系不能直接比方法描述符，
+        而要用 \kw{getGenericSuperclass()} 或 \kw{TypeResolver} 一类的工具把类型实参补回来。
+  \item \textbf{性能与内联}。桥方法是多出的一个调用帧，虽然 JIT 一般能把它内联掉，
+        但在热点循环里，“泛型接口 + 协变覆写”仍然比原始类型直调多一层间接；
+        这也是数值密集库宁可绕开通用容器，或者干脆自己手写专用类型的动机之一。
+\end{itemize}
+
+\begin{compare}[title={能否按类型参数分派运行期行为：\cpp{} 模板与 Java 擦除}]
+\cpp{} 模板为每个类型参数组合生成各自的代码，因此“按类型分派”在编译期就已完成，甚至能写出分支形态完全不同的实例；
+Java 只有一份擦除后的字节码，\kw{T} 在方法体里等价于它的上界，方法体\textbf{无法}据实参类型走不同路径，
+连“编译期常量式的类型判断”都没有（既没有 \kw{if constexpr}，也没有 \kw{static\_assert} 的对应物）。
+结论：\cpp{} 的差异是“生成多份代码，天然可分叉”，Java 的差异是“生成一份代码，必须把类型信息当参数传进来”。
+\end{compare}
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle,caption={\cpp{} 可以按类型参数分叉；Java 的等价做法是把 Class 或 Type 作为显式参数传入}]
+#include <iostream>
+#include <type_traits>
+
+template <class T>
+void report(T value) {
+    if constexpr (std::is_same_v<T, int>) {
+        std::cout << "int 分支: " << value << std::endl;
+    } else if constexpr (std::is_arithmetic_v<T>) {
+        std::cout << "其他算术类型: " << value << std::endl;
+    } else {
+        std::cout << "非算术类型" << std::endl;
+    }
+}
+
+int main() { report(1); report(1.5); }
+\end{lstlisting}
+
+\section{类型安全并没有丢}
+
+\begin{guideline}[title={擦除丢的是运行期具化，不是静态检查}]
+只要程序\textbf{没有}混用原始类型、没有 unchecked 转换，\kw{javac} 的类型检查足以保证运行期不会抛出
+泛型相关的 \kw{ClassCastException}；擦除只是让“运行期自我校验”这件事不存在，而不是让检查变成假的。
+把 \kw{ClassCastException} 归咎于泛型本身是误读，它一律来自被绕过的检查。
+\end{guideline}
+
+绕过的入口只有两个：原始类型（raw type）与 unchecked 转换。前者的典型形态与 \kw{-Xlint:unchecked} 打出的警告如下。
+
+\javalabel
+\begin{lstlisting}[style=javastyle,caption={heap pollution：写入端放行，ClassCastException 在读取端的 checkcast 抛出}]
+class MixUp {
+    // javac -Xlint:unchecked 对本文件的两条警告（原文照录）：
+    //   warning: [unchecked] unchecked conversion
+    //     required: List<String>
+    //     found:    List
+    //   warning: [unchecked] unchecked call to add(E) as a member of the raw type List
+    // 不加 -Xlint 时只有两行提示：
+    //   Note: MixUp.java uses unchecked or unsafe operations.
+    //   Note: Recompile with -Xlint:unchecked for details.
+    static String takeFirst(java.util.List<String> typed) {
+        java.util.List raw = typed;            // 参数化转原始：静默放行，信息在此丢弃
+        java.util.List<String> back = raw;     // 原始转参数化：unchecked conversion
+        raw.add(Integer.valueOf(7));           // 编译期放行：raw 的 add 形参是 Object
+        return typed.get(0);                   // 这一行带 checkcast java/lang/String
+    }
+
+    public static void main(String[] args) {
+        java.util.List<String> list = new java.util.ArrayList<>();
+        System.out.println(takeFirst(list));   // 异常栈顶就是 takeFirst 的那一行
+    }
+}
+\end{lstlisting}
+
+\begin{warning}[title={异常在“取出时”抛出，而不是“放入时”；擦除也不是免费的}]
+\textbf{其一，抛出位置反直觉。}向 \kw{List<String>} 放入 \kw{Integer} 的那一行不会报错也不会抛异常，
+因为擦除后的 \kw{add} 只接收 \kw{Object}；\kw{ClassCastException} 发生在编译器插入 \kw{checkcast} 的读取点。
+若中间隔着方法调用、\kw{Iterator}、流管道或异步回调，异常现场与污染源可能相距数百行栈帧，
+调试时务必向上追溯“最后一次成功写入”的位置。这就是“伪泛型”最真实的坑，与“检查是假的”是两回事。
+
+\textbf{其二，反射拿不到实例的实参。}\kw{list.getClass()} 对所有 \kw{List} 实例给出同一个 \kw{Class}，
+\kw{getGenericSuperclass()} 只能读到\textbf{父类声明}上的实参，读不到局部变量或方法形参的类型参数。
+需要元素类型时，社区的固定做法是 super type token：把类型参数“藏”到匿名子类的父类签名里，
+让它在 \kw{Signature} 属性中活下来，运行时再用反射取回。
+\end{warning}
+
+\section{擦除之下的补救机制}
+
+\textbf{通配符与 PECS。}\kw{?} 是唯一被允许出现在 \kw{instanceof} 右侧的实参形态，
+它的作用是让“不变”的泛型在特定方向上安全地协变或逆变：
+\kw{List<? extends Number>} 可协变读（取出的元素保证是 \kw{Number}，但几乎写不进去，除 \kw{null}）；
+\kw{List<? super T>} 可逆变写（写入 \kw{T} 及其子类型安全，读出来只能当 \kw{Object}）。
+由此得到 PECS 原则：\textbf{生产者（provider）用} \kw{extends}，\textbf{消费者（consumer）用} \kw{super}。
+方法签名是最好的记忆锚点——\kw{Collections.copy} 与函数式接口的定义都遵循它：
+
+\begin{itemize}
+  \item \kw{static <T> void copy(List<? super T> dest, List<? extends T> src)}：\kw{src} 生产 \kw{T} 给外面读，故 \kw{extends}；\kw{dest} 消费 \kw{T}，故 \kw{super}。
+  \item \kw{Function<? super T, ? extends R>}：入参是“我能接受的最宽类型”，返回值是“我保证给出的类型”。
+  \item \kw{void forEach(Consumer<? super T> action)}：只把元素交出去，因此是 \kw{super}。
+\end{itemize}
+
+无界 \kw{?} 用于“类型参数与我无关，我只想共享同一份擦除代码”的场合；
+把 \kw{List<?>} 传给泛型方法时，编译器会做\textbf{捕获转换}（capture conversion）临时造出一个未知但固定的类型变量，
+这也是为什么 \kw{List<?>} 能调用 \kw{<U> U identity(U)} 却无法被写入任意元素。
+
+\textbf{数组：协变换运行期检查。}Java 的数组是协变的（\kw{String[]} 是 \kw{Object[]} 的子类型），
+代价是每次 \kw{aastore} 都要在运行期比对组件类型，失败即 \kw{ArrayStoreException}：
+\kw{Object[] a = new String[1]; a[0] = Integer.valueOf(1);} 抛异常。
+泛型则相反：\textbf{不变}（\kw{List<String>} 不是 \kw{List<Object>} 的子类型），换取编译期就拒掉这个错误。
+两条路线都在守同一个目标——堆里不能出现元素类型与容器声明类型不一致的状态；
+泛型选了编译期，数组只能补运行期检查：它诞生在泛型之前，而早期类库大量只接受 \kw{Object[]} 的接口
+（排序、打印、\kw{System.arraycopy} 式搬运）已经把协变当成既成事实。
+
+\textbf{super type token。}既然 \kw{Signature} 属性会保留父类的实参，就把类型参数写进父类去：
+
+\javalabel
+\begin{lstlisting}[style=javastyle,caption={super type token：借匿名子类的父类签名把类型参数带到运行期（Jackson 的 TypeReference、Guava 的 TypeToken 同一原理）}]
+abstract class TypeRef<T> {
+    // getClass() 返回匿名子类，其 getGenericSuperclass() 是 ParameterizedType
+    private final java.lang.reflect.Type t =
+        ((java.lang.reflect.ParameterizedType) getClass().getGenericSuperclass())
+            .getActualTypeArguments()[0];
+
+    public java.lang.reflect.Type type() { return t; }
+
+    public static void main(String[] args) {
+        TypeRef<java.util.List<String>> ref =
+            new TypeRef<java.util.List<String>>() {};  // 必须是匿名子类，直接 new 父类拿不到实参
+        System.out.println(ref.type());                // 打印 java.util.List<java.lang.String>
+    }
+}
+\end{lstlisting}
+
+技巧的边界要讲清楚：它只对\textbf{父类上的实参}有效，嵌套泛型要靠 \kw{ParameterizedType} 递归展开，
+而类型变量（如方法内临时推导出的 \kw{T}）依旧无能为力。
+
+\textbf{后来加的语言特性没有动擦除。}\kw{var}（JDK 10）只是局部变量类型推断，
+编译后与显式写类型毫无区别，也不引入任何运行期信息；\kw{record}（JDK 16）允许泛型记录，
+其字段类型同样擦除，只多了一层规范化构造与访问器；\kw{sealed}（JDK 17）约束的是继承层次，与具化无关；
+模式匹配（JDK 16 起的 \kw{instanceof} 模式、JDK 21 落定的模式 \kw{switch}）也没有放宽规则：
+泛型模式只能是全无界通配符形态 \kw{Col<?>}，写成 \kw{Col<String>} 会被拒绝，菱形 \kw{Col<>} 连语法都不认——
+恰恰是“可具体化”这条老规则在新语法里的延续。
+唯一被官方承认的、真正指向擦除代价的方向是 Project Valhalla 项目线下的\textbf{泛型特化}
+（generic specialization）与基本类型特化草案：目标是让参数化类型在字节码里带上真实的类型参数，
+并让 \kw{List<int>} 之类的形态合法。截至本册撰写时，它仍是进行中的项目，尚未进入语言标准，
+现有代码不能依赖它。
+
+\section{与四条轴的对应}
+
+\begin{table}[!htbp]
+\centering
+\caption{Java 在四条分类轴上的取值}
+\begin{tabularx}{0.80\textwidth}{>{\raggedright\arraybackslash}p{0.19\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}>{\raggedright\arraybackslash}X}
+\toprule
+分类轴 & Java 取值 & 机制依据 \\
+\midrule
+绑定与检查时机 & 全在编译期（\kw{javac}），运行期不再检查 & 类型替换与擦除同处一个阶段；检查通过后信息被丢弃 \\
+运行期是否具化 & 擦除（erased），仅签名保留 & \kw{Signature} 属性与反射接口 \kw{Type}；对象头里没有类型参数 \\
+代码生成策略 & 一份擦除代码 + 装箱 + 插入 \kw{checkcast} & 参数化实例共享同一个类；桥接方法补齐协变 \\
+约束检查形态 & 上界声明（\kw{extends}，可交叉）+ 通配符 & 没有 \cpp{20} 的 concepts 那样的命名约束；细粒度检查靠注解与外部工具 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+“一份擦除代码 + 装箱/强转”这一策略，落到工程上会产生三个随时可观测的症状：
+
+\begin{itemize}
+  \item \textbf{无运行期分派能力}。既然 \kw{T} 只等于它的上界，方法体就不可能按实参类型走不同分支，
+        \kw{getClass()} 也区分不了参数化实例。凡是需要元素类型的地方——创建实例、反序列化、比较器默认实现、
+        数组分配——都必须把 \kw{Class<T>}、\kw{Supplier<T>} 或 \kw{Type} 当显式参数传进去。
+  \item \textbf{原生类型必须装箱}。\kw{List<Integer>} 存的是引用加独立对象，缓存区间又让 \kw{==} 的语义漂移，
+        数值密集场景的代价可用基准测试直接量出来；这正是 Valhalla 想解决而目前解决不了的部分。
+  \item \textbf{序列化与 RPC 框架需要额外的类型把手}。擦除后 \kw{Type} 信息不在实例上，
+        框架只能要求调用方交出类型：Gson 的 \kw{TypeToken}、Jackson 的 \kw{TypeReference}、
+        Spring 的 \kw{ResolvableType}，全部建立在 super type token 之上；
+        反射式框架还要额外处理桥方法重复注册与泛型父类解析。
+\end{itemize}
+
+一句话概括：Java 用“编译期完整、运行期失明”换来了与既有字节码的共存，
+这份交易的账单——装箱、强转、桥方法、类型把手——至今仍在每个依赖泛型的框架里按期支付。
+
+\chapter{C\#：具化泛型与共享实例化}
+
+前几章反复出现一个词：擦除。\javalabel\ 把类型参数当作编译期的临时记号，
+字节码里只留下原始类型和一堆强制转换；\cpplabel\ 模板更彻底，类型参数在
+目标代码生成完毕后就已经蒸发，剩下的只有具体函数。Common Language Runtime
+（CLR）走的是第三条路：泛型类型与泛型方法是\emph{元数据}的一部分，类型参数
+在运行期真实存在，机器码则由即时编译器（JIT）在部署之后按实参生成。这条路
+常被概括为“具化泛型”（reified generics），但“具化”两个字掩盖了一个关键细节：
+元数据层的具化和代码层的特化是两件事，CLR 把它们拆开了。本章按四条分类轴
+逐一说清 C\# 的位置。
+
+\section{类型参数是运行期的一等公民}
+
+在 \csharplabel\ 里，\kw{List<T>} 编译后是一个带类型参数签名的元数据条目，
+方法体是 IL；当你写下 \kw{List<int>} 时，运行期会构造一个\emph{闭合构造类型}
+（closed constructed type），它有自己独立的类型对象。于是下面这些在
+\javalabel\ 里根本写不出的操作，在 C\# 中都是日常代码：\kw{typeof(T)} 可以出现在
+泛型类的任何成员里；\kw{GetType()} 对不同实参返回不同结果；反射能读回实参列表，
+也能从开放类型定义反向构造闭合类型。
+
+\begin{lstlisting}[style=csharpstyle,caption={闭合类型的身份可以用普通手段读回}]
+using System;
+using System.Collections;
+using System.Collections.Generic;
+
+public static class Demo
+{
+    public static void Main()
+    {
+        var ints = new List<int>();
+        var strs = new List<string>();
+
+        // 同一份泛型定义，两个实参给出两个类型对象
+        Console.WriteLine(ints.GetType() == strs.GetType());
+        Console.WriteLine(ints.GetType().IsGenericType);
+        Type[] used = ints.GetType().GetGenericArguments();
+        Console.WriteLine(used[0] == typeof(int));
+
+        // 开放类型定义可以参与比较、也可以重新闭合
+        Type def = typeof(Dictionary<,>);
+        Type closed = def.MakeGenericType(typeof(int), typeof(string));
+        IDictionary map = (IDictionary)Activator.CreateInstance(closed);
+        map.Add(7, "seven");
+        Console.WriteLine(map.Count);
+        Type target = typeof(Dictionary<int, string>);
+        Console.WriteLine(closed == target);
+    }
+}
+\end{lstlisting}
+
+把这段代码和前一章的 \javalabel\ 例子并排看，差别是一句话：Java 程序里
+\kw{getClass()} 对 \kw{List<Integer>} 与 \kw{List<String>} 返回同一个类对象，
+而 C\# 里 \kw{GetType()} 返回两个不同的类型对象。类型参数于是成为一种
+\emph{运行期的值}：可以当字典的键、可以塞进缓存、可以作为依赖注入容器解析服务的
+依据。\kw{MakeGenericType} 让运行期“造类型”成为受支持的操作，代价是每一次闭合类型
+构造都要维护自己的方法表、静态字段副本与虚表。
+
+\begin{bestpractice}[title={把 \kw{typeof(T)} 当作可依赖的运行期身份}]
+需要按类型分派、按类型缓存实例、按类型做序列化注册的场合，C\# 可以直接用
+\kw{typeof(T)} 作键，不必像 \javalabel\ 那样构造匿名子类去“捕获”实参。但要清楚
+这份身份是运行期才确定的：编译器不会因为你在字典里漏注册某个实参而报错，
+这类错误只会在真实调用时暴露。
+\end{bestpractice}
+
+下面这张表把两门语言在同一批操作上的可行性对齐，后面几节的讨论都以此为坐标。
+
+\begin{table}
+\centering
+\caption{Java 与 C\# 在若干典型泛型操作上的可行性对照}
+\begin{tabularx}{0.83\textwidth}{%
+  >{\raggedright\arraybackslash}p{0.26\textwidth}
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}X}
+\toprule
+操作 & \javalabel\ 擦除 & C\# 具化 \\
+\midrule
+在方法体内取实参类型 & 不可，\kw{typeof(T)} 非法，须外部传 \kw{Class<T>} & 合法，\kw{typeof(T)} 随处可用 \\
+构造实例 & 只能反射或工厂委托 & \kw{new T()}，前提是 \kw{new()} 约束 \\
+以原生类型作实参 & 不支持，\kw{List<int>} 非法且须装箱 & 支持，\kw{List<int>} 是独立闭合类型 \\
+仅由实参区分的重载 & 擦除后签名相同，编译失败 & 签名保留，可合法重载 \\
+创建 \kw{T[]} 数组 & 不可，只能 \kw{Array.newInstance} & 可，\kw{new T[n]} 直接编译通过 \\
+运行期按类型分派 & 需 \kw{Type} 令牌技巧或额外参数 & 用 \kw{typeof(T)} 即可 \\
+静态字段的归属 & 原始类共享一份 & 每个闭合类型各一份 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{JIT 的两套策略：特化生成与共享实例化}
+
+这是 C\# 泛型最常被误读的一点。“具化”经常被讲成“每个类型实参都生成一份专属
+机器码”，事实并非如此。CLR 在 JIT 阶段按实参的类别走两条不同的路。
+
+第一条路是\emph{特化生成}，用于值类型实参。\kw{List<int>} 与 \kw{List<double>}
+各自得到独立的机器码与独立的字段布局：内部缓冲区是真正的 \kw{int[]}，元素按
+\kw{int} 的宽度连续排列，读写就是直接访存，既没有装箱也没有拆箱，边界检查与
+扩容逻辑都是原生长度语义。此时类型信息不只是“知道”，而是被编译进了指令。
+
+第二条路是\emph{共享实例化}（canonical instantiation），用于引用类型实参。
+JIT 只生成一份以规范化占位类型（工程上通常写作 \kw{\_\_Canon}）表示的机器码，
+所有引用类型实参共用它：字段与局部变量按引用宽度存取，赋值就是搬一个指针。
+在确实需要精确类型信息的位置——初始化值字段、按 \kw{T} 分配数组元素、访问闭合类型
+的静态字段、执行虚调用前的方法解析——这份共享代码插入运行期辅助调用，把类型句柄
+当作隐含参数取回来再决定行为。
+
+\begin{guideline}[title={具化不等于全部特化}]
+把 C\# 泛型分成三层来看，可以避免绝大多数误解：
+\textbf{元数据层}完全具化，类型参数是可反射读取的一等数据；
+\textbf{源语言层}按引用类型统一处理，\kw{List<string>} 与 \kw{MyClass[]} 的
+元素尺寸都是引用宽度；\textbf{机器码层}则是混合策略——值类型实参逐个特化，
+引用类型实参共享一份。因此“具化泛型”带来的是运行期身份与零装箱的值类型布局，
+\emph{并不}保证代码尺寸随实参线性膨胀；反过来，为若干值类型实参写泛型代码时，
+确实要为每个闭合类型付一份机器码。
+\end{guideline}
+
+两个常见追问值得当场钉死。其一，共享实例化不改变语义：\kw{EqualityComparer<T>}
+的选取、\kw{GetHashCode} 与 \kw{Equals} 的重写解析，看到的都是精确的闭合类型，
+代码共享只是同一份指令的复用，不是类型信息的丢失。其二，代码只有一份的是 IL，
+机器码由 JIT 在进程内生成；在有先行编译的部署形态里（ReadyToRun 与原生 AOT 这类），
+生成时机提前到构建期，但“元数据具化、引用类型共享、值类型特化”这套策略仍然成立。
+
+\section{约束体系的形态与边界}
+
+CLR 的约束写进元数据，检查发生在编译期与运行期两侧：编译期拒绝不满足约束的实参，
+运行期在类型构造阶段还会再校验一次。C\# 的约束种类比 \javalabel\ 的边界
+（bound）丰富，但比 \cpplabel\ \cpp{20} 概念（concept）窄得多。常用者如下。
+
+\begin{itemize}
+  \item \kw{where T : class}——引用类型，且默认是“不可为 null 的引用类型”；
+        有了它才能写 \kw{null} 比较、才能用模式匹配里的引用语义。
+  \item \kw{where T : struct}——非空值类型，隐含地排除 \kw{Nullable<U>} 与一切引用
+        类型；可以安全地取 \kw{default(T)} 得到全零值，也保证 \kw{null} 不可能出现在
+        这个位置，比较与哈希因此不必再为空引用单独分一支。
+  \item \kw{where T : new()}——必须有可访问的无参构造函数，才允许写 \kw{new T()}。
+        与其他约束并列时，语法上约定放在最后。
+  \item \kw{where T : notnull}——可空引用类型语境下的“不可为 null”，同时排除
+        可空值类型 \kw{Nullable<U>}，是泛型缓存和键类型最常用的约束。
+  \item \kw{where T : unmanaged}——T 是非指针、不可为 null 的非托管类型（数值、
+        枚举、指针类型、成员全为非托管类型的结构体）。它使 \kw{T*}、\kw{stackalloc T[n]}
+        与 \kw{sizeof(T)} 在 \kw{unsafe} 上下文中可用，是低层互操作代码的基础。
+        这个约束自 C\# 7.3 起提供，且已经蕴含 \kw{struct}，不能再与 \kw{struct}
+        或 \kw{new()} 叠加。
+  \item 基类约束与接口约束——可以指定一个基类和多个接口；接口约束可以是泛型接口，
+        例如 \kw{IComparable<T>} 让 T 与自身比较，这是自限定模式（F-bounded 风格）
+        在 C\# 里的常见写法。
+  \item 约束上的 \kw{?} 后缀——在可空引用类型语境下，基类名或接口名后面带
+        \kw{?} 时放宽实参为可空引用类型的权限；不带 \kw{?} 则要求非空。它属于
+        引用可空性体系，与“约束继承某个基类”是两件不同的事，不要混为一谈。
+  \item 委托与枚举约束——较新版本还提供针对委托类型与枚举类型的专用约束，用于
+        把指针转成委托、或统一处理标志位这类场景。
+  \item \kw{static} 抽象成员——C\# 11 与 .NET 7 起，接口可以声明静态抽象与静态虚方法，
+        实现类必须提供它们，于是数值泛型终于能把“加减乘除、字面量、零值一”作为约束
+        表达出来，标准库里的 \kw{INumber<T>}、\kw{IAdditionOperators<T, U, R>} 等
+        就是这套机制的产物。这是 C\# 约束表达力的一次实质扩容：约束第一次可以
+        要求“实现者必须提供一个静态成员”。
+\end{itemize}
+
+下面这段代码同时检验三条轴：值类型实参的特化（连续内存、零装箱）、
+\kw{unmanaged} 带来的 \kw{sizeof(T)} 能力，以及自限定接口约束带来的比较能力。
+
+\begin{lstlisting}[style=csharpstyle,caption={零装箱的二分查找与按 sizeof 计算的定长缓冲}]
+using System;
+
+public static unsafe class LowLevel
+{
+    // 归并结果写入调用方提供的栈缓冲；T 必须是可取指针的非托管类型
+    public static void CopyPair<T>(T first, T second, Span<T> destination)
+        where T : unmanaged
+    {
+        if (destination.Length < 2)
+            throw new ArgumentException("destination too short",
+                                        nameof(destination));
+
+        destination[0] = first;
+        destination[1] = second;
+
+        // sizeof(T) 在 unmanaged 约束下合法：布局是运行期已知的定长
+        T* probe = stackalloc T[1];
+        probe[0] = default;
+        Console.WriteLine(sizeof(T) + " bytes for " + typeof(T).Name);
+    }
+
+    // 值类型实参走特化生成：data 的元素直接内联，无需装箱即可 CompareTo
+    public static int BinarySearch<T>(T[] data, T value)
+        where T : unmanaged, IComparable<T>
+    {
+        int low = 0;
+        int high = data.Length - 1;
+        while (low <= high)
+        {
+            int mid = low + ((high - low) >> 1);
+            int cmp = data[mid].CompareTo(value);
+            if (cmp == 0) return mid;
+            if (cmp < 0) low = mid + 1;
+            else high = mid - 1;
+        }
+        return ~low;   // 未命中时返回插入点的按位取反
+    }
+}
+\end{lstlisting}
+
+\begin{warning}[title={构造、默认值与空值引用三处易错}]
+第一，没有 \kw{new()} 约束就写不出 \kw{new T()}，编译器只会给你一句约束缺失的错误；
+此时惯用替代是 \kw{default(T)}，但它对引用类型给出 \kw{null}，随后任何成员调用都是
+空引用异常，等于把构造失败推迟到运行期。第二，\kw{default(T)} 与 \kw{null} 不是一回事：
+\kw{where T : struct} 时 \kw{default(T)} 是全零值且永远不等于 \kw{null}，而
+\kw{where T : class} 时 \kw{default(T)} 就是 \kw{null}，可空引用类型语境下还会伴随
+可空性警告。第三，引用类型实参共享机器码这件事不影响任何语义——\kw{GetHashCode}、
+\kw{Equals} 与虚方法解析看到的仍是精确的闭合类型；真正会不同的是反射视图
+（\kw{GetType()}、\kw{GetGenericArguments()}、静态字段的归属）与值类型的内存布局，
+排查问题时请以这两处为准。
+\end{warning}
+
+\section{变型性：只有委托与接口有资格}
+
+\csharplabel\ 的变型性标注是声明在类型参数上的 \kw{in} 与 \kw{out}，且\emph{只能}
+用在委托类型定义和接口类型定义上；类与结构体的类型参数一律是不变的（invariant）。
+标注之后编译器会检查使用位置：\kw{out T} 只能出现在输出位置（返回值、只读属性的类型），
+\kw{in T} 只能出现在输入位置（方法参数、写入位置）。
+
+\begin{lstlisting}[style=csharpstyle,caption={协变与反变：谁可以安全地转换，谁必须保持不变}]
+using System;
+using System.Collections.Generic;
+
+public static class Variance
+{
+    public static void Main()
+    {
+        // IEnumerable<out T>：协变。string 是 object，于是序列可以向上走
+        IEnumerable<string> names = new List<string> { "a", "b" };
+        IEnumerable<object> read = names;          // 合法
+
+        // Action<in T>：反变。能处理 object 的委托必然能处理 string
+        Action<object> print = o => Console.WriteLine(o);
+        Action<string> printStr = print;           // 合法
+
+        // List<T> 既能读又能写，因此不变
+        // List<object> all = new List<string>(); // 编译错误：不允许
+        // 数组却仍是协变的，代价是运行期检查
+        object[] cells = new string[2];
+        cells[0] = "ok";
+        try { cells[1] = 42; }              // 元素存储时做运行期检查
+        catch (ArrayTypeMismatchException)
+        {
+            Console.WriteLine("rejected at runtime");
+        }
+
+        // 协变只对引用类型转换有效：int 到 object 不是引用转换
+        IEnumerable<int> numbers = new List<int> { 1, 2 };
+        // IEnumerable<object> boxed = numbers;    // 编译错误
+    }
+}
+\end{lstlisting}
+
+为什么 \kw{IEnumerable<out T>} 可以协变而 \kw{List<T>} 不行，答案藏在替换性检验里。
+把 \kw{IEnumerable<string>} 交给期待 \kw{IEnumerable<object>} 的调用方，调用方只能
+\emph{读出} 元素并当作 \kw{object} 使用，这个方向永远不会写入错误类型的元素，因此安全。
+而 \kw{List<T>} 暴露 \kw{Add(T)}，若允许把 \kw{List<string>} 当成 \kw{List<object>}，
+调用方一句 \kw{Add(42)} 就会往字符串列表里塞进整数，类型系统当场破产。数组恰好提供了
+写入能力却没有声明期保护，CLR 只能在每次元素存储时做运行期类型检查并在失败时抛出
+\kw{ArrayTypeMismatchException}——这与 \javalabel\ 的数组是同一个权衡，同样的代价。
+
+\section{两种泛型机制的实质差别}
+
+把 C\# 与 \cpplabel\ 模板放在同一张桌上，本册前面几章铺垫过的差异会收拢成三条。
+
+第一条：类型参数是运行期的值，还是编译期的名字。C\# 的 \kw{T} 可以带到运行期，
+\kw{typeof(T)} 能进字典、能进日志、能被反射层消费；\cpp{} 的 \kw{T} 在实例化完成后
+就从生成物里消失，按类型分派必须在编译期完成——靠类型萃取（traits）配合
+\kw{if constexpr}，或者退回 RTTI 在类多态的层面解决。
+
+第二条：代码可见性与生成时机。C\# 泛型的实现编译成一份 IL 存进程序集，机器码由
+JIT（或部署时的先行编译）在调用方编译之后才生成，因此实现\emph{不需要}随调用方一起
+重新编译，也不存在“模板定义必须出现在实例化点可见之处”的约束。C\# 的泛型库可以只发布
+一个二进制程序集，而 \cpp{} 的模板库长期依赖把头文件与实现一同分发，正是这条轴上的
+不同答案造成的后果；这个“实现要不要暴露在头文件里”的问题，本册后续部分会专门展开。
+
+\begin{lstlisting}[style=cppstyle,caption={同一需求在 C++ 里的写法：分派发生在编译期}]
+#include <concepts>
+#include <string>
+
+template <typename T>
+    requires std::regular<T>
+int probe(const T& value)
+{
+    if constexpr (std::integral<T>) {
+        return static_cast<int>(value);        // 仅该分支参与编译
+    } else if constexpr (std::same_as<T, std::string>) {
+        return static_cast<int>(value.size());
+    } else {
+        static_assert(sizeof(T) == 0, "unsupported type argument");
+    }
+}
+\end{lstlisting}
+
+第三条：特化与编译期计算的能力。C\# 泛型没有部分特化、没有全特化、没有变参模板展开、
+没有 SFINAE 式的替换失败，也没有把类型或数值当模板实参的非类型参数机制（本册前段
+讨论过的 NTTP 在 C\# 侧基本无对应物，只有 \kw{sizeof(T)} 这类受约束的编译期常量和
+较新版本引入的编译期求值特性在有限方向上补课）。C\# 用约束把“能做什么”写进签名，
+换来了更好的诊断信息、更早的检查与稳定的 ABI；\cpp{} 用实例化把“做了什么”交给编译器
+逐份生成，换来了几乎不受限的表达力和零成本抽象。两者是同一目标上的两种取舍，
+而不是能力强弱的排序。
+
+\begin{compare}[title={同一需求，两问两答}]
+\textbf{按类型参数分派。}C\#：\kw{switch (typeof(T))} 或用 \kw{typeof(T)} 作
+字典键，分派可以真的发生在运行期；\cpp{}：\kw{if constexpr}、标签分派或萃取，
+分派必须在编译期收敛，未选中的分支甚至不参与实例化。
+
+\textbf{构造实例。}C\#：\kw{new T()} 必须显式声明 \kw{new()} 约束，约束是契约，
+违约时编译器直接拒绝实参；\cpp{}：\kw{T()} 不写任何声明也能通过，能力靠调用点
+实例化检验，缺失时表现为一条可能很长的替换失败诊断，或用概念显式收紧。
+
+\textbf{取大小与内存布局。}C\#：\kw{sizeof(T)} 只在 \kw{unmanaged} 约束且
+\kw{unsafe} 上下文里可用，其余场合借助运行时工具函数；\cpp{}：\kw{sizeof T}
+无条件可用，且能作为非类型模板实参参与编译期算术，这是 C\# 侧完全不具备的能力。
+\end{compare}
+
+一句话收束本章：C\# 的泛型把类型参数留在运行期，让元数据具化、反射可读、值类型
+零装箱，同时在引用类型上保留共享代码控制体积；它用显式约束换取清晰诊断，也因此
+放弃了 \cpplabel\ 模板的特化与编译期计算所带来的表达力。下一节我们把镜头转向
+另一门同时在意零成本与安全边界的语言，它的选择与前两者都不同。
+
+\chapter{Rust：单体化与 trait 对象}
+
+Rust 的泛型只有一条主线：类型参数在编译期被彻底变成一份份具体代码，运行期几乎不留痕迹；确实需要“一个容器里装不同种类的东西”时，必须显式改走 \kw{dyn Trait} 这条带虚表的旁路。把本章放进本册的四条分类轴，坐标是这样的：
+
+\begin{itemize}
+  \item \textbf{绑定与检查时机}：约束写在函数签名的 bound 上，编译器在定义处就知道 \kw{T} 必须提供什么；实例化阶段只做少量推导，不承担“发现错误”的职责。
+  \item \textbf{运行期是否具化}：单体化路线完全不具化，连类型标识都无从取得；虚表路线只携带一个不透明的虚表指针，能做的“具化”仅限 \kw{Any} 提供的少量类型身份证。
+  \item \textbf{代码生成策略}：以 crate 与代码生成单元为单位的编译期单体化（monomorphization），实例在“使用它的那个 crate”里被造出来。
+  \item \textbf{约束检查形态}：命名的方法集合（trait）加上 bound 列表，默认强制、早检查，不依赖两次名字查找。
+\end{itemize}
+
+四条轴上它都和 \cpp{} 构成“同一目标、两种回答”的关系，下面逐节展开。
+
+\section{单体化：编译期把泛型变成具体代码}
+
+\begin{lstlisting}[style=ruststyle,caption={单体化：同一份 \kw{largest} 源码在 \kw{i32} 与 \kw{char} 下得到两份互不相干的实例}]
+fn largest<T: PartialOrd>(list: &[T]) -> &T {
+    let mut picked = &list[0];
+    for item in list {
+        if item > picked {
+            picked = item;
+        }
+    }
+    picked
+}
+
+fn main() {
+    let nums = vec![34_i32, 50, 12, 100, 99];
+    let chars = vec!['p', 'b', 'a', 'c'];
+
+    // 编译器为这两个调用点各生成一份代码：
+    //   实例一：largest::<i32>   —— 独立符号，静态直接调用，无虚表
+    //   实例二：largest::<char>  —— 另一个独立符号，两个实例只共享源码
+    println!("{}", largest(&nums));
+    println!("{}", largest(&chars));
+}
+\end{lstlisting}
+
+泛型函数在源码层面只有一份，但产物层面没有“泛型的机器码”这种东西：编译器为每个具体实参组合生成一份专属代码，两个实例除了形状相同之外毫无关系。于是调用是静态的直接调用，没有虚表间接、没有装箱、没有运行期类型查询，比较运算与循环体可以直接内联进调用者，\kw{i32} 那份甚至能把常量传播贯穿到底。
+
+值得强调的是单体化发生的位置。Rust 前端并不在类型检查阶段展开泛型：带占位参数的函数体会被降级成一份中端表示 \kw{MIR}，真正的实例集合是编译器后段在从 \kw{main} 出发的可达性遍历中一边发现一边登记的，登记完才由 \kw{MIR} 一路下沉到 LLVM IR 落代码。这条流水线带来的直接后果就是“实例化以 crate 与代码生成单元（\seqkw{codegen\allowbreak{} unit}，CGU）为单位”：
+
+\begin{itemize}
+  \item 实例是在\emph{使用它的那个 crate} 的编译过程里生成的，而不是在定义它的 crate 里一次性生成。这就是为什么泛型项的中端代码必须随 crate 元数据对下游可见——本册后半部分讨论“实现暴露”时会回到这一点。
+  \item 同一个 crate 内多个 CGU 可能各自产出一份形状相同的实例，重复由链接层的可折叠符号处理；\kw{-C codegen-units} 的取值直接影响这份重复的规模。
+  \item 加了 \kw{\#[inline]} 的泛型项更倾向以可折叠形式给出，减少跨 CGU 的重复。
+\end{itemize}
+
+顺带说清一处与 \cpp{} 的差别。\cpp{} 的隐式实例化以翻译单元为单位，同一实例的重复副本最终由链接器折叠；Rust 的单体化以 crate 为单位，同一个实例在每个使用它的 crate 里都可能被重新走一遍生成流程，是否真的留下重复还要看优化级别、内联设置与代码生成单元的划分。无优化构建里这份重复最为明显。这就是“实例化以 crate 为单位”这句话的实际分量：泛型的编译成本不在链接器那一站，而在每个下游 crate 的编译期。
+
+还有一个只有单体化语言才会出现的现象：泛型函数体内的一处类型错误，会随着实例的个数被重复报出来。同一份源码被检查许多次，每次实参不同，诊断里的类型也跟着变。\cpp{} 的模板同样有此困扰（每个实例化点报一遍），区别只是 Rust 的实例集合按 crate 划分，因此跨 crate 边界时诊断还会再重复一轮。
+
+\begin{guideline}[title={单体化是零成本抽象，但成本并没有消失，只是转嫁}]
+  \begin{itemize}
+    \item 换来的：无虚表、无装箱、无运行期类型检查，调用可内联、可常量传播，性能与手写具体类型等价。
+    \item 转嫁出去的：目标文件尺寸、编译耗时、链接期的符号去重。泛型嵌套越深（例如三层容器套叠、迭代器适配器链），实例数量增长越快。
+    \item 常见控制手段：收窄具体实参的集合（用枚举代替无限多的类型参数）、把热路径的公共入口做成非泛型、在边界处用虚表路线收口。
+    \item 判断依据：如果一段泛型代码只被两三种具体类型使用，单体化几乎无代价；如果它的实参组合是开放集合，就要提前考虑动态分派。
+  \end{itemize}
+\end{guideline}
+
+\section{trait bound：编译期的接口契约}
+
+Rust 的约束有三种等价书写形态：尖括号内联 bound、\kw{where} 子句、以及参数或返回位置上的 \kw{impl Trait}。
+
+\begin{lstlisting}[style=ruststyle,caption={三种约束写法：内联 bound、where 子句、参数位置的 impl Trait}]
+use std::fmt::Display;
+
+// 形态一：where 子句。等价于 <T: Display>
+fn describe<T>(item: &T) -> String
+where
+    T: Display,
+{
+    format!("{}", item)
+}
+
+// 形态二：参数位置的 impl Trait，代表一个未命名的类型参数
+fn summarize(items: &[impl Display]) -> String {
+    items.iter().map(|s| describe(s)).collect::<Vec<_>>().join(" ")
+}
+
+// 多个参数各自独立具化；bound 是集合，用 + 连接
+fn call_both<A, B>(a: &A, b: &B)
+where
+    A: Display,
+    B: Display + ?Sized,
+{
+    println!("{} / {}", a, b);
+}
+\end{lstlisting}
+
+这里的关键词是“命名的方法集合”。trait 由别人（或你自己）事先声明，里面写着必须提供哪些方法；一旦签名里出现 \kw{T: Display}，编译器在这个函数\emph{定义处}就已确定 \kw{T} 必须提供 \kw{fmt} 这一个方法，函数体内所有合法调用都能被静态核对；而调用点传入不满足约束的类型时，报错发生在调用点的类型检查里，附带一张明确的“缺少哪个 bound”清单。
+
+约束的另一半写在关联类型上。用关联类型（\kw{type Item}）而不是泛型参数表达抽象，含义是“一个类型对这个抽象只允许有一种答案”：\kw{Iterator} 选的就是关联类型，因此同一个类型不可能同时以两种元素类型实现它，要缩小范围只能写成带等式的 bound，例如 \kw{T: Iterator<Item = u32>}。站在分类轴上看，关联类型相当于把类型参数从“输入”改写成“输出”，检查时机仍在编译期，但失败的形态变了——冲突不再报 bound 不满足，而是报同一个类型上出现两个互相矛盾的 impl。
+
+这和 \cpp{} 的默认形态差别很大。\cpp{} 的模板可以完全不写约束，此时“接口契约”只存在于注释和作者直觉里，编译器必须等到实例化点才通过实际的成员访问反推需求，错误因此常常出现在被实例化的深处，且需要两次名字查找与实参依赖查找（ADL）来决定候选集合。在概念出现之前，\cpp{} 用来把错误前移的手段是替换失败并非错误（\seqkw{SFINAE}）加 traits 探测：先造一个只在能力齐备时才成立的重载，让不匹配的实参在重载决议阶段被剔除而不是在实例化深处崩掉；\cpp{20} 概念是同一动机的正式化版本，代价与收益正是本册后文关于“封闭类型集”的那一节要讨论的主题。
+
+\begin{stdbox}[title={固有实现与 trait 实现的分工}]
+  同一个类型可以既有 \kw{impl Track}（固有实现）又有 \kw{impl Play for Track}（trait 实现）。两条通道在分类轴上的位置不同：固有方法只能通过具体类型名调用，因此必然随单体化一起被具化，也必然在名字查找时优先于同名 trait 方法；trait 方法才是约束的对象，也才可能进入虚表。于是 \kw{dyn Play} 只暴露 trait 里声明的那几个方法，固有方法在动态对象上根本看不见。这条分工解释了 Rust 为什么能把“接口”与“实现细节”分开得比 \cpp{} 干净：\cpp{} 的成员函数同时承担两种角色，只能靠概念或基类去事后区分。
+\end{stdbox}
+
+\begin{compare}[title={Rust trait bound 与 \cpp{20} 概念：同位不同性}]
+  \begin{itemize}
+    \item \textbf{相同}：都是命名的约束集合，都能把错误从“实例化深处”前移到“定义处与调用点”，都为“零成本但可读的错误”服务。
+    \item \textbf{强制性相反}：Rust 的约束默认是强制的——未加 bound 的 \kw{T} 在函数体内几乎调不到任何方法（只能通过 blanket 实现间接获得能力）；\cpp{} 的约束默认可选，不写约束就退化为“实例化点报错”。
+    \item \textbf{查找模型相反}：Rust 方法候选集由作用域内可见的 trait 决定（没 \kw{use} 这个 trait 就调不到它的方法），完全不看参数类型住在哪个模块；\cpp{} 靠两次名字查找与 ADL，参数类型的命名空间会参与候选集。
+    \item \textbf{表达能力侧重不同}：概念是谓词，可以做布尔组合、可以带参数、还能检查子句之间的蕴含关系；trait bound 是类型对 trait 的成员关系，能组合的手段是 supertrait 继承与关联类型约束。Rust 写不出约束的析取与否定（\kw{+} 只是合取），也不能把一段约束起个名字后在别处复用——想要“可复用的约束”，唯一手段是把它重新声明成一个 trait。
+  \end{itemize}
+\end{compare}
+
+\section{Sized 与动态分派：Rust 自己的擦除通道}
+
+每个未加标注的类型参数都隐式带着 \kw{Sized} 约束：\kw{fn f<T>(x: T)} 实际含义是 \kw{T: Sized}，即编译器必须知道它的尺寸。想接受尺寸未知的事物，只能显式用 \kw{?Sized} 解除，并接受它只能藏在指针后面出现。\kw{[T]}、\kw{str} 与 \kw{dyn Trait} 都属于这一族。
+
+\kw{dyn Trait} 就是 Rust 版的“擦除”：值放在堆上或引用里，句柄是一个胖指针（数据指针加虚表指针），虚表里装的是方法槽位、drop 胶水以及尺寸与对齐信息。
+
+\begin{lstlisting}[style=ruststyle,caption={dyn Trait 的用法，以及泛型方法如何破坏对象安全}]
+trait Shape {
+    fn area(&self) -> f64;
+    fn name(&self) -> String;
+}
+
+struct Square(f64);
+struct Circle(f64);
+
+impl Shape for Square {
+    fn area(&self) -> f64 { self.0 * self.0 }
+    fn name(&self) -> String { String::from("square") }
+}
+
+impl Shape for Circle {
+    fn area(&self) -> f64 { 3.14159265358979 * self.0 * self.0 }
+    fn name(&self) -> String { String::from("circle") }
+}
+
+// 异构集合只能走 dyn：元素尺寸不同，但句柄尺寸相同
+fn report(shapes: Vec<Box<dyn Shape>>) -> String {
+    shapes
+        .iter()
+        .map(|s| format!("{}: {:.3}", s.name(), s.area()))
+        .collect::<Vec<String>>()
+        .join(" | ")
+}
+
+// 反例：含泛型方法的 trait 不能做成动态对象。
+trait GenericMethod {
+    fn echo<U: std::fmt::Debug>(&self, u: U);
+}
+
+// 一旦启用下面两行，rustc 就指出 GenericMethod 不满足对象安全——
+// 虚表槽位必须有固定签名，无法为任意 U 预留一个入口。
+// fn use_dyn(g: &dyn GenericMethod) {
+//     g.echo(1_i32);
+// }
+
+fn main() {
+    let shapes: Vec<Box<dyn Shape>> = vec![Box::new(Square(2.0)), Box::new(Circle(1.0))];
+    println!("{}", report(shapes));
+}
+\end{lstlisting}
+
+对象安全（近年文档改称“动态兼容”，\seqkw{object\allowbreak{} safety}）划定了 trait 能否走这条路的边界。会破坏它的典型形态有三类：带额外类型参数的方法（虚表里无法为“任意 \kw{U}”预留固定签名的槽位）、返回 \kw{Self} 的方法（调用方不知道要留多大的空间）、按值使用 \kw{Self} 的方法（同样需要知道尺寸）。紧挨着还有两条规则：方法必须有能确定下来的接收者形态，因此无 \kw{self} 的方法（例如 \kw{From} 的 \kw{from}）本来就没有虚表槽位可放；带类型参数的 trait 要先写全实参才能出现在 \kw{dyn} 之后，例如 \kw{Fn(u32) -> u32} 可以，光秃秃的泛型形态不行。
+
+这条路线的代价与 Java、C\# 的运行期分派是同一族：一次内存间接（取虚表再取槽位）、调用点失去内联机会、编译器无法在调用点做常量传播。差别在于 Rust 把这笔账显式写在类型里——\kw{T: Trait} 与 \kw{dyn Trait} 是两个不同的类型，看签名就知道有没有虚表。Java 的泛型没有这种可选性：所有实例方法调用一律走运行期方法表，不存在“具化路线”可供切换。
+
+胖指针要携带的不止方法入口：虚表里没有的信息必须由类型自己带。动态对象的尺寸与对齐放在虚表头部，存活期放在类型语法里（\kw{Box<dyn Trait>} 的默认生命周期是 \kw{'static}，写成 \kw{Box<dyn Trait + 'a>} 才允许借用），线程安全靠把自动 trait 一起写进类型（\kw{Box<dyn Trait + Send + Sync>}）。这三样合起来说明一件事：\kw{dyn} 路线不是“把类型信息抹掉就完事”，而是把编译期本可以直接算出的信息改成了随值携带的数据。
+
+\begin{table}[htbp]
+\centering
+\begin{tabularx}{0.82\textwidth}{>{\raggedright\arraybackslash}p{0.18\textwidth} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+\textbf{取舍维度} & \textbf{\kw{T: Trait}（单体化）} & \textbf{\kw{dyn Trait}（虚表）} \\
+\midrule
+调用形式 & 静态直接调用，可内联、可常量传播 & 虚表间接调用，调用点通常无法内联 \\
+代码尺寸 & 每个实参组合一份实例，随使用点增长 & 只有一份函数体，句柄与虚表尺寸固定 \\
+异构集合 & 不可能，容器元素类型必须唯一 & 可以，\kw{Vec<Box<dyn Trait>>} 收集不同类型 \\
+约束检查时机 & 定义处核对 bound，调用点检查实参 & 定义 trait 时即检查对象安全；调用点不再检查类型 \\
+尺寸要求 & 隐式 \kw{Sized}，值类型必须定尺寸 & 允许 \kw{?Sized}，只能躲在胖指针之后 \\
+\bottomrule
+\end{tabularx}
+\caption{trait 约束与动态对象的分界线：同一个抽象的两种落地方式}
+\end{table}
+
+\begin{warning}[title={对象安全失败与 \kw{Sized} 缺失的两类报错}]
+  \begin{itemize}
+    \item 把含泛型方法、返回 \kw{Self} 或按值使用 \kw{Self} 的 trait 写成 \kw{\&dyn Trait} 时，编译器会直接指出该 trait 不能作为动态对象，并把“哪一个方法破坏了对象安全”列出来。这类错误与 bound 无关，改 bound 不解决问题，只能改 trait 形状（把泛型方法换成具体类型的配套方法，或给方法加 \kw{where Self: Sized}）。
+    \item 缺少能力或尺寸未知时，报的是约束不满足一族：错误码 \kw{E0277}，附带形如 \kw{the trait bound is not satisfied} 的说明。看到它先分辨两种情形——是 bound 真的没实现，还是类型是 \kw{str}、\kw{[T]} 这类未满足隐式 \kw{Sized} 的胖类型。后者的修法是把参数改成引用，或在签名上写 \kw{?Sized}。
+    \item 别用 \kw{Box<dyn Any>} 作为“绕过对象安全”的手段：它把方法集换成向下转型，静态保证就此消失。
+  \end{itemize}
+\end{warning}
+
+\section{const 泛型与“泛型参数在运行期不存在”}
+
+Rust 也支持值参数，语法是 \kw{const N: usize}：它可以出现在类型位置（数组长度 \kw{[u8; N]}）、结构体字段与 \kw{impl} 块上，从而把“尺寸”这类编译期数值纳入类型系统。这与本册前面讨论 \cpp{} 非类型模板参数的那几章构成直接对照，但对照结果相当悬殊：
+
+\begin{itemize}
+  \item \textbf{形态更少}：\cpp{} 的非类型模板参数可以是整型、浮点、指针、左值引用、类类型（受字面量常量条件约束）；Rust 的 const 参数稳定形态以整数、布尔、字符这类标量为主，实参写成计算表达式（例如长度 \kw{N + 1}）依赖仍在推进中的 \seqkw{generic\_const\_exprs}，用任意类型作 const 参数也才刚进入可用范围。截至本册撰写时，这条线远没有 \cpp{} 那么宽。
+  \item \textbf{不参与特化}：\cpp{} 可以按非类型参数的取值做全特化或偏特化，值本身就是重载决议的输入；Rust 的 const 参数只是值，不能作为“按值分支”的选择器，语言层没有偏特化机制。想要按取值分支，只能回到 trait 关联常量、宏或运行期判断。
+  \item \textbf{没有对应的类型参数具化}：这是与 C\# 最尖锐的差别。C\# 的泛型在运行期带完整类型对象，\kw{typeof(T)} 可以直接问“此刻 \kw{T} 是谁”，还能与静态分发同时存在。Rust 的类型参数在单体化后根本不存在于产物里，函数体内无法询问 \kw{T} 的身份。要按类型分派，只有三条回头路：给 trait 加方法让每个类型自己回答、用宏在展开期分支、或让 \kw{T} 满足 \kw{'static} 并借助 \kw{std::any::Any}（它靠 \kw{TypeId} 提供有限的具化：一张类型身份证，只做相等比较与向下转型，不是反射，也拿不到成员信息）。第三条就是 Rust 唯一一处有限的运行期具化。
+\end{itemize}
+
+顺带一提，\cpp{} 的非类型模板参数在函数模板上的能力（尤其是“以函数作为模板实参”）长期受限，要靠 \cpp{17} 引入的 \kw{template<auto>} 才补上这一票；Rust 的函数参数从来不靠类型层选择，直接以闭包或函数指针作为普通参数，单体化再把闭包类型具化成专属实例，绕开了这整个历史包袱。
+
+const 参数同样走单体化这条道：\kw{Window<8>} 与 \kw{Window<16>} 是两个互不相同的类型，各自生成一份代码，宽度直接编进结构体布局，不存在运行期再查一次宽度的分支。它与 \cpp{} 的非类型模板参数还有两处细节差别。一是推断能力：const 实参只有在上下文提供尺寸约束时才能推出来（例如把结果标注成 \kw{Window<8>}），缺少这类标注就必须显式写出，而 \cpp{} 靠返回值与参数双向推导通常更宽容。二是表达式的地位：带运算的 const 实参（例如长度 \kw{N + 1}）在 \seqkw{generic\_const\_exprs} 稳定之前不能作为类型的一部分书写，于是公共签名与结构体字段里出现不了这种表达式。两点合起来说明，Rust 的 const 泛型目前只适合承载“尺寸”这一类简单数值，还当不了 \cpp{} 式元编程的底座。
+
+\section{单体化的代价与藏不住的泛型实现}
+
+把前面几节合起来看，Rust 在“代码从哪来”这个问题上给出了自己的答案，而这个答案有一个 \cpp{} 程序员会立刻注意到的缺失：Rust 没有显式实例化机制。\cpp{} 可以把泛型定义放进不导出的实现文件，在文件内列举本库支持的实参组合并显式实例化，对外只留声明；实例集合因此从“所有使用点的并集”缩小成“作者指定的清单”。Rust 做不到这件事，原因正是前面关于实例化位置的那条结论：实例在使用它的 crate 里生成，所以泛型函数体必须对调用方 crate 可见（编译器要把那份带占位参数的中端代码随元数据一起发给下游）。换句话说，“把泛型实现藏进私有实现文件”在 Rust 里根本没有对应物——可见性语言只控制“能不能调用”，控制不了“能不能实例化”。
+
+常见的缓解方式因此都朝另一个方向使劲：把公共入口收窄成非泛型的枚举或 \kw{dyn Trait} 分派，让实例数量由库作者决定而不是由调用点决定；用宏在具体类型上生成薄薄一层包装；或者干脆接受膨胀，靠链接期折叠与 \kw{-C codegen-units} 调参控制编译耗时。
+
+\begin{bestpractice}[title={三条边界的取舍顺序}]
+  \begin{itemize}
+    \item 内部代码优先写 bound：调用点少、实例集合小，单体化的收益全拿到，成本留在同一个 crate 里。
+    \item 需要“同一种行为、多种类型”时先想枚举再想 \kw{dyn}：枚举把实参集合封闭在编译期，仍然可以内联，比虚表路线少一次间接；只有当集合真的开放（插件、回调注册表）才退到 \kw{dyn}。
+    \item 对外 API 的泛型参数越多，下游 crate 的编译期就越长。把泛型留在内部、把非泛型的句柄暴露出去，是 Rust 里对应“\cpp{} 显式实例化”的替代姿势。
+  \end{itemize}
+\end{bestpractice}
+
+\begin{compare}[title={同一个需求下的五种“代码从哪来”}]
+  需求：一份源码要服务很多具体类型。五种语言给出的答案互不重叠。
+  \begin{itemize}
+    \item \textbf{\cpp{}}：实例化在使用点隐式发生（模板体必须在可见的头文件里），库作者可用显式实例化定义把实例集中到某个翻译单元，用导出声明禁止下游重复生成。代码从“声明可见性 + 作者清单”来。
+    \item \textbf{Rust}：实例化在使用它的 crate 的后段发生，无显式实例化机制，函数体必须随元数据公开。代码从“每个 crate 各自的单体化”来。
+    \item \textbf{C\#}：引用类型实参共享一份本机代码，具体类型由方法内的类型参数槽在运行期提供；值类型实参才特化成独立副本。代码从“运行时按实参类别二选一”来。
+    \item \textbf{Java}：只有一份擦除后的代码，运行期靠强制转换补足类型，实参再多也不生成新代码。代码从“擦除后的一份字节码加桥接方法”来。
+    \item \textbf{C（宏模板）}：由宏在具体类型上逐个复制粘贴展开，实参集合完全由调用方手写清单决定，编译器事先毫不知情。代码从“预处理期的手工单体化”来。
+  \end{itemize}
+\end{compare}
+
+这一节其实是全书后半部分的一个钩子：\cpp{} 的头文件暴露问题与 Rust 的“泛型实现必须公开”是同一个问题的两种回答——问题的名字叫“单体化的实例在哪里生成”，回答的分歧只在于“编译器能不能被作者代管实例集合”。语言在这一点上有没有提供出口，决定了一个库能否把第三方实参彻底排除在自己的编译过程之外。
+
+\begin{note}[title={读 Rust 泛型代码时的三个固定问题}]
+  \begin{itemize}
+    \item 这个签名是 \kw{T: Trait} 还是 \kw{dyn Trait}？前者意味着单体化与内联，后者意味着虚表与一次间接。
+    \item 约束是必需的吗？如果函数体只调 bound 提供的方法，报错一定指向 bound 清单，而不是指向某次深处的名字查找。
+    \item 有没有运行期问类型的需要？一旦有，就必须显式引入 \kw{Any}、宏或枚举，Rust 不会把这种能力“顺带”给你。
+  \end{itemize}
+\end{note}
+
+\chapter{C++：模板是编译期代码生成器}
+
+前面几章依次讲了三种机制：\javalabel\ 的擦除、\csharplabel\ 的具化与共享实例化、\rustlabel\ 的单体化。
+它们有一个共同前提——泛型是语言里一个\emph{独立的功能}，类型参数要么在某处（运行期或元数据里）留下痕迹，要么被明确决定不留。\cpp{}
+一章之所以和三家都不一样，是因为 \cpp{} 里没有“泛型系统”，只有模板；而模板不是为泛型设计的，它是一台通用的编译期代码生成器，
+“按类型参数生成容器”只是它最常见的一个用途。
+
+\section{一句话定位：泛型只是实例化的一个用途}
+
+先给结论，再解释为什么。
+
+\begin{guideline}[title={\cpp{} 泛型的真正差异点}]
+\cpp{} 的“泛型”是模板实例化这个更宽机制的用途：编译器按需为给定模板实参生成一份\emph{具体的}类、函数或变量的定义。生成物就是普通类型、
+普通函数，类型参数已经被替换干净。于是两件事同时成立：
+\begin{itemize}
+  \item 类型参数\emph{不参与运行期表示}——产物里没有“我是哪个实例”的记录，除非它体现在生成的类型本身里，或你自己显式写进去；
+  \item 实例集合\emph{可以被显式收窄}——用显式实例化定义与 \kw{extern template} 声明，
+能把“用到哪些类型就生成哪些代码”改成“只生成我列出的那几个”。
+\end{itemize}
+\end{guideline}
+
+因此在 \cpp{} 里问“T 在运行期是什么类型”，通常是一个没有答案的问题。要问就得改写成“在这次实例化里 T 是什么”，而答案在编译期就被消费掉：
+\kw{is\_same\_v}、\kw{if constexpr}、\kw{requires} 子句都是编译期问题，产生的是“生成哪一份代码”，
+不是“运行期走哪一条分支”。
+
+逐家对照一下“运行期还剩下什么”：
+
+\begin{itemize}
+  \item C\#：\kw{typeof(T)} 是可在运行期求值的表达式。引用类型的共享代码带着类型参数占位，
+值类型的特化代码也把类型参数记在类型对象里。
+  \item Java：运行期没有 T，但 class 文件里留着 Signature 属性，反射能读回声明的形状。这是\emph{元数据留档}，
+不是\emph{值留档}——拿不到 \kw{List<T>} 里那个 T 的 \kw{Class} 对象。
+  \item Rust：T 同样被单体化掉，但 \kw{TypeId::of<T>()}（要求 T 满足 \kw{'static}）与 \kw{Any}
+    这套类型身份证机制让运行期可以比较实参类型，\kw{type\_name} 则给每个类型一个可打印的名字。
+  \item \cpp{}：连这张身份证都不需要，类型本身就是身份。\kw{typeid(T)} 只有在开启 RTTI 时才存在，
+而且它报出的是\emph{具体实参类型}的名字，不是“这个实例化”的名字；关掉 RTTI（嵌入式常见的 \kw{-fno-rtti} 构建）
+后这条尾巴也没了。
+\end{itemize}
+
+\begin{compare}[title={三个老问题在四种机制下的答法}]
+同一份代码，问三件事：按类型参数分派、为不同实参构造不同代码、取大小。
+\begin{itemize}
+  \item \textbf{按类型参数分派。}\javalabel\ 做不到，要让调用方显式传 \kw{Class} 对象或加一个类型标签参数。
+\csharplabel\ 用 \kw{typeof(T)} 加运行期判断，代价是分派留在运行期。\rustlabel\ 比较 \kw{TypeId}（T
+需满足 \kw{'static}），或改用 trait 对象做动态分派。\cpplabel\ 用 \kw{if constexpr}、特化、
+重载——分派的结果是一条分支被删掉、另一条被生成，运行期没有任何判断。
+  \item \textbf{为不同实参构造不同代码。}\javalabel\ 没有对应物，一份字节码服务所有实参。
+\csharplabel\ 的值类型有 JIT 特化，但\emph{源码}只有一份实现，不能为某个实参改写实现体。\rustlabel\ 与
+\cpplabel\ 都能真正生成多份代码；\cpp{} 还允许你手写下其中一份（特化），或用类型计算把结构改掉。
+  \item \textbf{取大小。}\javalabel\ 语言层不可见，布局由 JVM 决定。\csharplabel\ 的
+\kw{sizeof} 只在对非托管类型时合法，且是编译期常量。\rustlabel\ 的 \kw{size\_of} 是编译期常量，可用于 const
+泛型。\cpplabel\ 的 \kw{sizeof(T)} 同样是编译期常量表达式，可以直接拿去做数组维度、模板实参、
+\kw{static\_assert} 的判据。
+\end{itemize}
+\end{compare}
+
+\section{实例化模型：什么时候生成、生成什么}
+
+要理解 \cpp{} 泛型的行为差异，必须理解实例化的三个层次。
+
+\subsection{隐式实例化的触发点}
+
+模板写出来之后什么都不发生。触发实例化的是\emph{使用点}：需要完整类型的地方（\kw{sizeof}、成员访问、定义对象、作为基类），
+需要函数定义的地方（调用，以及抛出或捕获某类异常时需要的类型），还有默认模板实参里被引用的实体。注意声明与定义的分界线：调用一个函数模板只要求有声明可见；
+但实例化需要定义而定义不可达时，程序非良构，错误出现在实例化点，而不在“看起来没错”的那一行调用上。
+
+\subsection{类模板成员按需实例化}
+
+这是 \cpp{} 泛型最有性格的一条规则：类模板的成员函数只有被用到时才实例化。
+后果是成员可以要求比模板参数更强的操作——一个容器模板的排序成员要求元素可比较，另一个成员要求元素可移动；只要从不调用排序，
+用不可比较的元素类型实例化这个容器完全合法。\rustlabel\ 用 trait bound 把“需要哪些操作”写在接口上，绑定覆盖整个实现块；
+\cpp{} 默认什么都不写，靠“用到才检查”。这让未经约束的模板异常灵活，也让错误推迟到很远的位置出现（见下一节）。
+
+\subsection{两次名字查找与依赖名}
+
+模板体里的名字分两类，查找时机不同：
+
+\begin{itemize}
+  \item \textbf{非依赖名}（含义不依赖模板参数的名字）在\emph{定义上下文}查找。找不到就是硬错误，后面用什么实参实例化都救不回来。
+  \item \textbf{依赖名}（含模板参数的名字）在\emph{实例化上下文}查找：普通查找，加上以实参关联的类与名字空间为范围的 ADL。
+这就是“先在模板体内写一条 \kw{using} 声明把标准库版本引进来，再调用 \kw{swap}”这套惯用法的由来——ADL
+能替实参类型找到更合适的版本。
+\end{itemize}
+
+另外几条与“泛型”直接相关的规则：特化\emph{不是}实例化，它是手写的另一份定义；显式实例化定义在编译期生成一份实例并导出符号，
+从而让实现留在源文件而非头文件；\kw{extern template} 声明抑制隐式实例化。多个等价的使用点都能触发实例化，
+标准允许实现从中挑一个作为实例化点，只要挑出来的结果彼此 ODR 等价。
+
+\begin{stdbox}[title={标准文本的说法}]
+本主题的三条主线落在：[temp.inst]——模板的成员、静态数据成员与函数模板定义在什么使用点被实例化，以及“只有被用到的成员才实例化”；
+[temp.point]——实例化点的选择，以及多个 ODR 等价实例化点之间的关系；[temp.res]——两次名字查找：非依赖名必须在定义上下文可查找，
+依赖名到实例化上下文求解。
+\end{stdbox}
+
+\section{约束检查发生在何处：默认靠实例化报错}
+
+没有显式约束时，模板体像是对一个具体类型的普通编译：要求 \kw{a + b}，实参类型没有可用的加法就报错。
+区别只在\emph{报错的位置与形态}——错误出现在实例化点，而不是你的调用那一行，而且常常拖出一长串回溯（\kw{required from here}
+逐层展开到调用处）。诊断里满是内部实现名字与几十层模板嵌套，这是 \cpp{} 泛型被诟病多年的地方。
+
+旧技术是 SFINAE：把“类型不满足条件”变成“这个候选在重载决议里因替换失败而消失”，用 \kw{std::enable\_if}
+一类的元函数把条件写进签名。注意它的边界——只有出现在\emph{直接上下文}中的替换失败才算失败，深埋在模板体内部的错误依然是硬错误。
+
+\cpp{20} 的概念（concept）把这件事标准化：约束写在接口上、可以被检查、参与函数模板的偏序比较，未满足时诊断直接指出哪一条约束不成立。
+它没有改变生成模型（照样是实例化），改变的只有\emph{检查的时机、位置与措辞}。机制细节回指《SFINAE 与概念》册与本册第六部分，本章只做定位，
+不展开。
+
+\section{表达力上独占的东西}
+
+因为模板是代码生成器而不是“带类型参数的类”，\cpp{} 能做到一批另外三家没有对应物的事：
+
+\begin{itemize}
+  \item \textbf{偏特化与部分特化。} 对接受多个类型参数的模板，只固定其中一部分，为剩下的组合另写一份实现。方向是单向的：类模板可以偏特化，
+函数模板不行——函数模板靠重载达到同样效果。
+  \item \textbf{变参模板与折叠表达式。} \kw{sizeof...(Ts)} 给出实参个数，折叠表达式把一个包展开成一次运算。这是元组、
+类型安全的可变参数输出、构建器链的地基。
+  \item \textbf{SFINAE 与概念。} 上一节所述的“检查类型本身”的能力，可以直接据此生成不同的实现。
+  \item \textbf{\kw{constexpr} 与编译期计算。} 值可以参与类型层面的算术（把 \kw{N} 用作数组维度、展开深度、
+递归终止判据），类型也可以参与值层面的计算（traits 返回类型）。
+  \item \textbf{非类型模板参数。} 这正是本册前面十三章的主题，一句话回指：\cpp{} 让\emph{值}进入类型系统，
+代价是这些值必须在编译期已知，且实例集合按值分裂。
+  \item \textbf{模板模板参数。} 接受“一个类模板”本身作为实参（传入某种容器模板而不指定它的元素类型），
+这要求实参保持\emph{尚未完全应用}的状态；类型参数在运行期有统一表示的语言给不出这种部分应用的类型。
+  \item \textbf{\kw{if constexpr} 分支裁剪。} 未选中的分支不会被实例化，因此可以写只对另一半合法的操作。
+\end{itemize}
+
+为什么 C\# 与 Java 没有对应物？根本原因不是“功能没做”，而是它们的类型参数必须在运行期保持\emph{统一表示}。
+\javalabel\ 擦除后所有实参映射到同一个上界，一份字节码要对所有实参成立，于是既不能按实参改变布局，也不能拿 T 参与编译期算术；
+\csharplabel\ 的共享代码里类型参数是运行期占位，编译期无法用它算出一个数、生成一个结构上不同的类型，实现体也不能按实参分叉。
+\rustlabel\ 的单体化模型最接近 \cpp{}，但缺少偏特化式的“为某几个类型重写实现”，也没有模板模板参数这类结构生成手段。
+
+下面两段代码把差别落到实处。第一段展示“每个实例化是一份独立定义”——静态成员互不相干：
+
+\begin{lstlisting}[style=cppstyle,caption={同一个类模板的两份实例：静态成员与生成符号各自独立}]
+template <class T>
+struct Registry {
+    static int count;                  // 每个实例化各有一份
+    static void bump() { ++count; }
+};
+
+template <class T>
+int Registry<T>::count = 0;            // 这仍是模板定义，不是某一份实例的定义
+
+void use_all() {
+    Registry<int>::bump();             // 实例化以 int 为实参的那一份
+    Registry<double>::bump();          // 另一个完全独立的类与静态成员
+    Registry<int>::bump();
+    // 结束时 Registry<int>::count 为 2，Registry<double>::count 为 1
+}
+\end{lstlisting}
+
+\kw{Registry<int>} 与 \kw{Registry<double>} 是两个不同的类型，各自的静态成员是不同的对象，
+链接器里是两个不同的符号；它们唯一的共同点是代码来自同一份模板文本。C\# 里 \kw{List<int>} 与 \kw{List<string>}
+共享同一份 IL、静态成员只有一份；Java 里 \kw{ArrayList} 的所有用法干脆是同一个类。
+
+\cppxxlabel{C++20} 要把“按类型分派”彻底搬到编译期，\cpp{} 只有一种写法：
+
+\begin{lstlisting}[style=cppstyle,caption={编译期分支裁剪取代运行期类型判断：未选中分支不会被实例化}]
+#include <string>
+#include <type_traits>
+
+template <class T>
+std::string describe(const T& value) {
+    if constexpr (std::is_arithmetic_v<T>) {
+        return "number " + std::to_string(value);
+    } else if constexpr (std::is_same_v<T, std::string>) {
+        return "string of size " + std::to_string(value.size());
+    } else {
+        return "other";
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=csharpstyle,caption={同样意图在 C\# 里只能写成运行期判断}]
+static string Describe<T>(T value)
+{
+    if (typeof(T) == typeof(int))      // T 在运行期仍然可用
+        return "number " + value.ToString();
+    return "other";
+}
+\end{lstlisting}
+
+\begin{warning}[title={把 C\# 或 Java 的“运行期按 T 分派”直觉搬进 \cpp{}}]
+在函数模板里写一个 \kw{typeid(T)} 的运行期相等判断，然后在其中一个分支中调用 \kw{value.size()}——错，
+而且报错方式很反直觉：\kw{if} 的判断发生在运行期，两个分支\emph{都要编译}，于是对没有 \kw{size()} 的实参类型，
+即使那条分支永远不会执行，编译器照样报“没有成员 \kw{size}”。正确写法只有 \kw{if constexpr}，或者拆成重载与特化。
+同源的另外两个错误：\textbf{一}，指望模板里某个类型参数在运行期“还认得自己”，用 \kw{typeid(T).name()}
+做持久化的类型标签——名字由实现定义、不保证跨版本稳定，关掉 RTTI 后直接不可用；\textbf{二}，指望同一模板的静态成员像 C\#
+那样所有实参共享一份，结果发现每个实参各有一份，计数器各走各的。
+\end{warning}
+
+\section{代价，以及一段失败的历史}
+
+代码生成器模型的代价清单很固定：
+
+\begin{itemize}
+  \item \textbf{编译时间。} 每个使用点都要重新求解名字、检查操作、生成代码；同一模板在多个编译单元里被重复实例化，
+链接期还要做符号合并与去重。
+  \item \textbf{错误信息。} 约束不可见，检查点埋在实例化深处，就是上一节的总账。
+  \item \textbf{代码膨胀。} 实例集合由“用了哪些类型”决定：形状相同的指针、结构相近的类型都会各生成一份。膨胀不止影响体积，
+也影响指令缓存与链接时间。
+  \item \textbf{可见性约束。} 实例化需要定义可见，于是实现进入头文件；头文件里的模板体一改，所有包含者重来。
+同一模板在不同编译单元因宏或声明顺序差异生成不一致的实例，是 ODR 违规的经典来源。
+\end{itemize}
+
+关于第四条，标准给过一次正式解法，而且失败了。\kw{export} 随 \cpp{98} 进入标准文本、并被 \cpp{03} 原样保留，
+本意是让模板实现留在源文件里：把定义标成 \kw{export}，由编译器负责在链接期把定义传送到需要它的地方，使用者不必再看到实现文本。它几乎只有
+Edison Design Group 的前端真正实现过；主流实现要么从未支持，要么接受这个关键字却忽略其语义。跨实现互操作、
+符号传播与调试问题让它从未在实践中被采纳，于是 \cpp{20} 之后不再有 \kw{export} 模板——标准最终承认这条技术路线没有价值。
+
+\cpp{20} 的模块（\kw{import}）常被误解成 \kw{export} 的复活，语义上不是。模块减少的是\emph{文本包含}：
+头文件预处理的重复解析、宏污染、包含顺序问题都变轻了；但“实例化需要定义可见”这条\emph{没有改变}——模板定义仍然要在实例化点可达，
+只是可见性的载体从源码文本换成了编译好的模块接口。实现仍然在使用者那一侧生成，膨胀与编译时间不会自动消失。
+
+\begin{bestpractice}[title={本册第六部分的两条现实出路}]
+面对实例化模型的成本，两条被广泛采用的路子是：\textbf{一}，显式实例化——在源文件里为一个有限集合写出显式实例化定义，把头文件里能省的模板体省掉，
+再用 \kw{extern template} 抑制别处的隐式实例化，实例集合从“用了什么生成什么”变成“我允许什么生成什么”；\textbf{二}，
+概念约束——把隐式的“用到才知道”前移成接口上可检查的条件，错误在调用点就报清楚，同时让重载集合只留下合法候选。两者都不是语法糖：
+第一条改变生成位置与实例集合，第二条改变检查时机。
+\end{bestpractice}
+
+\section{四条轴上 \cpp{} 的取值}
+
+\begin{table}
+\centering
+\begin{tabularx}{0.82\textwidth}{>{\raggedright\arraybackslash}p{0.15\textwidth}
+                X
+                >{\raggedright\arraybackslash}p{0.24\textwidth}}
+\toprule
+\textbf{轴} & \textbf{\cpp{} 的取值} & \textbf{与最近邻居的分岔} \\
+\midrule
+绑定与检查 & 编译期：类型绑定、名字查找与代码生成都在编译期完成，没有显式约束时检查推迟到实例化点，报错位置随使用点漂移 &
+\rustlabel\ 同样在编译期，但 trait bound 属于接口，强制检查在定义处就完成 \\
+\addlinespace
+运行期具化 & 无：产物是普通类型与普通函数，不携带类型参数的记录。\kw{typeid} 报出的是实参类型本身的名字，而且关掉 RTTI
+之后连这份名字也不存在 & C\# 的具化恰好相反，\kw{typeof(T)} 随时可用；Java 留元数据而不留值 \\
+\addlinespace
+代码生成 & 隐式单体化：实例集合由“哪些类型被用到”决定；显式实例化定义与 \kw{extern template} 能把它收窄成有限集合 &
+\rustlabel\ 的单体化由编译器沿调用图自动完成，没有“只生成我列出的这几个”的语言级开关 \\
+\addlinespace
+约束 & 可选：\cpp{20} 起可以写显式概念，不写就默认靠实例化错误。SFINAE 是把失败降级为重载决议失败的旧技术 & C\# 的
+\kw{where} 只能写结构性约束（可 new、引用类型、基类），表达不了“有某个成员” \\
+\bottomrule
+\end{tabularx}
+\caption{\cpp{} 在四条轴上的取值}
+\end{table}
+
+\begin{table}
+\centering
+\begin{tabularx}{0.82\textwidth}{>{\raggedright\arraybackslash}p{0.19\textwidth}
+                >{\raggedright\arraybackslash}p{0.24\textwidth}
+                X}
+\toprule
+\textbf{差异点} & \textbf{其余三语言的共同前提} & \textbf{\cpp{} 的做法与后果} \\
+\midrule
+类型参数的地位 & 类型参数是被擦除、共享或替换的对象，语言始终知道“有一个 T” & T 只是生成代码时的替换记号，生成完即消失。
+好处是没有装箱与表示开销，代价是运行期问不出问题 \\
+\addlinespace
+实现能否按实参分叉 & 一份实现体服务所有实参；值类型特化也只复制代码，不复制源码 & 特化、重载、\kw{if constexpr}
+都能为部分实参写下不同实现，代价是实现一致性要靠人维护 \\
+\addlinespace
+类型参数能否参与计算 & 不能：Java 无法用 T 决定布局，C\# 不能把 \kw{typeof(T)} 用于编译期算术 &
+求大小与数实参都发生在编译期：\kw{sizeof(T)} 给字节数，\kw{sizeof...(Ts)} 给实参个数，两者都能进入模板实参与数组维度 \\
+\addlinespace
+容器与元素的表示 & 集合类型自带运行期身份：可反射、可动态分派、可跨模块传递类型信息 & 跨编译单元只能传递类型名与接口。想要异构集合，得自己引入
+\kw{variant}、类型擦除包装或多态基类 \\
+\addlinespace
+成本落在哪里 & 落在运行期与类型系统的固定开销上：擦除后的转型、具化的类型对象、共享代码的占位与查表 & 落在编译期与链接期：编译时间、诊断质量、
+代码体积、定义可见性 \\
+\bottomrule
+\end{tabularx}
+\caption{与 Java、C\#、Rust 的关键差异点}
+\end{table}
+
+把这四章连起来看：Java 决定让泛型成为\emph{类型检查的附加层}，C\# 决定让它成为\emph{运行期类型系统的一部分}，Rust
+决定让它成为\emph{零成本的复制}，而 \cpp{} 从来没做过这三个决定——它先有了模板这台代码生成器，泛型是它的副产品。理解了这一点，\cpp{}
+泛型的种种怪癖（实现必须在头文件里、错误在深处爆出、静态成员每实例一份、特化随时可写、约束靠运气）就不再是设计失误，而是同一个模型的自然结果。
+
+\chapter{C：没有泛型时的建议泛型方案}
+
+本部分前面几种语言都能“一次编写、按类型参数复用”，\clabel{} 是唯一一种标准文本里根本没有泛型这个词的语言。于是一个反复出现的问题落到了 C 头上：一段“对任何元素类型都成立”的动态数组、任何一个“给什么数值类型就算什么类型”的求最大值接口，到底该怎么写？
+
+本章不给机制清单，只给\textbf{建议}：在标准不提供泛型的事实下，四条可行路线各自的适用边界、必须写进接口文档的契约、以及它们分别放弃了什么。读完应当能回答一句话——“这个接口该走哪条路，代价是什么”。
+
+\section{先把事实说清楚：C 到 C17/C23 都没有泛型}
+
+判据只有三条，缺一条就不算泛型：（1）能声明带\textbf{类型参数}的实体（类型或函数）；（2）调用点决定实际类型，定义体不必重写；（3）编译器在实例化点做类型检查，未覆盖的类型直接报错而不是运行期崩。C 的三条全不满足：C 里没有类型参数这个语法范畴，\kw{int} 数组和 \kw{double} 数组必须是两份不同的代码，或者是一份以“字节 + 大小”为边界的代码。
+
+\textbf{C11 的 \kw{\_Generic} 是“选择”，不是“参数化”。}这个 C11 引入的构造做的事情是：拿一个控制表达式的\textbf{类型}，在一枝写死的分支表里挑一个\textbf{表达式}。它不产生新类型、不产生新函数、不能对“任意类型 T”成立。分支表里没有的类型，只能靠 \kw{default} 分支兜到一个运行期错误或一个恰好兼容的函数上——这是查表，不是参数化。
+
+\textbf{C23 新增的东西里没有一条是泛型。}C23 确实动了不少与“类型书写”相关的语法，但逐条看都不是泛型：\kw{auto} 变量（含 \kw{for} 初始化语句里的 \kw{auto}）只是把“由初始化器推断类型”的活儿交给编译器，推断结果仍然是一个具体类型，不能跨函数边界传递；\kw{nullptr} 给空指针常量一个真正的类型；\kw{constexpr} 在 C 里基本退化为“编译期常量的声明说明符”，语义远窄于 \cpp{} 的同名特性；\kw{if} 带初始化语句只是收窄作用域；\kw{typeof}/\kw{typeof\_unqual} 是\textbf{类型查询}（从表达式取类型），不是类型参数。\textbf{不要把 C23 写成“支持泛型”}——这是这类文章最常见的以讹传讹。
+
+\textbf{为 C 加泛型的提案确实出现过，但没进标准。}WG14 在 C2x 讨论期间收到过若干以 generic objects、类型参数为目标的提案，最终一条都没有进入 C23。没能通过的常见理由是工程性的，而不是“没必要”：泛型要连带引入一套实例化、名字查找与重载决议规则，而 C 的翻译模型是“预处理 + 一遍编译 + 极小的运行时”，任何语法扩展都要与几十年存量代码共存；同时 C 用户里相当一部分人明确要求“看不出类型的代码就不要编译”。这两股力量合起来，让 C 的泛型停留在提案阶段。
+
+\begin{guideline}[title={判断“算不算泛型”的三条判据}]
+一条机制同时满足这三条，才能称为泛型：带类型参数的声明形式；调用点决定类型、定义体不重写；未覆盖的类型在编译期报错。\clabel{} 的 \kw{void*}、\kw{\_Generic}、宏展开、\kw{typeof} 分别只满足 0 到 1 条。承认这一点，才能把选型问题从“C 有没有泛型”换成“C 里这四条路各放弃什么”。
+\end{guideline}
+
+\section{方案一：\kw{void*} + 函数指针回调}
+
+这是 C 里最“正统”的一条路，也是标准库自己在走的路。\kw{qsort} 的签名里没有类型，它靠两件事补齐：\kw{size\_t nmemb} 与 \kw{size\_t size} 说明有几个元素、每个多大，\kw{int (*compar)(const void *, const void *)} 说明元素怎么比。\kw{bsearch} 同构。也就是说，\textbf{类型信息不在代码里，而在参数契约里}。
+
+把这套思路推广到容器，一个“建议泛型”对象由三部分构成：原始字节区（\textbf{只存字节或只存指针}）、\textbf{元素大小}、一组随实例携带的函数指针（比较、复制、析构）。下面是一个完整可编译的最小通用动态数组，它把三条契约都做成了显式参数。
+
+\clabel\ \begin{lstlisting}[style=cstyle,caption={字节存储 + 回调的通用向量：接口即契约}]
+/* vec.h -- 元素按原始字节存放，行为由调用方提供回调 */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef int  (*Compare)(const void *lhs, const void *rhs);
+typedef void (*CopyFn) (void *dst, const void *src);
+typedef void (*DropFn) (void *elem);
+
+typedef struct {
+    void   *items;      /* 大小恒为 elem_size 的整数倍 */
+    size_t  size, cap;
+    size_t  elem_size;  /* 契约一：元素尺寸由调用方给出 */
+    Compare cmp;        /* NULL 表示不需要排序能力 */
+    CopyFn  copy;       /* NULL 表示按位 memcpy 即可 */
+    DropFn  drop;       /* NULL 表示元素没有自有资源 */
+} Vec;
+
+static void *vec_slot(const Vec *v, size_t i) {
+    return (char *)v->items + i * v->elem_size;   /* 字节算术 */
+}
+
+static void vec_init(Vec *v, size_t elem_size, Compare cmp,
+                     CopyFn copy, DropFn drop) {
+    *v = (Vec){ NULL, 0, 0, elem_size, cmp, copy, drop };
+}
+
+/* 契约二：push 取元素的副本存入，容器拥有副本；
+   元素内部的指针仍是浅拷贝，深拷贝是 copy/drop 的责任 */
+static int vec_push(Vec *v, const void *item) {
+    if (v->size == v->cap) {
+        size_t next = v->cap ? v->cap * 2 : 8;
+        void *grown = realloc(v->items, next * v->elem_size);
+        if (grown == NULL) return -1;   /* 失败时旧数据完好 */
+        v->items = grown; v->cap = next;
+    }
+    void *dst = vec_slot(v, v->size);   /* 契约三：地址会变 */
+    if (v->copy) v->copy(dst, item);
+    else memcpy(dst, item, v->elem_size);
+    v->size++; return 0;
+}
+
+static void *vec_get(const Vec *v, size_t i) {
+    return i < v->size ? vec_slot(v, i) : NULL;
+}
+
+static void vec_dispose(Vec *v) {
+    for (size_t i = 0; i < v->size && v->drop; ++i)
+        v->drop(vec_slot(v, i));
+    free(v->items); v->items = NULL; v->size = v->cap = 0;
+}
+
+/* 使用点：int 的比较函数 */
+static int cmp_int(const void *a, const void *b) {
+    int x = *(const int *)a;     /* 最常见错误：写成 (int)a */
+    int y = *(const int *)b;
+    return (x > y) - (x < y);
+}
+
+int main(void) {
+    Vec v;
+    vec_init(&v, sizeof(int), cmp_int, NULL, NULL);
+    for (int i = 5; i >= 1; --i) {
+        int t = i * 7 % 13; vec_push(&v, &t);
+    }
+    qsort(v.items, v.size, v.elem_size, v.cmp);  /* 交给标准库 */
+    for (size_t i = 0; i < v.size; ++i)
+        printf("%d ", *(int *)vec_get(&v, i));
+    puts("");
+    vec_dispose(&v);
+    return 0;
+}
+\end{lstlisting}
+
+类型安全在这里\textbf{完全靠约定}：\kw{vec\_init} 传错 \kw{elem\_size}、\kw{vec\_push} 传错指针类型，编译器一句话都不会说，错误只在越界解引用时暴露。因此接口文档必须把三件事写成硬性条款——元素大小谁负责给、\kw{push} 之后所有权归谁、\kw{get} 返回的裸指针在什么操作之后失效。\textbf{写不清楚这三条的 C 容器库，不要上线。}
+
+\begin{warning}[title={这套写法的三个典型坑}]
+（1）\textbf{浅拷贝与深拷贝的归属}。默认 \kw{memcpy} 路径下，含 \kw{char*} 字段的结构被复制后有两个指针指向同一块内存，\kw{drop} 会双释放；带自有资源的元素必须显式给 \kw{copy} 与 \kw{drop}，且两者要成对出现。（2）\textbf{比较函数把 \kw{void*} 当值而不是当指针}。\kw{qsort} 传进来的 \kw{const void*} 是“指向元素的指针”，写成 \kw{int x = (int)a;} 只截取了地址低位，多数编译器只给一条警告、绝不报错，运行期排序结果似是而非——这是 \kw{qsort} 相关缺陷里最常见的一类。（3）\textbf{生命周期与 \kw{realloc} 后指针失效}。\kw{vec\_get} 返回的是内部字节区的地址，任何一次触发扩容的 \kw{push} 都会把它变成悬垂指针；把返回指针长期存在另一个结构里，是这类容器最贵的一类 bug。要么每次用完即弃，要么在接口上直接规定“返回下标而非地址”。
+\end{warning}
+
+\section{方案二：结构体首成员 + \kw{container\_of} 的手工继承}
+
+需要一个“可扩展的类型集合”（插件注册新形状、新编解码器）时，\kw{void*} 那条路不够：它连“这是什么对象”都不保留。C 生态的第二条路是把\textbf{基类结构体放在第一个成员的位置}，于是基类指针与派生类地址数值相同，向上转型只是取地址；再把一组函数指针放进一张 \kw{const} 表里当虚表，向下转型用 \kw{container\_of} 宏按偏移还原。
+
+\clabel\ \begin{lstlisting}[style=cstyle,caption={首成员 + 手工虚表：C 里的一次虚函数派发}]
+/* shape.h -- 基结构必须是第一个成员 */
+#include <stddef.h>
+#include <stdio.h>
+
+struct Shape;   /* 标签先行，否则参数列表内不可见 */
+
+#define container_of(ptr, type, member) \
+    ((type *)((char *)(ptr) - offsetof(type, member)))
+
+typedef struct ShapeVTable {
+    double (*area)(struct Shape *self);   /* 指向不完整类型 */
+} ShapeVTable;
+
+typedef struct Shape {
+    const ShapeVTable *vt;   /* 手工虚表指针，占对象头部一个字 */
+    const char        *kind;
+} Shape;
+
+typedef struct { Shape base; double side; }   Square;
+typedef struct { Shape base; double radius; } Circle;
+
+static double square_area(Shape *self) {
+    Square *q = container_of(self, Square, base);
+    return q->side * q->side;
+}
+static double circle_area(Shape *self) {
+    Circle *c = container_of(self, Circle, base);
+    return 3.14159265358979 * c->radius * c->radius;
+}
+
+static const ShapeVTable square_vt = { square_area };
+static const ShapeVTable circle_vt = { circle_area };
+
+int main(void) {
+    Square q = { { &square_vt, "square" }, 3.0 };
+    Circle c = { { &circle_vt, "circle" }, 2.0 };
+    Shape *list[2] = { &q.base, &c.base };   /* 向上转型 */
+    for (int i = 0; i < 2; ++i) {
+        Shape *s = list[i];   /* 只认基指针 */
+        printf("%s: %.2f\n", s->kind, s->vt->area(s));
+    }
+    return 0;
+}
+\end{lstlisting}
+
+这正是若干知名库的做法：GObject 在实例结构的头部放 \kw{GTypeInstance}，派生类型用类型系统生成的实例转换宏做带检查的向下转型；一些内核风格代码库用同名宏 \kw{container\_of} 从链表节点反推宿主结构；若干开源事件循环与图元系统也是“首成员 + 虚表”。这条路的代价也要说明白：一次函数指针间接（分支预测不友好）、每个对象多一个字、虚表结构与首成员顺序一旦跨 ABI 发布就\textbf{不可重排}，以及 \kw{const} 正确性得靠额外一个宏照顾。
+
+值得把这三种答案放在一起看，因为它们是同一个问题的三种解法：\textbf{向上转型在哪里发生、类型信息存在哪里}。\cpp{} 由编译器把虚表指针放进对象头部、由编译器算派生偏移，程序员不写；\rustlabel{} 的 \kw{dyn} 干脆把类型信息挪到指针里，做成“数据指针 + 虚表指针”的胖指针，对象头部保持干净；C 两者都不给，只能自己把虚表指针写进基结构的头部，让“取首成员地址”充当向上转型。
+
+\section{方案三：用宏展开生成类型化代码}
+
+如果“零成本”是硬要求——不留 \kw{void*}、不做间接派发、每个元素类型都要能被内联和警告检查——C 里唯一接近泛型的手段是\textbf{让预处理器把同一份源码按类型抄若干遍}。三档写法，由轻到重。
+
+\textbf{(a) 前缀宏 + 拼接，同一份模板头多次包含。}若干知名开源容器库走的就是这条思路：模板头文件里不含包含保护，实例文件先 \kw{\#define} 好元素类型与符号前缀，再包含它一次；换一个前缀再包含一次，就得到第二套完全类型化的 API。
+
+\clabel\ \begin{lstlisting}[style=cstyle,caption={前缀宏 + \#\# 拼接：一份模板头生成两套具体类型}]
+/* vec_gen.h -- 无 include guard：可多次包含，前面需 stdlib.h */
+#ifndef VEC_T
+#error "define VEC_T and VEC_PREFIX before including"
+#endif
+
+#define CAT2(a, b) a##b
+#define CAT(a, b)  CAT2(a, b)          /* 两级：先展开参数再拼接 */
+
+typedef struct CAT(VEC_PREFIX, _vec) {
+    VEC_T   *items;
+    size_t   size, cap;
+} CAT(VEC_PREFIX, _vec);
+
+static int CAT(VEC_PREFIX,_push)(CAT(VEC_PREFIX,_vec) *v, VEC_T x) {
+    size_t next = v->cap ? v->cap * 2 : 8;
+    if (v->size == v->cap) {
+        void *g = realloc(v->items, next * sizeof(VEC_T));
+        if (g == NULL) return -1;
+        v->items = g; v->cap = next;
+    }
+    v->items[v->size++] = x;            /* 完全类型化，无字节算术 */
+    return 0;
+}
+
+#undef CAT
+#undef CAT2
+#undef VEC_T
+#undef VEC_PREFIX
+
+/* ---- 实例文件：每包含一次得到一套符号 ---- */
+#define VEC_T      int
+#define VEC_PREFIX intvec
+#include "vec_gen.h"     /* intvec_vec, intvec_push */
+
+#define VEC_T      double
+#define VEC_PREFIX dblvec
+#include "vec_gen.h"     /* dblvec_vec, dblvec_push */
+\end{lstlisting}
+
+\textbf{(b) 参数化宏一次生成整个类型定义。}把类型与函数都塞进一个带参数的宏，实例化点变成一行 \kw{DEFINE\_VEC(int, IntVec)}。写法更紧凑，代价也直接：宏体不能单独编译或格式化，一处语法错误要在几十个展开点重复出现，行号与列号全部落在展开之后。
+
+\clabel\ \begin{lstlisting}[style=cstyle,caption={把整个类型定义塞进一个宏：能跑，但最难维护}]
+#define DEFINE_VEC(TYPE, NAME)                                \
+    typedef struct NAME { TYPE *items; size_t size, cap; } NAME; \
+    static int NAME##_push(NAME *v, TYPE x) {                 \
+        size_t n = v->cap ? v->cap * 2 : 8;                   \
+        if (v->size == v->cap) {                              \
+            void *g = realloc(v->items, n * sizeof(TYPE));    \
+            if (g == NULL) return -1;                         \
+            v->items = g; v->cap = n;                         \
+        }                                                     \
+        v->items[v->size++] = x;                              \
+        return 0;                                             \
+    }
+
+DEFINE_VEC(int, IntVec)       /* IntVec_push 类型正确，可被内联 */
+DEFINE_VEC(double, DblVec)
+\end{lstlisting}
+
+\textbf{(c) X-macro：把“清单”抽成唯一一份。}前两档生成的是代码，X-macro 生成的是\textbf{关于类型/字段的所有平行表示}——枚举名、结构成员、字符串表、格式化串，一次改动全部同步。做法是把清单单独放一个只含 \kw{X(...)} 调用的文件，在每个需要处定义 \kw{X} 后重新展开它。这正是本册前半部分那条“用类型编码语义、让清单只有一份真相”的路线在 C 里的对应物。
+
+\clabel\ \begin{lstlisting}[style=cstyle,caption={X-macro：一份清单同时生成枚举、结构成员与字符串表}]
+/* fields.def -- 唯一一份清单，本身不是合法 C */
+X(id,    int,    "%d")
+X(name,  char *, "%s")
+X(score, double, "%f")
+
+/* ---- 用法：在每个需要的地方重新定义 X ---- */
+enum Field {
+#define X(n, t, f) FIELD_##n,
+#include "fields.def"
+#undef X
+    FIELD_COUNT                      /* 枚举个数自动跟上 */
+};
+
+typedef struct Row {
+#define X(n, t, f) t n;
+#include "fields.def"
+#undef X
+} Row;
+
+static const char *const field_names[] = {
+#define X(n, t, f) #n,   /* 字符串化：名字不会脱节 */
+#include "fields.def"
+#undef X
+};
+/* 同理可生成 field_fmt[]：把上一行换成 #define X(n, t, f) f, */
+\end{lstlisting}
+
+\begin{note}[title={宏方案绕不开的三个硬伤}]
+（1）\textbf{诊断信息落在展开后}。报错行号指向宏体内部或展开点，编译器给出的“代码”与你写的不是同一份文本，警告也无法定位到清单源头。（2）\textbf{\kw{\#} 与 \kw{\#\#} 的限制}。\kw{\#\#} 会阻止其两侧参数先展开，所以拼接必须走两级宏（\kw{CAT2}/\kw{CAT}）；\kw{\#} 只在参数上生效，无法字符串化拼接结果；带空格的类型（\kw{unsigned long}）与指针类型（\kw{char *}）作为参数时经常需要 \kw{typedef} 别名才能拼出合法名字。（3）\textbf{宏生成的符号无法前向声明}。别的头文件想引用 \kw{intvec\_vec}，只能保证实例文件已经先包含过，于是形成隐式的包含顺序依赖；这也是宏方案对 ABI 稳定最不友好的一点——展开在调用方，库升级要求所有调用方重编。
+\end{note}
+
+\section{方案四：\kw{\_Generic} 做重载式选择}
+
+当“类型集合本来就很小且封闭”（数学库的三种浮点、序列化的几种标量），\kw{\_Generic} 是不二之选：它零成本、有类型检查，而且和标准库自己的路子同构——\kw{sin}/\kw{sinf}/\kw{sinl} 那一组就是手写的类型实例，只是没用一个宏把它们收拢。
+
+\clabel\ \begin{lstlisting}[style=cstyle,caption={\kw{\_Generic} 的三个典型用法与一个编译期类型断言}]
+#include <math.h>
+#include <stdlib.h>
+
+static inline int imax(int a, int b) { return a > b ? a : b; }
+static inline double dmax(double a, double b) {
+    return a > b ? a : b;
+}
+
+char   *str_copy(const char *s);        /* 以下三个由调用方提供 */
+int    *int_copy(const int *p);
+double *dbl_copy(const double *p);
+
+static inline void *bad_clone(const void *p) { (void)p; abort(); }
+
+/* 1) 重载式的 max：控制表达式本身不求值，实参只求值一次 */
+#define MAX(a, b) _Generic((a), \
+        int: imax, long: imax, float: dmax, double: dmax)(a, b)
+
+/* 2) 数学库的类型化包装：与标准库 cbrt / cbrtf / cbrtl 同一思路 */
+#define CBRT(x) _Generic((x), \
+        float: cbrtf, long double: cbrtl, default: cbrt)(x)
+
+/* 3) 按类型克隆：选中哪一枝就按哪种类型解释内存；
+      default 也必须是个可调用对象，写 NULL 通不过编译 */
+#define CLONE(p) _Generic((p), \
+        char *: str_copy, int *: int_copy, \
+        double *: dbl_copy, default: bad_clone)(p)
+
+/* 4) 编译期断言调用点给的类型（依赖非标准件，见下文） */
+#define ASSERT_TYPE(expr, T) _Static_assert( \
+        __builtin_types_compatible_p(typeof(expr), T), \
+        "unexpected argument type")
+\end{lstlisting}
+
+面积该不该用 \kw{\_Generic} 分派，正好是判断依据：如果形状集合是封闭的（三角形、矩形、圆三选一），把 \kw{area} 做成上面这样的分支表是零成本的好写法；如果插件会不断注册新形状，这张分支表永远补不完，老老实实回到方案二的虚表。
+
+限制要一条条讲清，否则会被误当成泛型：分支表必须\textbf{逐类型手写}，没有 \kw{default} 的表对新类型直接报错，有 \kw{default} 的表则可能悄悄走错枝；它只对“关联类型到一个表达式”起作用，选择的依据是控制表达式的\textbf{类型}而非值，也不能按参数个数或结构形态分派；它\textbf{不能生成新类型}，写不出 \kw{Vec\_int} 这种东西——那是上一节宏的活儿；它也\textbf{不参与约束检查}：选中一枝后，实参与该枝函数签名的匹配仍由普通赋值规则负责，\kw{\_Generic} 不会像重载决议那样帮你回退到别的候选。此外还有两个具体的坑：数组与函数类型会退化，\kw{char[]} 的实参会命中 \kw{char*} 枝；\kw{const char*} 与 \kw{char*} 是两个不同分支，忘了写 \kw{const} 枝就会掉进 \kw{default}。
+
+想更进一步做“编译期类型断言”，就得离开标准：\kw{typeof} 在 C23 之前一直是 GCC/Clang 扩展（C23 收进标准时另给了保留顶层 \kw{const}/\kw{volatile} 的 \kw{typeof\_unqual}），\kw{\_\_auto\_type} 至今只是 GCC 扩展，\seqkw{\_\_builtin\_types\_compatible\_p} 是 GCC/Clang 内建而非标准件。它们能把“C23 的 \kw{\_Generic} 只能选表达式”补成“能检查类型”，但那\textbf{不是标准 C}，跨编译器时要谨慎。
+
+\section{建议表与选型}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{3.1cm} >{\raggedright\arraybackslash}p{3.3cm} >{\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{2.6cm}@{}}
+\caption{C 里四条建议路线的选型：需求场景到首选方案与放弃项} \\
+\toprule
+\textbf{需求场景} & \textbf{首选方案} & \textbf{放弃了什么} & \textbf{落地要点} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{需求场景} & \textbf{首选方案} & \textbf{放弃了什么} & \textbf{落地要点} \\
+\midrule
+\endhead
+容器（动态数组、链表、哈希表） & 类型集固定：宏生成具体类型；类型集开放：\kw{void*} + 回调 & 类型安全；宏方案另有调试性 & 元素大小与所有权写进接口注释 \\
+\addlinespace
+算法（排序、查找、归约） & \kw{qsort}/\kw{bsearch} 式比较回调 + 上下文结构体 & 类型安全 & 回调收到的是指向元素的指针 \\
+\addlinespace
+序列化字段表、枚举与字符串双向映射 & X-macro 单清单 & 前向声明与编辑器跳转 & 清单文件里只放 \kw{X(...)} \\
+\addlinespace
+数学库的类型化三角函数、求最值 & \kw{\_Generic} 分派 & 可扩展性（分支表封闭） & 与 \kw{cbrtf}/\kw{cbrtl} 同构 \\
+\addlinespace
+跨 ABI 的可扩展接口（插件、对象系统） & 首成员 + \kw{container\_of} + 虚表 & 零成本（多一次间接） & 虚表置 \kw{const}，字段顺序即 ABI \\
+\addlinespace
+需要长期稳定的二进制接口 & 方案二（只暴露不透明的基指针） & 编译期分派与内联 & 宏生成的 \kw{static inline} 会破坏它 \\
+\addlinespace
+编译期断言“实参类型必须是 X” & \kw{typeof} + 编译器内建兼容判断 & 可移植性 & 明确标注为非标准扩展 \\
+\bottomrule
+\end{longtable}
+
+对照着看才知道 C 缺了什么：上一节 (b) 那一大段手工宏，在 \cpp{} 里就是语言本身提供的一件事——而且它顺手把类型检查、诊断定位、重载与调试信息全部补齐。
+
+\cpplabel\ \begin{lstlisting}[style=cppstyle,caption={C 的手工宏在 \cpp{} 里由模板自动化并获得类型检查}]
+// C 里 DEFINE_VEC(int, IntVec) 的等价物
+template <typename T>
+struct Vec {                        // 类型参数由语言给，不用拼名字
+    T      *items = nullptr;
+    size_t  size = 0, cap = 0;
+    bool push(T x) {
+        if (size == cap) {
+            size_t n = cap ? cap * 2 : 8;
+            void *g = realloc(items, n * sizeof(T));
+            if (!g) return false;
+            items = static_cast<T *>(g); cap = n;
+        }
+        items[size++] = x;          // 复制语义由 T 自己负责
+        return true;
+    }
+};                     // 实例化点即类型检查点
+Vec<int> a;
+\end{lstlisting}
+
+\begin{bestpractice}[title={在 C 里做“泛型”，先固定类型集合}]
+除非你能证明“任意类型”这个需求真实存在，否则\textbf{把类型集合固定下来}（一组手写实例 + 明确的类型后缀，如 \kw{\_int}、\kw{\_str}、\kw{\_f32}）几乎总比“支持任意类型”更划算：后缀让每个实例都能在日志、调试器与栈回溯里读出来，宏只在确实重复的部分使用，接口文档不必解释字节的归属。这与本册第六部分那条 \cpp{} 的工程判断是同一件事——\textbf{封闭类型集 + 显式实例化}胜过对任意类型的开放支持：两者都是用“可枚举的实例”换回可诊断性、可预测的目标代码与稳定的符号边界。C 只是没有把这个判断写成语法，它逼你在命名与文档里做同样的决定。
+\end{bestpractice}
+
+一句话收束本章：C 没有泛型，但 C 有一套成熟的\textbf{泛型替身}——\kw{void*} 换灵活性、首成员换扩展性、宏换零成本、\kw{\_Generic} 换类型安全。选型时先问“我的类型集合是封闭的还是开放的”，再问“我这个接口要不要跨 ABI”，两个答案基本就决定了用哪条路，以及必须在文档里补哪几条契约。
+
+\part{泛型与编译模型：实现暴露在头文件的代价}
+
+\chapter{为什么模板定义通常必须暴露在头文件}
+
+前面几章分别回答了“每种语言在什么时候、以什么形式生成泛型代码”。
+Java 在编译期擦除类型参数，运行期只有一份代码；C\# 在运行期具化，相同实参类型共用同一份共享实例；Rust 在编译期单体化，每个实参类型各生成一份机器码；\cpp{} 的模板则是一台编译期代码生成器，谁在使用、用什么实参，就在谁那里触发一次生成；C 没有这套机制，只能靠宏与 \kw{void *} 手工模拟。
+本章把视角拉回 \cpp{}，追问“在使用点生成”这条模型带来的第一个工程后果：为什么模板的定义几乎总是必须写在头文件里，而不是像普通类那样声明在头、定义在源文件。
+
+这个“必须”不是书写风格的洁癖，也不是某个编译器的方言限制。
+它是实例化模型的直接推论：编译器的输入是一个翻译单元，而翻译单元里能用来生成代码的材料，只有它此刻看到的声明与定义。
+模板的声明只告诉编译器“这个特化叫什么、签名长什么样”，并不包含“函数体是什么”；而生成一段代码恰恰需要后者。
+于是问题变成一句可以反复使用的话：生成发生在何时何处，定义就必须出现在何时何处。
+
+\section{机制根因：定义必须在实例化点可见}
+
+先把 \cpp{} 的编译模型摊平来看。
+一个翻译单元由一个源文件加上它文本包含的全部头文件构成；编译器在这个单元内独立完成语法分析、语义检查、实例化与代码生成，单元之间除了链接期交换的符号之外没有任何共享内存。
+模板在被实例化之前不产生任何独立编译好的产物——它是一条等待被喂给生成器的规则，而不是一段已经写好的函数。
+因此某个特化的代码只能在使用它的那个单元里生成；要在该处生成，该处就必须有可供展开的定义。
+
+\textbf{隐式实例化的触发时机}由标准在 [temp.inst] 中规定，要点可以压缩成三条。
+其一，函数模板的特化在它被使用（例如一次调用需要它）的那一刻隐式实例化；这一刻编译器必须能找到该函数模板的定义，找不到就没有东西可以生成。
+其二，类模板的特化只在需要完整类类型时才实例化类体：声明一个 \kw{Foo<int>} 对象、访问它的成员、求它的大小都需要类体，而只写 \kw{Foo<int> *} 这样的指针时，类体完全不必读进来。
+其三，类体被实例化时只引入各成员的声明，成员函数体本身是惰性的——只有当某个成员被用到（更准确地说，被 ODR-use）时，它的定义才被要求实例化；静态数据成员、默认成员初始化器、默认实参各有自己的触发点。
+
+第三条最容易被误解，也最能解释“为什么有的写法看起来没事”。
+它意味着“定义可见”不是一次性检查，而是沿着使用轨迹分布的多条独立要求：先要求类体可见，再逐个要求被用到的成员定义可见。
+一个把类体放进头文件、却把成员函数体留在实现文件里的设计，在“该成员从未被调用”的程序里完全能编译并链接通过；一旦某个翻译单元真的调用了它，同一条规则立刻开始索要那个函数体。
+
+这条惰性规则还有一层正面用途，也常被当成诡异现象：没被用到的成员可以引用根本不完整的类型，程序照样通过。
+因为那个成员的函数体从未进入生成阶段，里面的名字查找与类型检查也就从未真正执行。
+理解这一点很重要——它说明可见性要求是“按使用逐条兑现”的，而不是对整个模板类做一次性的完整性审查。
+
+还有一步常被忽略：可见不只是“在这个单元里某处出现过”，而是“在触发实例化的那一刻之前已经进入语法树”。
+文本包含决定了这一点——把那条包含指令挪到调用之后，同一份定义立刻变成不可见。
+两阶段名字查找又把辅助名的查找锚在定义处（非依赖名）或实例化点（依赖名，包含实参类型所在命名空间的 ADL），所以“把定义放进头文件”还必须配上一份完整的依赖声明清单。
+这就是模板头文件往往比同规模的非模板头文件更冗长松散的原因：它要交付的不是接口，而是一整套生成规则。
+
+\begin{note}[title={一句话钉住机制}]
+声明让使用通过语法与语义检查，定义让代码被生成出来。
+凡在使用点需要生成的东西，使用点就必须能看到它的定义；看不到，就没有任何东西可生成。
+\cpp{} 里“模板定义写在头文件”的通行做法，只是这条规则在文本包含式编译模型下的一种落地方式。
+\end{note}
+
+\section{只给声明会发生什么：三种实现的实际报错形态}
+
+\subsection*{函数模板：本单元编译通过，链接期才失败}
+
+这是最反直觉的一种失败，也是最常见的入门陷阱。
+头文件里只有声明，定义老老实实写在实现文件中，调用方一切正常——因为它在自己的单元里确实能看到一个合法的函数模板声明，调用点的类型检查全部通过，只有生成代码这一步被静默跳过。
+
+\begin{lstlisting}[style=cppstyle,caption={声明进头文件、定义进源文件：编译通过而链接失败的最小现场}]
+// widget.hpp —— 使用者唯一能看到的东西
+template <typename T>
+void draw(T& item);          // 只有声明：签名齐全，函数体缺席
+
+// widget.cpp —— 定义在这里，但它属于另一个翻译单元
+template <typename T>
+void draw(T& item) { item.paint(); }   // main.cpp 看不到它
+
+// main.cpp
+struct Shape { void paint(); };
+int main() {
+    Shape s;
+    draw(s);        // 类型检查通过（声明可见）；
+                    // 隐式实例化无定义可展开 -> 不生成代码
+    return 0;       // 本 TU 编译成功，符号悬空到链接期
+}
+\end{lstlisting}
+
+于是诊断落在链接器手里，而三种实现给出三种原文。
+GNU ld 直接打印缺失符号的完整签名；MSVC 报 \kw{LNK2019} 并附上它自己的修饰名；clang 在默认链接器 lld 下的消息与 ld 同形，而 clang 前端还能在更早的阶段拦住类模板那一类缺失。
+
+\begin{lstlisting}[style=cppstyle,caption={同一段代码在 GNU ld、MSVC、lld 下的链接期原文}]
+# GNU ld 与 collect2（引号形态随 binutils 版本略有差异）
+main.cpp:12: undefined reference to 'void draw<Shape>(Shape&)'
+collect2: error: ld returned 1 exit status
+
+# MSVC link.exe
+main.obj : error LNK2019: unresolved external symbol
+    "void __cdecl draw<struct Shape>(struct Shape &)"
+    referenced in function main
+
+# ld.lld（clang 常用链接器）
+ld.lld: error: undefined symbol: void draw<Shape>(Shape&)
+>>> referenced by main.cpp
+\end{lstlisting}
+
+值得注意的地方是报错点的位置：没有任何一行 \cpp{} 源码被指认为错。
+疏漏在头文件与实现文件的划分方式里，而诊断出现在构建流程的最末梢，中间隔着一整套构建系统。
+
+\subsection*{类模板：编译期就被拦住}
+
+类模板的情形更友好，因为缺失的东西当场就查不出来。
+若类模板只在头里声明、没有类体，任何需要完整类型的用法都会在编译期拿到一条前端诊断；若类体可见而成员定义不可见，诊断形态则按实现不同——多数实现对“使用了未定义的模板特化”给出 \seqkw{implicit instantiation of undefined template} 一类的消息，缺失的是成员时，标识符串里会带上成员名（形如 \kw{Foo<int>::bar}）。
+
+\begin{lstlisting}[style=cppstyle,caption={类模板成员的按需实例化：惰性触发点决定索要定义的时机}]
+// foo.hpp —— 类体可见；成员定义也必须在此之后继续可见
+template <typename T>
+class Foo {
+public:
+    void bar();        // 声明：只有它被调用时才需要函数体
+    void never();      // 声明：从未被调用，函数体缺失也无妨
+    T value_;
+};
+
+template <typename T>
+void Foo<T>::bar() { ++value_; }   // 写进头文件，使用点才生成得出来
+
+// main.cpp
+void f() {
+    Foo<int> x;     // 需要完整类型 -> 实例化类体（只引入成员声明）
+    x.bar();        // 被用到 -> 此刻才要求 bar 的定义可见
+}                   // 若 bar 的定义在另一个 TU：这里没有代码可生成
+\end{lstlisting}
+
+例子里的 \kw{never()} 是关键一环。
+它说明“没被调用就不需要定义”是合法观察而不是巧合：只要某个成员函数体从未被 ODR-use，它的定义不可见也不产生诊断，链接照样成功。
+同一段代码里，两条要求各自独立地生效，这也解释了为什么“少写一个头”会时灵时不灵：症状取决于使用者到底用到了哪些成员。
+
+把两种模板的失败时机并排看，规律很清楚。
+函数模板一旦调用就要求定义，但缺定义时编译期毫无动静，因为签名本身足够完成重载决议与实参检查；类模板一旦需要完整类型就要求类体，缺类体则当场无法继续，编译期立刻停下。
+一个是“能检查、不能生成”，一个是“连检查都进行不下去”，仅此差别。
+所以对外的经验法则只有一句：链接期出现的模板符号问题，几乎都可以倒回“定义没有出现在使用点”这条原因上。
+
+\subsection*{为什么必须区分编译期与链接期}
+
+这个区分不是学术兴趣，而是本章之后所有改造方案的前提。
+只有先看清“隐式实例化是每个单元各做一次的本地行为，而符号是否存在是全局的链接期问题”，才能理解后面几章的手段各自在解决什么：显式实例化把生成动作从使用点搬到库里，\kw{extern template} 让使用点放弃自己生成，封闭类型集则让使用点根本不需要任意特化都能被生成。
+
+\begin{table}
+\centering
+\caption{同一根因在不同用法下的诊断分布}
+\begin{tabularx}{\textwidth}{X>{\raggedright\arraybackslash}p{0.11\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}}
+\toprule
+症状原文 & 出现阶段 & 根因 \\
+\midrule
+\seqkw{undefined reference to 'void draw<Shape>(Shape\&)'} & 链接期 & 函数模板只见声明，本单元无定义可展开，特化从未生成 \\
+\seqkw{LNK2019: unresolved external symbol} & 链接期 & 同上，MSVC 形态；消息带它自己的修饰名 \\
+\seqkw{undefined symbol: void draw<Shape>(Shape\&)} & 链接期 & 同上，lld 下的写法 \\
+\seqkw{implicit instantiation of undefined template} & 编译期 & 需要完整类型，而类体定义不在使用点 \\
+改实现后只重编源文件，行为随构建顺序漂移 & 运行期 & 各单元仍持有旧实例，折叠后留下哪一份不确定 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{warning}[title={两个方向相反的坑}]
+把模板定义写进实现文件却不写显式实例化定义：症状是链接错误而不是编译错误，报错点离真正的疏漏隔着一整个构建系统，排查成本远高于一次普通的类型错误。
+反过来，只在使用者侧写了 \kw{extern template} 声明，而实现文件里没有对应的显式实例化定义：同样得到 \kw{undefined reference} 或 \kw{LNK2019}，因为这一次你连“本单元顺手生成一份”的机会都主动放弃了。
+两者是同一条规则的正反两面，任何“不暴露定义”的方案都必须先回答一个问题：那代码由谁、在哪里生成。
+\end{warning}
+
+\section{去重与符号折叠：暴露定义的另一份账单}
+
+隐式实例化是按翻译单元发生的本地行为，多个单元各自独立地把同一个 \kw{draw<Shape>} 展开一遍，于是生成若干份内容相同、名字也相同的函数。
+链接器靠符号属性把这些重复折叠掉：多数实现把模板实例放进可折叠的段（Windows 上的 COMDAT，ELF 上带弱符号绑定与 section group 的节），只保留一份、丢弃其余。
+这段机制属于链接器话题，《编译器与链接器》册里有专门讨论，本章只需要它的结论：折叠发生在链接期，而生成发生在编译期。
+换句话说，去重省下的是最终镜像里的空间，省不掉的是每个单元重复付出的解析与生成工作；折叠本身还给链接器加了工作量，并让“实现改了但只有部分使用者重编”这种危险状态能悄悄活到运行期。
+
+暴露定义还有一层更隐蔽的重复：文本包含意味着每个使用者都要把模板本体连同它依赖的全部声明重新读进语法树。
+同一个头文件被一百个单元包含，那台生成器的规则就被读进去一百遍；实例化的次数还会随实参类型的数量继续增长。
+即使最终只留一份代码，这“读一百遍、生成一百遍”的开销也已经付掉了。
+重复解析与重复生成这两笔账，就是下一节清单的来源。
+
+还要补一句风险面：折叠依据的是符号名与内容一致这个假设，而标准对“同一特化在不同单元里被实例化成不同结果”的说法是未定义行为。
+构建系统只要有一次没把某个使用者重编，这个假设就会悄悄破掉，而链接器没有任何信息可以察觉它。
+这也是下一节把“增量构建被绑到头文件时间戳”单独列为一条代价的原因。
+
+\section{暴露的代价清单}
+
+以下每一条只谈机制，不涉及未经测量的数字。
+
+\begin{itemize}
+\item \textbf{编译时间。}定义在头里，就意味着每个使用它的单元都要重新解析定义、重做一遍名字查找与依赖分析、再实例化一遍。
+这份成本随包含该头的单元数量与模板实参类型数量双向增长，而且无法靠拆分源文件来摊薄——拆分恰恰会破坏可见性。
+\item \textbf{增量构建被绑定到头文件时间戳。}定义住在头文件里，改动实现就是改动头文件，于是所有包含者都要重编。
+非模板代码可以用源文件隔离改动范围，模板做不到：构建系统的依赖图在这里成了实例化模型的复制品。
+\item \textbf{实现细节泄露。}头文件里的模板定义必须自洽，于是私有辅助模板、内部类型萃取、查表用的常量数组、仅供内部使用的重载，全都得跟着进入公开头文件，并占用使用者的名字空间。
+非模板代码可以用匿名命名空间与前向声明把这些藏起来，模板藏不住：藏起来就等于不可见，不可见就等于生成不出来。
+\item \textbf{ABI 脆弱与分发困难。}改动模板实现（哪怕只是多一层内联、换一种实现策略）在语义上要求所有使用者重新编译，因为代码本来就在人家那一侧生成。
+以二进制形式发布的库因此很难把模板放进公开接口：交付头文件后无法保证使用者用同一版本重编，通常只能退回“导出少数几个非模板包装函数”的写法。
+\item \textbf{代码膨胀与调试符号膨胀。}在使用者单元里生成的实例往往成群出现，结构高度相似；即使链接器折叠了函数体，未折叠的辅助结构、内联副本与调试信息仍在累积。
+调试器里成屏的模板名展开、断点究竟落在哪一份实例上，都是这条链的下游问题。
+\item \textbf{诊断质量下降。}错误发生在实例化内部，编译器会打印整条实例化回溯，一层层“在实例化 \kw{X<A, B>} 时，在实例化 \kw{Y<C>} 时”。
+真正的病因常常在几十行回溯之外；这与前面 Rust 一章看到的单体化诊断困境是同一类问题，只是回溯的形态不同。
+\end{itemize}
+
+\begin{guideline}[title={把结论说成一条推论}]
+模板把定义暴露在头文件，不是语法洁癖，也不是历史包袱，而是“在使用点按需生成定义”这一实例化模型的直接推论。
+想摆脱暴露，出路只有两条：改变生成发生的位置，或者改变可见性的载体；单纯调整文件与目录的组织方式不会有任何效果。
+\end{guideline}
+
+\section{两条已被否掉或受限的出路}
+
+历史上正面进攻过这条限制的方向有两个，它们的共同教训是：不触动“生成需要定义”这件事本身，只改善“定义放在哪里”的书写体验，就不可能成功。
+
+\textbf{\kw{export} 模板。}
+\cpp{03} 引入 \kw{export}，意图正是让模板定义可以离开头文件：在定义处标注 \kw{export}，把实现放进源文件，由实现自行把实例化产物与接口信息传递给其他单元。
+实践中这条路几乎只有 EDG 前端（以及以其为基础的 Comeau 编译器）真正落实，主流实现长期把它当作可以忽略的语法——代码不报错，也不起作用，于是所谓 export 模板几乎从未进入真实工程。
+因为缺少实现与真实用例，标准化方向随之反转：\cpp{17} 里 \kw{export} 已被搁置，\cpp{20} 之后不再有 export 模板的规范用法，该关键字本身也不再保留。
+保守的说法是：今天没有任何可移植的 \cpp{} 代码应当依赖 \kw{export}。
+
+\textbf{模块。}
+\cpp{20} 的模块用 \kw{import} 取代文本包含：一份预编译的模块接口替代“把源码再读一遍”，所以它确实消掉了重复解析这一项开销，也让实现分区里的东西不进入使用者的文本包含。
+但必须说清它没有消掉什么：实例化仍然需要定义可达。
+模块把可见性的载体从“头文件文本”换成“编译接口”。接口分区里导出的模板，其定义对导入者依然可见，导入者照样在自己的单元里生成实例；实现分区里没有导出的模板，使用者看不到定义，也就无法实例化，那部分实现要么搬进接口，要么改由模块自身做显式实例化。
+把这两件事混为一谈是最常见的误读：模块减少的是包含与解析成本，它不是一条“定义不可见也能生成”的豁免条款。
+
+\textbf{真正有效的折中。}
+既然代价来自“生成在使用者单元里发生”，那就把生成这件事从模板手里拿走。
+一条路是 PImpl 与非虚接口：把一个模板包进非模板的壳里，公开头只暴露壳，模板留在实现文件内部；另一条路是类型擦除——\kw{std::function} 是它的标准形式，手写 vtable 是它在 C 里的等价物，也就是前一章讨论 C 手工泛型时那套做法的延续。
+这两条路在《CRTP 与 PImpl》册里有系统讨论。
+它们的共同点是在换取同一个性质：让使用者的单元不再需要看到生成规则。至于代价，则转移到运行时间接层与手写样板上。
+
+\section{从开放集到封闭集：后面三章的入口}
+
+现在可以把本章的结论改写成一个问题：既然使用点必须看到定义，能不能让使用点根本不需要生成？
+答案取决于库对“合法实参类型”的假设。
+如果库必须支持使用者自带任意类型——新类型随时出现、数量与种类事先无从得知——那么生成只能在使用者那一侧发生，定义只能暴露，本章列出的全部代价就是这个设计目标的必要开支。
+反过来，如果合法实参类型是一个事先就能列全的封闭集合，库就可以在实现文件里对这些类型做显式实例化：一次生成、编译进库产物，使用者通过链接拿到现成的代码，头文件里连定义都不必出现。
+这条路有两个前提，缺一不可：类型集合真的封闭，以及每一个使用者都能链接到那份已经生成的代码。
+在开放集上强推这条路，结局是维护一份永远补不完的类型清单，而且新增使用者类型时要改的是库而不是使用者。
+
+这正是本册接下来三章要完成的改造：先补上显式实例化与 \kw{extern template} 这两块机制，再讨论封闭类型集的库设计取舍，最后回到“开放集与封闭集各自该付哪一种代价”。
+下面的例子只把 \kw{extern template} 的样子摆出来，作为下一章的预告，本章不展开它的规则。
+
+\begin{lstlisting}[style=cppstyle,caption={预告：extern template 声明的样子（机制细节见下一章）}]
+// widget.hpp
+template <typename T>
+void draw(T& item) { item.paint(); }   // 定义此刻仍必须在头里
+
+// 额外告诉编译器：这个特化由实现文件生成，本单元不要再实例化一份
+extern template void draw<Shape>(Shape&);
+
+// 实现文件必须有配套的显式实例化定义，否则链接期见不到符号
+template void draw<Shape>(Shape&);
+\end{lstlisting}
+
+\begin{compare}[title={开放集与封闭集：两种库设计目标}]
+开放集（实参类型由使用者决定，事先未知）：必须允许任意特化在使用点生成，因此必须暴露定义。
+换来的是完整通用性与零样板，付出的是编译时间、实现细节泄露与脆弱的 ABI。
+典型形态是容器、算法、智能指针。
+封闭集（合法类型事先列全）：只在实现文件里做显式实例化，头文件只留声明，定义与实现细节都能藏住。
+代价是新增一个受支持类型就要改库、重编、重发，通用性受限，且链接必须拿到库产物。
+典型形态是协议编解码、驱动接口、序列化框架里预先注册的类型表。
+两种目标没有优劣，只有是否匹配；选错方向的库，要么在为封闭的需求付暴露的成本，要么在为开放的需求无穷无尽地补类型清单。
+\end{compare}
+
+\chapter{封闭类型集：概念约束 + 显式实例化把实现收回源文件}
+
+上一章已经论证过另一面：模板的定义通常必须暴露在头文件里，因为翻译单元只有在实例化点看见定义才能生成代码；把定义藏进 \kw{.cpp} 而头文件只留声明，多数情况下会得到一个链接期错误。这一章给出收口手法——当库作者能够事先列出全部合法类型时，可以把“接口收紧”与“实例化位置”这两件事分开处理：头文件里留下概念（或 SFINAE）约束过的声明，加上一批 \kw{extern template} 声明；实现与显式实例化定义只存在于库自己的一个源文件里。三件套的分工要先记住：约束决定“谁能被接受”，显式实例化定义决定“代码在哪里生成”，\kw{extern template} 决定“别人的翻译单元不再重复生成”。缺任何一件，剩下的两件都会退化。
+
+\section{先做一次二分：合法类型集合是开放集还是封闭集}
+
+\textbf{开放集}（open set）指调用方可以拿任意类型来实例化你的模板：容器、算法、智能指针、数学库里的向量类型都属于这一类。此时库作者无法列举合法类型，也就无法代替调用方完成实例化——定义必须暴露在头文件里，由每个使用它的翻译单元在实例化点自行生成代码。这是上一章的结论，本章不提供替代方案。
+
+\textbf{封闭集}（closed set）指库作者能够事先写出全部会被实例化的类型。此时可以不让定义外泄：库在一个源文件里把集合中每个类型都显式实例化一遍，符号随之进入库的二进制；使用者只声明、不定义，链接时直接取现成的符号。代价也同时到账——你放弃了“任意用户类型可用”这一条。
+
+判断集合是否封闭，可以逐条过下面这张清单；只要有一条明显不成立，就不要走这条路。
+
+\begin{itemize}
+  \item 序列化／协议编解码：需要支持的类型是否只有若干已知标量加几个业务结构？如果第三方可以随时注册新的可序列化类型，集合就是开放的。
+  \item 数学核：是否只需要 \kw{float} 与 \kw{double}（必要时加 \kw{long double}）？若打算让用户自定义标量类型（如多精度库的 \kw{cpp\_dec\_float}），就是开放集。
+  \item 插件 ABI／跨编译器边界：接口是否只允许固定的一组类型穿过 DLL 或 \kw{.so} 边界？跨编译器时模板实体的 mangled 名与内存布局并不总是一致，多数工程反而会刻意把集合封死。
+  \item 错误处理的可接受性：当用户传入未列入集合的类型时，你是否愿意给出“该类型库未打算支持”这样的答复，而不是让它编译通过？
+  \item 演进方向：集合未来是否会频繁增删？封闭集的每次扩容都要改两处（声明与实例化定义），流程必须能兜住。
+  \item 易看走眼的一处：类型集合由配置文件或插件清单决定时，它在编译期仍然可能是封闭的（集合来自代码生成，最终仍是固定的几个类型），也可能是真正开放的（插件自带新类型进来）。区分标准是“新类型是否需要在库的源文件里显式实例化才能用”，而不是它在运行时是否可配置。
+\end{itemize}
+
+\begin{guideline}[title={二分先于技巧}]
+能否不暴露模板定义，只取决于合法类型集合是否封闭，与模板本身写得多优雅、约束表达得多精确无关。约束与显式实例化都是为“集合封闭”服务的工具；集合是开放的时候，任何工具都救不了你，必须老老实实把头文件写成包含定义的形式。先做二分，再谈手法。
+\end{guideline}
+
+\begin{compare}[title={暴露派与封闭集派：一次 API 决策对照}]
+\begin{tabular}{@{}p{0.17\linewidth}p{0.31\linewidth}p{0.31\linewidth}@{}}
+\toprule
+\textbf{决策维度} & \textbf{暴露派（开放集）} & \textbf{封闭集派（本章）} \\
+\midrule
+合法类型 & 调用方可自定义类型并直接使用 & 仅作者列出并被实例化的类型 \\
+\addlinespace
+定义位置 & 头文件内含实现 & 库的单个 \kw{.cpp}，头里只有声明加约束 \\
+\addlinespace
+改实现时 & 头文件变动，所有使用者重编 & 头文件不变，只重编库 \\
+\addlinespace
+未支持类型的报错 & 视写法而定，常在链接期缺符号 & 编译期概念不满足，指向约束名 \\
+\addlinespace
+典型场景 & 通用容器、算法、智能指针 & 序列化、协议编解码、插件 ABI、固定数值核 \\
+\bottomrule
+\end{tabular}
+\end{compare}
+
+\section{接口层先收紧：把允许的类型写进声明}
+
+封闭集的第一个动作，是在头文件里把“允许哪些类型”变成声明的一部分。\cppxxlabel{C++20} 用概念表达这件事最直白；\cpp{11}/\cpp{14} 的工程传统做法是 SFINAE 配合 \kw{enable\_if}。两种写法都给出可编译的完整片段。
+
+\begin{lstlisting}[style=cppstyle,caption={概念版：把类型集合写进声明（C++20）}]
+// text_codec.hpp 的一个断面：这里只有声明，没有定义
+#include <concepts>
+#include <string>
+#include <type_traits>
+
+namespace codec {
+
+// 把"库打算支持哪些类型"提升为一个可命名的约束
+template <class T>
+concept Scalar = std::is_arithmetic_v<T> || std::is_same_v<T, std::string>;
+
+// 形态一：概念作为类型占位符，等价于 class T 加上 Scalar<T>
+template <Scalar T>
+std::string to_text(T value);
+
+// 形态二：等价的 requires 子句写法，子句必须位于参数列表之后
+template <class T>
+    requires Scalar<T>
+std::string to_debug_text(T value);
+
+} // namespace codec
+\end{lstlisting}
+
+\begin{lstlisting}[style=cppstyle,caption={SFINAE 版：同一件事的传统形态（本例用 C++17 语法书写 trait，退回 C++11/14 见正文）}]
+// text_codec.hpp 的另一种断面：语义等价，诊断能力弱一档
+#include <string>
+#include <type_traits>
+
+namespace codec {
+
+template <class T>
+inline constexpr bool is_scalar_v =
+    std::is_arithmetic<T>::value || std::is_same<T, std::string>::value;
+
+// 默认模板参数在替换失败时把候选从重载集中剔除（SFINAE）
+template <class T,
+          class = typename std::enable_if<is_scalar_v<T>>::type>
+std::string to_text(T value);
+
+} // namespace codec
+\end{lstlisting}
+
+注意这段 SFINAE 写法里的时代差异：\kw{inline constexpr bool} 自定义 trait 与 \kw{std::is\_arithmetic\_v}、\kw{std::is\_same\_v} 都依赖 \cpp{17} 的变量模板，示例已把标准 trait 写成 \kw{::value} 形态；若要在 \cpp{11}/\cpp{14} 项目里彻底不引入变量模板，就把自己那个条件包进一个 \kw{struct} 的 \kw{value} 成员。SFINAE 版还有一个已知副作用：那个匿名默认模板参数使用者可以显式提供，从而绕过约束；把默认参数写成 \kw{class = std::enable\_if\_t<...>} 时，这是可接受的折衷，若要彻底堵住则需引入一个内部标签类型作为默认实参。
+
+\begin{guideline}[title={约束的真正收益是把错误前移}]
+约束把“链接期找不到符号”变成“编译期概念不满足”。前者的现场是一条 mangled 名和一堆反汇编线索，读者要反过来推断自己用了哪个未被实例化的类型；后者的诊断会直接点出是哪个概念、哪个 \kw{requires} 表达式不成立，读者立刻知道“这个类型库压根没打算支持”，不需要去查 \kw{mangled name}。定义外泄与否只是表面收益，报错质量的提升才是把约束放进头文件的首要理由。
+\end{guideline}
+
+SFINAE 与概念的差异不止于书写感受，在诊断链路上的差别值得列表固定下来。
+
+\begin{table}[htbp]
+\centering
+\caption{SFINAE 版与概念版在诊断上的差异（示意，具体文案随编译器版本变化）}
+\begin{tabularx}{0.83\textwidth}{>{\raggedright\arraybackslash}p{0.19\textwidth} >{\raggedright\arraybackslash}p{0.30\textwidth} X}
+\toprule
+\textbf{观察点} & \textbf{SFINAE／enable\_if 版} & \textbf{概念版} \\
+\midrule
+失败发生的阶段 & 模板实参推导中的替换失败，候选被静默剔除出重载集 & 显式的约束检查，发生在替换函数体之前 \\
+\addlinespace
+首条诊断 & 常为 no matching function for call to \kw{to\_text} 一类 & 同一句 no matching function，随后附约束不成立的说明 \\
+\addlinespace
+能否指出失败原因 & 需要额外 \kw{static\_assert} 或代理 traits 才会有自定义消息 & 概念名与 \kw{requires} 表达式直接进入诊断文本 \\
+\addlinespace
+重载歧义的处理 & 仅靠默认模板参数区分的重载易成歧义且难解释 & 约束可部分排序，更严格的候选胜出 \\
+\addlinespace
+多条件可读性 & 层层 \&\& 与 \kw{declval} 嵌套，难以逐条核对 & 逐条列出谓词，可命名可复用 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+表中约束部分排序（subsumption）那一行的机制另见《SFINAE 与概念》册，本章只使用它的结果。
+
+\section{实例化层：显式实例化定义与 extern template 声明}
+
+接口收紧之后，代码必须有地方生成。生成点选在库自己的一个翻译单元里，靠显式实例化定义（explicit instantiation definition）完成；同时用显式实例化声明（\kw{extern template}）抑制其他翻译单元的隐式实例化。语法形态分四类，逐一说明。
+
+\begin{lstlisting}[style=cppstyle,caption={显式实例化的几种语法形态（函数模板与类模板为主）}]
+// 假设 text_codec.hpp 里已声明 template <Scalar T> std::string to_text(T);
+// 以及同命名空间下的 template <Scalar T> class Buffer。
+
+// 一、函数模板：显式实例化定义，写在库的 .cpp 中
+template std::string to_text<int>(int);
+template std::string to_text<double>(double);
+template std::string to_text<>(int);       // 尖括号留空，由参数列表反推实参
+
+// 二、类模板：整类显式实例化定义（生成全部成员）
+template class Buffer<int>;
+template class Buffer<double>;
+
+// 三、成员函数级：只实例化需要的成员
+template void Buffer<int>::push(int const&);
+template std::string Buffer<double>::dump() const;
+
+// 四、抑制隐式实例化的声明，写在头文件里
+extern template std::string to_text<int>(int);
+extern template class Buffer<int>;
+extern template void Buffer<int>::push(int const&);
+\end{lstlisting}
+
+形态一的要点：显式实例化定义给出了一个“就地完成实例化”的指令，编译器必须在此处生成实体，因此该翻译单元必须能看见定义；形态三里成员级的 \kw{Buffer<double>::dump() const} 要把完整的函数签名写出来，参数与 \kw{const} 限定都参与匹配。类模板的显式实例化定义会实例化该特化的所有成员（模板定义里提供了定义的那些；已显式特化的成员与已删除的成员除外），这正是它比隐式实例化更吃代码尺寸的原因——用户只用 \kw{push}，你也把 \kw{dump}、构造函数与析构函数一并生成了。若某些成员昂贵且少有人用，宁可退回成员级实例化，只列出真正要导出的那几个。
+
+变量模板这里刻意不给完整示例。标准确实为变量模板规定了显式实例化语法（形态接近 \kw{template int const limit<int>;}，作为定义时还要在实例化处带上初始化器），但它比函数模板与类模板的写法生僻得多，跨实现的支持与诊断质量参差；工程上更常见的处理是让变量模板直接以 \kw{constexpr} 形态留在头文件里，不值得为它引入一套隐藏定义的机制。本章后续示例只使用函数模板与类模板两种。
+
+\kw{extern template} 的语义边界要说清，这是最容易被夸大成“禁用实例化”的地方。
+
+\begin{itemize}
+  \item 它是一条声明，不是定义；不改变名字查找，不改变程序的合法性判定，被它声明的实体仍必须由某个翻译单元提供定义，否则链接失败。
+  \item 它的唯一作用是抑制当前翻译单元里对该实例的隐式实例化：见到 \kw{extern template} 的编译器应当假定符号已在别处，直接引用而不再生成代码。
+  \item 标准保留了实现的自由度：允许实现仍然自行实例化。主流实现尊重这条声明，但把编译时间收益当作硬性契约并不稳妥——真正稳定的收益来自头文件里不再有实现体这件事本身。
+  \item 它必须与显式实例化定义成对出现；只写一半是最常见的链接错误来源，本节末尾的错配表会把它逐条列出。
+\end{itemize}
+
+\section{成对完整示例：三文件文本编码器}
+
+下面是一个可以直接抄的完整例子。头文件给出概念、函数模板声明、类模板的类体与成员声明（成员定义移出），以及一批 \kw{extern template} 声明；实现与显式实例化定义集中在一个 \kw{.cpp}；使用方只写普通调用。
+
+\begin{lstlisting}[style=cppstyle,caption={text\_codec.hpp —— 对外只有约束、声明与 extern template}]
+#pragma once
+
+#include <cstddef>
+#include <string>
+#include <type_traits>
+
+namespace codec {
+
+// 1) 约束：合法类型集合在头文件里就是可读的、可诊断的
+template <class T>
+concept Scalar = std::is_arithmetic_v<T> || std::is_same_v<T, std::string>;
+
+// 2) 函数模板：只有声明
+template <Scalar T>
+std::string to_text(T value);
+
+// 3) 抑制本翻译单元的隐式实例化：与 .cpp 里的定义一一配对
+extern template std::string to_text<int>(int);
+extern template std::string to_text<double>(double);
+extern template std::string to_text<std::string>(std::string);
+
+// 4) 类模板：类体必须留在头文件里（用户需要完整类型），
+//    但成员定义一律移出，用 PImpl 把状态也藏起来
+template <Scalar T>
+class Buffer {
+public:
+    Buffer();
+    explicit Buffer(std::size_t reserve_count);
+    ~Buffer();
+
+    Buffer(Buffer const&) = delete;
+    Buffer& operator=(Buffer const&) = delete;
+
+    void push(T const& item);
+    std::string dump() const;
+
+private:
+    struct Impl;      // 声明即可：成员是指针，不需要完整类型
+    Impl* impl_;
+};
+
+extern template class Buffer<int>;
+extern template class Buffer<double>;
+
+} // namespace codec
+\end{lstlisting}
+
+\begin{lstlisting}[style=cppstyle,caption={text\_codec.cpp —— 实现与显式实例化定义只在这里}]
+#include "text_codec.hpp"
+
+#include <string>
+#include <vector>
+
+namespace codec {
+namespace {
+
+// 内部工具：完全不出现在任何头文件里
+template <class T>
+std::string encode_one(T const& value) {
+    if constexpr (std::is_same_v<T, std::string>) { return '"' + value + '"'; }
+    else { return std::to_string(value); }
+}
+
+} // namespace
+
+template <Scalar T>
+std::string to_text(T value) { return encode_one(value); }
+
+template <Scalar T>
+struct Buffer<T>::Impl {
+    std::vector<T> items;
+};
+
+template <Scalar T>
+Buffer<T>::Buffer() : impl_(new Impl{}) {}
+
+template <Scalar T>
+Buffer<T>::Buffer(std::size_t reserve_count) : impl_(new Impl{}) {
+    impl_->items.reserve(reserve_count);
+}
+
+template <Scalar T>
+Buffer<T>::~Buffer() { delete impl_; }
+
+template <Scalar T>
+void Buffer<T>::push(T const& item) { impl_->items.push_back(item); }
+
+template <Scalar T>
+std::string Buffer<T>::dump() const {
+    std::string out;
+    for (auto const& item : impl_->items) { out += encode_one(item); out += ','; }
+    return out;
+}
+
+// 关键一步：显式实例化定义，代码在本翻译单元里落地
+template std::string to_text<int>(int);
+template std::string to_text<double>(double);
+template std::string to_text<std::string>(std::string);
+
+template class Buffer<int>;
+template class Buffer<double>;
+
+// 若嫌整类实例化生成过多成员，可改为逐个成员列出，例如：
+// template void Buffer<int>::push(int const&);
+// template std::string Buffer<int>::dump() const;
+
+} // namespace codec
+\end{lstlisting}
+
+\begin{lstlisting}[style=cppstyle,caption={main.cpp —— 只用被支持的类型，另附一段故意不支持的调用}]
+#include "text_codec.hpp"
+
+#include <iostream>
+#include <string>
+
+int main()
+{
+    // 被支持的类型：编译通过，链接取库里的现成符号
+    std::cout << codec::to_text(42) << '\n';
+    std::cout << codec::to_text(3.5) << '\n';
+    std::cout << codec::to_text(std::string("hi")) << '\n';
+
+    codec::Buffer<int> box;
+    box.push(1);
+    box.push(2);
+    std::cout << box.dump() << '\n';
+
+    // 未列入封闭集合的类型：这里刻意注释掉，它是本章的对照组
+    // struct Point { int x; int y; };
+    // std::cout << codec::to_text(Point{1, 2}) << '\n';
+    // 概念版诊断：Scalar<Point> 不成立，to_text 被剔出候选集，编译器报
+    //   no matching function for call to 'to_text' 并附约束不满足的说明。
+    // 若头文件没有 Scalar 约束、只有声明，这段代码能编译，失败推迟到链接期。
+    return 0;
+}
+\end{lstlisting}
+
+两个要点从示例里抽出来。第一，类模板想隐藏成员定义，头文件仍然必须有类体与全部成员声明——使用者要写 \kw{Buffer<int>} 这个对象，就需要完整类型；被移出的只是成员函数体与数据布局（这里靠 \kw{Impl} 指针完成）。第二，实例化集合与约束集合必须一致：概念说 \kw{std::string} 合法，\kw{.cpp} 里就要有对应的显式实例化定义，否则用户会撞上“概念满足但没有符号”的局面——这是最坏的一种错配，因为它重新把错误推回链接期。两种失败现场的原文对照见下表（表内文案为示意，不同编译器版本措辞会变）。
+
+\begin{table}[htbp]
+\centering
+\caption{概念不满足与链接期缺符号两种失败现场对照}
+\begin{tabularx}{0.83\textwidth}{>{\raggedright\arraybackslash}p{0.16\textwidth} >{\raggedright\arraybackslash}p{0.31\textwidth} X}
+\toprule
+\textbf{现场} & \textbf{概念收紧 + 定义藏在 .cpp} & \textbf{无约束 + 定义藏在 .cpp} \\
+\midrule
+失败阶段 & 编译期，函数调用处 & 链接期，编译全程无异常 \\
+\addlinespace
+GCC／Clang & no matching function for call to \kw{to\_text}，随后附 required from 与约束不满足的说明 & \seqkw{undefined reference to} 加上一串 mangled 名，需 \kw{c++filt} 还原 \\
+\addlinespace
+MSVC & C2672 一类“没有匹配的函数”，可附约束相关的说明 & LNK2019 无法解析的外部符号，符号名是装饰名 \\
+\addlinespace
+可否在源头拦住 & 可：约束本身就是文档与检查 & 否：任何类型都能过编译 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+mangled 名与链接阶段的技术细节另见《编译器与链接器》册；\kw{Impl} 指针这一手法的完整讨论见《CRTP 与 PImpl》册。
+
+\section{DLL 与共享库边界：显式实例化定义要导出}
+
+前面的三文件例子默认库与调用方在同一个链接单元里（静态库或直接同批编译）。一旦跨过分发边界，符号必须真的出现在导出表里，否则调用方照样取不到。这是 Windows DLL 与 ELF 默认可见性下最常见的坑：显式实例化定义生成的符号，默认并不自动导出。
+
+\begin{lstlisting}[style=cppstyle,caption={导出显式实例化定义：MSVC 形态与 GCC/Clang 形态}]
+// 一、MSVC：把 dllexport 放在显式实例化定义上
+template class __declspec(dllexport) Buffer<int>;
+template class __declspec(dllexport) Buffer<double>;
+template __declspec(dllexport) std::string to_text<int>(int);
+
+// 二、GCC/Clang：用可见性属性，或把实例化定义包在 pragma 区块里
+#pragma GCC visibility push(default)
+template class Buffer<int>;
+template std::string to_text<double>(double);
+#pragma GCC visibility pop
+// 调用侧的头文件仍然只写 extern template 声明，不带导出属性
+\end{lstlisting}
+
+保守地说明几点实现相关事实。MSVC 需要显式实例化定义参与 DLL 的符号生成，多数情况下把 \kw{\_\_declspec(dllexport)} 加在实例化定义上即可，具体语法位置随编译器版本有细微差异，落地前应以所用版本的文档验证；使用端则依赖导入库（\kw{.lib}）与 \kw{extern template} 声明配合。ELF 侧，若编译时用 \kw{-fvisibility=hidden}，模板符号同样会被藏起来，需要显式恢复默认可见性。静态库的情况最简单：只要包含显式实例化定义的那个目标文件被真正链进来即可——如果库里的其他符号没有触发对它的加载，链接器可能整段跳过，此时要么把该目标文件强制加入，要么让库提供一个非模板的入口函数保证它被引用。
+
+对需要跨编译器、跨语言发布的场景，更稳的做法是不让模板符号出现在边界上：在封闭集合之上再包一层普通函数或 C ABI 入口（每个类型一个非模板导出函数），库内仍然用本章手法组织实现。模板实体跨 DLL 的布局与 mangled 名一致性并不总可靠，把它当作 ABI 是给自己埋雷。
+
+\section{收益、代价与回滚条件}
+
+收益是具体而非修辞性的。实现不外泄：\kw{encode\_one} 这类内部函数、第三方头文件的包含关系、数据布局全部留在源文件里；改实现只需重编库——把 \kw{std::to\_string} 换成 \kw{<charconv>} 里的 \kw{std::to\_chars} 只动 \kw{.cpp}，头文件字节不变，使用者的翻译单元不必重编；使用者编译时间下降，下降幅度主要来自使用者不再解析实现体，而非 \kw{extern template} 本身；ABI 可以随类型集合演进而保持稳定——支持一个新类型就是两行改动：头文件一行 \kw{extern template} 声明，源文件一行显式实例化定义。
+
+代价同样要写进决策：失去开放集的通用性，用户带来的新类型一律不接受；配对忘记时错误从编译期推迟到链接期；类模板的显式实例化定义会生成全部成员，包含从未被使用的昂贵成员，代码尺寸随之上升；跨 DLL／共享库边界时还要额外处理导出。
+
+\begin{warning}[title={四种典型错配与其症状}]
+\begin{enumerate}
+  \item 只写了 \kw{extern template}，忘了显式实例化定义：使用者一侧被抑制了隐式实例化，没人提供符号，链接期 \seqkw{undefined reference}（MSVC 为 LNK2019）。
+  \item 只写了显式实例化定义，忘了头文件里的 \kw{extern template}：程序完全正确，但每个使用者翻译单元照样做隐式实例化，白白重复生成，编译时间与代码尺寸什么都没省下——这是最容易发生且最难被 review 发现的一种，因为没有任何错误。
+  \item 概念收紧了，但 \kw{.cpp} 里没实例化那个类型：好消息是它通常表现为编译期概念不满足；坏消息是当约束与实例化集合不一致（例如概念允许 \kw{std::string} 而只实例化了 \kw{int}/\kw{double}）时，用户会拿到链接错误，此时要认出“约束过宽／集合过窄”这一根因，而不是回头去改调用代码。
+  \item 头里只有声明，而类模板的使用者需要完整类型（定义对象、访问成员、取 \kw{sizeof}）：编译期就报不完整类型。类模板隐藏实现时，类体与成员声明必须留在头文件里，只能把成员定义与数据布局移出。
+\end{enumerate}
+\end{warning}
+
+\begin{table}[htbp]
+\centering
+\caption{四种错配：症状出现的阶段与修法}
+\begin{tabularx}{0.83\textwidth}{>{\raggedright\arraybackslash}p{0.26\textwidth} >{\raggedright\arraybackslash}p{0.14\textwidth} X}
+\toprule
+\textbf{错配形态} & \textbf{症状阶段} & \textbf{修法} \\
+\midrule
+有 extern template 声明，无实例化定义 & 链接期 & 在库的 \kw{.cpp} 补对应显式实例化定义；确认该目标文件被链接 \\
+\addlinespace
+有实例化定义，无 extern template 声明 & 无错误，只是浪费 & 头文件补 extern template 声明；或用脚本比对两处集合 \\
+\addlinespace
+约束允许但集合未实例化 & 链接期（本可更早） & 让约束谓词与实例化列表同源：集中一处清单并同时产出两侧 \\
+\addlinespace
+类模板使用者需要完整类型 & 编译期（不完整类型） & 类体与成员声明回到头文件，仅移出成员定义与状态布局 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+回滚条件也要预先写下：一旦出现下列任一情形，就退回“头文件暴露定义”的常规形态——调用方需要自定义类型（集合变开放）；实例化集合开始随插件或代码生成频繁变动，配对维护成本超过编译时间收益；需要跨编译器传递模板实体；或者你发现自己为了少生成成员而开始逐成员枚举，那份清单已经和模板本身一样长。
+
+\begin{bestpractice}[title={三件套必须同时出现}]
+约束（概念或 SFINAE）+ 显式实例化定义 + \kw{extern template} 声明三者是一个整体，缺任何一个都会退化：缺约束，失败推迟到链接期并只剩 mangled 名可读；缺显式实例化定义，\kw{extern template} 抑制掉的东西没人补回来，得到未定义引用；缺 \kw{extern template}，程序照跑但重复实例化把收益全部吃掉。写库时把这三处放进同一个 review 清单，并用一份类型清单同时生成头里的声明与源文件里的定义，让人工配对没有机会发生。
+\end{bestpractice}
+
+最后一句提醒：本章的手法服务于“封闭集”这一前提。前提成立时，它同时买到实现隐藏与更好的诊断；前提不成立时，它是纯粹的负担。判断权在类型集合，不在你的模板写得多漂亮。
+
+\chapter{混合方案：常见类型显式实例化 + 自定义类型回退}
+
+前两章把这条线索的两端铺好了：一端是编译模型的硬约束——模板定义必须在实例化点可见，否则隐式实例化无米下锅；另一端是当类型集合封闭时，概念约束加显式实例化可以把实现收进翻译单元，从而拿回编译时间并在 \cpp{} 层面获得稳定的二进制契约。真实库里最常见的形态落在两者之间：既要覆盖八成以上的常见类型，又不能在文档里写“本库不可扩展”。本章给出这一中间形态的工程做法：双头文件拆分、检测式前置诊断、类型擦除这条旁路，以及构建与分发侧必须配套的纪律。
+
+\section{为什么现实中大多数量是混合的}
+
+模板带来的成本与收益都不是阶梯函数，而是随类型数量与使用密度连续变化的曲线。把实现暴露在公共头文件里，代价是三件事同时发生：头文件体积膨胀（定义、辅助 trait、内部细节一起进编译单元）、每个包含它的翻译单元都重新生成一遍代码、实现细节事实上成为订阅者可见的内容。把实现全部收回 \kw{.cpp}，收益同样明确：公共头只留类体与声明、实例化只发生在库里一个翻译单元、用户侧通过 \kw{extern template} 声明避免重复生成。
+
+问题在于“全部收回”这个前提往往不成立。库作者愿意为 \kw{int}、\kw{double}、\kw{std::string} 和几个业务类型写显式实例化定义，因为这几种类型是绝大多数调用者会用到的；但作者无法预言调用者是否需要自己的键类型。禁止扩展对一个基础库是昂贵的合同：它把“新增一个键类型”这件本该只在调用方代码里发生的事，变成必须向库提需求的流程。于是出现两档契约的划分：
+
+\begin{itemize}
+\item \textbf{默认契约}：调用者只使用被库显式实例化过的类型。此时公共头是轻量的，包含即可用，链接库文件即完成全部符号解析；调用者看不到任何定义，也就无权依赖任何定义。
+\item \textbf{扩展契约}：调用者要为自定义类型实例化。此时他必须额外包含一个实现头文件，把自己放回“定义在实例化点可见”的编译模型里。库没有拒绝他，只是要求他自己承担可见性。
+\end{itemize}
+
+这两档不是权宜说法，而是可以写进文档与诊断信息的正式约定。默认契约覆盖八成使用量，拿走编译时间与符号唯一性的收益；扩展契约保留一条明确、可维护的后门，代价由选择扩展的人支付。混合方案的全部工程细节，就是让这两档各自稳定运行而不互相污染。
+
+\section{双头文件拆分手法}
+
+拆分方式是三个文件、三种角色：公开头只放类模板、成员声明与 \kw{extern template} 声明；实现头放模板成员的定义，或在开头 \kw{\#include} 一个 \kw{.inl} 文件；翻译单元包含实现头后给出显式实例化定义。
+
+\begin{lstlisting}[style=cppstyle,caption={双头文件拆分：公开头、实现头与实例化单元的三段式布局}]
+// ===================== widget.hpp：公开头 =====================
+#pragma once
+
+#include <concepts>
+#include <string>
+#include <type_traits>
+#include <utility>
+
+// 预处理标记：未包含实现头时为 0，实现头把它改写为 1。
+// 它必须是宏：某个头文件是否进入当前翻译单元是预处理期事实，
+// 编译期的 inline 变量无法表达这件事。
+#ifndef HANDBOOK_WIDGET_IMPL_INCLUDED
+#define HANDBOOK_WIDGET_IMPL_INCLUDED 0
+#endif
+
+template <typename T>
+class Widget {
+    static_assert(std::semiregular<T>, "Widget 要求可复制、可赋值的值类型");
+
+public:
+    explicit Widget(T value);
+    Widget(const Widget& other);
+    Widget& operator=(const Widget& other);
+    ~Widget();
+
+    [[nodiscard]] const T& value() const;   // 只读访问，定义同样在实现头
+    // describe 要求 T 支持流输出，其定义在 widget_impl.hpp
+    [[nodiscard]] std::string describe() const;
+
+private:
+    T value_;
+};
+
+// 库为下列类型保证全程序只有一份定义；只用它们的调用者无需实现头。
+extern template class Widget<int>;
+extern template class Widget<double>;
+extern template class Widget<std::string>;
+
+namespace detail {
+
+// 只对“已由库显式实例化”的类型为真。
+template <typename T>
+struct is_preinstantiated : std::false_type {};
+template <> struct is_preinstantiated<int> : std::true_type {};
+template <> struct is_preinstantiated<double> : std::true_type {};
+template <> struct is_preinstantiated<std::string> : std::true_type {};
+
+} // namespace detail
+
+// 公共入口：工厂函数是库完全掌控的那条路径，因此诊断可以放在这里。
+template <typename T>
+[[nodiscard]] Widget<T> make_widget(T value) {
+    static_assert(HANDBOOK_WIDGET_IMPL_INCLUDED != 0 ||
+                      detail::is_preinstantiated<T>::value,
+                  "make_widget 需要 Widget<T> 的成员定义："
+                  "请在包含 widget.hpp 之后再包含 widget_impl.hpp，"
+                  "或把 T 换成 widget.cpp 已显式实例化的类型");
+    return Widget<T>(std::move(value));
+}
+
+// ================== widget_impl.hpp：实现头 ==================
+#pragma once
+
+#include "widget.hpp"
+#include <sstream>
+
+#undef HANDBOOK_WIDGET_IMPL_INCLUDED
+#define HANDBOOK_WIDGET_IMPL_INCLUDED 1
+
+template <typename T>
+Widget<T>::Widget(T value) : value_(std::move(value)) {}
+template <typename T>
+Widget<T>::Widget(const Widget& other) : value_(other.value_) {}
+template <typename T>
+Widget<T>& Widget<T>::operator=(const Widget& other) {
+    if (this != &other) {
+        value_ = other.value_;
+    }
+    return *this;
+}
+template <typename T> Widget<T>::~Widget() = default;
+template <typename T> const T& Widget<T>::value() const { return value_; }
+template <typename T>
+std::string Widget<T>::describe() const {
+    std::ostringstream os;
+    os << "Widget = " << value_;
+    return os.str();
+}
+// 想为自定义类型使用 Widget？在包含 widget.hpp 之后再包含本文件即可：
+// 此时定义对你可见，隐式实例化合法。本文件不属于稳定契约。
+
+// ====================== widget.cpp ======================
+#include "widget_impl.hpp"
+
+template class Widget<int>;       // 与 extern template 声明逐项配对
+template class Widget<double>;
+template class Widget<std::string>;
+\end{lstlisting}
+
+三个文件的分工值得逐条读。常见类型走的是库里那一份定义：用户 TU 看到 \kw{extern template} 声明后不会再生成实例，只在链接期引用库里的符号。自定义类型则只有在包含实现头之后才是合法用法——不包含就使用，编译期一切正常（类模板的声明足以实例化类型），问题出现在链接期：一串 \kw{undefined reference to} 加上缺失的成员函数签名。错误阶段从编译期后移到链接期，是混合方案最主要的用户体验风险，也是下一层友好化的动机。
+
+第二层友好化用检测 trait 与 \kw{static\_assert} 把错误前移。机制上分两条线索：\seqkw{is\_preinstantiated} 在编译期回答“这个类型是否已由库负责”，预处理标记 \seqkw{HANDBOOK\_WIDGET\_IMPL\_INCLUDED} 回答“实现头是否已进入当前翻译单元”。两者做或运算后写进 \kw{static\_assert}，提示文案直接给出补救动作。同一约定也可以写成概念，把工厂函数的模板参数约束为“已实例化类型或实现头已可见”，让不满足条件的调用在约束检查阶段就被拒绝；代价是诊断措辞由编译器生成，通常比自定义文案更难读。这是“把文档写进诊断信息”的手法：不增加任何编译期开销，把一段本该写在 README 里的说明搬到报错现场。
+
+边界必须同时讲清，否则就是对读者撒谎。这类检测的覆盖范围只有库自己控制的那条路径：
+
+\begin{itemize}
+\item 只在经过工厂函数时生效。调用者直接声明一个自定义类型的对象时，我们的 \kw{static\_assert} 根本不被实例化，症状仍是链接期未定义引用。
+\item \kw{static\_assert} 写在函数体首行，编译器仍可能在同一次实例化里继续报告后面的定义缺失。前移换来的是“多一条可读诊断”，不是“替换掉那条难读诊断”。
+\item 它管不到包含顺序之外的间接可见性。若实现头被某个第三方头间接拉进来，标记已经变成 \kw{1}，检测认为扩展合法——这通常是正确判断，但不是全部情形。
+\end{itemize}
+
+把这类检测当成错误消息的美化层是合适的；把它当成可见性规则的替代品则不行。可见性规则始终由编译模型决定。
+
+\section{类型擦除作为第三条路}
+
+封闭集与开放集之外还有第三条路：把“类型集合”这个问题从接口里彻底删掉。做法是设计一个非模板的运行期容器，接口上没有类型参数，实现因此可以藏进翻译单元——编译模型不再要求任何定义对用户可见。可选形态有三档：
+
+\begin{itemize}
+\item 标准组件直接拼装：\kw{std::function} 表达“可调用对象”，\kw{std::any} 表达“任意值”。语义本来就落在两者之内时，别自己造。
+\item 手写函数指针表加 \kw{void*}：把需要的操作列成一组函数指针，配一个擦除后的状态指针。控制粒度最细，可以精确安排是否堆分配。
+\item 虚基类版本：接口是只有纯虚函数的基类，具体类型由派生适配器实现。它可以与 PImpl 组合——外层句柄持有指向概念基类的 \kw{unique\_ptr}，实现细节藏进只在前向声明处出现的内层结构；这一组合的完整手法见《CRTP 与 PImpl》册。
+\end{itemize}
+
+\begin{lstlisting}[style=cppstyle,caption={手写函数指针表加擦除状态指针的类型擦除示例}]
+// ==================== serializer.hpp ====================
+#pragma once
+
+#include <concepts>
+#include <new>
+#include <sstream>
+#include <string>
+#include <typeinfo>
+#include <utility>
+
+class Serializer {
+public:
+    // 函数指针表：每个操作只接受擦除后的状态。
+    struct VTable {
+        const char* type_name;
+        void (*write)(const void* state, std::string& out);
+        void* (*clone)(const void* state);
+        void (*destroy)(void* state);
+    };
+
+    Serializer() noexcept;
+    Serializer(const Serializer& other);
+    Serializer(Serializer&& other) noexcept;
+    Serializer& operator=(Serializer other) noexcept;
+    ~Serializer();
+    [[nodiscard]] std::string to_string() const;
+    [[nodiscard]] const char* type_name() const noexcept;
+
+    // 非模板工厂：表与全部逻辑都留在 serializer.cpp，
+    // 头文件里没有任何与具体类型相关的实现。
+    static Serializer from_text(std::string text);
+    // 唯一的泛型钩子：只做装箱与查表，不含序列化策略。
+    template <typename T>
+        requires std::copy_constructible<T>
+    static Serializer for_value(T value);
+
+    friend void swap(Serializer& a, Serializer& b) noexcept {
+        std::swap(a.state_, b.state_);
+        std::swap(a.vtable_, b.vtable_);
+    }
+
+private:
+    Serializer(void* state, const VTable* vtable) noexcept;
+
+    void* state_ = nullptr;
+    const VTable* vtable_ = nullptr;
+};
+
+template <typename T>
+Serializer Serializer::for_value(T value) {
+    static const Serializer::VTable table = {
+        typeid(T).name(),
+        [](const void* state, std::string& out) {
+            std::ostringstream os;
+            os << *static_cast<const T*>(state);
+            out += os.str();
+        },
+        [](const void* state) -> void* {
+            return new T(*static_cast<const T*>(state));
+        },
+        [](void* state) { delete static_cast<T*>(state); },
+    };
+    return Serializer(new T(std::move(value)), &table);
+}
+
+// ==================== serializer.cpp ====================
+#include "serializer.hpp"
+
+namespace {
+
+struct TextState { std::string text; };
+
+void write_text(const void* state, std::string& out) {
+    out += static_cast<const TextState*>(state)->text;
+}
+void* clone_text(const void* state) {
+    return new TextState(*static_cast<const TextState*>(state));
+}
+void destroy_text(void* state) {
+    delete static_cast<TextState*>(state);
+}
+
+const Serializer::VTable text_table{
+    "std::string", &write_text, &clone_text, &destroy_text};
+
+} // namespace
+
+Serializer::Serializer() noexcept = default;
+Serializer::Serializer(void* state, const VTable* vtable) noexcept
+    : state_(state), vtable_(vtable) {}
+Serializer::Serializer(const Serializer& other)
+    : state_(other.vtable_ ? other.vtable_->clone(other.state_) : nullptr),
+      vtable_(other.vtable_) {}
+Serializer::Serializer(Serializer&& other) noexcept
+    : state_(other.state_), vtable_(other.vtable_) {
+    other.state_ = nullptr;
+    other.vtable_ = nullptr;
+}
+Serializer& Serializer::operator=(Serializer other) noexcept {
+    swap(*this, other);
+    return *this;
+}
+Serializer::~Serializer() {
+    if (vtable_) vtable_->destroy(state_);
+}
+std::string Serializer::to_string() const {
+    std::string out;
+    if (vtable_) vtable_->write(state_, out);
+    return out;
+}
+const char* Serializer::type_name() const noexcept {
+    return vtable_ ? vtable_->type_name : "empty";
+}
+Serializer Serializer::from_text(std::string text) {
+    return Serializer(new TextState{std::move(text)}, &text_table);
+}
+\end{lstlisting}
+
+这与本册讲 C 标准库回调的那一章里手写 vtable 是同一手法：\kw{qsort} 的接口不带类型参数，比较函数只接受两个 \kw{void*}，状态以擦除指针传递。区别只在于这里由编译器替我们维护那张表的生成与生命周期——构造、复制、销毁三件事从“调用者自觉”变成“类的特殊成员函数”。代价也必须明说：一次间接调用（函数指针通常难以内联）、几乎必然伴随的堆分配（除非自己实现小对象优化）、以及类型检查后移。上面那个泛型钩子里的类型转换是运行期约定，把状态指针与表配错就是未定义行为，而模板版本里同样的错误会在编译期被拒绝。类型擦除是拿泛型的类型安全换接口的封闭性，不是免费交易。
+
+还有一点别美化：实现并未“完全”藏起来。为了支持任意类型，头文件里保留了一个薄薄的泛型钩子，它必须可见才能为每个类型生成表。真正的区别在内容量——钩子极小且几乎不会变动，而序列化策略、缓冲增长、错误处理这些会变的逻辑都留在 \kw{.cpp}。如果连这个钩子也不愿暴露，就只能接受封闭集合，回到前两章的方案。
+
+\section{构建与分发侧的配套}
+
+混合方案的稳定性一半来自源码布局，另一半来自构建配置的纪律。
+
+\begin{lstlisting}[style=cmakestyle,caption={构建与安装：实例化单元单独成列表、编译定义控制集合、头文件集分档}]
+add_library(widget_core STATIC)
+
+# 执行显式实例化的 TU 单独列出，方便审查“哪个类型由谁负责”
+target_sources(widget_core
+  PRIVATE
+    src/widget.cpp          # 内含 template class Widget<...>
+    src/serializer.cpp
+)
+
+target_compile_definitions(widget_core
+  PUBLIC
+    HANDBOOK_WIDGET_SET_STANDARD=1   # 标量 + std::string
+    HANDBOOK_WIDGET_SET_FILES=0      # 可选集合，关掉后连 extern 声明一起消失
+)
+
+# 头文件集分两档：公共头人人可用，实现头作为扩展契约的一部分单独安装
+target_include_directories(widget_core
+  PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+          $<INSTALL_INTERFACE:include>
+)
+
+install(DIRECTORY include/handbook DESTINATION include/handbook)
+install(FILES include/handbook/widget_impl.hpp
+        DESTINATION include/handbook)
+install(TARGETS widget_core ARCHIVE DESTINATION lib)
+\end{lstlisting}
+
+三点需要强调。其一，执行显式实例化的翻译单元应当单独成列表项并带注释，因为它是排查符号问题的唯一入口；把实例化定义塞进一个大单元，会让“某个类型的定义到底在哪”变成考古工作。其二，实例化集合是 API 的一部分。新增一个支持类型是一次库版本变更：需要同时加 \kw{extern template} 声明、加显式实例化定义、加 \seqkw{is\_preinstantiated} 特化，三者缺一都留下不对称症状。删除一个支持类型是破坏性变更——它把用户已有的隐式实例化路径断掉了：以前他的代码不依赖任何库内定义，升级后若没包含实现头，症状是链接期未定义引用，而不是干净的重编错误。这类变更要走正常的大版本流程。其三，库目标与头文件集的关系要写清：如果决定\textbf{不}安装实现头，库事实上就选了封闭集合路线，文档里不该再提扩展契约。
+
+符号唯一性可以用符号表工具核对，不需要凭感觉。多数实现把隐式实例化产生的成员函数放进可去重的段，而库里那份显式实例化定义是强符号。核对方法是把两侧列表对照：\kw{nm -C} \kw{--defined-only} \kw{libwidget.a}（\seqkw{llvm-nm} 同名同义）列出库中有定义的实例，\kw{nm -C} \kw{--undefined-only} 用户目标文件列出引用侧；两边应当严格配对。若用户目标文件里也出现了某个已支持类型的成员函数定义，说明 \kw{extern template} 没生效，收益已经丢失。真正的重复定义会由链接器报 \kw{multiple definition of}，那是最响亮的信号，值得当回归检查用。
+
+\section{决策表与四条出路}
+
+\begin{table}[htbp]
+\centering
+\caption{混合方案决策表：四个问题决定手段}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.12\textwidth}>{\raggedright\arraybackslash}p{0.13\textwidth}>{\raggedright\arraybackslash}p{0.11\textwidth}>{\raggedright\arraybackslash}p{0.12\textwidth}>{\raggedright\arraybackslash}p{0.29\textwidth}@{}}
+\toprule
+类型集合是否封闭 & 是否要求二进制分发 & 是否要求任意扩展 & 是否在乎每 TU 重复生成 & 建议方案 \\
+\midrule
+封闭 & 是 & 否 & 是 & 封闭集三件套：概念约束 + \kw{extern template} + 显式实例化定义，实现完全不外泄 \\
+\addlinespace
+半封闭（常见类型占多数） & 是 & 是 & 是 & 双头文件混合：常见类型走库里单一定义，自定义类型包含实现头 \\
+\addlinespace
+开放 & 任意 & 是 & 否 & 全暴露：定义留在公共头，接受每 TU 重复生成，换取最好的诊断 \\
+\addlinespace
+开放且要放进容器或插件边界 & 是 & 是 & 否 & 类型擦除：非模板接口 + \kw{std::function}、\kw{std::any} 或手写表 \\
+\addlinespace
+可枚举且都是值语义 & 任意 & 否 & 是 & 用 \kw{std::variant} 之类重载集合，把泛型改成值语义 \\
+\addlinespace
+封闭且只在本项目内部使用 & 否 & 否 & 否 & 全暴露即可，别为不存在的收益增加工程 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{guideline}[title={四条出路的排序}]
+按顺序提问，别一上来就挑手段。第一问：类型集合要不要开放？回答不了就暂时按封闭集设计——从封闭集改成混合方案的代价可控，反向改造要动用户的包含关系。第二问：要不要二进制分发与稳定的 ABI？不需要，则全暴露通常是最诚实的答案，模板诊断质量带来的开发期收益大于编译期开销。第三问：若前两问都是“要”，再在封闭集三件套与双头文件混合之间选——只有确实需要“用户可自带类型”这条后门时才引入实现头。第四问：接口是否要跨越运行期边界（容器里混多种类型、插件回调、异步队列）？是则类型擦除往往比继续加深模板更划算。这四问的顺序同时是复杂度递增的顺序：能用前者解决就别用后者。
+\end{guideline}
+
+\begin{compare}[title={三档契约下的头文件体积、编译时间与错误阶段}]
+\textbf{全暴露}：公共头最大（含全部定义与内部辅助），编译时间随实例化点密度上升，诊断最精准——错误发生在第一次看到定义的地方，模板错误消息带着完整上下文。\\[2pt]
+\textbf{封闭集三件套}：公共头最小，用户 TU 的实例化开销几乎归零，库侧重编代价集中在一处；误用集合外的类型在编译期就被约束拒绝，语义清楚。\\[2pt]
+\textbf{混合方案}：公共头介于两者之间。默认契约下的用户 TU 编译时间与封闭集方案接近；扩展契约下的包含者把定义拉回自己的 TU，承担接近全暴露的开销。错误阶段是三档里最需要注意的差别：默认契约路径的误用在编译期可见，而“用了集合外类型又没包含实现头”这一类误用，默认症状落在链接期，需要额外一层检测 trait 才谈得上前移。
+\end{compare}
+
+\begin{note}[title={不要用只暴露接口的做法实现开放式泛型}]
+最诱人的错误做法是：把所有模板定义塞进 \kw{.cpp}，公共头里只留类模板声明，然后宣称“这就是封装”。编译模型不接受这个声明——隐式实例化需要定义可见，于是调用者自定义类型的对象在编译期一片祥和（类模板的实例化只需要声明），到链接期才炸出一串未定义引用。你没有实现隐藏，只是把编译错误换成链接错误，并且换成更难定位、更难解释、离误用现场更远的那种。要让这条路线成立，必须\textbf{同时}具备封闭类型集合与显式实例化定义，两者缺一不可。
+\end{note}
+
+\begin{warning}[title={混合方案的两项长期维护风险}]
+第一，实现头文件的地位会漂移。只要它在安装目录里、只要文档教用户包含它，很快就有人的代码依赖它内部的辅助模板、私有重载甚至某个常量的具体值；此时它\textbf{事实上}成为公共 API，却按内部实现的名义给不出任何兼容性承诺。缓解办法是在文件头部声明“内容随时可变、不单独版本化”，并在评审时禁止从实现头向外暴露新名字。第二，\kw{extern template} 声明与显式实例化定义必须逐类型成对维护，漏一个的症状是不对称的：只写声明而忘实例化定义，所有使用点都报未定义引用（除非它们包含实现头），故障面大、发现快；只写实例化定义而忘声明，用户 TU 仍各自隐式实例化并输出可去重的弱符号，链接照常通过，包体积与编译时间悄悄变大——这种错误没有任何报警，只能靠符号表核对或回归脚本发现。两类不对称都建议在 CI 里用一条固定的符号检查覆盖。
+\end{warning}
+
+混合方案的定位值得再总结一句：它不是“封闭集方案不够彻底”的折中，而是把契约显式分成两档的工程。默认契约这一档要保证的东西与封闭集方案完全相同，因此可以毫不妥协；扩展契约这一档保证的是可达性而不是隐蔽性，承认它需要包含实现头，比假装可见性规则可以被绕开诚实得多。
+
+\chapter{选型与跨语言迁移}
+
+前面几章分别在五种语言里回答过同一个问题：类型参数到底活在哪里。本章不再引入新语法，只做两件收尾的事：把同一个需求在各语言里的落地方式并排摆出来，然后清算跨语言迁移时最容易带错的习惯。需求取一个足够小的样子：一个类型安全的动态数组，配一个按元素类型把内容序列化成文本的函数。
+
+\section{同一个需求在五种语言里怎么落地}
+
+这个需求小到能用十行代码写完，却把本部分一直在用的四条分类轴全部顶了出来：类型参数在运行期能否参与分派、原生类型如何存放、扩展一个新实参类型要付出什么、错误在哪个阶段暴露。任何一次跨语言迁移，本质上都是这四条轴上的答案发生变化，而语法只是这些变化的表象。
+
+还要先说清一点：这两半需求的难度完全不同。动态数组那一半几乎与类型无关——只要元素能拷贝或移动，实参是什么并不影响实现，所以在所有语言里它都能写成参数化形式，差别只在存放方式。难的是序列化那一半：它必须知道元素的类型才能决定怎么写，于是它把运行期身份这条轴从隐含变成必答。选型讨论里凡是把这两半混在一起谈的，最后都会得出“泛型有时能有时不能”这种没用的结论。
+
+下面这张表按语言把四个维度排在一起，读的时候建议逐列横读，而不是逐行竖读。
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.10\textwidth} >{\raggedright\arraybackslash}p{0.18\textwidth} >{\raggedright\arraybackslash}p{0.17\textwidth} >{\raggedright\arraybackslash}p{0.20\textwidth} >{\raggedright\arraybackslash}p{0.15\textwidth}@{}}
+\caption{同一个需求在五种语言里的落地方式} \\
+\toprule
+\textbf{语言} & \textbf{运行期类型分派} & \textbf{原生类型存放} & \textbf{扩展新实参类型的成本} & \textbf{错误暴露阶段} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{语言} & \textbf{运行期类型分派} & \textbf{原生类型存放} & \textbf{扩展新实参类型的成本} & \textbf{错误暴露阶段} \\
+\midrule
+\endhead
+\clabel & 无类型参数可言：运行期身份全靠手写的 tag & \kw{void*} 指针或固定宽度缓冲，值的拷贝与释放都要手工配对 & 每加一个类型都要再写一份包装，或再展开一遍宏 & 多数问题到运行期才暴露 \\
+\addlinespace
+\javalabel & 不能：\kw{T.class} 与 \kw{instanceof T} 都不合法，要身份就得显式传 \kw{Class} & 存引用；原始类型不能作实参，只能用装箱类型 & 直接可用，字节码只有一份，运行期插入校验用的转型 & 编译期做类型检查，错配常推迟到运行期 \\
+\addlinespace
+\csharplabel & 能：\kw{typeof(T)} 是真实类型对象，可分派、可 \kw{is} 与 \kw{as} & 存引用；值类型按实参特化生成代码，无装箱 & 直接可用，运行期按需生成或复用共享体 & 约束违反在编译期；反射与分支错配到运行期 \\
+\addlinespace
+\rustlabel & 概念上无此问：\kw{T} 不产生运行期身份；需要边界或改走 \kw{dyn Trait}、\kw{Any} & 按值布局，大小随单体化后的实参确定 & 在使用它的 crate 里重新编译出那个单体，且实现必须可见 & 在使用点所在 crate 的检查期，边界不满足的诊断较长 \\
+\addlinespace
+\cpplabel & 概念上无此问：\kw{T} 只活在编译期；分派靠 \kw{if constexpr}、重载与概念 & 按值存放，无装箱；少数特化是有意为之的取舍 & 定义可见则直接可用；否则要重编库，或补一行显式实例化 & 实例化点；库内私有类型的问题推迟到使用者编译时 \\
+\bottomrule
+\end{longtable}
+
+\begin{note}[title={最容易被忽略的那一列}]
+迁移时人们最先适应的是前两列——能不能按类型分派、值怎么存——因为它们直接改写代码。最常被忽略的是最后一列：错误暴露的阶段。同一个错误在一种语言里是编译期一行诊断，在另一种语言里可能是一次运行期类型转换异常，甚至是一个静默的数据损坏。阶段的差异不改变代码写法，却决定这套写法能不能放心地交给别人用。
+\end{note}
+
+\textbf{运行期分派。}这是唯一一条把五种语言劈成两半的轴。在带运行期具化的语言里，类型参数是程序的一部分，可以问、可以比、可以据此走分支；在编译期生成代码的语言里，问“这个 \kw{T} 是什么”没有意义，因为函数体被复制出来时 \kw{T} 已经被替换掉了，根本不存在一个可以查询的对象。前者可以在函数体里写“如果元素是整数就这样做”，后者必须把同样的判断前移到编译期，用 trait、概念或重载来决定生成哪一份代码。
+
+这条轴的两侧不是“有与没有”，而是“付出在哪里”。有运行期身份的语言要在每次调用上做一次判断，换来的是同一份代码可以覆盖以后出现的类型；没有运行期身份的语言把判断挪到编译期，换来的是执行路径上不再有这一步判断，代价是这份代码在写下时就要知道该走哪条路。序列化这个需求恰好卡在中间：它既不像容器那样与类型无关，也不像插件注册表那样真的需要运行期查表，所以两边的写法都说得通——这正是它适合当对照样本的原因。
+
+\textbf{原生存放。}动态数组装的是值还是引用，看起来是实现细节，实际上决定了 API 的形状。靠引用装值的语言，元素的可空性、身份语义和装箱开销都写在接口里；按值存放的语言，元素大小成为接口的一部分，于是移动代价、指针稳定性和容量增长策略都要重新讨论。手写 tag 与 \kw{void*} 的那条路则是第三种：值的大小由调用方保证，容器本身不做判断，正确性完全落在约定上。
+
+装箱不是可以“优化掉”的细节，而是接口的一部分。在只能装引用的那类语言里，把小整数放进集合意味着每次读写都跨过一层间接，元素之间不再连续；能按值存放的语言里，元素在缓冲区里紧挨着，但“取出一个元素”不再是取引用而是复制或移动，于是接口上必须出现移动语义或返回副本。同一个 \kw{push} 在两种语言里名字一样，含义不同。迁移时只翻译语法不翻译这一层，就会在别的语言里寻找并不存在的“引用”，或者把副本当成别名用。
+
+\textbf{扩展成本。}在具化或擦除的语言里，加一个新实参类型通常是“直接可用”，不需要动库；在编译期生成代码的语言里，加一个新类型意味着多生成一份代码，而这一份代码要在看得见模板实现的地方才能生成。这个差别决定了库作者的两难：要么把实现暴露在头文件里，要么固定住一组可支持的类型。本部分的“封闭类型集”一节给过三种应对，混合方案那一节给出折衷。
+
+扩展成本还有一个常被漏掉的承担者：使用方。当实现暴露在接口里时，使用方每换一个新实参就要多编译一遍这段代码，而它并没有在自己的项目里“写”这个函数。显式实例化把这份活儿收回到库里，换来的是另一个限制：库里没列出的类型，使用方必须自己想办法，要么退回暴露定义，要么把接口降级成运行期多态。这笔账在两种方案之间来回转移，从来没有消失过。
+
+下面两段短代码是本章唯一的语法样本，用来对照同一条 if 分别在编译期与运行期求值。
+
+\begin{lstlisting}[style=cppstyle,caption={C++：分派由 trait 在编译期决定，未选中的分支不会实例化}]
+template <typename T>
+std::string encode(const std::vector<T>& items) {
+    std::string out;
+    for (const T& x : items) {
+        if constexpr (std::integral<T>) out += std::to_string(x) + ";";
+        else                            out += to_text(x) + ";";
+    }
+    return out;
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=csharpstyle,caption={C\#：查的是运行期类型对象，同一个方法体对所有实参共享}]
+public static string Encode<T>(IReadOnlyList<T> items) {
+    var sb = new StringBuilder();
+    if (typeof(T).IsPrimitive) {
+        foreach (T item in items) sb.Append(item).Append(';');
+    } else {
+        foreach (T item in items) sb.Append(item.ToString()).Append(';');
+    }
+    return sb.ToString();
+}
+\end{lstlisting}
+
+两段代码读起来一样，出问题的方式完全不同。第一段里那个 \kw{else} 分支只在类型不满足整数概念时才被实例化，所以库里可以放心地不提供整数版本；第二段里 \kw{typeof(T)} 是运行期才知道的值，方法体必须为所有可能的实参都能编译、都能执行，代价是分支判断本身发生在每次调用上。
+
+另外三种语言不写代码，只说清它们把判断放在哪。擦除那条路要显式把类型当参数传进来：函数签名里多出一个类对象或类型令牌，调用方负责提供，容器负责校验，校验失败在运行期抛出。手写 tag 那条路把判断做成数据：每个元素带一个枚举值，序列化函数是一个按枚举分派的分支，新增类型要同时改枚举、改分配、改分派三处，编译器能帮忙检查分支是否穷尽，但帮不上“这个指针其实指向别的类型”。编译期生成那条路与第一段同构，只是判断的写法从 trait 换成边界或概念。
+
+最后回到表格的最后一列，把五种语言的错误阶段用一句话排出来：一种是运行期崩，一种是编译期拦一半、运行期补另一半，一种是约束在编译期、身份误用在运行期，两种是全在编译期但位置不同——一个在使用方，一个在库方。这句排序是后面几节所有讨论的底座。
+
+\section{从 Java、C\# 迁到 C++ 的常见误解}
+
+这三个误解有同一个来源：在带运行期类型信息的语言里待久了，会把“类型信息一直在那儿，随时可以问”当成理所当然。带着这个前提写 C++，代码会在第一个实参上表现良好，在第二个实参上出现奇怪的行为，而且很难归因。逐条拆开看。
+
+\textbf{误解一：以为模板参数在运行期也有一个类型对象。}症状很典型——想把 C\# 里查运行期类型的分支直译过去，于是写出比较字符串的 \kw{typeid(T).name()}、或者给每个实例挂一张运行期表；想在容器里“按实参类型走不同路径”，结果写出脆弱又难测的代码。这类代码的共同特征是：它在第一个实参上是对的，在第二个实参上才开始错，而且错得没有规律。
+
+正确做法分三层，按顺序试，前一层能解决就不要进下一层：
+\begin{itemize}
+\item 编译期分层。用 \kw{if constexpr} 加 trait，或者用概念把实参分成几组，让不同组生成不同的代码。这一层完全符合“\kw{T} 只活在编译期”这个事实，诊断也最短。
+\item 重载分层。当分支不是按类型特征而是按类型身份时，让每个类型自己带一个重载或函数对象，容器只调用名字。这层没有 trait 的间接性，读起来接近普通函数调用。
+\item 运行期身份。只有确实需要运行期知道类型时才用 \kw{typeid} 与 \kw{dynamic\_cast}：日志、跨模块注册表、序列化框架按类型查找处理器。
+\end{itemize}
+
+第三层要写清楚代价，否则迁移过来的人以为它是免费的。\kw{dynamic\_cast} 依赖多态类型与运行时信息，代价随继承层次与转换路径变化，而且在编译期检查不出“这个实参根本转不过去”。运行时信息本身可以在工程里被整体关掉，关掉后这段代码不再是“慢一点”而是“编不过”，于是它成了整个库的隐性配置依赖。\kw{typeid(T).name()} 返回实现自定义的名字，既可能混淆同名不同命名空间的类型，也可能随工具链版本改变，不适合当稳定的键；真要把类型当键，\kw{std::type\_index}\allowbreak{} 比字符串稳妥，但它仍然只覆盖带有运行时信息的类型。最后一个容易踩的坑是跨模块：同一个类型从两个动态库里各自取运行时信息，可能不被视为同一个对象，注册表就会神秘地查不到项。
+
+\begin{warning}[title={别把运行期分派塞进模板体}]
+在编译期生成代码的语言里写运行期类型分支，最坏的结果不是低效，而是“看起来安全”：分支永远走不到的那条路径不会被任何测试覆盖，而它可能在某个新实参下第一次执行。相比之下，编译期分层在实参不匹配时直接生成失败，错误至少是可见的。
+\end{warning}
+
+\textbf{误解二：以为可以像 C\# 那样只声明不暴露，靠运行期生成代码。}症状是库作者把模板定义留在源文件里、只导出头文件的声明，然后在自己的测试工程里一切正常，等到使用者换一个实参类型就报链接错误，于是怀疑是编译器的问题。这里的关键在于“测试工程正常”这件事毫无信息量：库自己的编译单元用了那个实参，代码就在那里生成了，看起来像是接口已经提供；使用者看不见这段代码，只看见符号找不到。
+
+C++ 没有“运行期按需生成”这条路：要么把定义暴露在头文件里，让每个使用点自己实例化，要么在库里把要支持的类型显式实例化一遍再由使用方引用。显式实例化还有配套的声明形式，能让使用点不要再重复生成一次，但这只是将生成地点固定下来的手段，不是让库“预支”未知类型的办法——库里不可能实例化它还没见过的类型。这两条路的取舍、以及它们为什么会变成“支持列表”，本部分的“封闭类型集”与“混合方案”两节已经展开，这里只强调一句：这不是风格问题，是可达性问题。
+
+\textbf{误解三：以为不写约束就没有检查。}症状是新手看到没有约束的模板就以为它“什么都不检查”，或者反过来，看到长长的实例化错误就以为约束失效了。
+
+事实是：不写约束照样检查，只是检查推迟到实例化点，诊断从错误信息里层层展开的调用栈里冒出来，长度和距离都让人误判原因。诊断长是有机制原因的：编译器在生成这段代码时才发现某个成员不存在或某次转换不合法，而它报错的位置在模板体内部，与真正写错的那个调用点隔着若干层。写了约束以后，要求被编码成一个可以直接判断的命题，编译器能在为实参挑候选阶段就说明“这个实参不满足要求”，错误出现在使用者写下的那一行。
+
+所以写概念不是新增一条规则，而是把同一件事的诊断前移，把“这份代码生成不了”变成“这个实参不满足要求”。这个前移带来的实际收益不是性能也不是产物大小，而是可归因性：新人能从错误信息里读出自己该改哪儿，代码评审也不用再靠猜。
+
+\textbf{顺带一条从 C\# 带过来的习惯：}\kw{where T : new()} 在 C++ 没有语言级对应物。约束一个类型必须有无参构造，要靠 \kw{requires} 表达式自己写出来，或者直接用标准库里的 \kw{std::default\_initializable}\allowbreak{}。注意这不是“语法糖换了个写法”：\kw{new()}\allowbreak{} 约束只承认公开无参构造函数，而一个手写的 \kw{requires}\allowbreak{} 能表达任意成员与表达式要求，也能表达“有但不可访问”这类细粒度差异。想要接近原语义，就只写构造要求，不要顺手加上可复制、可默认这些无关条件。
+
+还有一层差别值得写进设计文档：C\# 的约束是语言与运行时共同的合约，编译器与生成代码都看得见；C++ 里这一合约由库作者自己维护。写出来的概念属于库的接口，不是语言规定的东西，换一个库、换一组概念，同一批实参可能满足也可能不满足。所以迁移时不要只把约束抄成概念，还要抄一句“这条要求的适用范围到此为止”。
+
+\begin{warning}[title={约束不是可选的装饰}]
+把 C\# 的约束“翻译”成 C++ 的概念时，最常见的错误是加严：为了少写几个错误，顺手把实参要求写成一组很强的条件，于是原本合法的用法被拒。约束的作用是把诊断挪到调用点，不是缩小合法输入集。写之前先问自己：这条条件是我真的需要，还是只是我懒得解释错误。
+\end{warning}
+
+\begin{stdbox}[title={概念的定位}]
+\cppxxlabel{C++20} 的设施用于在模板定义处表达实参必须满足的要求；不满足要求的候选在重载解析阶段就被排除，而不是等到生成代码时才失败。这是措辞层面的近似，具体规则请以标准文本为准。
+\end{stdbox}
+
+\section{从 C++ 迁到 Rust、C\#、Java 的对应误解}
+
+第一个误解是把 C++ 的习惯带进 Rust：以为可以“只在库里实例化一次，外面完全不暴露”。Rust 没有显式实例化这个概念，单体化发生在使用这段泛型代码的那个 crate 里，实现必须在编译使用方时可见。想在库内部把实现藏起来、只支持一组固定类型，正确思路不是找“对应的实例化语法”，而是改变接口形状：把真正的实现写成一组非泛型的包装函数导出，或者把参数换成 trait 对象，用一张运行期虚表换回实现的隐藏。两种做法都在为“不想暴露实现”付出代价，只是付法不同，这一点与本部分混合方案那一节的结论完全一致。
+
+还要顺带纠正一个方向上的误解：从 C++ 过来的人常以为 Rust 的边界检查与 C++ 的概念是一回事。两者目的接近，机制不同——一边是编译期按边界挑候选，一边是类型系统本身在使用点核对。迁移时值得重学的不是语法，而是“错误出现在哪个 crate”：在使用方，就在这一侧改代码或改接口；不要指望在库里补一行声明把它解决。
+
+第二个误解是把 Java 的擦除当成“运行期什么都不知道”，进而以为需要反射时可以从 \kw{Class} 对象把泛型信息重建回来。方向要理清：擦除发生在变量与表达式的类型上，而类文件里保留的泛型签名属于类本身的结构信息。因此“拿到一个 \kw{List} 的 \kw{Class} 再问它装什么”是无解的，但“让使用者继承一个记录了实参的类型、再从父类签名里读回它”是可行的，这就是类型令牌那类做法的原理。它是设计出来的绕行手段，不是运行期真实存在的那个类型参数，遇到反射生成、代理、以及无法构造子类的场景就会露出边界。
+
+从 C++ 或 C\# 过去的人还容易低估擦除带来的第二层影响：编译期通过的代码可能在运行期才被发现类型不对，而发现地点离写错的地点很远。这不代表擦除“更不安全”，它和 C++ 的推迟暴露是两种不同的推迟方式。设计 API 时把这条算进去：需要运行期按元素类型分派的接口，就把类型当显式参数传进来，不要指望从集合本身问出来。
+
+第三个误解是把 C\# 的具化理解成“每个实参类型一份机器码”。本部分的 C\# 一章已经讲过实际策略：值类型按实参特化，引用类型共享一份实例化体。这里只做决策层面的引用：所以“类型太多导致代码膨胀”这个在 C++ 与 Rust 里必须认真算的账，在 C\# 里主要发生在值类型上；反过来，“能不能靠共享省代码”也只在引用类型上成立。跨语言讨论膨胀问题时不区分这两类，就会得出错误的结论。
+
+同一个共享策略还有一处会在选型时咬人：共享意味着某些按类型区分的东西在引用类型之间并不真的分开。写设计文档时要说清楚这一点，别假设每个实参类型都有完全独立的一份状态。至于运行期身份可以到处查——这是从 C++ 迁过去最舒服的地方，也是反向迁移最容易带错的东西，因为那边根本没有对应物。
+
+顺带一条容易被忽略的：从 C++ 过去的人会以为“对类型参数做运算”是泛型天然能做的事。在 C++ 里 \kw{T} 上写 \kw{+} 完全可以，因为代码生成时会检查这个表达式对这个实参是否成立；在擦除那条路上，运算符不能作用于类型参数，只能改成显式的方法调用或换成接口；在 Rust 里运算符是标准库特性的重载，要靠边界把“这个类型支持加法”写出来；在 C\# 里较新的运行时提供了表达数值要求的接口，但要按它的规矩声明。同一句代码在四种语言里的可行性差别，只取决于该语言把运算与类型的关系表达在哪里，而不是“泛型强不强”。
+
+三种误解的共同点很清楚：都是把一个语言的实现策略当成泛型本身的性质。下面这张表把两个方向的误解、症状与正确做法并排列出，可以当作迁移自查表。
+
+\begin{table}[htbp]
+\centering
+\caption{跨语言迁移的常见误解自查表}
+\begin{tabularx}{0.83\textwidth}{>{\raggedright\arraybackslash}p{0.17\textwidth} >{\raggedright\arraybackslash}p{0.30\textwidth} >{\raggedright\arraybackslash}X}
+\toprule
+误解 & 症状 & 正确做法\\
+\midrule
+\strut 模板参数在运行期有类型对象 & 比较 \kw{typeid} 名字、按 \kw{T} 建运行期表、代码脆弱难测 & 编译期用 \kw{if constexpr} 与概念或重载；确需运行期身份再用运行时信息，并接受其代价与限制\\
+\strut 可以只声明不暴露，等运行期生成 & 库自己测试正常，使用者换实参就报未定义符号 & 暴露定义，或在库里显式实例化一组类型再让使用方引用\\
+\strut 不写约束就没有检查 & 认为无约束模板“不检查”，或把长长的实例化错误当成约束失效 & 检查一直在，只是发生在实例化点；写概念是为了把诊断前移\\
+\strut 语言级构造约束到处都有 & 找不到 \kw{new()}\allowbreak{} 的对应写法，就放松或加严要求 & 用 \kw{requires} 表达式精确写构造要求，别顺带加无关条件\\
+\strut 在 Rust 里也能实例化一次给外面用 & 找显式实例化语法，实现藏起来后使用方编译失败 & 单体化在使用方发生、实现必须可见；要隐藏就改导出包装或 trait 对象\\
+\strut 擦除后还能靠 \kw{Class} 重建实参 & 想从集合的类对象问出元素类型，处处失败 & 认清类文件签名属于结构信息，需要时走类型令牌那类绕行手段，并接受其边界\\
+\strut 具化等于每类型一份代码 & 在 C\# 里过度担心代码膨胀，或误判共享带来的语义 & 值类型特化、引用类型共享；膨胀账只按值类型算\\
+\strut 对类型参数做运算是天生能力 & 把加法之类的写法照搬进擦除语言，编译不过就到处找重载 & 按该语言的规矩声明要求：显式方法调用、边界或数值接口\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{什么时候不该用泛型}
+
+泛型不是默认选项，而是一个有代价的设计决策。下面这对清单给出决策两侧的内容。
+
+\begin{compare}[title={泛型收益与泛型成本}]
+\begin{itemize}
+\item 收益：调用点少写重复代码，容器与算法可以成套提供；类型检查落在编译期，接口上写清了“装什么”；对使用方来说扩展新实参往往不需要改库。
+\item 成本：代码量随实参增长，编译时间与产物体积都要算；诊断可能变长、定位变远；实现可见性与接口稳定性互相牵扯，头文件里多一个成员就可能重编所有使用方；跨语言、跨模块边界的规则各不相同，一套设计要在多个地方分别验证。
+\end{itemize}
+\end{compare}
+
+判断从哪里开始：先数类型。类型集合小而稳定时，泛型带来的抽象收益通常抵不上它造成的成本。三个更清晰的选择是重载、\kw{std::variant} 加 \kw{std::visit}\allowbreak{}、或者一张显式的函数表。重载没有额外的机制，错误直接指向函数名与实参；变体加访问器把“可能的类型”写在类型本身上，分支在编译期枚举完整，新增分支漏写会被检查出来；函数表最简单，而且这三条路都能放进 C 接口——泛型接口做不到这一点，因为接口两侧必须共享同一套生成规则。这里不给数字，但机制本身就说明问题：非模板接口只有一份代码要链接，符号是普通函数符号；模板接口则把生成的活儿分给每个使用点，链接期要跨单元合并重复实例。
+
+三者的适用条件可以再窄一点：
+\begin{itemize}
+\item 类型已知且极少，调用方式随类型不同：直接重载。代码量与泛型方案相差不大，读起来更直白。
+\item 类型是一组互斥的取值，且需要“一次只能装一个”：变体。它同时把存放与分派都写进类型，运行期靠访问器分支。
+\item 需要跨模块或跨语言扩展、由别人注册新类型：函数表加一个显式类型标识。这是唯一一种让“新增类型”成为运行期动作的方案。
+\end{itemize}
+
+这三条覆盖了很多被写成泛型的场景。真正必须参数化的，是“调用方自己带来一个库里没见过的类型，还要把它塞进同一个容器”的那类需求。
+
+第二个判断看实际用量。若一个“通用”容器最终只有一两个类型真的在用，泛型只是把简单问题复杂化：多出来的那层参数没有换来复用，却带来了可读性损失与诊断成本。这种情况写具体类型，等第二个类型真的出现再抽象。判断标准不是“将来可能需要”，而是现在能不能列出至少两个真实的实参类型与它们的差异。列不出来，就不要为想象中的复用付账。
+
+第三个判断看边界。跨动态库边界时，优先非模板接口加一组显式实例化：库里生成确定的那几个实例，导出普通符号，使用方不需要看见实现，也不需要在自己的编译单元里再生成一次。类型集合一旦开放、必须让使用方自带实参，才回到“暴露定义”这条路。边界还牵扯两件事：插件与宿主可能用不同的编译选项或不同版本的库编译，同一个模板实例在两侧未必是同一个东西；而普通函数符号不存在这个问题，这也是接口层偏爱非模板形式的另一个原因。
+
+还有两个次要但常被提起的角度。测试：非模板接口可以用一组普通用例覆盖，模板接口必须按实参类型各铺一份用例，覆盖矩阵随类型数增长，漏掉的那一格直到某个使用者第一次用到才暴露。评审：错误可读性是团队成本的一部分，一个新人能从“找不到重载”里读出的信息，远多于从一长串生成过程里读出的信息；把这一点当作选型因素并不肤浅。
+
+反过来也要防止另一种偏差：因为怕诊断长就彻底不用参数化机制，把本该是一组容器的东西写成几份平行实现，之后每次改动都要同步多处。取舍的落点是类型集合是否可枚举，而不是代码美观。
+
+\begin{bestpractice}[title={泛型是设计决策，不是默认选项}]
+先回答三个问题再决定用不用泛型：类型集合是封闭还是开放；要不要运行期类型身份；实现能不能暴露在接口里。三个答案里只要有一个偏向“封闭、不要、不能”，非模板方案往往更合适。把泛型当作默认写法的项目，会在多年后花更多力气去补那些本该用函数表表达的地方。
+\end{bestpractice}
+
+\section{收束：三条判断与一条流程}
+
+把本章与前几章的结论压到一起，只剩三条判断。它们不是风格偏好，而是把语言与手法基本确定下来的三个变量。
+
+\begin{guideline}[title={决定方案的三条判断}]
+\begin{itemize}
+\item 类型集合封闭还是开放。封闭就枚举出来：变体、函数表、显式实例化列表；开放才需要参数化的机制。
+\item 要不要运行期类型身份。要，就往具化、trait 对象、tag 与运行时信息那一侧靠；不要，就能拿到直接存放与编译期分派这两条好处。
+\item 实例化定义在编译期还是运行期。编译期生成意味着实现必须可见、代码量随实参增长；运行期生成或按需填充意味着接口更小、但错误可能推迟。
+\end{itemize}
+\end{guideline}
+
+第一条判断先于语言选择。类型集合封闭时，任何语言都能用枚举的方式写好，甚至可以刻意选一个不强制你用泛型的写法；集合开放时，才轮到参数化机制上场。这条判断的答案会变——今天三个类型，明年七个——但变的时候是需求变了，不是当初选型错了。
+
+第二条判断决定手法。需要运行期身份的场景有共同特征：处理的类型里有来自别处的（插件、序列化数据、外部格式），或者要求程序在运行时才决定走哪条路。这两类场景在编译期生成的语言里都必须换成显式设计：带 tag 的联合、虚表、或者一个由使用方填写的类型特征表。反过来，如果所有分派都能在写代码时确定，就不要留一个运行期的判断在路径上。
+
+第三条判断决定接口形状。实现可见与否牵扯的不只是编译时间，还有版本策略与二进制兼容性：暴露定义时，实现是接口的一部分，改动实现等于改动接口；固定实例化列表时，实现被收在库里，代价是支持范围要由库作者提前替使用方决定。
+
+这三条一旦确定，剩下的几乎都只是查表：语言决定第一与第三条的可行范围，手法决定第二条的落点。下面这棵流程树按文字层级表达，不必画图也能照做。
+
+\begin{itemize}
+\item 先问类型集合能否枚举。
+  \begin{itemize}
+  \item 能，而且数量少、变动慢：优先非泛型方案。
+    \begin{itemize}
+    \item 需要传给别的语言或别的模块：函数表加普通接口。
+    \item 只在内部使用，要求分支完整：变体加访问器。
+    \end{itemize}
+  \item 能枚举但会增长：封闭集加显式实例化那一套，把新类型的成本算清楚。
+  \item 不能枚举：进入泛型路线。
+  \end{itemize}
+\item 再问要不要运行期按类型分派。
+  \begin{itemize}
+  \item 不要：分派写进编译期判断，靠该语言的要求机制（trait 边界、概念、静态检查）保证实参可用。
+  \item 要：选择有运行期身份的一侧；若语言不提供，就引入显式的类型令牌或 tag。
+  \end{itemize}
+\item 最后问实现可见性。
+  \begin{itemize}
+  \item 可以公开：走定义暴露，接受编译时间与产物成本。
+  \item 必须隐藏：固定支持的类型列表，或在接口处降级成运行期多态。
+  \end{itemize}
+\item 收尾检查两件事。
+  \begin{itemize}
+  \item 错误暴露阶段是否可接受：能否在调用点看见原因，而不是在层层展开的生成过程之后。
+  \item 跨边界行为是否验证过：动态库、插件、别的语言各跑一遍，别假设一致。
+  \end{itemize}
+\end{itemize}
+
+把这三条判断按语言家族读一遍，会得到一张很粗的地图：需要“新类型不用重编、运行期还能查到是谁”的组合，就落在带运行期具化那一侧，接受它带来的间接层与生成成本；需要“存放直接、分派完全在编译期”的组合，就落在编译期生成那一侧，接受实现可见性与诊断长度；两者都要，且要求二进制边界稳定，则多半得回到 tag 与函数表。没有哪一种语言同时站在三格上，这也是为什么“换语言”看起来像在换语法，其实是在换答案。
+
+这张地图同时给出一个务实的结论：同一个系统里可以同时用两侧。核心数据用编译期生成的形式写，边界与扩展点用运行期身份的形式写，中间靠一层显式转换连起来——本部分讨论混合方案时得到的正是这个形状，只是当时在单一语言内部看它。
+
+最后重复一次那个最容易被忽略的维度。语法差异看得见，改两遍代码就习惯了；阶段的差异看不见，它只在事故里现身。迁移之前把“这个错误会在哪里出现”写成一句可以核对的话，比记住任何一种语言的细节更有用。
+\appendix
+
+
+\chapter{四语言泛型机制与诊断信息速查}
+
+本附录把前面各章的机制压缩成可对照的表格，并把最常见的诊断原文按语言归位。
+它不按章节顺序阅读，而按故障现场查阅：先判断错误发生在哪个阶段，再锁定语言，最后回到机制表确认自己的假设。
+
+\begin{note}[title={速查表的用法：先定阶段，再定语言}]
+拿到一条报错时，先问三件事：它在编译期、链接期还是运行期出现；它报的是声明还是定义；它的实例化（或特化）发生在谁的视野里。
+阶段决定用哪一手工具（编译器、链接器、运行时），语言只决定该阶段的名称。
+本附录的机制总表回答“这里该不该报错”，诊断表回答“报错长什么样、第一眼看哪一行”。
+\end{note}
+
+\section{机制总表}
+
+下面的机制总表是本附录的核心。七列全部按同一口径填写，可以直接横向比较。
+
+\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.075\textwidth}
+ >{\raggedright\arraybackslash}p{0.17\textwidth}
+ >{\raggedright\arraybackslash}p{0.095\textwidth}
+ >{\raggedright\arraybackslash}p{0.15\textwidth}
+ >{\raggedright\arraybackslash}p{0.135\textwidth}
+ >{\raggedright\arraybackslash}p{0.095\textwidth}
+ >{\raggedright\arraybackslash}p{0.09\textwidth}@{}}
+\caption{Java、C\#、Rust、\cpp{}、C 的泛型机制对照}\\
+\toprule
+语言 & 约束写法 & 运行期是否具化 & 代码生成策略 & 原生与值类型实参 & 变型性支持 & 实现须在使用点可见\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\textbf{\javalabel} &
+\seqkw{<T extends Comparable<T>>}；无声明处变型语法 &
+否，类型参数被擦为原始类型 &
+一份字节码，取出点插强制转换，覆写处生成桥接方法 &
+不支持原生实参，只能装箱为包装类 &
+站点变型：\seqkw{? extends} 与 \seqkw{? super} &
+仅需类型声明可见\\
+\textbf{\csharplabel} &
+\seqkw{where T : struct, IComparable<T>}，另有 \kw{new()} &
+是：每个值类型实参自成闭合类型 &
+编译到中间语言，即时编译按实参特化；引用类型实参共享机器码 &
+值类型不装箱，直接内联进数组与字段 &
+声明处变型：\kw{in}、\kw{out} &
+仅需程序集元数据可见\\
+\textbf{\rustlabel} &
+\seqkw{T: Serialize + Clone}；\kw{dyn Trait} 要求对象安全 &
+否：特化后类型信息消失，只剩 \kw{Any} 一类逃生口 &
+每个实参组合生成一份机器码，可跨翻译单元重复 &
+无装箱概念；\kw{dyn} 走胖指针加方法表 &
+无声明处语法，由字段与 \seqkw{PhantomData} 推定 &
+trait 须被 \kw{use} 入作用域\\
+\textbf{\cpplabel} &
+\cpp{11} 用替换失败与 \seqkw{std::enable\_if}；\cpp{20} 用概念与 \kw{requires} &
+否：模板参数在目标文件里不留痕迹 &
+每特化一份实例，弱符号在链接期合并 &
+原生类型直接绑定，无装箱问题 &
+模板参数本身无变型性 &
+定义须在实例化点可见，否则靠显式实例化\\
+\textbf{\clabel} &
+无泛型：\kw{\_Generic} 关联表、宏、\kw{void*} 加约定 &
+不适用；转为 \kw{void*} 后类型即丢 &
+预处理器文本展开，或逐类型手写，或用宏模板批量生成 &
+无重载决议，尺寸与对齐靠手写保证 &
+无 &
+宏体与关联表须在同一翻译单元内\\
+\end{longtable}
+\normalsize
+
+读表要点：\cpp{} 与 Rust 同属零成本抽象，但失败阶段不同——前者把未满足的约束拖到实例化乃至链接，后者在类型检查阶段就报出；
+\javalabel 与 \csharplabel 都把约束写进类型系统，区别只在运行期是否保留实参类型；
+\clabel 根本不在同一层面，它的“泛型”是三条替代路线的合称。
+
+\section{诊断信息定位表}
+
+\subsection{\cpp{} 的四种现场}
+
+\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.12\textwidth}
+ >{\raggedright\arraybackslash}p{0.44\textwidth}
+ >{\raggedright\arraybackslash}p{0.27\textwidth}@{}}
+\caption{\cpp{} 泛型相关诊断的常见形态}\\
+\toprule
+阶段 & 典型原文形态 & 第一反应查哪一行\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+编译期：定义缺席 &
+\seqkw{error: implicit instantiation of undefined template 'Foo<int>'} &
+声明处只有前向声明；确认实现是否留在了 \kw{.cpp} 里\\
+\addlinespace
+编译期：约束不满足 &
+\seqkw{candidate template ignored: constraints not satisfied [with T = Shape]}；GCC 尾部为 \seqkw{constraints not satisfied}；\cpp{20} 概念失败还会逐条给出 \kw{requires} 表达式的求值结果 &
+只看第一个被判为假的子句，通常是缺失的成员或不可转换的返回类型\\
+\addlinespace
+编译期：重载找不到 &
+\seqkw{error C2672: 未找到匹配的重载函数}，常伴随 \seqkw{error C2065} 一类后继噪声 &
+把它当作上一条的简写形式，回到候选列表而不是报错行\\
+\addlinespace
+编译期：实例化回溯 &
+\seqkw{required from here}、\seqkw{in instantiation of function template specialization 'draw<Shape>' requested here} &
+回溯行只标实例化点；真正的错因在更靠前的第一条\\
+\addlinespace
+链接期 &
+\seqkw{undefined reference to 'void draw<Shape>(Shape\&)'}；MSVC 侧为 \seqkw{error LNK2019: unresolved external symbol} 并附修饰名 &
+核对是否存在同签名的显式实例化，以及定义所在目标文件是否参与链接\\
+\end{longtable}
+
+\subsection{其余语言的现场}
+
+\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.085\textwidth}
+ >{\raggedright\arraybackslash}p{0.115\textwidth}
+ >{\raggedright\arraybackslash}p{0.36\textwidth}
+ >{\raggedright\arraybackslash}p{0.27\textwidth}@{}}
+\caption{Java、C\#、Rust 与 C 的诊断形态}\\
+\toprule
+语言 & 阶段 & 典型原文形态 & 第一反应查哪一行\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\javalabel & 编译期（告警） &
+\seqkw{uses unchecked or unsafe operations}，加 \kw{-Xlint:unchecked} 后展开为 \seqkw{unchecked cast} 或 \seqkw{possible heap pollution from parameterized vararg type} &
+被抑制的那条强转；通常是原始类型混用造成污染\\
+\addlinespace
+\javalabel & 编译期（错误） &
+\seqkw{error: incompatible types: Object cannot be converted to String}；实参越界时报 \seqkw{type argument ... is not within bounds of type-variable} &
+擦除后返回类型退化成 \kw{Object} 的那个调用点\\
+\addlinespace
+\javalabel & 运行期 &
+\seqkw{java.lang.ClassCastException: class java.lang.Integer cannot be cast to class java.lang.String} &
+抛出点在取出元素那一行，写入点才是污染点\\
+\addlinespace
+\csharplabel & 编译期（约束） &
+\seqkw{The type 'X' must be a non-nullable value type in order to use it as parameter 'T'}；缺无参构造时提示 \seqkw{must be a non-abstract type with a public parameterless constructor}；实参不可转换时报 \seqkw{The type 'T' cannot be used as type parameter ... no implicit reference conversion}（错误号从略，形态比编号稳定） &
+约束子句与实参是否同族：\kw{struct} 拒绝可空类型与引用类型\\
+\addlinespace
+\csharplabel & 运行期 &
+静态构造器里的失败被包成 \seqkw{System.TypeInitializationException} 并带内部异常；反射构造闭合类型失败常见 \seqkw{System.TypeLoadException} 与 \seqkw{System.MissingMethodException}（按签名解析找不到重载，此处只写大意） &
+只看内部异常；带元数的开放类型与闭合类型是两个不同的类型对象\\
+\addlinespace
+\rustlabel & 类型检查期 &
+\seqkw{the trait bound 'Shape: Serialize' is not satisfied}，随后跟 \seqkw{the trait 'Serialize' is not implemented for 'Shape'} 与一行 \seqkw{help: consider ...} 建议 &
+报错指向的边界：是实参不满足，还是自己漏了 \kw{use} 一条 trait\\
+\addlinespace
+\rustlabel & 类型检查期（动态分发） &
+\seqkw{the trait 'X' cannot be made dyn-compatible}，原因通常写成含泛型方法阻止动态分发一类大意；\kw{Sized} 缺失时报 \seqkw{the size for values of type 'str' cannot be known at compilation time} &
+先看 trait 里是否有泛型方法或返回 \kw{Self}；再看是否该把裸 \kw{str} 换成 \seqkw{\&str} 或 \seqkw{Box<str>}\\
+\addlinespace
+\clabel & 预处理之后 &
+错误行号指向宏调用处，展开体内的行号需靠 \seqkw{in definition of macro} 与 \seqkw{expanded from here} 两条注记回溯 &
+先单独做一次预处理再定位；直接读源码行号会得到错位的结论\\
+\addlinespace
+\clabel & 编译期（\kw{\_Generic}） &
+没有匹配的关联且缺 \kw{default} 时直接报错；GCC 的形态接近 \seqkw{type 'float' does not match association with type 'int'}（写大意） &
+关联表是否漏掉该实参类型，整型提升是否已把实参换成别的类型\\
+\addlinespace
+\clabel & 运行期 &
+\kw{void*} 路线编译期不报错，最坏只有一句指针类型不符的告警；按错误尺寸解引用则直接崩溃 &
+比较函数与元素真实类型的签名是否一致，排序后是否按同一种类型解读\\
+\end{longtable}
+
+\begin{compare}[title={编译期报错与链接期报错，哪种更好诊断}]
+编译期诊断携带上下文：约束在哪个实参上失败、\kw{requires} 的哪一支为假、trait 边界缺哪一条，编译器都能逐条列出，且报错点与出错点通常落在同一条语句内。
+链接期诊断只剩符号名：一句未解析的外部符号，既没有实例化历史，也没有候选列表，唯一线索是修饰名里的模板实参。
+代价的不对称在于方向：编译期失败可以靠收紧约束、补 \seqkw{static\_assert} 或改用概念来提前拦截；一旦错到链接期，可诊断性骤降，只能靠显式实例化、把定义收回头文件，或用 \seqkw{extern template} 把责任点前移。
+经验法则：能让它在编译期失败的设计，就不要留给链接器。
+\end{compare}
+
+\section{同一问题的五种解法}
+
+需求是同一个：写一段能对若干类型复用的排序与序列化。
+下面给出各语言的最小写法与其关键代价。
+
+\begin{lstlisting}[style=cppstyle,caption={\cpp{20} 概念约束下的可复用排序}]
+#include <algorithm>
+#include <concepts>
+#include <vector>
+
+template <typename T>
+concept Sortable = requires (T a, T b) {
+    { a < b } -> std::convertible_to<bool>;
+};
+
+template <Sortable T>
+void sort_parts(std::vector<T>& v) {
+    std::sort(v.begin(), v.end());
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=ruststyle,caption={Rust 的边界约束与动态分发两条路}]
+fn sort_all<T: Ord>(v: &mut [T]) { v.sort_unstable(); }
+
+trait Serialize { fn to_bytes(&self) -> Vec<u8>; }
+
+fn dump<T: Serialize>(items: &[T]) -> Vec<u8> {
+    let mut out = Vec::new();
+    for it in items { out.extend(it.to_bytes()); }
+    out
+}
+\end{lstlisting}
+
+\small
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.09\textwidth}
+ >{\raggedright\arraybackslash}p{0.44\textwidth}
+ >{\raggedright\arraybackslash}p{0.30\textwidth}@{}}
+\caption{同一需求的五种最小写法与代价}\\
+\toprule
+语言 & 最小写法 & 关键代价\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\javalabel &
+\seqkw{<T extends Comparable<? super T>>} 加 \seqkw{Collections.sort(list)}；序列化交给 \kw{Serializable} &
+擦除使实参类型不可探测，比较时依赖隐式强转；装满容器则装箱不可避免\\
+\addlinespace
+\csharplabel &
+\seqkw{where T : IComparable<T>} 加 \kw{Array.Sort} 的泛型重载；序列化走接口或反射 &
+每个值类型闭合类型各自生成代码与静态字段，首次调用有即时编译开销\\
+\addlinespace
+\rustlabel &
+\seqkw{fn sort\_all<T: Ord>(...)}；需要异构集合时改用 \seqkw{Vec<Box<dyn Serialize>>} &
+单体化放大目标文件；转动态分发则要先满足对象安全，泛型方法立刻挡路\\
+\addlinespace
+\cpplabel &
+概念或 \kw{requires} 约束的函数模板，配合 \seqkw{std::ranges::sort}；序列化用按类型重载或概念约束的类模板 &
+定义须在使用点可见；不加约束时会甩出上千行实例化回溯\\
+\addlinespace
+\clabel &
+\seqkw{qsort(base, n, size, cmp)} 配 \seqkw{int cmp(const void*, const void*)}，或用 \kw{\_Generic} 分派、宏模板批量生成 \seqkw{sort\_i32}、\seqkw{sort\_f64} &
+比较函数与元素类型的一致性无人校验；每加一个类型都要改关联表或再展开一次宏\\
+\end{longtable}
+
+五列写法里真正可迁移的是同一个决策：约束写多紧，以及是否愿意为复用付出代码膨胀。
+\cpp{} 与 Rust 在抽象成本上口径一致，但前者把选择权交给可见性与显式实例化，后者把它交给边界与对象安全；
+\javalabel 用擦除换互操作，\csharplabel 用具化换运行期内省，\clabel 则根本没有第三种选项。
+
+\section{术语对照}
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.155\textwidth}
+ >{\raggedright\arraybackslash}p{0.11\textwidth}
+ >{\raggedright\arraybackslash}p{0.42\textwidth}
+ >{\raggedright\arraybackslash}p{0.145\textwidth}@{}}
+\caption{泛型机制相关术语}\\
+\toprule
+术语 & 中文译名 & 一句定义 & 本册出处\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\seqkw{reified} & 具化 & 类型实参在运行期仍是可查询的真实类型 & 擦除与具化对照一节\\
+\seqkw{erased} & 擦除 & 编译后类型参数退化为其上限的原始类型 & \javalabel 擦除与强转一节\\
+\seqkw{monomorphization} & 单体化（亦作单态化） & 为每个具体实参组合生成一份专用代码 & 单体化与代码膨胀一节\\
+\seqkw{instantiation} & 实例化 & 由模板与实参推导出具体函数或类的过程 & 模板可见性与链接一节\\
+\seqkw{generic specialization} & 泛型特化 & \csharplabel 中闭合类型对应的专用代码与静态状态 & \csharplabel 值类型实参一节\\
+\seqkw{bridge method} & 桥接方法 & 擦除后为协变覆写签名补生成的转发方法 & \javalabel 协变返回一节\\
+\seqkw{vtable} & 虚函数表 & 以运行期查表代替静态绑定的函数指针数组 & 动态分发与对象安全一节\\
+\seqkw{type erasure} & 类型抹除 & 用统一句柄包住异构对象的主动设计 & \cpp{17} 变体与句柄一节\\
+\seqkw{X-macro} & 宏模板 & 用一个列表宏驱动多次展开来批量生成同构代码 & \clabel 三条替代路线一节\\
+\seqkw{SFINAE} & 替换失败非错误 & 候选模板参数替换失败时静默剔除该候选 & \cpp{11} 约束前史一节\\
+\seqkw{concept} & 概念 & 命名的子句集合，充当模板参数的编译期谓词 & \cpp{20} 概念与 \kw{requires} 一节\\
+\seqkw{explicit instantiation} & 显式实例化 & 用定义语句强制在某处生成一份特化 & 显式实例化与构建时间一节\\
+\seqkw{extern template} & 外部模板声明 & 声明抑制本翻译单元的隐式实例化 & 显式实例化与构建时间一节\\
+\end{longtable}
+
+出处一栏写主题而不写编号，便于本册日后重排章节时仍然可读；同一术语在多节出现时，表中只列主线出处。
+
+\chapter{把实现从头文件收回源文件的改造清单}
+
+本册讨论封闭类型集与显式实例化的那一章给出了语义：模板的定义必须对实例化点可见，\kw{extern template} 只是把“请你替我生成”这句话收回来自已生成。语义清楚之后，剩下的是一件很脏的活——把一个已经把所有实现摊在公共头里的库改造成“公共头只留声明、实现收回源文件”的形态。本附录把这件事压成可照抄的清单：先判定要不要改，再按十步改，然后按症状表排错，最后给一组改造前后的最小样例。
+
+\section{改造前判定：一页问答}
+
+动手前先回答四个问题，答案的组合已经把方案定了大半。
+
+\begin{enumerate}
+\item [{Q1}] 类型集合是否封闭？清单能在文档里写成有限个具体类型（\kw{int}、\kw{float}、\kw{double}、几个项目自己的类型），并且你预期它一年内不变。
+\item [{Q2}] 是否需要任意扩展？用户会不会拿自己的类型来实例化，或者你根本不知道将来有谁。
+\item [{Q3}] 是否要跨动态库或二进制分发？符号必须在 \texttt{.dll}/\texttt{.so} 边界上站得住。
+\item [{Q4}] 是否在意每个翻译单元的重复生成？在意的是编译时间、调试符号体积，还是最终二进制里的重复代码。
+\end{enumerate}
+
+\begin{table}
+\centering
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.20\textwidth} X >{\raggedright\arraybackslash}p{0.11\textwidth}}
+\toprule
+\textbf{答案组合} & \textbf{方案与落点} & \textbf{工作量} \\
+\midrule
+Q1 是，Q2 否，Q3 否，Q4 否
+& 全暴露：实现继续留在公共头，别折腾。显式实例化只会增加一处会漏的清单。
+& 小 \\
+\addlinespace
+Q1 是，Q2 否，Q3 否，Q4 是
+& 三件套：公共头（概念＋声明）＋内部实现头（定义）＋一个实例化 TU，配 \kw{extern template}。
+& 中 \\
+\addlinespace
+Q1 是，Q2 否，Q3 是，Q4 是
+& 三件套再加导出：在显式实例化定义处加导出属性，核对 \texttt{.lib}/\texttt{.so} 里的符号。
+& 大 \\
+\addlinespace
+Q1 是，Q2 是
+& 双头文件混合：公共头只声明，公开 \kw{gauge\_impl.hpp} 作为扩展用户的包含点，清单内类型走显式实例化。
+& 中到大 \\
+\addlinespace
+Q1 否
+& 类型擦除：把模板边界收在少数具体类型之后，对外只暴露非模板接口；模板留在实现内部。
+& 大 \\
+\bottomrule
+\end{tabularx}
+\caption{答案组合到方案的映射，工作量按改造面与回归面给定性档位}
+\end{table}
+
+\begin{guideline}[title={判定顺序：先问封闭性，再问分发形态}]
+Q1 与 Q2 是互斥的：一个集合不可能既封闭又允许任意扩展。若两边都答“是”，说明库里有两类接口——把封闭的那部分交给显式实例化，把开放的那部分交给类型擦除或另一个模板接口，别用一套机制硬扛两边。Q4 单独答“是”而 Q3 答“否”时，收益只在编译期，改造完要用编译时间验证，而不是猜。
+\end{guideline}
+
+\section{十步改造清单}
+
+下面十步按顺序做，每一步都有明确的落点和“做完了”的判据。步骤编号后括号里是落点文件。
+
+\begin{enumerate}
+\item \textbf{写成文档化的封闭清单，并为它写一个概念。}（公共头＋项目文档）列出全部支持类型，逐条给理由；\cpp{20} 把它写成概念，\cpp{14} 写成 SFINAE trait。判据：任一使用点都能在编译期回答“在不在清单里”，且文档里的清单与概念里的约束不是两份人肉同步的东西。
+\item \textbf{公共头只留三样。}（公共头）类模板的类体与成员声明、函数模板的声明、概念定义。成员一律只声明不定义；确实必须内联的辅助函数单独标注，别让读者以为它也被收回去了。
+\item \textbf{把定义搬出去。}（\texttt{.cpp} 或内部头 \kw{gauge\_impl.hpp}）定义整体移到实现文件；若还需要支持扩展路径，就移进内部头。内部头只允许两类包含者：第 4 步的实例化 TU，和自愿接受隐式实例化的扩展用户。判据：包含公共头的 TU 里看不到任何模板定义。
+\item \textbf{写显式实例化定义。}（唯一的实例化 TU）函数模板逐类型写，如 \seqkw{template double moving\_average(const double*, std::size\_t, double);}；类模板整类写，如 \kw{template class Gauge<double>;}。记住整类那一行会把\emph{全部}成员实例化一遍，包括没人调用的成员和类里那个 \kw{std::vector<T>} 的全部后端。
+\item \textbf{为每个已实例化类型补 \kw{extern template} 声明。}（公共头）与第 4 步逐类型成对：一个显式实例化定义对应一个 \kw{extern template} 声明，命名空间、类型、const 与 \& 限定都要一致。漏掉声明不报错，只是白干；漏掉定义则变成链接错误。
+\item \textbf{给需要扩展的用户留一条正路。}（内部头＋文档）公开 \kw{gauge\_impl.hpp} 的包含点，并在文档里写清一句话契约：“包含它＝承诺接受隐式实例化”，连带写清代价：本 TU 编译变慢、调试符号变多、二进制里可能出现与库内同名的实例。
+\item \textbf{处理共享库边界。}（实例化 TU＋构建脚本）MSVC 在显式实例化定义处加导出属性，例如 \kw{template class GAUGE\_API Gauge<double>;}；GCC/Clang 侧核对默认可见性与 \kw{-fvisibility=hidden} 是否把实例藏掉了。判据：导出清单里能找到这些符号，而不是靠用户侧的隐式实例化蒙过去。
+\item \textbf{用符号表核对“每个实例只有一份定义”。}（构建产物）在 \texttt{.o}/\texttt{.a} 里按 mangled 名搜：GNU 用 \kw{nm -C --defined-only libgauge.a}，跨平台用 \kw{llvm-nm --defined-only}，Windows 用 \kw{dumpbin /symbols} 或 \kw{dumpbin /disasm}；关键词取 mangled 名里必定出现的子串 \seqkw{\_Z14moving\_average}（\seqkw{nm -C} 也能直接按展开后的名字搜）。判据：目标文件里同一个 mangled 名只出现一次定义；用户 TU 里既没有定义也没有未定义引用。
+\item \textbf{双向回归。}（测试）故意用一个清单内类型实例化，要求编译并链接通过；再故意用一个清单外类型（例如某个只支持移动的类）实例化，要求在编译期拿到概念不满足的诊断。若第二例变成了链接错误，说明约束没生效，公共头里那个概念只是装饰。
+\item \textbf{版本化。}（变更记录）把“新增一个支持类型”当 API 变更处理，写进变更记录并说明它需要一次库发布；把“删除一个支持类型”当破坏性变更处理，因为它的症状是用户升级后链接错误，而不是编译错误。
+\end{enumerate}
+
+\begin{bestpractice}[title={第 4 步与第 5 步是成对维护的}]
+显式实例化定义与 \kw{extern template} 声明写在不同文件、由不同人改动，是最容易腐化的一对。把它们放在能互相看见的位置：在 \texttt{.cpp} 里把 \kw{template class Gauge<double>;} 紧挨着写成一组，并在公共头对应声明旁留同一句注释锚点；新增类型时一次改两处，评审时一眼能数出“定义三个、声明三个”。只要两边数量对不上，就一定有类型正在偷偷走隐式实例化，或者正在偷偷缺定义。
+\end{bestpractice}
+
+\section{症状对照表}
+
+改造失败的形态很有限，认出来就修得完。
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{0.22\textwidth} >{\raggedright\arraybackslash}p{0.22\textwidth} >{\raggedright\arraybackslash}p{0.30\textwidth}}
+\caption{常见症状、成因与修法} \\
+\toprule
+\textbf{现象} & \textbf{成因} & \textbf{修法} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+链接期 \kw{undefined reference}（MSVC 为 \kw{LNK2019}），缺的正是某个成员函数的实例
+& 公共头加了 \kw{extern template}，但没有对应的显式实例化定义；或定义写在没进链接的 TU 里
+& 补第 4 步的成对定义，确认该 TU 在链接命令里；再核对导出边界是否把它藏了 \\
+\addlinespace
+编译时间没降，目标文件里同名实例成堆，靠链接期折叠去重
+& 只加了显式实例化定义，忘了 \kw{extern template}：其他 TU 仍在隐式实例化
+& 公共头逐类型补声明；用符号表确认用户 TU 里已无定义 \\
+\addlinespace
+编译期 “incomplete type”，尽管声明看着没错
+& 头里只留了前向声明，使用处却需要完整类型（按值成员、\kw{new}、访问成员）
+& 要么把接口改成句柄式，要么把该类型退回清单外，要么提供内部头包含点并说明代价 \\
+\addlinespace
+编译期 \kw{constraints not satisfied}，挡住合法用户类型
+& 概念收得比清单还紧，扩展路径又不可达
+& 先判定该走扩展路径（第 6 步）还是补实例化（第 4/5 步），不要随手放宽概念 \\
+\addlinespace
+二进制变大，出现从没人调用的成员函数
+& 类模板整类显式实例化会实例化全部成员
+& 改成逐成员显式实例化，例如 \kw{template void Gauge<float>::push(float value);} \\
+\addlinespace
+MSVC 上 DLL 侧符号找不到，或客户端与库各有一份实例
+& 导出属性加在了声明处而不是定义处
+& 把属性挪到显式实例化定义处（第 7 步），重新核对 \texttt{.lib} 导出清单 \\
+\bottomrule
+\end{longtable}
+
+\begin{note}[title={两条容易记反的语义}]
+第一，\kw{extern template} 不改变链接语义，它只是抑制本翻译单元对该实例的隐式生成；定义必须另有出处，否则就是一份引用无处安放。第二，整类显式实例化的粒度是“类的所有成员”，不是“被用到的成员”；需要细粒度时用逐成员形式，代价是清单从一行变成一堆行，维护负担回到第 4/5 步的成对纪律上。
+\end{note}
+
+\section{改造前后：最小 diff 式示例}
+
+改造前，公共头同时承担接口与实现，任何包含者都生成一份。
+
+\begin{lstlisting}[style=cppstyle,caption={改造前：实现全部暴露在公共头}]
+// gauge.hpp —— 改造前：概念、声明与定义混在同一个头里
+#ifndef GAUGE_HPP
+#define GAUGE_HPP
+
+#include <concepts>
+#include <cstddef>
+#include <vector>
+
+template <typename T>
+concept Sample = std::integral<T> || std::floating_point<T>;
+
+template <Sample T>
+T moving_average(const T* first, std::size_t n, T init) {
+    T acc = init;
+    for (std::size_t i = 0; i < n; ++i) acc = static_cast<T>(acc + first[i]);
+    return n ? static_cast<T>(acc / static_cast<T>(n)) : acc;
+}
+
+template <Sample T>
+class Gauge {
+public:
+    void push(T value) {
+        data_.push_back(value);
+        if (data_.size() > 32) data_.erase(data_.begin());
+    }
+    T average() const {
+        return data_.empty() ? T{} : moving_average(data_.data(), data_.size(), T{});
+    }
+    std::size_t size() const { return data_.size(); }
+private:
+    std::vector<T> data_;
+};
+
+#endif
+\end{lstlisting}
+
+改造后拆成三件：公共头、内部实现头、实例化源文件。
+
+\begin{lstlisting}[style=cppstyle,caption={改造后之一：公共头只留概念、声明与 extern template}]
+// gauge.hpp —— 接口：看不到任何定义
+#ifndef GAUGE_HPP
+#define GAUGE_HPP
+
+#include <concepts>
+#include <cstddef>
+#include <vector>
+
+template <typename T>
+concept Sample = std::integral<T> || std::floating_point<T>;
+
+template <Sample T>
+T moving_average(const T* first, std::size_t n, T init);
+
+template <Sample T>
+class Gauge {
+public:
+    void push(T value);
+    T average() const;
+    std::size_t size() const;
+private:
+    std::vector<T> data_;
+};
+
+// 与 gauge.cpp 里的显式实例化定义逐类型成对，增删同时改
+extern template class Gauge<int>;
+extern template class Gauge<float>;
+extern template class Gauge<double>;
+
+extern template int moving_average(const int*, std::size_t, int);
+extern template float moving_average(const float*, std::size_t, float);
+extern template double moving_average(const double*, std::size_t, double);
+
+#endif
+\end{lstlisting}
+
+\begin{lstlisting}[style=cppstyle,caption={改造后之二与三：定义进内部头，实例化进唯一 TU}]
+// gauge_impl.hpp —— 内部头：扩展用户显式包含它即接受隐式实例化
+#ifndef GAUGE_IMPL_HPP
+#define GAUGE_IMPL_HPP
+
+#include "gauge.hpp"
+
+template <Sample T>
+T moving_average(const T* first, std::size_t n, T init) {
+    T acc = init;
+    for (std::size_t i = 0; i < n; ++i) acc = static_cast<T>(acc + first[i]);
+    return n ? static_cast<T>(acc / static_cast<T>(n)) : acc;
+}
+
+template <Sample T>
+void Gauge<T>::push(T value) {
+    data_.push_back(value);
+    if (data_.size() > 32) data_.erase(data_.begin());
+}
+
+template <Sample T>
+T Gauge<T>::average() const {
+    return data_.empty() ? T{} : moving_average(data_.data(), data_.size(), T{});
+}
+
+template <Sample T>
+std::size_t Gauge<T>::size() const { return data_.size(); }
+
+#endif
+
+// gauge.cpp —— 唯一的实例化 TU：清单在这里闭合
+#include "gauge_impl.hpp"
+
+template int moving_average(const int*, std::size_t, int);
+template float moving_average(const float*, std::size_t, float);
+template double moving_average(const double*, std::size_t, double);
+
+template class Gauge<int>;    // 整类：三个成员都会生成
+template class Gauge<float>;
+template class Gauge<double>;
+\end{lstlisting}
+
+\begin{warning}[title={三种不该做}]
+第一，给所有模板都套 \kw{extern template}。类型集本来就是开放的那些库，这么做把“编译期就报概念不满足”改成“链接期才发现没有定义”，报错点离出错点更远，还平白多出一张没人维护的清单。第二，用宏拼接手工模拟显式实例化，把清单藏进一次 \kw{FOR\_EACH\_TYPE(...)} 展开：看起来只有一处，实际上公共头里的声明、导出列表与文档各自是独立的一处，漏掉任一处都在链接期爆。第三，让内部实现头被用户当公共头依赖。一旦某个用户包含它并调用了未闭合清单里的实例，库的 ABI 承诺就变成“你的 TU 替我生成”，第 8 步的符号核对也再读不出真相。
+\end{warning}
+
+清单里所有“判据”都比改动本身重要：改完之后能不能在符号表里数出一份定义、能不能让清单外的类型在编译期就被挡住，是这轮改造唯一的验收标准。
+
 
 \end{document}
