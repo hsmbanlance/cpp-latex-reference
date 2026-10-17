@@ -1,6 +1,6 @@
 # C/C++ LaTeX 参考手册合集
 
-本仓库包含 **39 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
+本仓库包含 **40 个独立的 LaTeX 子项目**，涵盖 C/C++ 核心主题的参考手册。全部使用 XeLaTeX + ctexbook 排版，共享统一的格式规范和构建脚本。
 
 ## 目录结构
 
@@ -74,7 +74,7 @@ C、C++/
 ├── C and Cpp Compat/             # C++ 与 C 的不兼容性：VLA / FAM / union UB / 编译器对比 / C23 同步
 │   ├── c_cpp_compat.tex
 │   └── build.ps1
-├── Template Parameters/          # C++20 非类型模板参数扩展：浮点 / 结构化类 / TString / 具名指针
+├── Template Parameters/          # C++20 模板参数与泛型机制：NTTP 扩展 / 五语言泛型对照 / 实现收回源文件
 │   ├── template_parameters.tex
 │   └── build.ps1
 ├── Lang History/                 # C/C++ 历史与 ISO/IEC 治理模式：从 Multics 到 C++26、三种治理模式对比
@@ -125,8 +125,11 @@ C、C++/
 ├── Undefined Behavior/           # 未定义行为与标准一致性：UB 与实现定义及未指定的分界、生命周期与别名、内存模型、标准库约定
 │   ├── undefined_behavior.tex
 │   └── build.ps1
-└── Compiler and Linker/          # 编译器与链接器：从源码到镜像的流水线、目标文件与链接、加载执行与三平台 ABI
-    ├── compiler_and_linker.tex
+├── Compiler and Linker/          # 编译器与链接器：从源码到镜像的流水线、目标文件与链接、加载执行与三平台 ABI
+│   ├── compiler_and_linker.tex
+│   └── build.ps1
+└── Properties and Annotations/   # C++ 属性与 C# 属性、Java 注解：三个同名词三种机制、封闭清单与开放类型、三条扩展方向
+    ├── properties_and_annotations.tex
     └── build.ps1
 ```
 
@@ -151,7 +154,7 @@ C、C++/
 ### 编译
 
 ```powershell
-# 编译全部 39 个项目（每个 2 pass + TOC 修复）
+# 编译全部 40 个项目（每个 2 pass + TOC 修复）
 .\workflow.ps1 build-all
 
 # 编译单个项目
@@ -188,7 +191,7 @@ C、C++/
 .\workflow.ps1 list
 ```
 
-显示全部 39 个项目名及其对应的文件夹路径。
+显示全部 40 个项目名及其对应的文件夹路径。
 
 ### 打开 PDF
 
@@ -231,7 +234,7 @@ C、C++/
 | UIFwk | UI Framework | GUI 框架：MFC / WinUI 3 (C++/WinRT) / wxWidgets / Qt / UE 对比与迁移 |
 | ModularBuild | ModularBuild | 模块化构建：Modules vs Headers / BMI / Clang·LSP·三方库困局 / CMake 实战与渐进迁移 |
 | CCompat | C and Cpp Compat | C++ 与 C 不兼容性：VLA / FAM / union 非活跃成员 UB / 编译器矩阵 / C23 同步 |
-| TemplateParams | Template Parameters | C++20 NTTP 扩展：浮点 / 结构化类 / TString / 具名指针 / 数学·DSP·序列化实战 |
+| TemplateParams | Template Parameters | C++20 NTTP 扩展：浮点 / 结构化类 / TString / 具名指针 / 数学·DSP·序列化实战；泛型机制对照：Java 擦除 / C# 具化 / Rust 单体化 / C 建议泛型 + 概念·SFINAE 与显式实例化把实现收回源文件 |
 | History | Lang History | C/C++ 历史与 ISO/IEC 治理：从 Multics 到 C++26 时间线 / WG14·WG21 提案投票流程 / 去中心化 vs 中心化 vs 准中心化客观对比 |
 | AsmEmbed | Asm Embedding | 汇编嵌入与 volatile 真实用途：asm volatile / MSVC intrinsics / MMIO·信号·setjmp / FFI 边界 / 四语言 volatile 对比 |
 | HWKernels | HW Access and Kernels | 硬件访问与 GPU/NPU 核函数：MMIO/PCIe BAR/DMA 一致性/中断与 MSI-X、I2C·SPI·UART·GPIO、CUDA SIMT·内存层级·流、SYCL oneAPI queue/nd_range/USM、NPU MAC 阵列与 tile；除核函数外区分 Unix/Windows API（含三平台物理地址对比与 libserialport 示例），附录含传感器驱动-HAL-应用全链与 CUDA 算子-PyTorch 绑定 |
@@ -249,6 +252,7 @@ C、C++/
 | PerfMeas | Performance and Measurement | 性能剖析与测量学参考手册：时钟源与计数器（CLOCK_MONOTONIC·rdtsc·TSC 频率与失步·Windows 高精度计时器·GPU 时钟域）/ 口径定义（墙钟与 CPU 时间、用户与内核时间分账、并发下的占用率歧义、延迟与吞吐的对偶、p50·p99·p999 尾延迟）/ 统计判据（多次运行的分布、置信区间与最小可检出差异、A/B 交替与阶跃偏置、warmup 与稳态、观测者效应）/ 微基准框架 Google Benchmark·hyperfine 与反优化防护（常量折叠、内存屏障、DoNotOptimize）/ 采样剖析 perf record 与调用栈展开（帧指针·DWARF·LBR 的代价与失真）、火焰图与差分火焰图 / PMU 事件计数（cycles·instructions·IPC·cache/TLB miss·TopDown 微架构分层）/ 缓存、分支与指令级归因（局部性对照实验、向量化报告一族、把指标送回代码位置）/ 内存与分配剖析（heaptrack·massif·Callgrind·MTMD·ETW 堆事件）/ I/O 与存储测量（块设备队列深度·页缓存冷热·fio 口径·延迟分账）/ 并发下的测量（伸缩性曲线、伪共享、占用率歧义）/ 编译器与构建口径（-O 级别·-DNDEBUG·LTO·PGO·内联的真实语义）/ 三平台对照（Linux perf·eBPF/BCC，Windows ETW·XPerf·VTune，macOS Instruments·powermetrics）/ GPU 与异构计时（CUDA event 与流同步语义、nsys·Nsight Compute 口径差别）/ 带宽与拓扑（显存·PCIe·NUMA 距离·STREAM 型上限·多卡）/ 连续性能与线上采样（CI 基线门禁、回归检测阈值、生产环境低开销采样预算）/ 测量反模式（口径偷换、归因偷换、不可复现的结论）/ 三张速查附录（三平台工具与权限对照、指标与命令行参数速查、术语与按症状排障手册） |
 | UBeh | Undefined Behavior | 未定义行为与标准一致性参考手册：五种行为类别的分界与标准文本读法（良好定义·UB·实现定义·未指定·畸形与不要求诊断，as-if 规则凭什么成立）/ 为什么任何语言都免不了未定义行为（撤回承诺是优化的定价基础，术语条目应该这样查）/ 消毒器与静态分析的口径（UBSan·ASan·MSVC 消毒器与 /analyze·警告档位·静态分析边界）/ 生命周期、对象表示与 trap 表示（存储期·placement new·std::bit_cast·std::start_lifetime_as）/ 指针的合法性（算术·比较·derived pointer·provenance·reinterpret_cast 边界）/ 严格别名与类型双关（char 例外·may_alias·厂商差异）/ 对齐（alignas·alignof·未对齐访问·assume_aligned 与打包陷阱）/ 求值顺序与副作用（sequenced before·函数参数·初始化顺序·重载逗号运算符）/ 整型边界（有符号溢出·除法取余·移位越界·位域与 char 符号性）/ 内存模型与 data race（修改顺序·可见性与顺序保证·volatile 不是同步·memory_order 合法取值）/ 自我移动、noexcept 与 terminate 的边界（部分移动对象·异常路径·unexpected 演化）/ 标准库的前置条件（下标与迭代器失效·算法区间·string_view 悬挂·optional 空访问·assert 与 NDEBUG）/ 实现定义与未指定：可移植边界的写法（去哪里查、怎么固化进 CI）/ 标准库约定（包含模型·特性测试宏·库调试模式·分配器与容器约定·hash 稳定性）/ 前向兼容与缺陷报告回译（语言兼容与 ABI 兼容之别·弃用移除清单）/ 三张速查附录（五种行为类别速查·消毒器与诊断开关对照·常见未定义行为案例与最小复现清单） |
 | CompLink | Compiler and Linker | 编译器与链接器参考手册：流水线形状与实现的载体（预处理·语法与语义分析·AST·IR·优化·指令选择·链接，以及语言可自举而实现载体几乎全是 C/C++ 与其他中级语言——GCC 与 Clang 是 C++、CPython 与 MRI 是 C、V8 与 HotSpot 是 C++、Rust 编译器坐在 LLVM 之上）/ 预处理、头文件与模块（宏展开顺序·头文件守卫·Modules 与 BMI）/ 名字解析、重载决议与模板实例化（两阶段查找·依赖名与非依赖名·实例化时机）/ 中间表示与静态单赋值（LLVM IR 与 GIMPLE·phi 与支配树·别名元数据）/ 优化管线、整程序优化与反馈驱动（内联·常量传播·循环变换·向量化·LTO 与 PGO 与 BOLT 的机制侧）/ 指令选择与寄存器分配（DAG 匹配·机器描述·图着色·线性扫描·spill）/ 目标文件与符号表（节与段·重定位类型·ELF 与 PE 与 Mach-O 对照）/ 静态链接（符号解析与链接顺序·弱符号与 COMDAT 与 ODR·段回收与折叠·归档与部分链接）/ 动态链接与加载执行（PIC 与 GOT 与 PLT·延迟绑定·符号插入·dlopen 查找语义·三平台加载器·TLS 模型·ASLR 与 PIE·控制流保护与栈展开表）/ 调用约定：系统 V、MS x86-64、AArch64 与 RISC-V（影子空间·红色区域·可变参数·结构体传递与返回）/ 数据布局：对齐、打包与位域（填充·packed 与 pragma pack 的 ABI 后果）/ 字节序与数据模型（大小端与转换内建·char 符号性·wchar_t 宽度·LLP64 与 LP64）/ C++ ABI：名字修饰、虚表与展开表（vtable 与 RTTI 布局·异常表·noexcept 落地·跨 so 与跨 DLL 稳定性）/ 编辑器与 IDE 如何消费编译器的产物（诊断格式·编译数据库·语言服务器读的到底是哪份产物）/ 端到端演练：从源码到镜像（把一条命令拆开看每步的输入输出）/ 三张速查附录（命令行与产物查看工具速查·三平台两架构的 ABI 速查·主流实现的载体语言与自举关系一览） |
+| PropsAnn | Properties and Annotations | C++ 属性与 C# 属性、Java 注解参考手册：三个同名词拆成三种东西（C++ 的 attribute 是贴附在既有语法实体上的修饰 / C# 的 property 是携带访问器的类成员 / C# attribute 与 Java annotation 才是同一类元数据）/ 判据三问（在哪个时机被消费、能否被程序自己读回、认不认识未知条目）/ 三条年代线与 Java 至今没有语言级 property（@Property 一类全部来自库而非语言）/ C++ 方括号属性的语法与 appertains-to 贴附位置、命名空间保留（std 与 std 后跟数字归标准化，其余归实现）因此**截至 C++26 C++ 无用户自定义属性**、未知属性 C++11/14 判畸形而 C++17 起忽略、`__has_cpp_attribute` 与 `__has_include`（C++20）对比实现侧的 `__has_attribute` / 标准属性按版本清单（noreturn·deprecated·fallthrough·maybe_unused·nodiscard 及原因串·likely 与 unlikely·no_unique_address·assume·indeterminate 与结构化绑定上的属性）/ 厂商扩展的边界（GCC 与 Clang 的 `__attribute__`、MSVC 的 `__declspec`，其中 `__declspec(property(get=…, put=…))` 把成员访问在编译期改写成 get/put 调用——C++ 一侧唯一真正的 property 不在标准里）/ C# property 年代线（1.0 访问器·3.0 自动属性·6.0 表达式体与初始化器·9.0 init 与 record 位置式属性·13 partial property·14 的 field 关键字与扩展成员）/ property 的 IL 真身与版本坑（编译成 get_ 与 set_ 两个方法加一条 .property 元数据、编译器另生成私有后备字段，由此带来的反射与序列化错位、跨语言边界只见方法不见字段、哪些改动只是源码级破坏哪些是二进制级破坏）/ C# Attribute（派生 System.Attribute 的类·位置实参即构造参数·命名实参即公开字段与属性·两者都必须编译期常量·AttributeUsage 的三件事·同一个语法位置四种效果的 Conditional 与 DllImport 与 CallerMemberName 与 Obsolete）/ Java 的 @interface（元素写成抽象方法形态可带 default·元素类型集合被限定·@Target 与 @Retention 与 @Inherited 与 @Documented 四个元注解·默认保留策略是 CLASS 即写了反射读不到·@Repeatable 与 TYPE_USE 随 Java 8·javax.annotation.processing 随 Java SE 6）/ “Java 注解源于 C# Attribute”的证据边界（JSR 175 全文不提 C#，同期同形可证实而因果说无一手出处，形状差异反证不是移植）/ 三条扩展方向（C++26 反射 P2996 与 P3394 的匿名 `[[= 表达式 ]]` 注解：可被反射读回的匿名反射常量，不是自定义属性名，也不等于标准属性可被反射；Roslyn 源生成器与 Java 注解处理器的生成期路线及其各自的能力边界；把信息编码进类型而不是标注的替代手法与代价）/ 按“谁在读、什么时候读到”给定的选型决策表与全册反直觉结论（元数据只有在确实存在消费者时才不是装饰，C++ 把清单封死是因为每一条都必须由编译器自己兑现） |
 
 ## 统一格式规范
 

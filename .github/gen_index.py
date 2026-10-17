@@ -77,8 +77,8 @@ PROJECTS = [
      "C++ 与 C 的不兼容性",
      "VLA / 柔性数组成员 / 复合字面量 / union 非活跃成员 UB 等差异详解，MSVC·GCC·Clang·Apple Clang 实测对比，以及 C23 与 C++ 同步进展（bool/nullptr/typeof/constexpr/attributes）。"),
     ("TemplateParams","template_parameters.pdf",
-     "C++20 非类型模板参数扩展",
-     "从整型白名单到浮点、结构化类、具名指针、TString 编译期字符串：P0732R2 / P1907R1 详解，数学/DSP/物理单位/序列化/具名参数实战，GCC·Clang·MSVC 支持矩阵与陷阱清单。"),
+     "C++20 模板参数与泛型机制",
+     "从整型白名单到浮点、结构化类、具名指针、TString 编译期字符串：P0732R2 / P1907R1 详解，数学/DSP/物理单位/序列化/具名参数实战，GCC·Clang·MSVC 支持矩阵与陷阱清单；另含泛型机制五语言对照（Java 擦除、C# 具化、Rust 单体化、C 的 _Generic 与宏模板），以及模板实现可见性问题：用概念或 SFINAE 加显式实例化把定义收回源文件。"),
     ("History",       "c_cpp_history.pdf",
      "C/C++ 历史与 ISO/IEC 治理模式",
      "从 Multics 到 C23、从 C with Classes 到 C++26 的完整时间线，ISO/IEC JTC1/SC22 WG14/WG21 治理结构、提案与投票流程详解，以及去中心化治理相较中心化（Java/Oracle）与准中心化（C#/.NET Foundation）模式的优势与代价的客观对比。"),
@@ -130,6 +130,9 @@ PROJECTS = [
     ("CompLink",        "compiler_and_linker.pdf",
      "编译器与链接器的 C/C++",
      "从源码到镜像的每一步都有产物可查；自举与现实的落差：语言可以自举，实现的载体却几乎都是 C 与 C++ 或其他中级语言——GCC 与 Clang 用 C++ 写成，CPython 与 Ruby MRI 用 C，V8 与 HotSpot 用 C++，Rust 编译器虽用 Rust 写成仍坐在 C++ 的 LLVM 之上，所以读懂这条流水线是几乎所有工具链工作的公共前提；流水线形状（预处理、语法分析、语义分析、AST、中间表示、优化、指令选择、寄存器分配、汇编与链接，每一步单独打印产物也单独有一种坏法）；预处理与包含模型（宏展开顺序、头文件守卫、Modules 与 BMI 换掉了什么）；名字与类型检查（重载决议、模板实例化时机、诊断为什么不可依赖）；中间表示与 SSA（LLVM IR 与 GIMPLE 的形态、phi 与支配树、load 与 store 和别名元数据）；优化 pass（内联、常量传播、循环变换、自动向量化、LTO 与 PGO 与 BOLT 的机制侧，测量口径回指性能剖析册）；指令选择与寻址模式（DAG 匹配、机器描述、合并与强度削弱）；寄存器分配与调度（图着色与线性扫描、spill、调用约定决定可用寄存器）；目标文件与符号表（节与段、重定位类型、符号类型与段标志字段，ELF 与 PE 与 Mach-O 三格式对照）；静态链接（符号解析与链接顺序、弱符号与 COMDAT 与一次定义规则、段回收与相同折叠、归档与部分链接）；动态链接（共享库、位置无关码与 GOT 与 PLT、延迟绑定、符号插入、dlopen 的查找语义）；加载与执行（进程镜像与三平台加载器、TLS 模型、静态初始化与 main 之前、exit 与析构、ASLR 与 PIE、控制流保护与栈展开表）；调用约定的由来（System V AMD64、Microsoft x64、AArch64 AAPCS、RISC-V psABI：影子空间、红色区域、可变参数、结构与联合的传递和返回、寄存器分类）；数据布局与对齐（填充规则、位域、packed 与 pragma pack 的 ABI 后果、跨语言边界的结构体表示）；字节序与字符表示（大小端与字节序转换内建、char 的符号性、wchar_t 与 char16_t 的宽度、long 的 LLP64 与 LP64 与 SIL64 模型）；C++ ABI 的专门面（名字修饰、vtable 与 RTTI 布局、虚调用落地、异常表与展开信息、noexcept 的实现、跨 so 与跨 DLL 的稳定性）；三张速查附录（三平台工具、开关与产物对照，ELF 与 PE 与 Mach-O 的字段与重定位类型对照，按症状排障手册与自检清单）。"),
+    ("PropsAnn",        "properties_and_annotations.pdf",
+     "C++ 属性与 C# 属性、Java 注解",
+     "三个中文同名词底下压着三种不相干的机制，这一册先把它们拆开：C++ 的 attribute 是贴附在既有语法实体上的修饰，不引入新成员；C# 的 property 是一种类成员，携带读写访问器并被编译成方法；只有 C# 的 attribute 与 Java 的 annotation 属于同一类东西（类型化的元数据），它们与 C++ 的 attribute 只是同名。贯穿全册的判据是三问：这条元数据在哪个时机被消费、程序能否把它读回来、系统认不认识未知条目——按这三问，C++ 的属性是一份封闭清单（标准属性加厂商命名空间，任何使用者都不能新增条目），C# 与 Java 的元数据是一个开放类型（谁都能定义新类型，但编译器不兑现任何行为）。硬结论：截至 C++26，C++ 没有用户自定义属性，命名空间 std 以及 std 后跟数字归标准化、其余归实现，未知属性在 C++11 与 14 是畸形程序、从 C++17 起改为忽略；探测靠 __has_cpp_attribute 与 __has_include（两者都是 C++20），厂商的 __attribute__ 与 __declspec 不在该宏覆盖范围内。标准属性按版本清点（noreturn、deprecated、fallthrough 与 maybe_unused 与 nodiscard、likely 与 unlikely 与 no_unique_address 与带原因串的 nodiscard、assume、indeterminate 与结构化绑定上的属性）；C++ 一侧唯一真正与 C# property 同物的东西不在标准里，而是 MSVC 的 __declspec(property)，它把成员访问在编译期改写成 get 与 put 调用。C# 的 property 年代线（1.0 访问器、3.0 自动属性、6.0 表达式体与初始化器、9.0 的 init 与 record 位置式属性、13 的 partial property、14 的 field 关键字与扩展成员）只改书写长度、不改编译产物：property 的真身是两个方法加一条元数据记录，自动属性的后备字段是编译器细节而非语言契约，由此带来反射与序列化的错位、跨语言边界只见方法不见字段、以及哪些改动只是源码级破坏哪些同时破坏二进制兼容。注解侧：C# 的 attribute 是派生自 System.Attribute 的类，位置实参即构造参数、命名实参即公开字段与属性，两者都必须编译期常量，于是它只能被编译期与生成期的工具消费，同一个语法位置上 Conditional、DllImport、CallerMemberName、Obsolete 给出四种截然不同的效果；Java 的 annotation 是特殊的 @interface 声明，元素写成抽象方法形态、类型集合被限定，靠 Target、Retention、Inherited、Documented 四个元注解描述自己，默认保留策略是 CLASS，也就是说写了注解而反射读不到是默认行为而非缺陷。关于 Java 注解源于 C# Attribute 的流行说法：JSR 175 全文不提 C#，可证实的只有两年半的时间差与同形的设计目标，因果句没有一手出处，而两边的形状差异恰好反证它不是移植。三条扩展方向：C++26 的反射（P2996 已采纳，P3394 补上匿名的方括号等号表达式注解，它是可被反射读回的匿名反射常量而不是新的属性名，也不等于标准属性变得可反射）；生成期路线（Roslyn 源生成器与 Java 注解处理器各自能做什么、不能做什么，C++ 侧只有构建期代码生成与 libTooling 插件）；以及把信息编码进类型而不是标注的替代手法与其代价。收尾给一张按谁在读、什么时候读到组织的选型决策表，和全册的反直觉结论：元数据只有在确实存在消费者时才不是装饰，C++ 之所以把清单封死，是因为清单里每一条都必须由编译器自己兑现。"),
 ]
 
 HTML_TEMPLATE = """\

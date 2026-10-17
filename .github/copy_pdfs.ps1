@@ -51,7 +51,8 @@ $projects = @(
     @{ dir = 'Code Style';                      job = 'code_style' },
     @{ dir = 'Performance and Measurement';     job = 'performance_measurement' },
     @{ dir = 'Undefined Behavior';              job = 'undefined_behavior' },
-    @{ dir = 'Compiler and Linker';             job = 'compiler_and_linker' }
+    @{ dir = 'Compiler and Linker';             job = 'compiler_and_linker' },
+    @{ dir = 'Properties and Annotations';      job = 'properties_and_annotations' }
 )
 
 $copied = 0
