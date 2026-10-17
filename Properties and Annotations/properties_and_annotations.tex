@@ -1,0 +1,1794 @@
+% !TEX program = xelatex
+% C++/C# 属性与 Java 注解：三个同名词、三种机制
+\documentclass[12pt,a4paper,fontset=fandol]{ctexbook}
+
+% ===== 页面 =====
+\usepackage[margin=2.5cm]{geometry}
+
+% ===== 字体 =====
+\usepackage{fontspec}
+\usepackage{iffont}
+% CJK 钉 fandol（两侧都取自 TeX 树里的同一份 FandolSong-Regular.otf）；
+% mono 钉 DejaVu Sans Mono：CI 由 fontconfig 命中同名，本机没有该系统字体，
+% 就用 MiKTeX dejavu 包里的同一版本 TTF（kpathsea 按文件名命中）。
+\IfFontExistsTF{DejaVu Sans Mono}
+  {\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]}
+  {\setmonofont[Extension=.ttf,
+      UprightFont=DejaVuSansMono,
+      BoldFont=DejaVuSansMono-Bold,
+      ItalicFont=DejaVuSansMono-Oblique,
+      BoldItalicFont=DejaVuSansMono-BoldOblique]
+     {DejaVuSansMono}[Scale=MatchLowercase]}
+
+% ===== 颜色 =====
+\usepackage[dvipsnames,svgnames,x11names]{xcolor}
+\definecolor{codebg}{HTML}{F5F5F5}
+\definecolor{codeframe}{HTML}{E0E0E0}
+\definecolor{linenumgray}{HTML}{999999}
+\definecolor{cppkeyword}{HTML}{1A1AFF}
+\definecolor{cppcomment}{HTML}{2E8B2E}
+\definecolor{cppstring}{HTML}{B22222}
+\definecolor{cppheadbg}{HTML}{2E4057}
+\definecolor{cpp17bg}{HTML}{7A4FA3}
+\definecolor{cpp20bg}{HTML}{B03A2E}
+\definecolor{algheadbg}{HTML}{1A3C5E}
+\definecolor{csharptype}{HTML}{006400}
+% -- 对比语言（Java / C\#）--
+\definecolor{javakeyword}{HTML}{A020F0}
+\definecolor{javatype}{HTML}{005A9C}
+\definecolor{javaheadbg}{HTML}{1565C0}
+\definecolor{csharpkeyword}{HTML}{8B008B}
+\definecolor{csharpheadbg}{HTML}{68217A}
+
+% ===== listings =====
+\usepackage{listings}
+
+% ---- C++ ----
+\lstdefinestyle{cppstyle}{%
+  language=C++,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{cppkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    override,final,noexcept,constexpr,consteval,constinit,
+    decltype,auto,concept,requires,co_await,co_yield,co_return,
+    nullptr,sizeof...,static_assert,thread_local,alignas,alignof,
+    namespace,using,template,typename,virtual,explicit,friend,
+    mutable,volatile,register,extern,inline,
+    module,import,export,
+    std,string,vector,array,map,unordered_map,set,unordered_set,
+    unique_ptr,shared_ptr,weak_ptr,optional,variant,any,
+    tuple,pair,span,string_view,
+    cin,cout,cerr,endl,
+    move,forward,swap,make_unique,make_shared,
+    begin,end,size,empty,push_back,emplace_back,
+    is_same_v,is_constructible_v,integral_constant,
+    chrono,literal,operator
+  },
+  deletekeywords={int,char,float,double,bool,void,long,short,unsigned,signed},
+  emph={%
+    int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,
+    size_t,ptrdiff_t,intptr_t,uintptr_t,wchar_t,char8_t
+  },
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- Java ----
+\lstdefinestyle{javastyle}{%
+  language=Java,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{javakeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  morekeywords={%
+    record,sealed,permits,var,yield,
+    native,strictfp,transient,volatile,synchronized
+  },
+  emph={%
+    int,long,short,byte,float,double,boolean,char,void,
+    String,Object,Integer,Long,Double,Float,Boolean,
+    System,Class,Thread,Exception,RuntimeException,
+    Override,FunctionalInterface,Deprecated,SuppressWarnings,
+    List,Map,Set,ArrayList,HashMap,Optional,Stream
+  },
+  emphstyle=\color{javatype},
+  escapeinside={(*@}{@*)}
+}
+
+% ---- C\#（listings 无内置语言，本地定义）----
+\lstdefinelanguage{CSharp}{%
+  morekeywords={%
+    abstract,as,base,bool,break,byte,case,catch,char,checked,class,const,
+    continue,decimal,default,delegate,do,double,else,enum,event,explicit,
+    extern,false,finally,fixed,float,for,foreach,goto,if,implicit,in,
+    int,interface,internal,is,lock,long,namespace,new,null,object,operator,
+    out,override,params,private,protected,public,readonly,ref,return,sbyte,
+    sealed,short,sizeof,stackalloc,static,string,struct,switch,this,throw,
+    true,try,typeof,uint,ulong,unchecked,unsafe,ushort,using,var,void,
+    volatile,while,async,await,record,required,file,init,nint,nuint
+  },
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]'
+}[keywords,comments,strings]
+
+\lstdefinestyle{csharpstyle}{%
+  language=CSharp,
+  basicstyle=\small\ttfamily,numbers=left,numberstyle=\tiny\color{linenumgray},
+  frame=single,rulecolor=\color{codeframe},framesep=6pt,
+  breaklines=true,tabsize=4,columns=flexible,keepspaces=true,
+  backgroundcolor=\color{codebg},showstringspaces=false,
+  keywordstyle=\color{csharpkeyword}\bfseries,
+  commentstyle=\color{cppcomment}\itshape,
+  stringstyle=\color{cppstring},
+  emph={%
+    int,long,short,byte,float,double,decimal,bool,char,string,void,
+    object,dynamic,nint,nuint,
+    String,Int32,Int64,IntPtr,UIntPtr,
+    List,Dictionary,HashSet,Task,Span,Memory,
+    Console,Math,Convert,StringBuilder
+  },
+  emphstyle=\color{csharptype},
+  escapeinside={(*@}{@*)}
+}
+
+\lstset{style=cppstyle}
+
+% ===== tcolorbox =====
+\usepackage[most]{tcolorbox}
+
+% ===== 代码标签 =====
+\newcommand{\cpplabel}{%
+  \tcbox[on line,colback=cppheadbg,colframe=cppheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{C++}}
+
+\newcommand{\cppxxlabel}[1]{%
+  \tcbox[on line,colback=cpp20bg,colframe=cpp20bg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{#1}}
+
+\newcommand{\javalabel}{%
+  \tcbox[on line,colback=javaheadbg,colframe=javaheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{Java}}
+
+\newcommand{\csharplabel}{%
+  \tcbox[on line,colback=csharpheadbg,colframe=csharpheadbg,
+    boxrule=0pt,arc=1pt,left=2pt,right=2pt,top=1pt,bottom=1pt,
+    colupper=white,fontupper=\scriptsize\bfseries]{C\#}}
+
+% ===== tcolorbox 提示框 =====
+\newtcolorbox{guideline}[1][]{
+  enhanced,breakable,
+  colback=blue!5!white,colframe=blue!75!black,
+  fonttitle=\bfseries,title=要点,#1,
+  boxed title style={colback=blue!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{compare}[1][]{
+  enhanced,breakable,
+  colback=green!3!white,colframe=green!50!black,
+  fonttitle=\bfseries,title=对比,#1,
+  boxed title style={colback=green!50!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{warning}[1][]{
+  enhanced,breakable,
+  colback=red!5!white,colframe=red!75!black,
+  fonttitle=\bfseries,title=常见陷阱,#1,
+  boxed title style={colback=red!75!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{note}[1][]{
+  enhanced,breakable,
+  colback=orange!5!white,colframe=orange!80!black,
+  fonttitle=\bfseries,title=注意,#1,
+  boxed title style={colback=orange!80!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{bestpractice}[1][]{
+  enhanced,breakable,
+  colback=purple!5!white,colframe=purple!60!black,
+  fonttitle=\bfseries,title=最佳实践,#1,
+  boxed title style={colback=purple!60!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+\newtcolorbox{stdbox}[1][]{
+  enhanced,breakable,
+  colback=gray!5!white,colframe=gray!70!black,
+  fonttitle=\bfseries,title=标准条款,#1,
+  boxed title style={colback=gray!70!black},
+  attach boxed title to top left={yshift=-2mm,xshift=2mm},
+  arc=2mm,boxrule=0.8mm,
+}
+
+% ===== 章节标题 =====
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{seqsplit}
+\usepackage{float}
+
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries\color{algheadbg}}
+  {\CTEXthechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{blue!70!black}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{blue!60!black}}
+  {\thesubsection}{1em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\leftmark}
+\fancyhead[LO]{\rightmark}
+
+\setlist[itemize]{leftmargin=2em,itemsep=2pt}
+\setlist[enumerate]{leftmargin=2em,itemsep=2pt}
+
+\emergencystretch=3em
+
+% ===== 超链接 =====
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!70!black,
+  urlcolor=blue!60!black,
+  bookmarks=true,
+  pdfauthor={hsmbanlance},
+  pdftitle={C++ 与 C\# 的属性、Java 的注解},
+}
+
+% ===== 自定义命令 =====
+\newcommand{\cpp}[1]{C++#1}
+\newcommand{\kw}[1]{\texttt{#1}}
+\newcommand{\seqkw}[1]{\seqsplit{\texttt{#1}}}
+
+% ====================================================================
+% book 双页模式默认 \flushbottom，会靠拉伸行距把每页撑满；本仓库框体与长表多，
+% 撑页产生的 Underfull \vbox 是排版噪声而非缺陷，这里统一改用小底部对齐。
+\raggedbottom
+
+\begin{document}
+
+\frontmatter
+
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\Huge\bfseries C++ 与 C\# 的属性、Java 的注解\par}
+\vspace{1cm}
+{\LARGE 三个同名词、三种机制\par}
+\vspace{0.35cm}
+{\LARGE 截至 \cpp{26} 无自定义属性\par}
+\vspace{0.35cm}
+{\LARGE 元数据的落地形态与三条扩展方向\par}
+\vfill
+{\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+
+\mainmatter
+
+\chapter{三个同名词，三种东西}
+\label{ch:one}
+
+本章不深入任何一门语言的机制细节，它只做三件事：把三个被同一个中文词盖住的概念拆开；把三条互不相干的年代线并排摆好，并钉死其中两条硬结论；最后给出一条贯穿全册的判据。机制留给第 2 章（C++ 的属性侧）与第 3 章（C\# 与 Java 的元数据侧）。
+
+全册有三条主张，本章负责把它们一次立起来，后两章只是分别展开。第一条：三个词是三种东西，中文把它们都译作“属性/特性/注解”，这是一次命名事故，也是这一册存在的理由。第二条：截至 \cpp{26}，\cpp{} \textbf{没有用户自定义属性}；C\# 的 attribute 与 Java 的 annotation 是\textbf{开放类型}，\cpp{} 的属性清单是\textbf{封闭清单}——这一对照是全册的轴心。第三条：拿到任何元数据设施，先问“它在哪个时机被消费、能不能被程序自己读回来、认不认识未知条目”，三问之后差异自然浮现。第一条在 \S\ref{sec:one-names}，第二条在 \S\ref{sec:one-timeline}，第三条在 \S\ref{sec:one-criterion}，\S\ref{sec:one-table} 把三者压成一张可回查的速查表。
+
+\section{property、attribute、annotation：一次跨语言的命名事故}
+\label{sec:one-names}
+
+这一册要处理的第一个麻烦不在语法，而在翻译。中文技术写作里，\textbf{property}、\textbf{attribute}、\textbf{annotation} 三个英文词被同一个汉字词盖住了。当有人说“给这个成员加个属性”时，他可能指三件完全不同的事：在 \cpp{} 里往声明前面贴一对中括号；在 C\# 里声明一个带访问器的类成员；或者给一个已有的声明贴一段元数据。三者没有包含关系，也没有实现关系，唯一的关系是它们被译成了同一个词。
+
+撞车不是偶然。英语里 property 与 attribute 本来就是一对近义词，都指“归属于某物的特征”；annotation 与 attribute 又共享“附加说明”这层意思。于是中文各自挑了一个最常用、也最顺口的词：“属性”“特性”“注解”。挑词的人都只看见自己那一门语言，三个选择合起来就把两种本体地位相反的东西压进了同一个词（\cpp{} 的 attribute 与 C\# 的 property），又把同一种东西分给了两个词（C\# 的 attribute 与 Java 的 annotation）。这类错位单靠“约定俗成”解释不掉，只能逐语言把原文名词摆回句子旁边——本章通篇保留英文原词，就是这个原因。
+
+\subsection*{先把三个词的分工写死}
+
+请看表~\ref{tab:ch1-names} 的第三列——“它到底是什么”。本体地位比名字重要得多：名字会骗人，会不会新增成员这件事骗不了人。
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}>{\raggedright\arraybackslash}p{0.19\textwidth}@{}}
+\caption{三个同名词，三种东西：本体地位与中文译名}\label{tab:ch1-names}\\
+\toprule
+原文名词 & 中文常译 & 它到底是什么 & 新增成员吗 \\ \midrule
+\endfirsthead
+\toprule
+原文名词 & 中文常译 & 它到底是什么 & 新增成员吗 \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\cpp{} 的 attribute（\texttt{[[\,\dots\,]]}） & 属性 & 贴在既有语法实体上的编译期修饰：改诊断、改优化前提、改布局，不改声明的本体 & 否，不新增任何成员 \\
+C\# 的 property & 属性 & 一种\textbf{类成员}：声明里带 \kw{get}/\kw{set} 访问器，编译成方法，出现在类型的成员表里 & 是，它本身就是一个成员 \\
+C\# 的 attribute & 特性 & 派生自 \seqkw{System.Attribute} 的\textbf{类型}；它的实例被写进程序集元数据 & 否，贴上去不改变被贴对象的成员 \\
+Java 的 annotation & 注解 & 一种特殊的 \texttt{@interface} 声明；元素写成抽象方法的形式，靠元注解约束用法 & 否，不新增成员，只新增一段元数据 \\
+\end{longtable}
+}
+
+于是真正的“同名词事故”只发生在两处。第一处：\cpp{} 的 attribute 与 C\# 的 property 都译作“属性”，而它们一个是修饰、一个是成员，本体地位正好相反。第二处：C\# 的 attribute 与 Java 的 annotation 才是同一类东西（类型化的元数据），可中文给了它们两个不同的译名——“特性”与“注解”——于是读者容易误以为它们是两套不相干的机制，而实际上它们的差别主要在保留策略与声明形状，不在“是不是元数据”。一个词被两样东西共用、两样东西各有一个名字，这种错位正是这一册要付的账。
+
+\subsection*{“属性”这个词在 \cpp{} 标准里并不存在}
+
+值得单独钉一下：\cpp{} \textbf{标准}没有把 property 作为一种设施存在。语言里没有 \kw{property} 关键字，没有“属性成员”这一类东西，因此连“\cpp{} 的属性如何实现”这个问题都不成立。你在面向 Windows 的代码里见过 \seqkw{\_\_declspec(property)}，那是 MSVC 的\textbf{厂商扩展}，把成员访问映射到 getter/setter 函数上，形状接近 C\# 的 property；它不是标准的一部分，跨编译器不可携带。标准所管辖的名字空间与厂商名字空间如何分界，见 \S\ref{sec:two-cpp-reserved}。
+
+这条事实决定了全册的用词纪律：谈 \cpp{} 时，“属性”一词一律指 \texttt{[[\,\dots\,]]} 这个语法设施；谈 C\# 时，“属性”一律指 property 这种成员；需要指元数据时，本册宁可保留英文原词 attribute / annotation，也不用“属性”这个双义词。
+
+\subsection*{为什么这一册要三语言并排，而不是两语言对照}
+
+如果只有 \cpp{} 与 C\#，命名事故会被当成 C\# 的方言问题——“属性”一词在 C\# 里同时指成员与元数据，读者只要老实读 C\# 的文档就能自己分辨。加入 Java 之后，问题的形状才显出来：Java 有 annotation 却没有 property，于是“注解”一词在 Java 语境下不需要与“属性”抢地盘；而 \cpp{} 有 attribute 却没有 property，于是“属性”一词在 \cpp{} 语境下也只指一样东西。三门语言各自都“没有歧义”，歧义只出现在把三者的中文材料混在一起读的时候——这恰好是现实：跨语言借鉴设计、看框架教程、读别人写的架构说明，材料的中文译名互相不通。三语言并排不是凑篇幅，而是这种歧义唯一的解法：把每一格都钉在原语言的英文名上，再让读者自己决定要用哪一样。
+
+\subsection*{认概念靠形状，不靠译名}
+
+译名会打架，语法形状不会。拿到一句看不懂的中文描述，先按形状反推它在说哪一样东西：
+\begin{itemize}
+\item 看到“两对方括号贴在声明前”、\texttt{[[nodiscard]]} 这类写法——那是 \cpp{} 的 attribute，编译期修饰。
+\item 看到“带 \kw{get} 与 \kw{set}（或 \kw{init}）的成员声明”——那是 C\# 的 property，是成员。
+\item 看到 C\# 里 \seqkw{[Serializable]} 这样贴在成员上方的方括号，或看到“继承 \seqkw{System.Attribute}”——那是 C\# 的 attribute，是元数据。
+\item 看到 \texttt{@interface}、\seqkw{@Override}、\seqkw{@Target} 这样的 \texttt{@} 前缀——那是 Java 的 annotation，是元数据。
+\item 看到“\texttt{@Property}”且它出现在 Jackson 或 JavaBeans 语境里——那是\emph{库}的注解，别读成语言设施（\S\ref{sec:one-timeline} 的第二条硬结论专门讲这点）。
+\end{itemize}
+
+同名词事故还有第三个层次，比前两处更隐蔽：C\# 的 attribute 与 Java 的 annotation 虽然同类，形状却互不兼容，而中文材料常把它们写成好像可以互换的样子。C\# 侧是一个\textbf{类}：继承 \seqkw{System.Attribute}，携带构造实参与公共成员，用方括号形状贴上去（\seqkw{[Serializable]} 这一类写法）；Java 侧是一种\textbf{特殊的接口声明}：\texttt{@interface}，元素以抽象方法的形式声明、可带默认值，用 \texttt{@} 前缀贴上去，再由 \seqkw{@Target}/\seqkw{@Retention} 两个元注解约束它能贴在哪、活到多远。把两者都写成“注解/特性”而忽略形状差别，代价是读者会去 Java 里找并不存在的 attribute 类继承体系，或者在 C\# 里找并不存在的 \seqkw{@Target}。两侧的形状细节分别在第 3 章展开；本章只要记住：它们\emph{同类}，但\emph{不同形}。
+
+\subsection*{三小段同物对照}
+
+下面三段代码看起来都像“给声明加东西”，本体地位却互不相同。第一段是 \cpp{}：修饰贴在既有声明上，声明本体一个字没变。
+
+\cpplabel{}
+\begin{lstlisting}[style=cppstyle, caption={\cpp{}：attribute 只是修饰，声明本体不变}, label={lst:ch1-cpp-attr}]
+struct alignas(16) Pixel { unsigned char rgba[4]; };
+
+[[nodiscard]] int load(const char* path);  // 函数还是那个函数
+[[maybe_unused]] void draw();              // 只改编译器如何看待这条声明
+\end{lstlisting}
+
+第二段是 C\#：property 不是贴在别人身上的标签，它自己就是类型的一个成员，编译后落到成员表里——对外写法像字段，对内是方法。
+
+\csharplabel{}
+\begin{lstlisting}[style=csharpstyle, caption={C\#：property 是类成员，携带访问器}, label={lst:ch1-cs-property}]
+public sealed class Cursor
+{
+    private int _x;            // 字段：存储
+    public int X               // 属性：成员，编译成方法
+    {
+        get => _x;
+        private set => _x = value < 0 ? 0 : value;
+    }
+}
+\end{lstlisting}
+
+第三段是 Java：annotation 的定义本身是一种类型声明，使用它只是在别的声明前面写一段键值对——既不给被贴对象新增成员，也不改变被贴对象的行为。
+
+\javalabel{}
+\begin{lstlisting}[style=javastyle, caption={Java：annotation 是一种 \texttt{@interface}，元素写成方法形式}, label={lst:ch1-java-annotation}]
+@Retention(RetentionPolicy.RUNTIME)   // 不写这一行，默认档是 CLASS
+@Target(ElementType.METHOD)
+public @interface Beta {
+    String since() default "unknown"; // 元素是抽象方法的形式
+}
+\end{lstlisting}
+
+\begin{compare}[title={名字相同不等于东西相同}]
+按“它新增成员吗”分类，三者立刻分开：C\# 的 property 新增成员；\cpp{} 的 attribute、C\# 的 attribute、Java 的 annotation 都不新增成员。
+按“它是不是元数据”分类，分组又换了一次：C\# 的 attribute 与 Java 的 annotation 同组（类型化元数据）；\cpp{} 的 attribute 单独一组（编译期修饰）；C\# 的 property 根本不参与这个分类。
+两个判据给出两种不同的分组，这正说明它们是三种东西，而不是同一东西的三种方言。
+\end{compare}
+
+\subsection*{为什么不给三个词重新分配中文译名}
+
+一个自然的补救方案是把三个中文词强行分工：“属性”只给 \cpp{} 的 attribute，“特性”只给 C\# 的 attribute，“注解”只给 Java 的 annotation。这条路走不通，卡点正好在 C\# 的 property 身上——它也要一个词，而它历来就叫“属性”；把 \cpp{} 的 attribute 让出去，\cpp{} 侧就失去既有文献习惯；把 C\# 的 property 让出去，等于重写 C\# 中文生态的通用术语。两头都是既有约定，没有便宜的解法。
+
+本册因此采用一条更机械但可执行的纪律：中文只在章、节标题层面使用“属性”这类词，正文一律在概念第一次出现处附英文原词（需要指语法形状时直接写 \texttt{[[\,\dots\,]]}、\texttt{@Name}、\texttt{\{ get; set; \}}），并优先用英文原词指代。全书通篇按 attribute（修饰）、property（成员）、attribute/annotation（元数据）三种身份各带原名来写，而不是反复用“属性”再靠上下文澄清——对这类双义词，靠上下文澄清正是最常见的失效方式。
+
+\subsection*{一段必须说清的因果空白}
+
+中文材料里常见一句顺手的话：“Java 的注解是学 C\# 的 Attribute 的。”本册不接受这种因果句式，理由见下框。
+
+\begin{note}[title={“Java 注解源于 C\# Attribute”：没有一手出处}]
+可核实的只有两件事。时间顺序：C\# 的 attribute 随 ECMA-376 定稿于 2002 年在场，Java 的 annotation 由 JSR 175 定义、规范最终版为 2004-09-30、随 J2SE 5.0 同日出货，两者相差约两年半。形状差异：C\# 走“派生自 \seqkw{System.Attribute} 的类 $+$ 构造实参 $+$ 写进程序集元数据”；Java 走“特殊的 \texttt{@interface} 声明 $+$ 抽象方法形式的元素 $+$ \seqkw{@Target}/\seqkw{@Retention} 元注解 $+$ 三档保留策略”。两者的设计目标相同：把类型化的键值对贴到声明上。
+而 JSR 175 全文不提 C\#，没有任何一手文献支持“继承／源自”这类说法。因此本册的口径是：\textbf{同期同形、相互独立可证实，因果说不成立}。任何说 Java 抄 C\#（或反过来）的句子都没有一手出处；详细辨析见 \S\ref{sec:three-lineage}。
+\end{note}
+
+\begin{stdbox}[title={本节的依据边界}]
+本节故意\textbf{不引标准条款号}：命名事故不需要条款支持，而“\cpp{} 的属性在标准哪一子句”属于第 2 章逐条处理的工作，本章给出编号只会增加出错面。本节用到的可核实外部文件名只有两个：ECMA-376（C\# 定稿于 2002 年）与 JSR 175（注解，规范最终版 2004-09-30，随 J2SE 5.0 出货）。
+\end{stdbox}
+
+\begin{guideline}[title={本节要记住的四句}]
+一、\cpp{} 的 attribute 是\textbf{修饰}：不新增成员，只改编译器对该实体的处理。
+二、C\# 的 property 是\textbf{成员}：它有访问器，编译成方法，是类型表面的一部分。
+三、C\# 的 attribute 与 Java 的 annotation 是\textbf{同类}（元数据）；它们与 \cpp{} 的 attribute 只是\textbf{同名}。
+四、\cpp{} 标准里\textbf{不存在} property 这种设施；见到“\cpp{} 属性”，先确认它指 \texttt{[[\,\dots\,]]} 还是 MSVC 扩展。
+\end{guideline}
+
+\section{三条年代线}
+\label{sec:one-timeline}
+
+三个概念各有各的年表，互不推导。把它们并排放好（表~\ref{tab:ch1-timeline}）有两个好处：读者不会把某一侧的年份安到另一侧头上；并排之后也能看清，这张表里\textbf{没有任何一格}能读成“因为某语言先做了，所以另一语言跟着做”。
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}p{0.33\textwidth}>{\raggedright\arraybackslash}p{0.31\textwidth}@{}}
+\caption{三条年代线：\cpp{} 属性、C\# 的两条线、Java 注解}\label{tab:ch1-timeline}\\
+\toprule
+时间 & 事件 & 所属线 \\ \midrule
+\endfirsthead
+\toprule
+时间 & 事件 & 所属线 \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+2002 & C\# 1.0：property 与 attribute \textbf{同时}在场（ECMA-376 定稿于 2002 年） & C\#（两条线同起点） \\
+2004-09-30 & JSR 175 规范最终版定稿；注解随 J2SE 5.0 同日出货 & Java（起点） \\
+Java SE 6 & \seqkw{javax.annotation.processing}：注解处理器 API 进入（JSR 269 / JEP 117）；该版本具体发布年份本章不展开 & Java（消费时机侧） \\
+2007 & C\# 3.0：自动属性 & C\#（property 线） \\
+C\# 5 & 参数属性一类（\seqkw{[CallerMemberName]} 等）：写在参数上的 attribute；该版本对应年份本章不展开 & C\#（attribute 线） \\
+2011 & \cpp{11}：\texttt{[[\,\dots\,]]} 属性语法进入语言；此后标准属性逐个增加（14/17/20/23/26） & \cpp{}（起点） \\
+2015 & C\# 6.0：表达式体成员 & C\#（property 线） \\
+Java 8 & \seqkw{@Repeatable} 与类型注解（\seqkw{ElementType.TYPE\_USE}） & Java（形状扩展） \\
+2020 & C\# 9.0：\kw{init} 访问器 & C\#（property 线） \\
+2022 & C\# 11：\kw{required} 成员；attribute 侧的泛型 attribute & C\#（两条线同年） \\
+2024 & C\# 13：partial property & C\#（property 线） \\
+Java 16 & record（JEP 395）：数据载体的紧凑写法，没有引入 property 语法 & Java（仍无 property） \\
+2025-11 & C\# 14（随 .NET 10）：\kw{field} 关键字与扩展成员 & C\#（property 线） \\
+\cpp{26} & 反射（P2996）落地；标准属性清单继续扩展，仍无自定义属性 & \cpp{} \\
+2026-09-15 & JDK 27 发布——本册写作时的最新 GA 基线；JDK 28 及之后不作断言 & 版本基线 \\
+\end{longtable}
+}
+
+\subsection*{从表里读出的两条硬结论}
+
+第一，\textbf{\cpp{} 从头到尾没有“自定义属性”这一档}。\cpp{11} 给出语法，此后逐个版本增的是\textbf{清单}，不是\textbf{可扩展性}：清单由标准与厂商维护，程序员写不出一个新属性。而 C\# 的 attribute 与 Java 的 annotation 从诞生第一天起就是\textbf{开放类型}——任何人都能声明一个新的 attribute / annotation 类型，代价是必须自己提供消费它的代码。这条“封闭清单对开放类型”的对照是全册的轴心：第 2 章展开 \cpp{} 那一侧（为什么名字空间被占死、见 \S\ref{sec:two-cpp-reserved}），第 3 章展开元数据那一侧（自定义类型如何被消费）。第一章只负责把它钉住。
+
+第二，\textbf{Java 至今没有语言级 property}。Java 有字段，有 getter/setter 命名约定，有库与框架提供的各式注解（例如 Jackson、JavaBeans 体系里的 \seqkw{@Property}），但这些都是\emph{库}的东西，不是语言：没有访问器语法，没有“属性是成员”这一本体地位。record（JEP 395，随 Java 16）解决的是数据载体的写法长度，不是把字段升级成 property。所以本册在 Java 一侧不谈 property，只在“字段 $+$ 方法约定”的意义上使用这个词。
+
+顺带一条读表法：C\# 那一列值得注意的地方不是年份多，而是\textbf{两条线在 1.0 就同时在场}。同一门语言里，“成员”和“元数据”从第一天起并存，且都被中文译成过“属性/特性”，所以 C\# 文档里的“属性”歧义并不来自翻译滞后，而来自语言本身同时提供两种东西。
+
+三个起点的间距也值得说一句：2002（C\#）、2004-09-30（Java）、2011（\cpp{}）。这张表里没有任何一格能读成因果，间距本身也不构成因果；它能读出的只有一件结构性的事：\cpp{} 拿到属性语法时，前两套元数据体系已经各自完整跑通多年，\cpp{} 这一套从第一天起就是独立设计的第三种东西——这也解释了为什么“\cpp{} 能不能有自定义属性”不能靠照搬任何一套现成答案来回答（第 2 章 \S\ref{sec:two-cpp-reserved} 给出 \cpp{} 侧真正的卡点）。
+
+\cpp{} 那一列看起来最稀疏，这不是停滞。\cpp{11} 之后每个版本都在增属性（14/17/20/23/26，逐条见第 2 章），但增的动作发生在\textbf{清单}上，不在\textbf{语法}上，也不在\textbf{可扩展性}上。语法一次定型（两对方括号），此后由委员会往里填名字，由编译器厂商在自己的命名空间里填另一批。稀疏的年份正对应“这条路已经走完”的状态。
+
+C\# 的 property 线之所以最忙，是因为它每一档都在还\textbf{写法成本}的账：自动属性省掉样板字段（3.0）、表达式体省掉花括号（6.0）、\kw{init} 把“只许初始化时写”变成语法（9.0）、\kw{required} 让必填写入可检查（11）、partial property 让生成代码与手写代码分工（13）、\kw{field} 关键字与扩展成员继续在同一层加糖（14，随 .NET 10）。相比之下 attribute 线只在必须动语法时才动——参数属性（C\# 5）与泛型 attribute（C\# 11）是两条著名扩展，节奏慢得多。同为“属性”，两条线的扩展压力完全不是一回事。
+
+Java 线的节奏则是另一种形状：起点给形状（JSR 175），紧接着 JSR 269 / JEP 117 在 Java SE 6 给\textbf{消费通道}（\seqkw{javax.annotation.processing}），Java 8 再补形状（\seqkw{@Repeatable}、类型注解 \seqkw{ElementType.TYPE\_USE}）。注意这条线的重心：它扩展的是“谁在什么时候读注解”，不是“字段能不能变成成员语义”——record（JEP 395，随 Java 16）解决的是数据载体的书写长度，property 在 Java 里至今仍然是约定而非设施。
+
+\begin{note}[title={表里两处刻意留空，不是遗漏}]
+年代线表里有两格故意只写版本号、不写年份：Java SE 6（注解处理器 API 进入的版本）与 C\# 5（参数属性一类的版本）。本章的口径是“年份能一手核实才写”，这两处的发布年份不在本章的核实范围内，因此按留空处理而不是估一个数。同理，record 只写“随 Java 16”、类型注解与 \seqkw{@Repeatable} 只写“随 Java 8”。这类留空不影响结论：两条硬结论（\cpp{} 无自定义属性、Java 无语言级 property）都不依赖这些空缺年份。
+\end{note}
+
+把表倒过来读更有用：看每一门语言\textbf{缺}哪一格。\cpp{} 缺“自定义条目”这一格，也缺“运行期回读”这一格（\cpp{26} 之后缺到什么程度要按实现实测，见 \S\ref{sec:one-criterion}）；Java 缺“语言级 property”这一格；C\# 的两条线都在，但它的 attribute 不自带效果——它必须等一个消费者，这正是它与 \cpp{} 清单条目最实际的差别。\textbf{缺格决定选型}：一个需求如果落在某语言的缺格上，在那门语言里就没有对应设施，只能改写法，而不是改写法细节。
+
+\subsection*{两条线各写一遍：封闭清单与开放类型}
+
+\cppxxlabel{C++17}
+\begin{lstlisting}[style=cppstyle, caption={\cpp{}：清单外的属性——\cpp{11}/14 报错，\cpp{17} 起被忽略}, label={lst:ch1-closed-list}]
+[[nodiscard]] int open(const char* p);   // 标准属性：清单内，编译器负责生效
+[[gnu::flatten]] void tick();            // 厂商命名空间：认得才生效
+[[acme::heaviness]] void spin();         // 自创条目：不是自定义属性，只是被忽略
+\end{lstlisting}
+
+\csharplabel{}
+\begin{lstlisting}[style=csharpstyle, caption={C\#：自定义 attribute 是一个普通类——语义靠消费方}, label={lst:ch1-open-type}]
+sealed class RunsOnAttribute : Attribute
+{
+    public RunsOnAttribute(string os) => Os = os;   // 构造实参
+    public string Os { get; }                       // 注意：这里才用到 property
+}
+
+[RunsOn("linux")]          // 贴上：不改变方法本体，也不新增成员
+static void Serve() { }    // 行为来自读它的代码；不读则完全无事
+\end{lstlisting}
+
+\begin{compare}[title={开放类型对封闭清单：谁能加新条目}]
+\textbf{能加吗}：C\#、Java 可随意声明新的 attribute / annotation 类型；\cpp{} 只能用清单内条目与厂商命名空间。
+\textbf{加了有用吗}：开放类型的新条目默认\emph{零效果}，必须有代码消费它；\cpp{} 的清单条目自带效果，因为编译器就是它唯一的消费者。
+\textbf{遇到不认识的条目呢}：\cpp{} 拒绝或忽略（版本相关，见 \S\ref{sec:two-cpp-reserved}）；C\# 与 Java 接受，因为“不认识”在这个体系里没有意义——风险换了位置，从“编译不过”变成“写了没人读”。
+\end{compare}
+
+\section{判据：它留在源码里，还是进了产物}
+\label{sec:one-criterion}
+
+本节给出贯穿全册的方法论。以后每一节遇到一个新机制，先别背语法，把它推到这三个问题面前问一遍——三语言的差异会自己浮出来，不需要人去论证。三问的顺序不可换：第一问决定第二问有没有意义，第二问的答案又决定第三问的风险类型。
+
+\subsection*{问题一：它在哪个时机被消费}
+
+三种可能，互斥程度比直觉上高。
+\begin{itemize}
+\item \textbf{只影响编译期}：改变诊断（该不该警告）、改变优化前提、改变内存布局。用完即弃，产物里不留可读取的记录。\cpp{} 侧三个例子已经说明这点：\kw{[[nodiscard\,]]} 只在编译期报警，\seqkw{[[no\_unique\_address]]} 改的是布局，\seqkw{[[assume]]} 是给优化器的前提条件——三者都不产生运行期能读的东西。
+\item \textbf{写进产物元数据，供运行期读取}：C\# 的 attribute 实例在编译期被写进程序集元数据的 blob，运行期可用反射取回；Java 的 annotation 走不走这一步，取决于它的保留策略。
+\item \textbf{只活在源码与工具链里}：Java 的 \seqkw{RetentionPolicy.SOURCE} 属于这里——产物里根本没有它；文档生成器、静态检查器、注解处理器在这一档工作。C\# 的源生成器消费的也主要是源码层的形状。
+\end{itemize}
+指路：这一问在第 3 章被拆成完整一节，三档保留策略如何决定元数据的去向，见 \S\ref{sec:three-retention}；\cpp{} 侧“编译期即全部”的后果见 \S\ref{sec:two-cpp-reserved}。
+
+三档之间的差别值得先记住一句话：\texttt{SOURCE} 是\emph{源码层}的（产物里没有，工具链读走就算用完了）；\texttt{CLASS} 是\emph{产物层}的（记录进了 class 文件，但反射这条路不通）；\texttt{RUNTIME} 才是\emph{运行期}的（记录在里面，也读得出来）。C\# 的 attribute 只有一种落点：编译期写进元数据 blob，运行期由反射消费；差异被推到了“谁去读”这一侧，而不是“写不写进去”这一侧。
+
+\begin{warning}[title={Java 的默认保留策略是 CLASS，不是 RUNTIME}]
+注解不写 \seqkw{@Retention} 时，默认档是 \textbf{CLASS}：它\emph{进 class 文件}，但\textbf{反射读不到}。也就是说“我明明标了注解，反射拿回来的数组却是空的”是\textbf{默认行为}，不是 bug，也不是编译器的错。这是 Java 侧最常见的元数据误判。想让运行期读到，必须显式声明 \texttt{RUNTIME}；只想服务工具链，则留在 \texttt{SOURCE}。对照见 \S\ref{sec:three-retention}。
+\end{warning}
+
+\subsection*{问题二：它能不能被程序自己读回来}
+
+元数据的存在意义是“被别人读”。读不回来，它就退化成注释的替代品。
+\begin{itemize}
+\item C\# 的 property 是成员，反射读回靠 \seqkw{GetProperty}（本册只走到这一步，成员反射的更深处不在本章）。
+\item C\# 的 attribute 靠 \seqkw{GetCustomAttributes} 读回，运行期可读——前提是读取方也解析得到那个 attribute 类型。
+\item Java 的 annotation 只有 \texttt{RUNTIME} 档保证反射可读；\texttt{CLASS} 档进产物但反射读不到，\texttt{SOURCE} 档两者都不读。
+\item \cpp{} 的 attribute 在 \cpp{26} \textbf{之前基本没有回读通道}：语言把修饰吃进了代码生成，事后没有 API 能问“这个函数当时贴过什么”。\cpp{26} 反射（P2996）落地之后，\emph{标准属性自身如何被反射读出仍未完全打通}——某个具体实现能读到什么，属于需按实现实测的问题，本册不断言（清单与对照见 \S\ref{sec:two-compare}）。
+\end{itemize}
+指路：\S\ref{sec:two-compare} 会把“能不能读回”做成跨语言总账；\S\ref{sec:three-retention} 给出 Java 三档与 .NET 侧留存差异的逐项对照。
+
+\subsection*{问题三：它认不认识未知条目}
+
+这一问区分封闭清单与开放类型，也是可移植性风险最集中的地方。
+\begin{itemize}
+\item \textbf{封闭清单}：不认识的一律拒绝或忽略。\cpp{} 在 \cpp{11}/14 对不认识的属性\textbf{报错}，\cpp{17} 起\textbf{忽略}（版本细节见 \S\ref{sec:two-cpp-reserved}）。“忽略”比“报错”危险：它让代码带着一个从未生效过的意图安静编译通过。
+\item \textbf{开放类型}：不存在“未知条目”这个概念——你写的类型只要存在、形状正确就合法，编译器根本不关心有没有人读它。风险于是换了位置：\emph{它一定通过编译，而且可能永远没有效果}。
+\end{itemize}
+指路：三种失败模式（拒绝／忽略／接受但无人读）在第 2 章按 \cpp{} 版本逐个落实，在 \S\ref{sec:three-retention} 按 Java 保留策略逐个落实。
+
+\subsection*{三问演练：同一个意图，三种落点}
+
+设想一个共同的意图：“标记某个成员只能在 Linux 上跑。”把三问依次问下去，差异自动出现。
+\begin{enumerate}
+\item \textbf{时机}：\cpp{} 只能表达成编译期效果（例如靠清单内属性影响诊断，或者干脆改用条件编译），因为它的元数据不进产物；C\# 写成一个 attribute，编译期落进元数据 blob；Java 写成 annotation，进不进产物则由你选的保留策略决定。
+\item \textbf{回读}：\cpp{} 事后问不到；C\# 运行期可用 \seqkw{GetCustomAttributes} 问；Java 只在 \texttt{RUNTIME} 档问得到。
+\item \textbf{未知条目}：\cpp{} 里 \texttt{[[acme::heaviness]]} 这种写法要么编译不过要么被忽略；C\# 与 Java 会欣然接受 \texttt{[RunsOn]} 与 \texttt{@RunsOn} 这两种形状——而接受不等于生效，必须存在读它的代码。
+\end{enumerate}
+结论不是“谁更强”，而是：同一个意图在三门语言里落在三个不同的层，跨语言讨论时把它们当成一回事，就会写出自以为有约束、实际零效果的代码。
+
+\begin{warning}[title={C\# 的 attribute 不会自己做事}]
+attribute 只是元数据，行为全部来自\textbf{消费方}：反射代码、源生成器，或运行时框架。“贴上 \seqkw{[Serializable]} 就自动序列化”这类说法，要当场识别出它把\textbf{框架行为}误当成了\textbf{语言行为}——语言只负责把这条记录写进元数据，序列化是某个库读了它之后的作为。换一个不带该消费方的环境，同一个 attribute 什么都不做。判断一个 attribute 有没有用，唯一可靠的办法是去找谁读它，而不是猜它想干什么。
+\end{warning}
+
+\begin{bestpractice}[title={遇到任何元数据设施的三步读法}]
+第一步，找\textbf{消费方}：编译器、反射、源生成器、注解处理器，还是外部工具？找不到消费方的元数据，按注释对待。
+第二步，问\textbf{生命周期}：源码层、产物层、运行期层——它决定能否读回，也决定跨模块、跨版本时这条记录会不会丢。
+第三步，问\textbf{不认识时怎样}：拒绝（编译失败，安全但脆）、忽略（静默通过，危险）、接受（责任转给作者）。
+三问答完，一个机制的能力边界与风险点就描出来了；本册后面所有章节都按这个顺序回填细节。
+\end{bestpractice}
+
+\subsection*{三问之外的一件事：不要问“它算不算元数据”}
+
+三问之外还有一个常见弯路：争论某个设施“算不算元数据”。这个争论没有产出，因为它不改任何行为。判据只关心可观察的三件事——什么时候被读、读不读得回、不认识的条目怎么处理——把“算不算”这种归类问题留给中文译名去吵。顺带一条推论：\cpp{} 的 attribute 与 C\#/Java 的元数据之间最实用的区分线，正是第一问与第二问的合取：\emph{需要运行期读到}这一条需求，在 \cpp{} 里不能靠 \texttt{[[\,\dots\,]]} 满足，只能改类型、改结构或换设施；反过来，只影响编译期诊断的东西，用 C\# 的 attribute 表达就得自己写反射代码或源生成器，成本完全不对称。这就是第 3 章最后要谈的选型问题的源头（本册把它压在 \S\ref{sec:two-compare} 的总账里）。
+
+\begin{guideline}[title={判据三问的一句话版}]
+（a）它在哪个时机被消费——编译期、产物元数据、还是只在源码与工具链里？
+（b）它能不能被程序自己读回来——读不回的东西，效果只在编译器那一次。
+（c）它认不认识未知条目——拒绝、忽略，还是接受但无人消费？
+三问的顺序不可换：第一问决定第二问有没有意义，第二问的答案决定第三问的风险长什么样。
+\end{guideline}
+
+\subsection*{为什么恰好是三问}
+
+判据可以列到十条，但本册只留三条，因为这三条彼此独立、且各自的失败模式不重叠。把“时机”与“回读”合成一条是不行的：Java 的 \texttt{CLASS} 档就是活证据——它\emph{进了产物}（时机侧有位置），却\emph{读不回来}（回读侧没有通道），两问在这一格上给出两个不同答案，而这正是 Java 侧最常见的误判来源。把“回读”与“未知条目”合成一条也不行：C\# 的 attribute 读得回来、也接受未知形状，但它的风险来自“没人读”，这跟“读不到”是两回事。反过来，三问一条也不能省：省掉第一问，就会把 \cpp{} 的属性当成“编译器的一种注释”；省掉第二问，就说不清 Java 两档进产物之间的差别；省掉第三问，就注意不到“接受但无人消费”这一整类静默失效。
+
+\section{三语言速查}
+\label{sec:one-table}
+
+把 \S\ref{sec:one-criterion} 的三个问题对四个设施各问一遍，得到表~\ref{tab:ch1-criteria}。它是全册的索引：后面某节讲得太细而迷路时，回到这张表确认坐标。
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.26\textwidth}>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.25\textwidth}@{}}
+\caption{三个判据 $\times$ 三语言速查：消费时机、能否读回、未知条目}\label{tab:ch1-criteria}\\
+\toprule
+设施 & （a）消费时机 & （b）能否读回 & （c）未知条目 \\ \midrule
+\endfirsthead
+\toprule
+设施 & （a）消费时机 & （b）能否读回 & （c）未知条目 \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\cpp{} \texttt{[[\,\dots\,]]} & 编译期：改诊断、给优化器前提、改布局 & \cpp{26} 之前基本无回读通道；\cpp{26} 反射能否读出标准属性，需实测 & 封闭清单：\cpp{11}/14 报错，\cpp{17} 起忽略 \\
+C\# property & 不是元数据：它是成员，编译成方法，随类型成员表进产物 & 可读回，走反射 \seqkw{GetProperty} & “未知条目”不适用：写错即语法错误 \\
+C\# attribute & 编译期写进元数据 blob，运行期由反射或框架消费 & 可读回，\seqkw{GetCustomAttributes} & 接受；但 attribute 类型必须存在，否则编译错误 \\
+Java annotation & 保留策略分三档：\texttt{SOURCE} 只在源码与处理器阶段、\texttt{CLASS} 进 class 文件、\texttt{RUNTIME} 进产物且反射可读（默认档 \texttt{CLASS}） & 只有 \texttt{RUNTIME} 保证读回 & 接受；有无效果取决于有没有代码读它 \\
+\end{longtable}
+}
+
+\subsection*{这张表的四条用法}
+
+第一，它把“谁表达力更强”这类问题直接消解。四个设施站在不同格子上：\cpp{} 那一行整行都在编译期，C\# property 那一行根本不是元数据，剩下两行才是可比项。凡把 \kw{[[nodiscard\,]]} 与 C\# 的 property 放在一起比“哪个更高级”的讨论，从提问阶段就串了线；正确的问法是“我这个意图需要在哪一层生效”，也就是回到 \S\ref{sec:one-criterion}。
+
+第二，它把风险分层。\cpp{} 的风险集中在“忽略”（意图静默失效）；C\# attribute 与 Java annotation 的风险在“接受但无人消费”（写了等于没写）；Java 还要再加一层——默认 \texttt{CLASS} 让你误以为反射能读到。三者补救办法不同：前者靠编译警告与 CI 检查清单外条目，中者靠评审时强制回答“谁读它”，后者靠显式 \seqkw{@Retention}。
+
+第三，它给出后两章的分工。第 2 章从编译期那一行出发：语法形状、被占死的名字空间、标准属性清单、忽略规则，见 \S\ref{sec:two-cpp-reserved}；第 3 章从两个“元数据”行出发：C\# 与 Java 两条血统为什么同期同形而无因果（\S\ref{sec:three-lineage}），三档保留策略如何决定去向（\S\ref{sec:three-retention}），跨语言总账收在 \S\ref{sec:two-compare}。
+
+第四，它给评审提供一份可以直接照抄的核对顺序。表格的行序就是评审时的提问序：先确认手上这一行属于“成员”“修饰”还是“元数据”（这一格错了，后面全错）；再确认消费方在不在同一层——编译期的消费者（编译器诊断、优化器）与运行期的消费者（反射、框架、源生成器、注解处理器）不互换，指望 \cpp{} 的属性在运行期起作用是错层，指望 Java 的 \texttt{SOURCE} 档注解被反射读到也是错层；最后查“这一条如果没人读，代码会不会带着假意图上线”。
+
+\begin{bestpractice}[title={按速查表做元数据评审的三步}]
+第一步，定位行：这个设施落在四行中的哪一行？判据是语法形状（\S\ref{sec:one-names} 里“认概念靠形状”那组清单），不是中文译名。
+第二步，查格子：沿该行读（a）（b）（c）三格，确认你的意图所需的那一格确实有效——想让运行期分派，就要落在“可读回”为“是”的行了，\cpp{} 那一行给不了运行期信息。
+第三步，找读者：在（c）为“接受”的行里，必须能指出一段具体代码读这条元数据；指不出来，就把它当注释，并且按注释的可靠性去要求它。
+\end{bestpractice}
+
+本册的版本基线就钉在这里，后面所有“支持／不支持”的说法都以它为准：\cpp{} 一侧到 \cpp{26}；C\# 一侧到 14（2025-11，随 .NET 10）；Java 一侧到 JDK 27（2026-09-15 发布，写作时的最新 GA）。基线之后的动向本册一律按未核实处理，尤其不对 JDK 28 及之后作任何断言。
+
+读这张表还有三个坑值得先避开，它们都是把行与行串门的错误：
+\begin{itemize}
+\item \textbf{把（a）格当成优劣}。“只在编译期消费”不是缺点，它是\emph{零运行期成本}的另一面；反过来，“写进产物元数据”也不是进步，它意味着多了一条可以被漏掉的消费路径。两格各有代价，比较要落到自己的需求上。
+\item \textbf{把 C\# 的两行并成一行}。同一个类里 property 与 attribute 可以并存，但它们在表里是两行，（a）（b）（c）三格的答案完全不同；把它们混成“C\# 的属性”去查表，查到的永远是错的那一行。
+\item \textbf{把 Java 的三档读成一种}。表里 Java 那一行的（a）格列了三档，是为了说明“注解”不是一个统一行为：同一个 annotation 类型，换一档保留策略就换一层落点。查这张表时要以\emph{具体那个 annotation 类型}的保留策略为准，不是以 annotation 为准。
+\end{itemize}
+
+\begin{note}[title={怎么读表里那句“需实测”}]
+\cpp{} 那一行的（b）格写成“\cpp{26} 之前基本无回读通道；\cpp{26} 反射能否读出标准属性，需实测”。这不是含糊其辞，而是本章能给的最强结论：\cpp{26} 的反射（P2996）确实落地了，反射能读出类型的哪些信息属于第 3 章范围；但“贴在某条声明上的标准属性，反射能否把它当时贴过的那条记录取回来”这一件具体的事，本册没有跨实现的核实材料，因此只按“需按实现实测”处理，既不肯定也不否定。任何在本册之外读到“\cpp{26} 反射能读属性”的断言，都应回到实现与文档去验证，而不是当作语言层结论。
+\end{note}
+
+回到本章开头那句判据：\textbf{它留在源码里，还是进了产物，进去了又能不能被自己读回来}。四个设施在这三问下站成四格，没有两格是重合的——这就是全册后面所有章节都要反复引用的坐标系。第 2 章沿 \cpp{} 那一行往细里走（语法、贴附、名字空间、清单、忽略规则），第 3 章沿两个元数据行往细里走（自定义类型、保留策略、消费通道、跨语言血统），而 \S\ref{sec:two-compare} 与 \S\ref{sec:three-retention} 是两张把行与行对齐的总账。
+
+\begin{note}[title={本册的用词约定}]
+“元数据”一词在本册只用于 attribute 与 annotation；\cpp{} 的 attribute 一律称“修饰”或直接写 \texttt{[[\,\dots\,]]}；C\# 的 property 一律称“property”或“属性成员”，不与 \cpp{} 的“属性”混用；“自定义属性”这个短语只允许出现在两处——C\#/Java 侧指自定义 attribute/annotation 类型，\cpp{} 侧只用于说不存在（截至 \cpp{26} 不存在）。
+\end{note}
+
+\begin{guideline}[title={本章的定位与本章不下结论的清单}]
+本章只立坐标系，不讲机制。三件事已完成：三个同名词被拆成三种东西（修饰／成员／元数据）；三条年代线并排且互不推导，其中 \cpp{} 侧钉死“截至 \cpp{26} 无自定义属性”，Java 侧钉死“无语言级 property”；判据三问给出，后两章每节都回到它。
+本章\textbf{刻意不下结论}的有：\cpp{26} 反射能否读出标准属性（需按实现实测）；\seqkw{\_\_declspec(property)} 的完整语义（第 2 章）；Java 与 C\# 元数据形状差异的根源（\S\ref{sec:three-lineage}）；JSR 269 与 C\# 5 两个版本的具体发布年份（本章不展开）；JDK 28 及之后的任何动向（不作断言）。
+\end{guideline}
+
+\chapter{C++ 与 C\# 的属性}
+\label{ch:two}
+
+中文里同一个词，底下压着两件完全不同的东西。C++ 的 \texttt{[[\,attr\,]]} 是一枚贴在既有语法实体上的标签：它不新增成员，不改变访问语法，最多影响编译器的告警与代码生成决策。C\# 的 \kw{property} 则是一个类成员，自带 \kw{get} 与 \kw{set}（后来还有 \kw{init}）访问器，编译器在背后把它改写成方法调用。前者是修饰，后者是成员；前者不能由使用者扩展，后者天然可以。
+
+本章按这个顺序展开：\S\ref{sec:two-cpp-syntax}--\S\ref{sec:two-cpp-list} 把 C++ 侧的语法、贴附规则、命名空间保留、未知属性的历史命运、探测手段与标准清单讲完；\S\ref{sec:two-cpp-vendor} 处理厂商扩展那一层，其中藏着 C++ 里唯一真正的 property；\S\ref{sec:two-cs-property}--\S\ref{sec:two-cs-il} 讲 C\# 侧的年代线与 IL 真身；\S\ref{sec:two-compare} 用一张对照表收口。判据本身见 \S\ref{sec:one-criterion}；与 .NET Attribute 的留存期对照见 \S\ref{sec:three-retention}。
+
+\section{C++ 属性：从方括号讲起}
+\label{sec:two-cpp-syntax}
+
+\cpp{11} 之前，C++ 没有语言级的属性语法。各家编译器早就有各自的一套：GCC 家族写 \seqkw{\_\_attribute\_\_((...))}，MSVC 写 \seqkw{\_\_declspec(...)}。这两套都是编译器扩展，写法互不兼容，也不参与标准语言规则。\cpp{11} 做的事情是提供一套统一的、可被标准点名的语法：两对方括号。
+
+一个属性列表（attribute list）形如 \texttt{[[\,attr-list\,]]}，其中 \texttt{attr-list} 是若干属性名以逗号分隔。每个属性名可以带命名空间限定，也可以带一个可选的参数圆括号：
+
+\cpplabel{}
+\begin{lstlisting}[style=cppstyle, caption={属性语法的四种可写形态}, label={lst:ch2-cpp-syntax}]
+[[nodiscard]]                  // 裸名，无参数
+[[deprecated("use bar()")]]    // 裸名，带参数
+[[acme::widget]]               // 带命名空间限定
+[[maybe_unused, nodiscard]]    // 同一列表里两个属性名，逗号分隔
+\end{lstlisting}
+
+先把三个容易混的层次分开。属性\emph{名}是 \texttt{nodiscard} 这样的单个标识符，或者带命名空间限定的名字；属性\emph{列表}是 \texttt{[[\,\dots\,]]} 这一整块；属性\emph{说明符序列}（attribute-specifier-seq）是语法产生式里的名字，它可以由一个或多个属性列表前后串起来构成。也就是说，下面两行都合法，效果都是把两个属性贴到同一个声明上：
+
+\cpplabel{}
+\begin{lstlisting}[style=cppstyle, caption={并排多个属性列表，或一个列表里多个属性名}, label={lst:ch2-cpp-multi}]
+[[maybe_unused]] [[nodiscard]] int f();   // 两个列表，贴同一个实体
+[[maybe_unused, nodiscard]] int f();      // 一个列表，两个属性名
+\end{lstlisting}
+
+更要注意，一个声明里属性可以出现在\textbf{两个不同的位置}：一处在声明的起始处（属性声明序列，attribute-decl），一处在说明符上（属性说明符序列）。下面这句两处都有，另外还叠了一个厂商扩展，三者贴附的实体并不相同：
+
+\cpplabel{}
+\begin{lstlisting}[style=cppstyle, caption={同一声明里的多个属性位置}, label={lst:ch2-cpp-two-slots}]
+[[acme::pure]] int buf[16] __attribute__((aligned(32)));
+//  声明开头的属性      说明符一侧的属性     厂商扩展
+\end{lstlisting}
+
+参数那一头也是同理：属性名后面的圆括号里写什么，由该属性自己的规则决定。有的属性根本不接受参数（\texttt{[[noreturn]]}、\texttt{[[fallthrough]]}），有的接受一个字符串实参（\texttt{deprecated} 的消息形态），有的接受表达式（\texttt{assume} 的断言条件）。参数形态不是通用语法，逐个属性查。
+
+\begin{stdbox}[title={术语：attribute specification}]
+标准把这一整块规则放在名为 attribute specification 的语言节里：\cpp{11} 引入语法，后续版本逐个增补属性名与允许位置。本章只复述术语与规则形态，不写死条款号——不同版本 ISO/IEC 14882 的编号会挪动，写死编号反而误导。要查某个属性，应查它自己的条目，那里列出它允许贴附的实体集合与参数形态。
+\end{stdbox}
+
+\begin{compare}[title={方括号 vs 双下划线}]
+\texttt{[[\,attr\,]]} 是语言语法，名字要么在标准清单里，要么落在实现保留的命名空间里；\seqkw{\_\_attribute\_\_} 与 \seqkw{\_\_declspec} 是编译器在解析层面自己认的扩展，不受标准清单约束，也不受 \seqkw{\_\_has\_cpp\_attribute} 探测（见 \S\ref{sec:two-cpp-detect}）。三者在同一个声明上可以并存，但语义来源完全不同：前者的含义由 ISO 文本规定，后两者由厂商文档规定。
+\end{compare}
+
+\section{appertains-to：属性贴在哪一个语法实体上}
+\label{sec:two-appertains}
+
+标准描述属性时用的动词是 appertains to，中文读作“贴附于”。这不是修辞：一个属性只有先确定贴在哪个语法实体上，才谈得上它起什么作用。允许贴附的位置由语法规则给出，典型的有下面这些。
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.26\textwidth}>{\raggedright\arraybackslash}p{0.55\textwidth}@{}}
+\caption{属性的典型贴附位置与对应实体}\label{tab:ch2-appertains}\\
+\toprule
+书写位置 & 贴附的语法实体 \\ \midrule
+\endfirsthead
+\toprule
+书写位置 & 贴附的语法实体 \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+声明符之前或之中 & 由该声明符引入的实体：变量、数据成员、函数 \\
+声明末尾 & 整个声明所引入的实体（含类型说明符那一段） \\
+语句之前 & 该语句（\texttt{switch} 分支、复合语句等） \\
+类/枚举说明符之后 & 该类或该枚举类型 \\
+函数参数上 & 该参数 \\
+返回类型上 & 返回类型（与函数本身是两件事） \\
+带 \kw{auto} 的结构化绑定声明上 & 该结构化绑定声明（\cpp{23} 起放开） \\
+\end{longtable}}
+
+同一实体上贴了多个属性时，组合语义由标准规定，而不是“按书写顺序叠加”。清单里的属性彼此作用面基本正交：\texttt{[[nodiscard]]} 管返回值被丢弃，\texttt{[[maybe\_unused]]} 管未使用告警，\texttt{[[deprecated]]} 管被引用时提示，一起写不会互相压制，也不存在“后面的覆盖前面的”。真正需要留神的是位置，不是顺序。
+
+\cppxxlabel{C++17}
+\begin{lstlisting}[style=cppstyle, caption={不同位置、不同贴附目标}, label={lst:ch2-cpp-appertains}]
+class Shape {                     // 类上可贴厂商/工具属性
+  [[no_unique_address]] Label tag;   // 贴在非静态数据成员上
+public:
+  [[nodiscard]] virtual int area() const;   // 贴在函数上
+  void set(int [[maybe_unused]] v);         // 贴在参数上
+  [[deprecated("use area()")]]              // 贴在成员函数声明上
+  int a() const { return area(); }
+};
+
+switch (k) {
+  case 1: ++n; [[fallthrough]];   // 贴在语句上：本分支故意贯穿
+  case 2: go(); break;
+  default: break;
+}
+\end{lstlisting}
+
+\begin{warning}[title={左右挪一个位置，贴附目标就变了}]
+把属性写在返回类型左边、参数表右边、\texttt{const} 之后，得到的可能不是同一个贴附实体。对某些属性而言，这个区别直接改变作用范围：贴在函数上与贴在函数的返回类型上，触发时机不同。允许位置是逐个属性规定的，没有“写哪儿都一样”的通式。\textbf{下笔前先查该属性条目列出的允许位置；拿不准就紧贴在最外侧的声明开头，然后用一个刻意丢弃返回值、刻意留下未使用变量的测试，验证告警是否真的出现。}
+\end{warning}
+
+还有第二类位置坑：属性贴在\emph{声明}与贴在\emph{声明符}上，对一个声明引入多个实体的情形覆盖面不同。同一行用逗号声明两个变量时，写在声明开头的属性与写在每个声明符旁的属性，作用范围可能一个是整句、一个是单个变量。跨编译器迁移代码时这类差异是常见来源，属于可观察行为，别当作纯风格问题。
+
+\begin{note}[title={属性不是注释，也不是标记语言}]
+一个常见误解是“方括号里的东西随写随有，像注释一样无害”。事实是：贴附位置错到不允许的实体上是编译错误；位置对但目标错，是静默失效。两者都不会提醒你。把每个属性都当作会改变编译器行为的一句话来对待，写完就要验证它是否真的生效。
+\end{note}
+
+\section{命名空间被标准占死：为什么 C++ 没有自定义属性}
+\label{sec:two-cpp-reserved}
+
+这是全册在 C++ 侧最要紧的一节，先把结论摆出来。
+
+\begin{guideline}[title={截至 \cpp{26}，C++ 没有用户自定义属性}]
+可写的属性只有两类：\textbf{标准属性}（一张封闭清单，见 \S\ref{sec:two-cpp-list}）与\textbf{实现属性}（编译器厂商自己命名空间里的条目，见 \S\ref{sec:two-cpp-vendor}）。语言没有提供“给自己造一个属性名”的机制，也没有让使用者挂载语义的钩子——自定义名字即使写得出来，也没有语言层面的观察者。
+\end{guideline}
+
+标准用保留规则把这扇门焊死，规则分两层。
+
+第一层：\textbf{不带命名空间的属性名整体保留给标准化}。编译器不允许把某个裸名字实现成自己的属性。你今天随手写的 \texttt{[[unlike]]}，在任何 conforming 编译器上都不是 C++ 属性——它要么落到“未知属性”的命运（\S\ref{sec:two-cpp-unknown}），要么被某个厂商用扩展那套机制特殊处理，但那也不是语言属性。反过来，如果标准化在下一版收编了这个名字，你代码的语义会被静默改写。
+
+第二层：\textbf{带命名空间的属性名里，只有 } \texttt{std} \textbf{以及匹配 } \texttt{std} \textbf{后跟数字的命名空间保留给标准化}（\texttt{std1}、\texttt{std2} 依此类推），\textbf{其余所有命名空间一律留给实现}。语法上你可以写 \texttt{[[acme::widget]]}，但它的含义只存在于某个具体编译器的实现里。
+
+\cpplabel{}
+\begin{lstlisting}[style=cppstyle, caption={“写得出来”不等于“是语言特性”}, label={lst:ch2-cpp-reserved}]
+[[unlike]]          int a;   // 裸名：保留给标准化，属未知属性
+[[std::whatever]]   int b;   // std 命名空间：保留给标准化
+[[std3::whatever]]  int c;   // std 后跟数字：同样保留
+[[acme::widget]]    int d;   // 其余命名空间：留给实现，纯厂商语义
+\end{lstlisting}
+
+把这两层合起来读，就能理解“C++ 为什么没有自定义属性”这个问题的结构。语法是开放的：限定名、参数列表都能写，解析器不会因为你造了新名字而拒绝你（\cpp{17} 起尤其如此）。语义是封闭的：没有任何语言机制把你的名字变成含义，也没有属性求值、属性查询、属性传播这类规则。开放的是拼写，封闭的是解释。
+
+\begin{compare}[title={“语法开放”与“语义开放”是两件事}]
+C++：属性名可以随便拼，但只有清单内与厂商命名空间内的名字有解释。C\# 的 attribute 是另一套设计：它是一个继承自 \seqkw{System.Attribute} 的类，谁都能定义、谁都能读（它编译后留在哪儿、能留多久，见 \S\ref{sec:three-retention}）。同一句中文“我可以自定义属性”，在 C++ 里答案是“不能”，在 C\# 里答案是“能，而且这是常规操作”。
+\end{compare}
+
+\begin{bestpractice}[title={要“自定义属性”，就换工具而不是换语法}]
+想在 C++ 里给代码附带可查询的元信息，现实路径有三条：其一，用厂商或静态分析工具认得的实现命名空间属性，代价是不可移植；其二，用注释加工具，某些工具链的注解走的是宏或厂商属性，不是标准属性；其三，把信息编码进类型系统本身——tag 类型、\texttt{constexpr} 变量、概念约束。三条都不产生“C++ 属性”。承认这一点，比假装它存在有用。
+\end{bestpractice}
+
+\section{未知属性的命运：C++11 判错，C++17 起忽略}
+\label{sec:two-cpp-unknown}
+
+写下一个编译器不认识的标准属性名，会发生什么？答案取决于你在哪个版本里问这个问题，而这条差异是本章版本表里最要紧的一行。
+
+\textbf{\cpp{11} 与 \cpp{14}：畸形程序（ill-formed）。} 属性列表里出现未被识别的标准属性名，编译器必须报错。这是有意为之的严格：属性当时是新特性，宁可拒译，也不要在悄悄忽略某个修饰的前提下生成代码。
+
+\textbf{\cpp{17} 起：忽略。} 经缺陷报告回译（P2552R3）改的。未被识别的属性不再让程序畸形，编译器把它丢弃，行为是实现定义，可以给警告。
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}>{\raggedright\arraybackslash}p{0.40\textwidth}@{}}
+\caption{未知属性的命运按版本}\label{tab:ch2-unknown}\\
+\toprule
+版本 & 未知标准属性名 & 实际后果 \\ \midrule
+\endfirsthead
+\toprule
+版本 & 未知标准属性名 & 实际后果 \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\cpp{11} & 畸形程序 & 编译失败，必须报错 \\
+\cpp{14} & 畸形程序 & 同上 \\
+\cpp{17} & 忽略 & 丢弃该属性，行为实现定义，可给警告 \\
+\cpp{20} & 忽略 & 同上；可用 \seqkw{\_\_has\_cpp\_attribute} 预先探测 \\
+\cpp{23}、\cpp{26} & 忽略 & 同上；清单逐年变长，被忽略的概率随之上升 \\
+\end{longtable}}
+
+\cpplabel{}
+\begin{lstlisting}[style=cppstyle, caption={同一句源码在两个版本里的两种结局}, label={lst:ch2-cpp-unknown}]
+[[acme::widget]] int v;   // acme 不是任何标准命名空间
+// -std=c++14：若编译器不认这个名字 -> 报错，程序畸形
+// -std=c++17 及以上：忽略它，继续编译，最多一句警告
+// 无论哪一档，它都不是语言特性；差别只在“拒绝”还是“装没看见”
+\end{lstlisting}
+
+\begin{warning}[title={严格模式挡不住“被忽略”}]
+\texttt{-Werror} 看起来能把忽略变成失败，但前提是那个编译器真的为忽略发了警告；发不发的粒度、时机都是实现定义。用 \texttt{-std=c++17} 及以上编译老代码，原本会被拒的属性现在被静默丢弃，代码语义可能已经与你的预期不同，而构建是绿的。“编译通过”在这里不再是“属性生效”的证据。
+\end{warning}
+
+\begin{bestpractice}[title={跨版本安全的属性写法}]
+把这条当规矩执行：\textbf{只有确认该属性在这个版本、这个编译器上被支持时，才能用裸名。} 否则二选一——要么把它放进实现命名空间，明确承认它是厂商语义（见 \S\ref{sec:two-cpp-reserved}）；要么用探测宏把它包起来（\S\ref{sec:two-cpp-detect}）。同一份源码要跨 \cpp{14} 与 \cpp{17} 时，探测宏那条路几乎是唯一稳的：\cpp{14} 里一个不被支持的属性是编译错误，不是警告。
+\end{bestpractice}
+
+“行为是实现定义”这句标准用语，落到工程上意味着三件事同时可能成立：编译器可以发警告，也可以不发；可以把忽略记录在诊断输出里，也可以静默；可以在命令行开关之间改变态度。所以这一条不能靠“我这儿试过会被忽略”外推到别处，只能当作没有保证。
+
+顺带一提，厂商扩展走的是另一条演化路径：\seqkw{\_\_attribute\_\_} 与 \seqkw{\_\_declspec} 对不认识的处理方式从来由编译器自己定，与上面这张表无关。别把两套机制的容错行为混为一谈。
+
+\section{探测手段}
+\label{sec:two-cpp-detect}
+
+既然未知属性在 \cpp{17} 起会被静默丢弃、在 \cpp{14} 会拒译，能事先问一句“你到底认不认识这个属性”就成了刚需。
+
+\textbf{\seqkw{\_\_has\_cpp\_attribute}}：\cpp{20} 起进入标准。参数是一个属性名，可以带命名空间限定。返回值语义三条：
+\begin{itemize}
+\item \textbf{0}：不认识这个属性；
+\item \textbf{非零}：认识，且这个值对应标准化时间的日期值，形态是 \texttt{201603L} 这样的高位年、低位月组合，与 \texttt{\_\_cpp\_} 风格的特性宏同族。因为日期值可比，可以写阈值判断，用来区分“只支持基础形态”与“支持后来增补的参数形态”；
+\item 带命名空间的形式（\seqkw{\_\_has\_cpp\_attribute(ns::attr)}）对实现属性返回\textbf{实现定义}的值：非零只表示这一家编译器认得，不能横向比较。
+\end{itemize}
+
+\textbf{\seqkw{\_\_has\_include}}：同样在 \cpp{20} 进标准，用来探测头文件是否存在，常与前者配合做“有就用、没有就退化成空宏”的组合。
+
+\textbf{\seqkw{\_\_has\_attribute}}：GCC 风格，探测的是厂商 \seqkw{\_\_attribute\_\_} 那一族名字，\textbf{不是标准 C++}，由实现提供（Clang 也提供它）。它与 \seqkw{\_\_has\_cpp\_attribute} 各查各的清单，不能混用。
+
+\cppxxlabel{C++20}
+\begin{lstlisting}[style=cppstyle, caption={用特性探测宏做跨版本兼容}, label={lst:ch2-cpp-detect}]
+#if __has_cpp_attribute(nodiscard)
+#  define RETURN_DISCOURAGED [[nodiscard]]
+#else
+#  define RETURN_DISCOURAGED            // 老编译器：退化成空
+#endif
+
+// 阈值写法：日期值有序，可用来要求“支持某一档形态”
+#if __has_cpp_attribute(nodiscard) >= 201603L
+#  define NODISCARD_IS_STD 1
+#endif
+
+RETURN_DISCOURAGED int parse(const char* s);   // 宏决定有没有方括号
+\end{lstlisting}
+
+\begin{warning}[title={探测宏自己也讲版本}]
+\seqkw{\_\_has\_cpp\_attribute} 到 \cpp{20} 才进标准，但各家编译器远在这之前就把它作为扩展提供了，所以 \cpp{11}/\cpp{14} 模式下用它通常能过——严格说依赖的是实现扩展。稳妥顺序是：先确认所用编译器提供该探测宏，再用它去探测属性。另外，别把某个具体日期阈值当可移植性承诺：能比较不等于各家给的值真的相同，尤其是实现命名空间那条路返回的是实现定义值。
+\end{warning}
+
+至于“条件属性”一类的特性宏，本章刻意不给名字与数值：相关细节我这里\textbf{未核实}，写出来反而误导。需要精确值时，直接查你所用编译器的属性文档与标准的特性宏表。
+
+\section{标准属性清单（按版本）}
+\label{sec:two-cpp-list}
+
+这张清单是封闭的：除它之外的属性名，要么是厂商条目（\S\ref{sec:two-cpp-vendor}），要么是未知属性（\S\ref{sec:two-cpp-unknown}）。按引入版本排列，注意每档的年代。
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.13\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}>{\raggedright\arraybackslash}p{0.45\textwidth}@{}}
+\caption{标准属性按版本清单}\label{tab:ch2-list}\\
+\toprule
+版本 & 属性 & 作用要点 \\ \midrule
+\endfirsthead
+\toprule
+版本 & 属性 & 作用要点 \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+\cpp{11} & \texttt{[[noreturn]]} & 声明函数不返回；控制流到达函数末尾是 UB \\
+\cpp{11} & \texttt{[[carries\_dependency]]} & \cpp{11} 引入、\cpp{20} 移除；内存模型相关的早期尝试 \\
+\cpp{14} & \texttt{[[deprecated]]} & 引用该实体时告警 \\
+\cpp{14} & \texttt{[[deprecated]]} 的消息形态 & 同上，圆括号里可给一个字符串实参 \\
+\cpp{17} & \texttt{[[fallthrough]]} & 显式声明 \texttt{switch} 分支故意贯穿 \\
+\cpp{17} & \texttt{[[maybe\_unused]]} & 抑制“未使用”告警，实体可被优化掉 \\
+\cpp{17} & \texttt{[[nodiscard]]} & 返回值被丢弃时告警 \\
+\cpp{20} & \texttt{[[likely]]}、\texttt{[[unlikely]]} & 分支热度提示，影响优化取向，不改语义 \\
+\cpp{20} & \texttt{[[no\_unique\_address]]} & 允许空成员占零空间，影响对象布局 \\
+\cpp{20} & \texttt{[[nodiscard]]} 增补 & 可带字符串原因，出现在告警文本里 \\
+\cpp{23} & \texttt{[[assume]]} & 向优化器断言条件恒真；条件为假是 UB \\
+\cpp{23} & 结构化绑定上的属性 & 属性可用于带 \kw{auto} 的结构化绑定声明（P0609R3） \\
+\cpp{26} & \texttt{[[indeterminate]]} & 读取未初始化局部变量由 UB 收窄为值未定（见正文） \\
+\end{longtable}}
+
+这张表有两点读法提醒。
+
+第一，条目分两类：一类只影响诊断，也就是 \texttt{nodiscard}、\texttt{maybe\_unused}、\texttt{deprecated}、\texttt{fallthrough} 这些；另一类会进入代码生成或对象布局，比如 \texttt{likely} 与 \texttt{unlikely}、\texttt{no\_unique\_address}、\texttt{assume}。后者的实际效果与优化级别、编译器版本都有关，别按“写了就一定怎样”去验证，验证要落到产物上。
+
+第二，\cpp{20} 那一行的 \texttt{[[nodiscard]]} 是同一属性的增补，不是新属性。清单条目会随版本变长，参数形态会变，但“由标准点名”这一点始终没松：增补的仍是标准解释得过来的东西，使用者这一侧没有任何新增入口。
+
+\cppxxlabel{C++11}
+\begin{lstlisting}[style=cppstyle, caption={noreturn：最早的清单条目}, label={lst:ch2-cpp-std11}]
+[[noreturn]] void die(const char* why);   // 调用后不会再回到这里
+[[noreturn]] void loop() { for (;;) { work(); } }
+// 若 die 的函数体真的返回，那是未定义行为，而不是警告
+\end{lstlisting}
+
+\cppxxlabel{C++17}
+\begin{lstlisting}[style=cppstyle, caption={三个“改告警不改语义”的属性}, label={lst:ch2-cpp-std17}]
+int classify(char c) {
+  switch (c) {
+    case 'a' ... 'z': ++letters; [[fallthrough]];  // 故意贯穿
+    case '0' ... '9': return 1;
+    default: return 0;
+  }
+}
+[[nodiscard]] int commit();      // 丢弃返回值就告警
+void helper([[maybe_unused]] int dbg) { }
+\end{lstlisting}
+
+\cppxxlabel{C++20}
+\begin{lstlisting}[style=cppstyle, caption={带原因的 nodiscard、分支提示与布局属性}, label={lst:ch2-cpp-std20}]
+struct [[no_unique_address]] Tag { };       // 空成员可占零字节
+struct Buf { Tag tag; int n; };             // tag 可能不占空间
+[[nodiscard]] int open(const char* p);      // C++17 形态
+[[nodiscard("失败也必须检查返回值")]] int close();  // C++20 增补的字符串原因
+int slow(int n) { if (n > 1000000) [[unlikely]] { return trim(n); } return n; }
+\end{lstlisting}
+
+\cppxxlabel{C++23}
+\begin{lstlisting}[style=cppstyle, caption={assume 与结构化绑定上的属性}, label={lst:ch2-cpp-std23}]
+int half(unsigned v) { [[assume(v % 2 == 0)]; return v / 2; }
+[[maybe_unused]] auto [x, y] = pt();   // C++23：属性可贴带 auto 的结构化绑定
+\end{lstlisting}
+
+\cppxxlabel{C++26}
+\begin{lstlisting}[style=cppstyle, caption={indeterminate：把“读取即 UB”收窄成“值未定”}, label={lst:ch2-cpp-std26}]
+void probe() {
+  [[indeterminate]] int v;   // 明知未初始化，仍要读
+  use(v);                    // 值未定，但不再按未定义行为处理
+}
+\end{lstlisting}
+
+\begin{warning}[title={三条容易串台的时代错误}]
+其一，\texttt{[[assume]]} 的条件为假是未定义行为：它是给优化器的断言，不是运行期检查，也不能当 \texttt{assert} 的替代。需要运行期把关就继续用 \texttt{assert}。其二，\texttt{[[reproducible]]} 与 \texttt{[[unsequenced]]} 是 \textbf{C23} 的属性，不是 C++ 的；把它们写进 C++ 清单是很典型的串台。其三，\texttt{[[carries\_dependency]]} 按“\cpp{11} 引入、\cpp{20} 移除”处理，新代码不要再依赖它。
+\end{warning}
+
+\section{编译器属性与 \texttt{\_\_declspec(property)}}
+\label{sec:two-cpp-vendor}
+
+清单之外是厂商那一层。这一层有两套写法，都必须和 \texttt{[[\,\dots\,]]} 分开。
+
+\textbf{GCC/Clang 的 \seqkw{\_\_attribute\_\_}\texttt{((...))}。}常见的有 \texttt{format}、\texttt{always\_inline}、\texttt{section}、\texttt{visibility}、\texttt{cleanup} 等。它是实现扩展，不受标准属性清单约束，也用 \seqkw{\_\_has\_attribute} 而不是 \seqkw{\_\_has\_cpp\_attribute} 探测（后者查的是标准清单与带命名空间的实现属性）。
+
+\textbf{MSVC 的 \seqkw{\_\_declspec(...)}}。同一层的另一族，名字与语义由微软文档规定。这一族里藏着一个与本章主题直接相关的成员：
+
+\begin{guideline}[title={C++ 里唯一真正的 property，在 MSVC 的 \texttt{\_\_declspec} 里}]
+\seqkw{\_\_declspec(property(get=GetX, put=SetX))} 与 C++ 标准属性毫无关系。它做的事情恰恰是本卷 C\# \kw{property} 做的事情：\textbf{把成员访问语法在编译期改写成方法调用}。所以若问“C++ 里有没有 property”，准确答案是：标准里没有，这一家编译器的扩展里有。
+\end{guideline}
+
+\cppxxlabel{MSVC}
+\begin{lstlisting}[style=cppstyle, caption={declspec(property)：访问语法被改写成调用}, label={lst:ch2-cpp-declspec}]
+struct Window {
+  int  GetX() const    { return x_; }
+  void SetX(int v)     { x_ = v; }
+  void SetXref(const int* p) { x_ = *p; }
+  __declspec(property(get = GetX, put = SetX, putref = SetXref)) int x;
+  int x_;
+};
+
+void demo() {
+  Window w;
+  w.x = 1;         // 编译期改写为 w.SetX(1)
+  int k = w.x;     // 改写为 w.GetX()
+  w.x += 1;        // 先 GetX 取旧值，加一，再 SetX 写回
+  int v = 2;
+  w.x = &v;        // putref：调用 SetXref(&v)
+}
+
+struct Grid {
+  int  At(int i, int j) const  { return cell_[i][j]; }
+  void Put(int i, int j, int v){ cell_[i][j] = v; }
+  __declspec(property(get = At, put = Put)) int cells[][4];
+  int cell_[8][4];
+};
+void row() { Grid g; g.cells[1][2] = 7; int q = g.cells[1][2]; }
+\end{lstlisting}
+
+把上面这段的要点按实现文档口径归纳，不掺推测：\kw{get} 指定读取时调用哪个方法；\kw{put} 指定赋值时调用哪个方法，实参是被赋的值；\kw{putref} 让“赋一个指针”转成把指针本身交给方法；复合赋值（\texttt{+=} 这类）会先调 \kw{get} 再调 \kw{put}，也就是它实打实读一次旧值——若 \kw{get} 代价高或有副作用，\texttt{+=} 的开销与可见行为都要按两次调用估算；数组形式的属性把下标作为参数传给访问器，于是 \texttt{cells[1][2] = 7} 变成 \texttt{Put(1, 2, 7)}。声明里那个 \texttt{x}、\texttt{cells} 是语法占位，不是成员存储。
+
+\begin{warning}[title={三条限制，一条比一条硬}]
+第一，它\textbf{不是} C++ 标准属性：任何一致性模式都不保证它可用，跨版本行为属于厂商文档范畴。第二，GCC 没有对应物；Clang 对它的支持状态我这里\textbf{未核实}，请用你所用编译器与版本实测后再决定能否进主干代码。第三，即使可用，它也不产生任何运行期可见的结构：调用方看到的仍是普通成员访问，方法调用是编译期改写的结果，元数据里什么都没有。这一点与 C\# 的 property 差别极大，见 \S\ref{sec:two-cs-il}。
+\end{warning}
+
+\begin{bestpractice}[title={把它当迁移工具，不当语言特性}]
+\seqkw{\_\_declspec(property)} 的设计目标是让 C++ 类兼容“成员式访问”的旧接口，典型场景是移植代码、包装既有的 \texttt{get}/\texttt{set} 方法对。新写的跨平台代码不要依赖它：它把语法糖的成本换成可移植性债务，还遮蔽了“这里是一次函数调用，有副作用，未必是 O(1)”这一事实。
+\end{bestpractice}
+
+\section{C\# 的 property：从 1.0 到 field 关键字}
+\label{sec:two-cs-property}
+
+翻到 C\# 这一侧，词还是那个词，东西换了一个。这里的 property 是\textbf{类成员}，从 C\# 1.0（2002 年标准化）就在，不是后来补的糖。1.0 的形态就带 \kw{get} 与 \kw{set} 访问器，可以只给一个：
+
+\csharplabel{}
+\begin{lstlisting}[style=csharpstyle, caption={C\# 1.0：完整 property 与显式后备字段}, label={lst:ch2-cs-10}]
+public class Temperature {
+    private double celsius;              // 后备字段自己写
+    public double Celsius {
+        get { return celsius; }
+        set { celsius = value; }
+    }
+    public double Fahrenheit {           // 只读：只有 get
+        get { return celsius * 9.0 / 5.0 + 32.0; }
+    }
+}
+\end{lstlisting}
+
+之后的每一档变化，几乎都只改“写起来多长”，不改“编译出来是什么”（后者见 \S\ref{sec:two-cs-il}）。
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.44\textwidth}@{}}
+\caption{C\# property 年代线}\label{tab:ch2-cs-line}\\
+\toprule
+年代 & 名称 & 变化在哪 \\ \midrule
+\endfirsthead
+\toprule
+年代 & 名称 & 变化在哪 \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+C\# 1.0 / 2002 & \texttt{get}/\texttt{set} & property 本体；访问器可只给一个 \\
+C\# 2.0 及后续 & 访问器可访问性 & \texttt{get}/\texttt{set} 可各自更严（细档年份本章未逐条核实） \\
+C\# 3.0 / 2007 & 自动属性 & \texttt{\{ get; set; \}}，后备字段交给编译器生成 \\
+C\# 6.0 / 2015 & 表达式体 & \texttt{=>} 写法、自动属性初始化器；\texttt{get}/\texttt{set} 也可表达式体 \\
+C\# 9.0 / 2020 & \texttt{init} 访问器 & 只允许在对象初始化器与 \texttt{with} 中赋值；record 的位置式 property \\
+C\# 11 / 2022 & \texttt{required} 成员 & 强制初始化器给出该成员 \\
+C\# 13 / 2024 & partial property & 访问器实现拆到另一个部分，由源生成器补全 \\
+C\# 14 / 2025-11（.NET 10） & \texttt{field} 关键字 & 访问器里直接引用自动属性的后备字段；扩展成员（extension property）随本代放开 \\
+\end{longtable}}
+
+\csharplabel{}
+\begin{lstlisting}[style=csharpstyle, caption={C\# 2.0 形态：读写可见性分离}, label={lst:ch2-cs-access}]
+public class Session {
+    public string Token { get; private set; }   // 外部只读，类内可写
+    private int hits;
+    protected internal int Hits {               // property 本身受限
+        get { return hits; }
+        set { hits = value < 0 ? 0 : value; }
+    }
+}
+\end{lstlisting}
+
+自动属性是最关键的一档压缩：声明成员，存储交给编译器。
+
+\csharplabel{}
+\begin{lstlisting}[style=csharpstyle, caption={C\# 3.0 自动属性与 C\# 6.0 的写法压缩}, label={lst:ch2-cs-30}]
+public class Person {
+    public string Name { get; set; }                 // 3.0：自动属性
+    public int Id { get; } = NextId();               // 6.0：只读 + 初始化器
+    public string Display => Name.Trim();            // 6.0：表达式体
+    public string Nick { get => _nick; set => _nick = value?.Trim() ?? ""; }
+    private string _nick = "";
+}
+\end{lstlisting}
+
+\csharplabel{}
+\begin{lstlisting}[style=csharpstyle, caption={C\# 9.0：\texttt{init} 与 record 的位置式 property}, label={lst:ch2-cs-90}]
+public record Point(int X, int Y);        // X / Y 是 property，不是字段
+
+public class Account {
+    public int Balance { get; init; }     // 只能在初始化器或 with 里赋值
+    public string Owner { get; set; } = "";
+}
+
+var a = new Account { Balance = 100 };    // 合法
+a.Balance = 200;                          // 编译错误：init 之后不可写
+var b = a with { Owner = "ada" };         // 合法：with 表达式里可写
+\end{lstlisting}
+
+\csharplabel{}
+\begin{lstlisting}[style=csharpstyle, caption={C\# 11 的 \texttt{required} 与 C\# 13 的 partial property}, label={lst:ch2-cs-11}]
+public class Config {
+    public required string Url { get; set; }   // 11：初始化器必须给
+    public int Retries { get; set; } = 3;      // 有默认值，初始化器可省
+}
+
+public partial class Session {
+    public partial string Token { get; init; } // 13：声明在此，实现在别处
+}
+// 访问器实现由源生成器在另一个部分里补出
+\end{lstlisting}
+
+\csharplabel{}
+\begin{lstlisting}[style=csharpstyle, caption={C\# 14：\texttt{field} 上下文关键字}, label={lst:ch2-cs-14}]
+public class Order {
+    public decimal Total {
+        get;                          // 仍是自动属性：后备字段由编译器生成
+        set {
+            if (value < 0) throw new ArgumentOutOfRangeException();
+            field = value;            // 直接引用那个后备字段
+        }
+    }
+}
+\end{lstlisting}
+
+\begin{note}[title={\texttt{field} 解决的是样板问题}]
+在 C\# 14 之前，一旦你想在访问器里碰到后备字段，自动属性就不再“自动”：你得回去手写一个 \texttt{private decimal \_total;}。\texttt{field} 让你在保留 \texttt{\{ get; set; \}} 形态的同时仍能引用那块由编译器生成的存储。对已经习惯显式后备字段的读者，它是可读性问题而非能力问题；数一数 1.0 到 14 这条线，property 一共被改写过六次写法，语义内核一次没动。
+\end{note}
+
+泛型属性（property 自身带类型参数）属于 C\# 14 那一代扩展成员的语境，\textbf{这一档归属我在本章标注为待核实}；C\# 11 那代的泛型化是 attribute（\texttt{System.Attribute} 的泛型），与 property 不是一回事，本章不展开。
+
+\section{property 的 IL 真身与版本坑}
+\label{sec:two-cs-il}
+
+上面所有语法档位共享一个事实：property 编译下来从来不是字段。
+
+\textbf{一个 C\# property 编译后是两个方法加一条元数据记录。}\kw{get} 访问器编成名为 \texttt{get\_X} 的方法，\kw{set} 编成 \texttt{set\_X}；两者靠 special name 规则关联——方法名要带 \texttt{get\_}/\texttt{set\_} 前缀，且返回类型与首参数符合约定（\texttt{get\_X} 无参数、返回属性类型；\texttt{set\_X} 返回 \texttt{void}、首参数是属性类型）。属性定义表（.property 记录）把这两个访问器绑成一个属性，并记下可访问性与签名。
+
+\textbf{自动属性额外多一个私有字段。} 编译器为它生成一个私有后备字段，名字形如 \seqkw{<X>}\seqkw{k\_\_BackingField}，并打上 \seqkw{[CompilerGenerated]}。尖括号那一段是编译器细节，不属于语言契约。
+
+\csharplabel{}
+\begin{lstlisting}[style=csharpstyle, caption={概念上的产物形态：方法在前，字段是细节}, label={lst:ch2-cs-il}]
+// 源码：public int Count { get; set; }
+// 产物（概念）：
+//   .property int32 Count { get get_Count, set set_Count }
+//   int32 get_Count()             // 转发到后备字段
+//   void  set_Count(int32 value)
+//   .field private int32 '<Count>k__BackingField'  [CompilerGenerated]
+\end{lstlisting}
+
+\csharplabel{}
+\begin{lstlisting}[style=csharpstyle, caption={反射视角：属性在，字段名不可依赖}, label={lst:ch2-cs-reflect}]
+var t = typeof(Point);
+PropertyInfo[] ps = t.GetProperties();       // X、Y 在这里
+FieldInfo[]    fs = t.GetFields();           // 只有编译器细节字段
+foreach (var f in fs) Console.WriteLine(f.Name);  // <Count>k__BackingField...
+object raw = t.GetField("X");                // null：X 不是字段
+\end{lstlisting}
+
+由此产生三类真实坑。
+
+\textbf{一、反射与序列化。}\texttt{GetProperty} 与 \texttt{GetField} 各查各的清单，一边返回空不代表另一边也返回空。凡靠反射遍历成员做映射的序列化器，配置成只扫字段时会把你的 property 全漏掉，反之亦然。那个带尖括号的后备字段名属于编译器实现细节，\textbf{不在语言契约里}，不要在代码里拼这个字符串。
+
+\textbf{二、跨语言边界。}\texttt{DllImport}、COM 与互操作层看到的是方法，不是字段；C\# 侧的 property 与另一侧的“字段”从不对齐。C++/CLI 需要用 \kw{property} 关键字声明，才会被 C\# 当作 property 消费。MSVC 的 \seqkw{\_\_declspec(property)}（\S\ref{sec:two-cpp-vendor}）连这一步都省了，代价是运行期什么都不留。
+
+\textbf{三、版本与兼容。}这是唯一一处“写法变了但二进制没变”与“写法没变但二进制崩了”并存的地方，值得单独一个框。
+
+\begin{warning}[title={改实现不破二进制，改契约必破}]
+把自动属性换成带私有状态的手写 property，或反过来，二进制兼容性取决于\textbf{访问器签名不变}：属性本身不占字段槽，调用方一直在调 \texttt{get\_X}/\texttt{set\_X}，换实现不影响已编译的调用方。但下面这些是源码级与二进制级的双重破坏：给 property 加 \texttt{required}；把 \texttt{set} 改成 \texttt{init}，或直接删掉 \texttt{set}；调整 \texttt{get}/\texttt{set} 的可访问性；改属性类型。它们要么改了 special name 的有无与可调性，要么改了签名；重编译后老调用方可能仍链接在旧形态上并静默出错。公共 API 上做这类改动，请按破坏性变更处理。
+\end{warning}
+
+留存期与元数据可见性的完整对照——哪些 attribute 在运行期读得到、哪些编译完就丢——不在本章，见 \S\ref{sec:three-retention}。
+
+\begin{bestpractice}[title={把 property 当契约写，把后备字段当私事藏}]
+对外暴露的读写能力，写进访问器签名与可访问性；内部怎么存、要不要缓存、要不要校验，留在访问器体内。这条分界决定了改动是否破坏兼容：动实现通常安全，动契约（存在性、可访问性、类型、\texttt{required}/\texttt{init}）必破。凡靠反射做映射的序列化或 ORM 配置，也要在配置里明确“扫属性”还是“扫字段”，别指望两边自动等价——按字段扫描的默认配置漏掉 property 是很常见的事故来源。
+\end{bestpractice}
+
+\section{两种“属性”对照}
+\label{sec:two-compare}
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.29\textwidth}>{\raggedright\arraybackslash}p{0.33\textwidth}@{}}
+\caption{C++ 属性与 C\# property 的六个维度}\label{tab:ch2-compare}\\
+\toprule
+维度 & \texttt{[[\,attr\,]]}（C++） & \kw{property}（C\#） \\ \midrule
+\endfirsthead
+\toprule
+维度 & \texttt{[[\,attr\,]]}（C++） & \kw{property}（C\#） \\ \midrule
+\endhead
+\bottomrule
+\endfoot
+是不是成员 & 不是。贴附在既有实体上的修饰，不引入新成员 & 是。类成员，有自己的签名与可访问性 \\
+能否自定义新条目 & 不能。\cpp{26} 为止只有标准属性与实现属性两类（\S\ref{sec:two-cpp-reserved}） & 能。类里想声明多少 property 就声明多少，这是常规成员声明；另有一族可自定义的 attribute 类与它并列，别混为一谈 \\
+编译后剩下什么 & 只剩编译器的决策：告警、优化取向、对象布局；无运行期痕迹 & 两个方法 \texttt{get\_X}/\texttt{set\_X} 加一条 .property 记录（\S\ref{sec:two-cs-il}） \\
+厂商特例 & \seqkw{\_\_declspec(property)}：访问语法被编译期改写成调用，运行期仍零痕迹 & 不适用 \\
+跨版本兼容负担 & 有。未知属性 \cpp{17} 起被静默忽略；清单逐年变长 & 有。改访问器存在性、可访问性或类型属破坏性变更，改实现不破坏 \\
+工具链可见性 & 仅编译器与静态分析工具可见 & 反射、调试器、序列化器、IDE 均可见 \\
+语言何时开始允许 & \cpp{11}（此前只有厂商 \seqkw{\_\_attribute\_\_} 与 \seqkw{\_\_declspec}） & C\# 1.0（2002）；\texttt{field} 要到 C\# 14（2025-11，.NET 10） \\
+\end{longtable}}
+
+\begin{guideline}[title={一句话分野}]
+C++ 的属性回答“\textbf{这个既有实体，编译器该怎么额外看待它}”；C\# 的 property 回答“\textbf{这个成员对外长什么样、内部怎么算出来}”。前者贴在不改变实体形态的东西上，后者本身就是成员并编译成可被调用的方法。写文档、做评审、设计跨语言接口时，把“属性”这个词每次替换成具体名字——\texttt{[[nodiscard]]}、\texttt{[[maybe\_unused]]}、\texttt{get/set} 访问器、\seqkw{\_\_declspec(property)}——歧义会当场消失。
+\end{guideline}
+
+最后回到判据：判断某个“属性”机制值不值得依赖，看它是否引入新成员、是否留下运行期可见结构、以及能否由使用者扩展。按这三条，C++ 标准属性、MSVC 的 \seqkw{\_\_declspec(property)} 与 C\# 的 property 恰好落在三个不同位置——前者无成员无结构、中者有改写无结构、后者有成员有元数据——这也正是本章前七节与后三节要分开讲的原因。判据的完整陈述见 \S\ref{sec:one-criterion}，C\# attribute 那一族（第三种“属性”）留到 \S\ref{sec:three-retention} 再说。
+
+\chapter{注解、物化与扩展方向}
+\label{ch:three}
+
+前两章比较的是形状：\cpp{} 的属性怎么写、C\# 的 attribute 怎么声明、Java 的 annotation 怎么保留。本章问的是兑现：一段元数据写下去之后，究竟有没有一个人在某个时刻读到它，读到之后又能改变什么。这个问题决定了三件事——为什么 C\# 的 attribute 实参必须是编译期常量，为什么 Java 要把保留策略做成显式的一档，以及为什么 \cpp{} 到今天仍然拒绝开放自定义属性。
+
+本章有三条主张，贯穿全部小节，不会因为某一段写得顺手就松动。第一条：\cpp{} 没有自定义属性（截至 \cpp{26}），所以想要“注解”只能另找路。\S\ref{sec:three-ext-reflect}、\S\ref{sec:three-ext-generators}、\S\ref{sec:three-ext-alt} 就是这三条路：\cpp{26} 反射与它的匿名注解、构建期代码生成、以及干脆把元数据搬进类型系统。这是全册“扩展方向”的主体，也是本章标题的由来。第二条：元数据的可靠性与它的消费时机成反比——越早被消费（编译期就检查实参形状、就据此影响代码生成）越可信，越晚（运行期反射读、靠第三方框架解释）越像一句祈祷；\S\ref{sec:three-retention} 与 \S\ref{sec:three-pick} 沿这条轴给出选型表。第三条：“Java 注解源于 C\# Attribute”这个说法没有一手出处；\S\ref{sec:three-lineage} 是一节证据边界辨析，时间上确实一先一后、设计目标确实同形，但把先后写成因果，证据不支持，能说到的最强结论是同期同形。
+
+\section{C\# 的 Attribute：一个类，实参却是编译期常量}
+\label{sec:three-cs-attr}
+
+C\# 把 attribute 做成了一件很讨巧的事：它就是一个类，派生自 \seqkw{System.Attribute}，于是你能用继承、构造函数、公开成员这些已经学会的东西去描述它；但在书写处它又必须表现得像一个常量表达式。这两半的张力，就是理解 C\# 元数据的全部钥匙。
+
+定义按惯例以 \kw{Attribute} 结尾，使用处可以把后缀省掉：声明 \seqkw{RangeAttribute}，贴上去写 \seqkw{Range} 也能命中。可贴位置、能否重复、是否随继承生效三件事，交给 attribute 家族里最特殊的那一个：\texttt{AttributeUsage} 的\textbf{位置实参}是 \texttt{AttributeTargets} 的按位或集合（决定允许贴在类、方法、属性、字段、参数中的哪些声明上），命名实参 \texttt{AllowMultiple} 决定同一声明上允许出现几次（不写就是 \texttt{false}，贴两次是编译期错误而非运行期惊喜），\texttt{Inherited} 决定派生类与重写成员是否自动继承这份元数据（不写就是 \texttt{true}，读不到父类标注时第一反应会是“反射坏了”，而不是“我没开继承传递”）。
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle,caption={C\# 的 attribute：一个类，但对外只暴露编译期可知的信息},label={lst:ch3-cs-def}]
+using System;
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Method,
+                AllowMultiple = false, Inherited = true)]
+public sealed class RangeAttribute : Attribute
+{
+    public RangeAttribute(double min, double max)   // 位置实参 = 构造函数形参
+    {
+        Min = min;
+        Max = max;
+    }
+
+    public double Min { get; }           // 只读属性：只能由位置实参落地
+    public double Max { get; }
+
+    public string Message { get; set; }  // 命名实参：可读可写的公开属性
+    public bool Strict;                  // 命名实参：公开字段同样可以
+
+    public bool Within(double v) => v >= Min && v <= Max;  // 方法不能作命名实参
+}
+
+[Range(0.0, 120.0, Message = "超出可接受区间", Strict = true)]
+public sealed class Person
+{
+    [Range(0.0, 150.0)]
+    public int Age { get; set; }
+}
+\end{lstlisting}
+
+限制全在实参上：位置实参就是构造函数的参数，命名实参就是公开的字段或属性，而\textbf{两者都必须是编译期常量}。合法形态是有限的一小撮——整数字面量、字符串字面量、\kw{typeof} 表达式、另一个 attribute、一维数组字面量，并且这些形态可以嵌套。于是 \texttt{[Marker(Tags.Important)]}（\texttt{const} 字符串）、\texttt{[Marker(typeof(Tags))]}、\texttt{[Marker(new string[] \{ "a", "b" \})]}、\texttt{[Marker(new MarkerAttribute("inner"))]} 全部合法，而 \texttt{[Marker(DateTime.Now.ToString())]} 与 \texttt{[Marker(string.Join("", "a", "b"))]} 一律编译不过：后者的结果即便人可算出，也不是常量表达式。这就是它与“一个普通类实例”的分界——attribute 不能携带任意运行期对象。
+
+\begin{warning}[title={把 attribute 当成“能带逻辑的类”是 C\# 侧最常见的心智错误}]
+定义处是一个类，读者就顺手想写计算、注入依赖、传一个集合对象进去。实参必须编译期可知这一条把这类写法全部挡在编译门外。这不是语言小气，而是它规定了\textbf{这份元数据只能被编译期与生成期的工具消费}：编译器要在任何东西被实例化之前，就把这些值原封不动写进程序集元数据。任何“运行一下才知道”的信息都无法通过这条通道传递。
+\end{warning}
+
+正因为只写进元数据，读取就有两条成本不同的路径。一条是 \texttt{Attribute} 类的 \seqkw{GetCustomAttributes} 一族，它会真的构造 attribute 实例并执行构造函数；另一条是 \seqkw{MemberInfo.GetCustomAttributesData}，返回 \seqkw{CustomAttributeData}，只给你实参的形状与值而不构造对象。历史接口 \seqkw{ICustomAttributeProvider} 从 .NET 5 起在 \seqkw{MemberInfo} 上被 \seqkw{CustomAttributeData} 这条路径取代，新代码应从后者开始。另外 CA1813 主张 attribute 应当 \kw{sealed}：可被子类改写的 attribute 会让“实参形状”这个契约失去意义。
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle,caption={同一个标注的两种读取成本：构造实例与只读实参},label={lst:ch3-cs-readpaths}]
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+
+public static class Reader
+{
+    // 路径 A：构造 attribute 实例。便利，但有对象分配与构造函数成本。
+    public static void PrintByInstance(Type t)
+    {
+        foreach (RangeAttribute r in Attribute.GetCustomAttributes(t, typeof(RangeAttribute)))
+            Console.WriteLine($"{r.Min}..{r.Max} : {r.Message}");
+    }
+
+    // 路径 B：只读实参，不构造实例。诊断、源生成器与扫描工具应优先走这条。
+    public static void PrintByData(Type t)
+    {
+        IList<CustomAttributeData> data = t.GetCustomAttributesData();
+        foreach (CustomAttributeData d in data)
+            if (d.AttributeType == typeof(RangeAttribute))
+            {
+                foreach (CustomAttributeTypedArgument a in d.ConstructorArguments)
+                    Console.WriteLine("  位置实参: " + a.Type.Name + " = " + a.Value);
+                foreach (CustomAttributeNamedArgument n in d.NamedArguments)
+                    Console.WriteLine("  命名实参: " + n.MemberName + " = " + n.TypedValue.Value);
+            }
+    }
+}
+\end{lstlisting}
+
+真正把“元数据”与“编译指令”区分开的，是下面这组行为型 attribute：它们写在同一类位置上，对编译器的指令却南辕北辙。
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle,caption={四个行为型 attribute：同一语法位置上的四种截然不同的效果},label={lst:ch3-cs-behavior}]
+using System;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+public static class Behavior
+{
+    // 一、条件编译：编译期把调用点整句删掉，连实参的求值一起消失
+    [Conditional("DEBUG")]
+    public static void Dump(string state) => Console.WriteLine("dump: " + state);
+
+    // 二、参数属性：编译器在调用处填进一个编译期已知的实参
+    public static void Notify([CallerMemberName] string from = "?")
+        => Console.WriteLine("from: " + from);
+
+    // 三、互操作：标注本身就是生成指令，决定互操作桩怎么生成
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern int MessageBoxW(IntPtr hWnd, string text, string caption, uint type);
+
+    // 四、诊断：只调整警告或错误级别，生成的代码与不写它完全一致
+    [Obsolete("改用 TryParse；此重载下一版本移除", error: true)]
+    public static int Parse(string s) => int.Parse(s);
+}
+\end{lstlisting}
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.20\textwidth}>{\raggedright\arraybackslash}p{0.34\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}@{}}
+\caption{行为型 attribute 的效果分级：全部在编译期兑现，与“元数据只是记录”截然不同}\label{tab:ch3-cs-behavior}\\
+\toprule
+标注 & 编译器做了什么 & 事后能读到什么 \\
+\midrule
+\endfirsthead
+\toprule
+标注 & 编译器做了什么 & 事后能读到什么 \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{[Conditional]} & 定义不存在时删掉\textbf{调用点}，不删方法本身 & 调用点消失：反射看不到“这里曾经有个调用” \\
+\texttt{[DllImport]} & 生成 P/Invoke 互操作桩并决定封送方式 & 元数据里保留，可被反射读出 \\
+\texttt{[CallerMemberName]} & 编译期把调用者名字作为实参填进去 & 读到的是\textbf{填好的字符串}，不是“这里被填过” \\
+\texttt{[Obsolete]} & 只调整诊断级别，不改代码生成 & 元数据里保留，可被反射读出 \\
+\end{longtable}}
+
+\begin{bestpractice}[title={C\# 侧：先问消费者，再决定 attribute 的形态}]
+只影响编译器自己的信息属于行为型 attribute，形态由框架规定，你不需要设计。要给自家框架读的才做成纯数据的 attribute，并\textbf{同时决定读它的那段代码运行在哪里}：编译期读用 \seqkw{GetCustomAttributesData} 或源生成器（\S\ref{sec:three-ext-generators}），运行期读才构造实例。数据型 attribute 若找不到读取代码，它就是装饰。术语上本册一律用 attribute 原词而不译“特性”，因为“特性”在 C\# 语境里还指语言功能本身；命名事故的梳理见 \S\ref{sec:one-names}，而“它留在源码里还是进了产物”这条判据见 \S\ref{sec:one-criterion}。
+\end{bestpractice}
+
+\section{Java 的 @interface：声明、元注解与保留策略}
+\label{sec:three-java}
+
+Java 没有让 attribute 长成一个类，而是发明了一种\textbf{特殊的声明形式} \texttt{@interface}。元素写成抽象方法的形态：无参数列表、无 \kw{throws}、无类型参数，但可以有 \kw{default} 值。代价是表达能力受限，收获是形状完全可判定。
+
+\javalabel
+\begin{lstlisting}[style=javastyle,caption={Java 的注解声明：元素即抽象方法形态，合法元素类型只有这一小撮},label={lst:ch3-java-meta}]
+import java.lang.annotation.*;
+
+enum Level { INFO, WARN, ERROR }
+@interface Owner { String name(); }
+
+@Target({ElementType.FIELD, ElementType.METHOD, ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@Documented
+public @interface Range {
+    double min();                                    // 必填元素
+    double max();
+    String message() default "值超出可接受区间";        // 有 default 即可省略
+}
+
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+@interface Meta {
+    int order() default 0;                                    // 基本类型
+    String name() default "";                                 // String
+    Class<? extends Runnable> worker() default Runnable.class; // Class
+    Level level() default Level.WARN;                         // 枚举
+    Owner owner() default @Owner(name = "unknown");            // 注解
+    String[] tags() default {};                                // 上述类型的一维数组
+    // 其余一律非法：无 List、无 Object、无泛型数组之外的数组
+}
+\end{lstlisting}
+
+上面那六行就是 Java 允许的全部元素类型：基本类型、\texttt{String}、\texttt{Class}、枚举、注解，以及这些类型的一维数组。这条限制与 C\# 的“编译期常量”在效果上同构——两边都不允许元数据携带任意运行期对象——但机制不同：Java 在类型层面收窄，C\# 在表达式层面要求常量。单元素约定也值得记：只有一个名为 \kw{value} 的元素时，书写处可以省略键名。
+
+描述自己的那一族叫元注解，一共四件，职责互不重叠。
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.18\textwidth}>{\raggedright\arraybackslash}p{0.42\textwidth}>{\raggedright\arraybackslash}p{0.22\textwidth}@{}}
+\caption{Java 的四件元注解各自约束什么}\label{tab:ch3-java-metaannotations}\\
+\toprule
+元注解 & 约束什么 & 缺省行为 \\
+\midrule
+\endfirsthead
+\toprule
+元注解 & 约束什么 & 缺省行为 \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+\texttt{@Target} & 允许贴的位置，取值是 \texttt{ElementType} 集合：\texttt{TYPE}、\texttt{FIELD}、\texttt{METHOD}、\texttt{PARAMETER}、\texttt{CONSTRUCTOR}、\texttt{LOCAL\_VARIABLE}、\texttt{ANNOTATION\_TYPE}、\texttt{PACKAGE}；Java 8 起增加 \texttt{TYPE\_PARAMETER} 与 \texttt{TYPE\_USE} & 未声明时不限位置，除类型声明外几乎都能贴 \\
+\texttt{@Retention} & 保留到哪个阶段：\texttt{SOURCE}、\texttt{CLASS}、\texttt{RUNTIME} & \textbf{缺省 CLASS}：class 文件里有，反射读不到 \\
+\texttt{@Inherited} & 是否随类继承传递；\textbf{只对类声明生效}，不随方法继承 & 缺省不传递 \\
+\texttt{@Documented} & 是否出现在 Javadoc 生成的文档里 & 缺省不进文档 \\
+\end{longtable}}
+
+重复贴同一个注解需要第五件元注解，并显式提供容器注解类型：容器本身也是注解类型，只有一个数组元素，形如 \texttt{@interface Audits \{ Audit[] value(); \}}，被容器化的那个写 \texttt{@Repeatable(Audits.class)}；这一对随 Java 8 落地。同一年 Java 8 打开类型使用位置（\texttt{TYPE\_USE}），注解第一次可以贴到泛型实参、强转、新建表达式上，静态分析工具由此获得“给可空性加标注”的落点。
+
+\javalabel
+\begin{lstlisting}[style=javastyle,caption={@Repeatable 与容器注解类型（Java 8）：容器只有一个数组元素},label={lst:ch3-java-repeat}]
+import java.lang.annotation.*;
+
+@Retention(RetentionPolicy.CLASS)
+@Target(ElementType.METHOD)
+@interface Audits { Audit[] value(); }          // 容器：重复标注的真实落点
+
+@Repeatable(Audits.class)
+@Retention(RetentionPolicy.CLASS)
+@Target(ElementType.METHOD)
+@interface Audit { String by(); }               // 被容器化的那个
+
+class Ledger {
+    @Audit(by = "alice") @Audit(by = "bob")     // 编译器改写成一个 @Audits
+    void reconcile() { }
+}
+\end{lstlisting}
+
+\begin{warning}[title={缺省保留策略是 CLASS，不是 RUNTIME}]
+一个忘写 \texttt{@Retention} 的注解会安静地进 class 文件，然后在反射里彻底消失。框架“读不到我的注解”九成九是这个原因，而不是扫描器漏了包。反向错误同样常见：把只服务静态分析器的注解保留成 \texttt{RUNTIME}，等于让每个类都拖着一段没人读的元数据。档位与后果见 \S\ref{sec:three-retention}。
+\end{warning}
+
+JDK 自带注解里 \texttt{@Deprecated} 是最早的一批：它同时示范了保留策略（\texttt{RUNTIME}，工具链要读）、文档化（\texttt{@Documented}，进 Javadoc）与元素演进（Java 9 起增加 \texttt{forRemoval} 与 \texttt{since}）。record 则让注解的落点问题第一次无法回避（JEP 395，Java 16）：注解贴在 record 头部时，它要落到组件对应的字段、访问器、规范构造参数中的某几个上——\texttt{@Positive} 的 \texttt{@Target} 若覆盖这三类实体，落点就覆盖这三处；若只声明其中一部分，落点集合按声明收缩。传播规则按 \texttt{@Target} 决定，细节见 JLS，本册不复述逐条矩阵。这个例子要记住的不是规则细节，而是规则的\textbf{存在方式}：元数据落地在哪个实体上必须由语言精确定义，否则“同一个标注”在反射眼里是三个位置上的三份拷贝。\cpp{} 侧对应另一极端：一个声明只有一个实体，因此不存在“一份标注落到多个实体”的问题。
+
+\begin{stdbox}[title={规范坐标}]
+Java：注解类型由 JSR 175 定稿，最终版发布于 2004-09-30，随 J2SE 5.0 出货；Java 8 引入 \texttt{@Repeatable}、\texttt{TYPE\_USE} 与 \texttt{TYPE\_PARAMETER}；Java 9 给 \texttt{@Deprecated} 增元素；record 由 JEP 395 落地，Java 16。C\#：attribute 见 ECMA-376 与 C\# 1.0（2002）；泛型 attribute 自 C\# 11 起合法。两条年代线的完整排布见 \S\ref{sec:three-lineage}。
+\end{stdbox}
+
+\section{“Java 注解源于 C\# Attribute”的证据边界}
+\label{sec:three-lineage}
+
+这一节要把一件被反复转述的事，说到证据能支撑的那个程度为止，不多走一步。
+
+先摆时间。C\# 的 attribute 随 C\# 1.0 与 ECMA-376 在 2002 年落地；Java 的 annotation 由 JSR 175 定稿，最终版在 2004-09-30 发布，随 J2SE 5.0 出货。两者相隔约两年半，设计目标同形：都是“给声明贴一份可机读的元数据”，都要求实参编译期可知，都不改变被标注对象的语义。这是一个真实的、可核查的先后关系。
+
+现在把话说完：\textbf{JSR 175 规范全文不提 C\#}。因此，“Java 注解源自 C\# Attribute”“借鉴了”“照搬了”这一类因果断言\textbf{全部无据}。证据支持的结论只到“同期同形”为止。Java 当时有自己的输入序列（元数据、标记接口、代码生成工具链的诉求），这些材料足以独立长出一个 \texttt{@interface}；把形态相似当成来源证据，是拿相关性冒充因果。
+
+更能说明问题的是形状差异。若只是移植，两边的机制不会处处不同：
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\textwidth}>{\raggedright\arraybackslash}p{0.34\textwidth}>{\raggedright\arraybackslash}p{0.32\textwidth}@{}}
+\caption{C\# 的 attribute 与 Java 的 annotation：时间轴相邻，机制处处不同}\label{tab:ch3-shape}\\
+\toprule
+维度 & C\# 的 attribute & Java 的 annotation \\
+\midrule
+\endfirsthead
+\toprule
+维度 & C\# 的 attribute & Java 的 annotation \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+声明形式 & \textbf{一个类}：继承 \texttt{System.Attribute} 的类，走正常类声明 & \textbf{一种特殊声明形式}：\texttt{@interface}，既不是类也不是接口的第三类 \\
+携带信息 & 构造函数（位置实参）加公开字段或属性（命名实参） & 元素写成\textbf{抽象方法形态}，可有 \texttt{default} 值 \\
+实参约束 & 必须是\textbf{编译期常量}：字面量、\texttt{typeof}、数组字面量、嵌套 attribute & 元素\textbf{类型集合被限定}：基本类型、\texttt{String}、\texttt{Class}、枚举、注解、其一维数组 \\
+自我描述 & 用 \texttt{AttributeUsage}——它\textbf{自己就是一个 attribute}，因此自指 & 用\textbf{元注解}：\texttt{@Target}、\texttt{@Retention}、\texttt{@Inherited}、\texttt{@Documented}，语言把这一族单列 \\
+保留策略 & 无对应档位：写进程序集元数据，读取时机由反射调用方决定 & 显式三档 \texttt{SOURCE}/\texttt{CLASS}/\texttt{RUNTIME}，缺省 \texttt{CLASS} \\
+泛型 & C\# 11 起 attribute \textbf{可以为泛型} & 注解类型\textbf{不能}有类型参数 \\
+读取入口 & \texttt{GetCustomAttributes} 构造实例；\texttt{GetCustomAttributesData} 只读实参 & \texttt{AnnotatedElement} 一族；仅 \texttt{RUNTIME} 可见 \\
+\end{longtable}}
+
+\begin{compare}[title={同形，但不是同源}]
+同形的部分：贴在同一类语法位置上、实参必须编译期可知、都不改变被标注对象的运行语义、都要靠一个额外机制兑现（C\# 靠框架与源生成器，Java 靠注解处理器与框架）。不同的部分：一边把元数据做成\textbf{对象模型的一部分}（是类、能继承、能带构造函数逻辑、C\# 11 起还能带类型参数），一边把它做成\textbf{语言层面的一个专门类别}（第三种声明形式、元素是方法形态、类型集合被收窄、保留策略显式分档）；一边把描述自己的机制\textbf{自指}（\texttt{AttributeUsage} 自己是个 attribute），一边把它\textbf{单列}（元注解是语言规定的一族）。这两套审美不可能来自同一次抄写。
+\end{compare}
+
+\cpp{} 在这条时间轴上的位置也要标出来：\cpp{11} 采纳属性语法时选的是封闭清单加两对方括号的形态（语法细节见 \S\ref{sec:two-cpp-syntax}）。它既不像 C\# 也不像 Java，谁也没借鉴——那是一个反向决定：\textbf{不让使用者自己扩这张清单}（理由见 \S\ref{sec:two-cpp-reserved}）。这个决定的后果要到 \S\ref{sec:three-ext-reflect} 才完全展开。
+
+\begin{guideline}[title={证据边界：说到“同期同形”就停}]
+时间先后与目标同形是可以引用的事实；“源自”“借鉴”“抄”是需要一手出处（提案文本、设计者陈述、规范致谢）才能说的因果断言。JSR 175 规范全文不提 C\#，因此这类断言无据。机制差异清单正是这一节的核心证据：差异越系统，越说明两边各自推导，而不是彼此复制。
+\end{guideline}
+
+\section{注解的三种消费时机}
+\label{sec:three-retention}
+
+把 C\# 与 Java 摆到同一根时间轴上，元数据的生命周期只有三段：源码期与文档期、编译期、运行期。“可靠性与消费时机成反比”的意思是：越早被消费，错误越早暴露、契约越硬；越晚被消费，越依赖一个此刻并不在场的读者。
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.14\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}>{\raggedright\arraybackslash}p{0.40\textwidth}@{}}
+\caption{三种消费时机：入场券、两边的对应机制、以及每个时机一个可核查的后果}\label{tab:ch3-retention-matrix}\\
+\toprule
+时机 & 入场券 & 对应机制与可核查后果 \\
+\midrule
+\endfirsthead
+\toprule
+时机 & 入场券 & 对应机制与可核查后果 \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+源码期与文档期 & 标注只在源码里存在，编译器用完即弃 & Java \texttt{SOURCE} 保留：class 文件里没有它，写了就没了；IDE 与静态分析器（可空性一族注解）读源码，靠分析器兑现而不是 JVM；\texttt{@Documented} 只影响 Javadoc 输出 \\
+编译期 & 标注参与“生成什么、删什么、报什么”，实参形状当场校验 & Java 注解处理器（JSR 269 / JEP 117，\texttt{javax.annotation.processing}，Java SE 6 起）；C\# 源生成器（Roslyn，随 C\# 9 正式可用，增量接口 \texttt{IIncrementalGenerator}）；C\# 的 \texttt{[Conditional]} 与参数属性 \texttt{[CallerMemberName]} \\
+运行期 & 标注必须留在 class 文件或程序集元数据里 & Java \texttt{RUNTIME} 加 \texttt{AnnotatedElement} API；C\# \texttt{GetCustomAttributes} 加框架反射；代价是代理与注入的启动开销、类加载耦合 \\
+\end{longtable}}
+
+三档各有一条能被当场验证的后果。Java 的 \texttt{SOURCE}：\textbf{写了就没了}，类文件里查不到，任何运行期框架都不可能读到它；它的价值恰在于此——处理器与静态分析器当场兑现完毕，剩下的字节码不背任何包袱。Java 的 \texttt{CLASS}：反射读不到，而这是 Java 的\textbf{默认档}，也就是说一个什么元注解都没写的注解，天生只能被字节码工具、代理生成器与调试器看到，对所有依赖反射的框架等于不存在。Java 的 \texttt{RUNTIME}：读得到，但要付真实成本——注解元素里引用的类型必须能被加载，注解的存活因此绑上类路径的完整性；C\# 侧同理，构造 attribute 实例意味着对象分配与构造函数执行。
+
+\javalabel
+\begin{lstlisting}[style=javastyle,caption={三档保留策略的可见性差异：一个源文件，三处声明，三个读者},label={lst:ch3-java-retention}]
+import java.lang.annotation.*;
+
+@Target(ElementType.METHOD) @Retention(RetentionPolicy.SOURCE)
+@interface Contract { String requires() default ""; }    // 处理器与分析器读
+
+@Target(ElementType.METHOD) @Retention(RetentionPolicy.CLASS)
+@interface Internal { }                                  // 缺省档：反射读不到
+
+@Target(ElementType.METHOD) @Retention(RetentionPolicy.RUNTIME)
+@interface Managed { String pool() default "default"; }   // 框架反射可读
+
+public class Service {
+    @Contract(requires = "id != null") public void save(Object id) { }
+    @Internal                            public void flush() { }
+    @Managed(pool = "io")                 public void poll() { }
+}
+// 现场验证：Service.class.getDeclaredMethods() 各自的 getAnnotations()
+//   只交出 @Managed；@Internal 与 @Contract 都不在场。
+//   但用字节码工具看 class 文件，@Internal 确实在里面。
+\end{lstlisting}
+
+\begin{warning}[title={“反射读不到”与“信息丢了”是两件事}]
+\texttt{CLASS} 档的注解没有丢，它在 class 文件里，只是反射 API 不暴露它。把这种状况说成“元数据丢失”会把排查方向带偏：正确的问题是“谁在读它，它读的是 class 文件还是反射视图”。同理，C\# 里被 \texttt{[Conditional]} 删掉的调用点不是“跳过执行”，而是“根本不曾生成”——两者在副作用时序上的表现完全不同。
+\end{warning}
+
+于是第二条主张可以写成三条可操作性质。其一，\textbf{实参形状当场可校验}：C\# 要求编译期常量、Java 限定元素类型，都是在编译期把形状钉死；越晚消费，越只能靠读者自查，框架拿到意外实参时往往在启动阶段抛一个与根因无关的异常。其二，\textbf{消费者与被消费代码同时在场}：处理器与源生成器在编译过程内运行，读不到东西就当场报错；运行期框架读不到标注通常只是安静地什么都不做，而沉默是最难排查的失败模式。其三，\textbf{兑现方是工具链还是第三方}：\cpp{} 的 \texttt{[[nodiscard]]} 由编译器兑现，Java 的 \texttt{@Deprecated} 由编译器与 javadoc 兑现，自定义注解则由某个库兑现——库升级、库缺席、版本不匹配，都会让那句标注变成装饰。
+
+\begin{bestpractice}[title={把保留策略当接口契约来定}]
+Java 侧不要一律 \texttt{RUNTIME}。先写出读者：只有静态分析器读，用 \texttt{SOURCE}；只有字节码工具与代理生成器读，用 \texttt{CLASS}；确有框架在反射里读，才用 \texttt{RUNTIME}，并把它当公开 API 的一部分——改元素名、改默认值都是行为变更。C\# 侧没有档位可调，等价的问题变成：这份元数据是编译器消费的（行为型），还是你自己写的框架消费的（数据型）。
+\end{bestpractice}
+
+\section{扩展方向一：C++ 用反射重建注解}
+\label{sec:three-ext-reflect}
+
+回到 \cpp{}。\S\ref{sec:two-cpp-reserved} 给出“清单封闭”这一事实，本节给出第一条出路：用反射把“贴了可查”补回来。必须按下面的顺序讲，因为顺序本身就是结论。
+
+第一块砖：P2996 描述的反射已被 \cpp{26} 采纳——在 2025-06 的 Sofia 会议上采纳，而 \cpp{26} 的特性窗口在 2026-03 的 London-Croydon 会议关闭。反射给出的是“把声明当作值来操作”的能力：取到一个类型或成员的反射对象，在 \texttt{constexpr} 语境里遍历成员、读名字、生成声明。这些能承载元数据，但\textbf{它本身不是注解语法}。
+
+第二块砖才是主角：P3394R4 在反射之上增加了\textbf{匿名注解语法}，形态是 \texttt{[[= 表达式 ]]}，例如 \texttt{[[= annotations::max\_size(64) ]]} 这一类写法。等号之后是一个\textbf{表达式}，它所涉及的实体是\textbf{匿名的反射常量}；读回来靠反射接口，形如 \seqkw{std::meta::annotations\_of}（参数是一个反射对象）。实现门禁宏写作 \seqkw{\_\_cpp\_impl\_reflection}，值 \texttt{202506L}。
+
+\cppxxlabel{C++26}
+\begin{lstlisting}[style=cppstyle,caption={匿名注解的书写与读出：形态示意；接口名以采纳文本为准，落地程度需按实现实测},label={lst:ch3-cpp-anon}]
+namespace annotations {
+  consteval int max_size(int n) { return n; }  // 名字来自本项目定义的反射常量
+}
+
+// 书写处（形态示意）：
+//   class [[= annotations::max_size(64) ]] Buffer { ... };
+// 关键点：annotations::max_size 不是语言认识的关键字，
+// 也不是新开放的属性名，而是本项目声明的一个 constexpr 实体。
+
+#if defined(__cpp_impl_reflection) && __cpp_impl_reflection >= 202506L
+template <class T>
+consteval int declared_max_size()
+{
+  int out = -1;
+  for (auto a : std::meta::annotations_of(^^T)) {
+    // a 是一枚匿名的反射常量：把它读回来、匹配 max_size 的调用形态、取回实参。
+    // 这里刻意不写完整的匹配代码：采纳文本或实现接口任一处变化，这段就会失效。
+  }
+  return out;
+}
+#else
+  // 无注解能力：本翻译单元退回把约束写进类型，或用构建期生成表达
+#endif
+\end{lstlisting}
+
+现在做本节最重要的辨析，它也是与本章第一条主张的接缝。
+
+\begin{warning}[title={匿名注解不是自定义属性：这条边界不许模糊}]
+\texttt{[[= ... ]]} \textbf{不是}新增一个具名属性 token，\textbf{不是}开放自定义属性名。等号后面的名字来自你自己的反射常量——类、变量、命名空间成员；语言层面只有一个统一的匿名注解语法，它对所有名字一视同仁，因为它根本不认识这些名字。所以“截至 \cpp{26} \cpp{} 无自定义属性”仍然成立。读者必须知道这条边界的精确位置：你获得的是\textbf{可被反射读到的匿名表达式}，不是\textbf{编译器认识你的属性名并据其改变诊断或代码生成}。前者是数据，后者是行为。
+\end{warning}
+
+这个区别的后果清单很具体。拼写错误可检出：具名属性\textbf{是}——不在清单里就是诊断（\cpp{11} 判错，\cpp{17} 起忽略）；匿名注解\textbf{否}——表达式合法即通过，名字写错只会被查不到。影响编译器诊断与改变代码生成：具名属性\textbf{是}（\texttt{nodiscard}、\texttt{deprecated}、\texttt{may\_discard}，以及厂商的调用约定、对齐、导出）；匿名注解\textbf{否}，编译器不解释其含义。程序化读回：匿名注解\textbf{是}，这是它唯一但扎实的能力；具名属性\textbf{不可靠}（理由见下一段）。读者是谁：前者是编译器、静态分析器、IDE，后者是你自己写的 \texttt{consteval} 代码。
+
+第三块砖的缺口也要说明白：P3385R4（把标准属性纳入反射）\textbf{未进入 \cpp{26}}。这意味着在 \cpp{26} 里读回一个已有对象上的 \texttt{[[nodiscard]]} 之类标准属性并不可靠。准确措辞是：标准属性自身的反射读出未随 \cpp{26} 落地，需按实现实测。也就是说，反射补上的是“我自己加的信息”，没有补上“编译器加的信息”——两侧不对称，任何“\cpp{} 现在也有完整属性反射”的说法都要打折。
+
+采纳后的拼接与反引用语法形态是 \texttt{[: ... ]}（splice）与 \texttt{\textasciicircum\textasciicircum}（反引用/嵌入）。早期提案里出现过的 \texttt{@.name} 之类形态\textbf{不被支持}；文献中若遇到，那是旧提案，不能当作现状引用。
+
+\begin{note}[title={现状诚实交代：还不能进生产}]
+截至写册时，主流实现（GCC/Clang/MSVC）对反射的支持处于部分实现或实验阶段，\textbf{具体版本与支持程度未核实}，本册刻意不写编译器版本号与命令行开关。上手前自测三件事：门禁宏是否可见、\texttt{[[= ... ]]} 是否被解析、\seqkw{std::meta::annotations\_of} 是否可用。短期结论：这条路线可以进技术预研与内部工具，不能进生产代码。
+\end{note}
+
+\begin{guideline}[title={反射路线的定位：把注解降级为可反射的编译期数据}]
+它补上的是可程序化查询的编译期数据，且必须写成表达式；代价是没有一方替你检查含义，也没有任何编译期行为因此改变。需求若是“让编译器替我做事”，回到封闭清单；需求若是“让我自己的 \texttt{consteval} 代码替我做事”，反射是 \cpp{26} 下唯一正统答案。
+\end{guideline}
+
+\section{扩展方向二：源生成器与注解处理器}
+\label{sec:three-ext-generators}
+
+第二条路不碰语言本身，而是把元数据的兑现放进编译过程：让标注成为生成代码的输入。C\# 与 Java 各有一套正规机制，\cpp{} 只有构建期的手工版本。
+
+Java 的注解处理器住在包 \seqkw{javax.annotation.processing} 里，由 JSR 269 与 JEP 117 落地，Java SE 6 起在场。写 \seqkw{AbstractProcessor} 的子类，用 \texttt{SupportedAnnotationTypes} 声明处理哪些注解类型、用 \texttt{SupportedSourceVersion} 声明源版本，再用 \texttt{Filer} 写新文件、用 \texttt{Messager} 报诊断。
+
+\javalabel
+\begin{lstlisting}[style=javastyle,caption={注解处理器骨架：只能新增类型，不能改动被注解的类自身},label={lst:ch3-java-processor}]
+package demo.processor;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Set;
+import javax.annotation.processing.*;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
+import javax.tools.JavaFileObject;
+
+@SupportedAnnotationTypes("demo.Range")
+@SupportedSourceVersion(SourceVersion.RELEASE_8)
+public class RangeProcessor extends AbstractProcessor {
+    @Override
+    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        TypeElement range = processingEnv.getElementUtils().getTypeElement("demo.Range");
+        for (Element e : roundEnv.getElementsAnnotatedWith(range)) {
+            String gen = processingEnv.getElementUtils().getPackageOf(e).getQualifiedName()
+                       + "." + e.getSimpleName() + "Validator";
+            try {
+                JavaFileObject file = processingEnv.getFiler().createSourceFile(gen, e);
+                try (Writer w = file.openWriter()) {
+                    w.write("class " + e.getSimpleName() + "Validator { }\n");
+                }
+            } catch (IOException ex) {
+                processingEnv.getMessager().printMessage(
+                    Diagnostic.Kind.ERROR, "generate failed: " + ex.getMessage(), e);
+            }
+        }
+        return true;   // 声明本处理器已消费这些注解
+    }
+}
+\end{lstlisting}
+
+这里有一条硬边界必须写清：处理器\textbf{不能修改被注解的类自身}，只能新增类型。因此 Lombok 那类改动既有类的做法\textbf{不属 JSR 269 正规渠道}；本册对此不作评价，只把边界标出来，因为它决定你能承诺什么：正规渠道能承诺“我生成了一个新文件”，不能承诺“我改了你写的类”。反过来，处理器未注册（或缺 service 声明）时是静默无事发生——它失效的方式和运行期框架一样隐蔽。
+
+C\# 的源生成器（Roslyn，随 C\# 9 正式可用）在同一层，但接口更细：推荐增量生成器接口 \seqkw{IIncrementalGenerator}，从语法管道筛出候选节点、投影成语义符号、为每个符号追加源文件，增量语义让不变的部分不重生成。C\# 13 的 \texttt{partial} 属性与源发生器的配合也值得留意：属性第一次可以被声明成“一半在用户代码、一半在生成代码”，这是成员形态向生成器形态的一次让步式配合。
+
+\csharplabel
+\begin{lstlisting}[style=csharpstyle,caption={增量源生成器骨架：读语法与语义模型，追加文件，可参与增量},label={lst:ch3-cs-generator}]
+using System.Text;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+
+[Generator(LanguageNames.CSharp)]
+public sealed class RangeValidatorGenerator : IIncrementalGenerator
+{
+    public void Initialize(IncrementalGeneratorInitializationContext context)
+    {
+        var candidates = context.SyntaxProvider.ForAttributeWithMetadataName(
+            "RangeAttribute",                 // 实际使用需按命名空间限定
+            predicate: static (node, _) => node is PropertyDeclarationSyntax,
+            transform: static (ctx, _) => ctx.TargetSymbol);
+
+        context.RegisterSourceOutput(candidates, static (spc, symbol) =>
+        {
+            string name = symbol.Name;
+            string code = "sealed class " + name + "Validator { }\n";
+            spc.AddSource(name + "Validator.g.cs", SourceText.From(code, Encoding.UTF8));
+        });
+    }
+}
+\end{lstlisting}
+
+\cpp{} 没有编译过程内的这个插槽。可复现的替代只有构建期代码生成：从 schema、IDL、X-macro 表或任何自定义描述文件生成头文件，让编译器只看到生成结果。代价是校验发生在你的工具里而不是编译器里，收益是它对任何 \cpp{} 版本都成立。
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle,caption={构建期代码生成的 CMake 形态（构建脚本示意，非 C++ 源码；不涉及具体版本号）},label={lst:ch3-cmake}]
+# 生成期：把描述文件里的元数据兑换成头文件
+add_custom_command(
+  OUTPUT  ${CMAKE_CURRENT_BINARY_DIR}/generated/contract.hpp
+  COMMAND contract_codegen --schema ${CMAKE_CURRENT_SOURCE_DIR}/schema/contract.xml
+                          --out    ${CMAKE_CURRENT_BINARY_DIR}/generated/contract.hpp
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/schema/contract.xml contract_codegen
+  COMMENT "from schema to contract.hpp")
+
+add_custom_target(contract_generated
+  DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/generated/contract.hpp)
+
+add_library(contract INTERFACE)
+add_dependencies(contract contract_generated)
+target_include_directories(contract INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/generated)
+\end{lstlisting}
+
+还有一条 \cpp{} 侧独有的分支：libTooling / clang 插件，在 AST 上读标注并改写或报诊断。它的地位对应“源生成器”，但它既不是标准的一部分，也不是编译过程内的正规插槽，而是绑定到某个前端的扩展；把项目押在这里，等于把可移植性押在单个实现上。最后点一条不需要任何工具链配合的路径：\textbf{具名反射常量加 \texttt{constexpr}}，以及\textbf{非类型模板参数}，能承担一部分“贴了可查”的需求——把约束写成一个 \texttt{constexpr} 变量并与声明放在一起，或用模板实参传入，读它的是类型系统与 \texttt{static\_assert}，而不是某个遍历标注的过程。这条路与 \S\ref{sec:two-cpp-reserved} 里“清单由编译器兑现”的精神最接近。
+
+\section{扩展方向三：不带元数据的替代写法}
+\label{sec:three-ext-alt}
+
+第三条路最朴素也最耐久：把信息编码进类型，而不是编码进标注。这一节是第二条主张的极端形式——如果一个信息连一个可能的延迟消费者都不需要，它就不该是元数据，而应该是类型的一部分，让类型系统当场兑现。
+
+\cpplabel
+\begin{lstlisting}[style=cppstyle,caption={六种把信息搬进类型系统的写法：约束进类型、不变式进构造路径、开关进标签类型},label={lst:ch3-cpp-nometa}]
+#include <concepts>
+#include <optional>
+#include <type_traits>
+
+// 一、强类型包装 / 新类型：单位进类型系统，而不是一个假的 [[unit]]
+struct Meter {
+  double v;
+  explicit constexpr Meter(double x) noexcept : v{x} {}
+};
+constexpr Meter operator+(Meter a, Meter b) noexcept { return Meter{a.v + b.v}; }
+// Meter + Second 现在编不过：不需要属性，也不需要任何读者
+
+// 二、构造函数与静态工厂保证不变式：合法值是构造出来的，不是标注出来的
+class Positive {
+  std::size_t n_;
+  explicit constexpr Positive(std::size_t n) noexcept : n_{n} {}
+public:
+  static constexpr std::optional<Positive> make(std::size_t n) noexcept {
+    return n == 0 ? std::nullopt : std::optional<Positive>{Positive{n}};
+  }
+  constexpr std::size_t value() const noexcept { return n_; }
+};
+
+// 三、类型特征 / constexpr 布尔量表达“属性”，由 static_assert 当场检查
+template <class T> inline constexpr bool is_addable_v =
+    requires (T a, T b) { { a + b } -> std::convertible_to<T>; };
+static_assert(is_addable_v<Meter>, "Meter 需支持相加");
+
+// 四、[[nodiscard]] 加返回类型表达“不可忽略”
+[[nodiscard]] constexpr Meter scale(Meter a, double k) noexcept { return Meter{a.v * k}; }
+
+// 五、策略类 / 标签类型替代运行期开关
+struct fast_tag {};  struct safe_tag {};
+template <class Policy>
+constexpr double evaluate(double x) noexcept {
+  if constexpr (std::is_same_v<Policy, safe_tag>) return x * 1.0;  // 带检查的一支
+  else return x;                                                   // 快路径
+}
+
+// 六、用概念与 constraints 表达要求（C++20）
+template <std::regular T>
+T clamp_value(T lo, T hi, T v) { return v < lo ? lo : (hi < v ? hi : v); }
+\end{lstlisting}
+
+\begin{warning}[title={上面的代码是手法示意，不是可直接编译的完整程序}]
+为把六种手法压进一个块，\texttt{Positive} 的不变式只演示了一半（\texttt{make} 拒绝零值，但私有构造仍可被友元绕过），\texttt{clamp\_value} 也没有表达“区间有序”这一前提。把它当索引读，不要当模板抄。
+\end{warning}
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.22\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}>{\raggedright\arraybackslash}p{0.32\textwidth}@{}}
+\caption{把信息编码进类型：手法、当场兑现什么、要付的代价}\label{tab:ch3-into-type}\\
+\toprule
+手法 & 当场兑现的是什么 & 真实代价 \\
+\midrule
+\endfirsthead
+\toprule
+手法 & 当场兑现的是什么 & 真实代价 \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+强类型包装 / 新类型 & 非法组合是编译错误，不依赖任何工具 & 显式转换的成本；与算术混杂要补一堆 \texttt{operator}；调试器里看到的是包装类型 \\
+构造函数与静态工厂 & 不变式由构造路径保证，活对象即合法对象 & 非法值没有表示位时要么返回 \texttt{optional} 要么抛，调用者要处理失败分支 \\
+类型特征 / \texttt{constexpr} 布尔量 & 可被 \texttt{static\_assert} 检查的元性质 & 只能表达有或没有；一旦要带实参（上限、优先级）就得回到模板参数或反射 \\
+\texttt{[[nodiscard]]} 加返回类型 & 忽略返回值的后果由编译器负责，因为它在清单里 & 只覆盖这一种语义；范围、单位、时序一概表达不了 \\
+策略类 / 标签类型 & 开关在编译期定形，分支可被 \texttt{if constexpr} 消掉 & 模板噪音：诊断里出现策略类型名，调用点可读性下降 \\
+概念与 constraints（C++20） & 要求成为接口签名的一部分，不匹配即时报错 & 报错可读性依赖概念的命名与拆解；约束过强会连合法调用一起挡掉 \\
+\end{longtable}}
+
+同样的手法在 C\# 与 Java 侧也有对应物，这一点值得点出，因为“选型”不是某一门语言的专利：C\# 侧是 \texttt{readonly struct} 加克制使用的隐式转换、代码契约库，以及可空引用类型——那正是把可空性从标注搬进类型系统的一次努力；Java 侧是值类库、\texttt{Optional} 返回类型、用枚举代替魔法整数。三边都出现过“把标注搬回类型”的运动，这不是巧合，而是元数据可靠性存在天花板的证据。
+
+\begin{compare}[title={标注与类型的分工：一条判据}]
+标注适合表达\textbf{关于代码的事实}：这个成员会被序列化、这个函数只在某域内被调用、这个类是某个测试夹具。类型适合表达\textbf{关于值的事实}：这个量是长度不是时间、这个整数严格为正、这个引用可能为空。判据很直接：信息错了会导致\textbf{非法值存在}，它就该进类型，因为类型在构造点当场拒绝；错了只导致\textbf{行为不对但不产生非法值}，那是标注的任务（并回到 \S\ref{sec:two-compare} 那张对照表去定形态）。
+\end{compare}
+
+\section{选型：什么时候加元数据，什么时候改类型}
+\label{sec:three-pick}
+
+把三条主张收成一张表。决策的唯一自变量是那根时间轴：这个信息需要被谁、在什么时候读到。
+
+{\footnotesize
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.19\textwidth}>{\raggedright\arraybackslash}p{0.24\textwidth}>{\raggedright\arraybackslash}p{0.39\textwidth}@{}}
+\caption{全册选型决策表：按“谁在读、什么时候读”选机制}\label{tab:ch3-pick}\\
+\toprule
+需求 & 结论 & 前提与代价 \\
+\midrule
+\endfirsthead
+\toprule
+需求 & 结论 & 前提与代价 \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+只影响编译器诊断 & 标准属性 & \cpp{} 侧只能选清单内条目（\texttt{nodiscard}、\texttt{deprecated}、\texttt{may\_discard}）；C\# 侧是 \texttt{[Obsolete]} 一族。编译器自己兑现，拼写错误可检出 \\
+改代码生成、布局或调用约定 & 厂商属性或生成器 & \cpp{} 侧厂商属性与实现绑定，需要隔离层；C\# 用源生成器，Java 用注解处理器，\cpp{} 只有构建期生成 \\
+需要被第三方框架或运行期读到 & attribute 或 annotation，并\textbf{显式定保留策略} & Java 缺省 \texttt{CLASS} 反射读不到，必须写 \texttt{RUNTIME}；C\# 实参须编译期常量，且要有一段可测试的读取代码 \\
+需要被类型系统保证 & 改类型，不要用元数据（\S\ref{sec:three-ext-alt}） & 新类型有转换成本、标签类型有模板噪音、概念报错需要打磨；换来构造点当场拒绝 \\
+\cpp{} 侧要可程序化查询 & 反射加匿名注解 \texttt{[[= ... ]]}（\S\ref{sec:three-ext-reflect}） & 截至 \cpp{26} 仍无自定义属性；编译器不解释含义；实现支持程度未核实，短期不能进生产 \\
+\end{longtable}}
+
+表外还要补三条操作提醒，它们都是前面埋过的雷。第一，决定加元数据之前，先把读它的代码写出来；顺序反过来（先写标注再找消费者），得到的通常是装饰。这也解释了为什么 C\# 的 attribute 与 Java 的 annotation 在框架代码里像一种方言：它绑死了一个特定的读者。第二，行为型标注与数据型标注不要混在一张表里比较：\texttt{[Conditional]}、\texttt{[DllImport]}、\texttt{[CallerMemberName]} 与 \texttt{@Deprecated} 的效果由工具链负责，自定义标注的效果由你负责，两者不是同一量级的承诺。第三，\cpp{} 侧反射补的是数据不是行为——“改用 \cpp{26} 反射就能像 Java 一样用注解驱动框架”这句只有一半对：框架确实可以自己写，但编译器不替你检查含义，也没有任何现成消费者认识你的名字。
+
+\begin{guideline}[title={全册的反直觉结论}]
+元数据是“给别人的代码的注释”。只有当确实存在一个消费者时它才不是装饰，而消费者的在场时间决定它的可靠性：越早被消费越可信，越晚越像祈祷。\cpp{} 之所以把这份清单封闭起来，理由不是保守，而是一致性——它的每一个条目都必须由编译器自己兑现，兑现不了的条目就不进清单。于是 \cpp{} 用反射、构建期生成与更强的类型这三种方式承接“开放扩展”这件事，每一种都被一个能当场验证的机制兜住，而不是一条可以随手写下的语法。
+\end{guideline}
+
+\begin{bestpractice}[title={把“谁在读”写成一行注释}]
+每一个自定义 attribute、annotation 或反射常量旁边，写一行指明读者的注释：读它的类、读它的生成器、读它的 \texttt{consteval} 函数，以及读不到时的后果。这一行注释是元数据唯一自带的可靠性证明；删掉它的那次改动，通常也是这段标注开始变成死代码的那一刻。
+\end{bestpractice}
+
+\end{document}
